@@ -1,14 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
+#include "mining_vote_popup.hpp"
 #include "gui_wallet_global.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "mining_vote_popup.hpp"
-
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QIntValidator>
 
 namespace gui_wallet {
 
@@ -212,6 +211,5 @@ std::string MiningVotePopup::setDesiredNumOfMiners(const std::string& account_na
 
    return message;
 }
-
 
 }

@@ -1,12 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#include <string>
-#include <QString>
-
 #include "gui_wallet_tabcontentmanager.hpp"
 
+#ifndef STDAFX_H
 class QSignalMapper;
+#endif
 
 namespace gui_wallet
 {
@@ -48,4 +47,5 @@ protected:
    QString                 m_strSearchTerm;
    std::vector<SDigitalContentPurchase>   _current_content;
 };
+
 }//   end namespace gui_wallet

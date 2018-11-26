@@ -62,20 +62,15 @@ namespace wallet_utility
       class WalletAPIHelper
       {
       public:
-         WalletAPIHelper()
+         WalletAPIHelper(const fc::path &wallet_file)
          : m_asset_precision(0)
          ,m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
-            fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
-            if (fc::exists(wallet_file))
+            bool has_wallet_file = fc::exists(wallet_file);
+            if (has_wallet_file)
                wdata = fc::json::from_file(wallet_file).as<wallet_data>();
-            else
-               wdata.chain_id = chain_id_type("0000000000000000000000000000000000000000000000000000000000000000");
-
-            //  most probably this needs to get out to somewhere else
-            //graphene::package::package_manager::instance().set_libtorrent_config(wdata.libtorrent_config_path);
 
             websocket_client_ptr ptr_ws_client(new websocket_client());
                websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
@@ -96,6 +91,9 @@ namespace wallet_utility
             if (false == (*ptr_remote_api)->login(wdata.ws_user, wdata.ws_password))
                throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
+            if (!has_wallet_file)
+               wdata.chain_id = (*ptr_remote_api)->database()->get_chain_id();
+
             //  capture ptr_api_connection and ptr_remote_api too. encapsulate all inside wallet_api
             m_ptr_wallet_api.reset(new wallet_api(wdata, *ptr_remote_api),
                                    [ptr_api_connection, ptr_remote_api](wallet_api* &p_wallet_api) mutable
@@ -106,8 +104,8 @@ namespace wallet_utility
                                       ptr_remote_api.reset();
                                    });
 
-            m_ptr_wallet_api->set_wallet_filename(wallet_file.generic_string());
-            m_ptr_wallet_api->load_wallet_file();
+            if (has_wallet_file)
+               m_ptr_wallet_api->load_wallet_file(wallet_file.generic_string());
 
             fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
 
@@ -136,8 +134,9 @@ namespace wallet_utility
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI()
-   : m_pthread(nullptr)
+   WalletAPI::WalletAPI(const fc::path &wallet_file)
+   : m_wallet_file(wallet_file)
+   , m_pthread(nullptr)
    , m_pimpl(nullptr)
    , m_mutex()
    {
@@ -156,16 +155,15 @@ namespace wallet_utility
 
       m_pthread.reset(new fc::thread("wallet_api_service"));
 
-      auto& pimpl = m_pimpl;
       fc::future<string> future_connect =
-      m_pthread->async([&pimpl, &cancellation_token] () -> string
+      m_pthread->async([this, &cancellation_token] () -> string
                        {
                           std::string error;
                           while (! cancellation_token)
                           {
                              try
                              {
-                                pimpl.reset(new detail::WalletAPIHelper());
+                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file));
                                 break;
                              }
                              catch(wallet_exception const& ex)
@@ -324,8 +322,7 @@ namespace wallet_utility
       if (!Connected())
          throw wallet_exception("not yet connected");
 
-      fc::path wallet_file(decent_path_finder::instance().get_decent_home() / "wallet.json");
-      string str_file = wallet_file.to_native_ansi_path();
+      string str_file = m_wallet_file.to_native_ansi_path();
 
       std::lock_guard<std::mutex> lock(m_mutex);
 

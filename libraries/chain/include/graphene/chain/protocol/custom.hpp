@@ -29,24 +29,41 @@
 
 namespace graphene { namespace chain { 
 
-   struct message_payload_receivers_data {
+   struct message_payload_receivers_data
+   {
+      message_payload_receivers_data() = default;
+
+      /**
+       * @brief Construct encrypted message
+       * @param msg the message to encrypt
+       * @param priv the private key of sender
+       * @param pub the public key of receiver
+       * @param id the account id of receiver
+       * @param nonce the salt number to use for message encryption (will be generated if zero)
+       */
+      message_payload_receivers_data(const std::string &msg, const private_key_type& priv, const public_key_type& pub, account_id_type id, uint64_t nonce = 0);
+
+      /**
+       * @brief Decrypt message
+       * @param priv the private key of sender/receiver
+       * @param pub the public key of receiver/sender
+       * @return decrypted message
+       */
+      std::string get_message(const private_key_type& priv, const public_key_type& pub) const;
+
       account_id_type to;
       public_key_type pub_to;
       uint64_t nonce = 0;
       std::vector<char> data;
    };
+
    struct message_payload {
       account_id_type from;
       public_key_type pub_from;
 
       std::vector<message_payload_receivers_data> receivers_data;
-      
-      void set_message(const fc::ecc::private_key& priv, const public_key_type& pub,
-         const string& msg, message_payload_receivers_data& receivers_data);
-
-      static void get_message(const fc::ecc::private_key& priv,
-         const public_key_type& pub, const std::vector<char>& data, std::string& text, uint64_t nonce);
    };
+
    enum custom_operation_subtype : int;
    /**
     * @brief provides a generic way to add higher level protocols on top of miner consensus

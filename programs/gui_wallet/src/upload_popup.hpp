@@ -3,8 +3,9 @@
 
 #include "richdialog.hpp"
 
+#ifndef STDAFX_H
 class QDateEdit;
-class QStringList;
+#endif
 
 namespace gui_wallet
 {
@@ -67,5 +68,4 @@ namespace gui_wallet
 
       std::vector<std::pair<Publisher, bool>> m_arrPublishers;
    };
-   
 }

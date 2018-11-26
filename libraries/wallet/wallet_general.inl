@@ -11,18 +11,8 @@ optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
    if( !result )
       return optional<signed_block_with_info>();
 
-   share_type miner_pay_from_reward = 0;
-   share_type miner_pay_from_fees = 0;
-
-   //int64_t time_to_maint = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);//(dpo.next_maintenance_time - dpo.last_budget_time).to_seconds();
-   miner_reward_input mri = my->_remote_db->get_time_to_maint_by_block_time(result->timestamp);
-   int64_t time_to_maint = mri.time_to_maint;
-   uint32_t blocks_in_interval = (uint64_t(time_to_maint) + mri.block_interval - 1) / mri.block_interval;
-
-   if (blocks_in_interval > 0) {
-      miner_pay_from_fees = mri.from_accumulated_fees / blocks_in_interval;
-   }
-   miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
+   share_type miner_pay_from_fees = my->_remote_db->get_miner_pay_from_fees_by_block_time(result->timestamp);
+   share_type miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
 
    //this should never happen, but better check.
    if (miner_pay_from_fees < share_type(0))
@@ -118,9 +108,12 @@ string wallet_api::get_help(const string& method)const
    }
    else
    {
-      std::string doxygenHelpString = my->method_documentation.get_detailed_description(method);
+      std::string doxygenHelpString = my->method_documentation.get_brief_description(method).append(my->method_documentation.get_detailed_description(method));
       if (!doxygenHelpString.empty())
-         ss << doxygenHelpString;
+      {
+         auto i = doxygenHelpString.find_first_not_of(" \t\n");
+         ss << doxygenHelpString.substr(i == std::string::npos ? 0 : i);
+      }
       else
          ss << "No help defined for method " << method << "\n";
    }
@@ -152,8 +145,8 @@ std::string wallet_api::sign_buffer(const std::string& str_buffer,
        str_brainkey.empty())
       throw std::runtime_error("You need buffer and brainkey to sign");
 
-   string normalized_brain_key = detail::normalize_brain_key( str_brainkey );
-   fc::ecc::private_key privkey = derive_private_key( normalized_brain_key, 0 );
+   string normalized_brain_key = graphene::utilities::normalize_brain_key( str_brainkey );
+   fc::ecc::private_key privkey = graphene::utilities::derive_private_key( normalized_brain_key );
 
    fc::sha256 digest(str_buffer);
 
@@ -195,4 +188,9 @@ optional<signed_transaction> wallet_api::get_transaction_by_id( const transactio
 vector<operation_info> wallet_api::list_operations()
 {
    return my->list_operations();
+}
+
+void wallet_api::from_command_file( const std::string& command_file_name ) const
+{
+   return my->from_command_file( command_file_name );
 }

@@ -1,32 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
-#include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QMenuBar>
-#include <QMoveEvent>
-#include <QMessageBox>
-#include <QDateTime>
-#include <QProgressBar>
-#include <QGridLayout>
-#include <QStackedWidget>
-#include <QComboBox>
-#include <QStyleFactory>
-#include <QTimer>
-#include <QButtonGroup>
-#include <QFontDatabase>
-#else
-
+#ifndef STDAFX_H
+#include "../stdafx.h"
 #endif
-
 
 #include "mainwindow.hpp"
 #include "decent_label.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "richdialog.hpp"
 #include "browse_content_tab.hpp"
 #include "transactions_tab.hpp"
 #include "upload_tab.hpp"
@@ -35,37 +16,21 @@
 #include "mining_vote_tab.hpp"
 #include "mining_vote_popup.hpp"
 
-#include "json.hpp"
-
-#ifndef _MSC_VER
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <graphene/utilities/dirhelper.hpp>
-#include <graphene/wallet/wallet.hpp>
-
-#include <QCloseEvent>
-#include <QMessageBox>
-#include <QCheckBox>
-#include <QtGlobal>
-#endif
-
 #include "update_manager.hpp"
 
-using namespace nlohmann;
-using namespace gui_wallet;
-using namespace std;
-using namespace graphene;
-using namespace utilities;
+namespace gui_wallet
+{
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(const std::string &wallet_file)
 : QMainWindow()
+, m_wallet_file(wallet_file)
 , m_iSplashWidgetIndex(0)
 , m_pTimerBalance(new QTimer(this))
 , m_pOneShotUpdateTimer(new QTimer(this))
 , m_pStackedWidget(new QStackedWidget(this))
 , m_pAccountList(nullptr)
 , m_pBalance(nullptr)
+, m_pAssetSymbol(nullptr)
 , m_pPreviousPage(nullptr)
 , m_pResetPage(nullptr)
 , m_pNextPage(nullptr)
@@ -108,8 +73,12 @@ MainWindow::MainWindow()
    m_pAccountList->setStyle(QStyleFactory::create("fusion"));
    m_pAccountList->setMinimumContentsLength(40);
    m_pBalance = new DecentLabel(pMainWidget, DecentLabel::Balance);
+   m_pAssetSymbol = new DecentButton(pMainWidget, DecentButton::Asset);
+   QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
+   connect(pAssetMenu, &QMenu::triggered, this, &MainWindow::slot_updateAccountBalance);
+   m_pAssetSymbol->setMenu(pAssetMenu);
    DecentButton* pTransferButton = new DecentButton(pMainWidget, DecentButton::Send);
-   pTransferButton->setToolTip("Transfer DCT to account");
+   pTransferButton->setToolTip(tr("Transfer to account"));
 
    //
    // 2nd row controls
@@ -207,18 +176,19 @@ MainWindow::MainWindow()
    // 1st row layout
    //
    QHBoxLayout* pSpacerLayout = new QHBoxLayout;
-   pSpacerLayout->addWidget(m_pAccountList, Qt::AlignLeft);
+   pSpacerLayout->addWidget(m_pAccountList);
    pSpacerLayout->addStretch();
    pRow1Spacer->setLayout(pSpacerLayout);
    pSpacerLayout->setSpacing(0);
    pSpacerLayout->setContentsMargins(0, 0, 0, 0);
 
    QHBoxLayout* pRow1Layout = new QHBoxLayout;
-   pRow1Layout->addWidget(pDecentLogo, Qt::AlignLeft);
-   pRow1Layout->addWidget(pAccount, Qt::AlignLeft);
-   pRow1Layout->addWidget(pRow1Spacer, Qt::AlignLeft);
-   pRow1Layout->addWidget(m_pBalance, Qt::AlignRight);
-   pRow1Layout->addWidget(pTransferButton, Qt::AlignRight);
+   pRow1Layout->addWidget(pDecentLogo, 1);
+   pRow1Layout->addWidget(pAccount);
+   pRow1Layout->addWidget(pRow1Spacer);
+   pRow1Layout->addWidget(m_pBalance, 1);
+   pRow1Layout->addWidget(m_pAssetSymbol);
+   pRow1Layout->addWidget(pTransferButton);
    //
    // 2nd row layout
    //
@@ -373,8 +343,8 @@ MainWindow::MainWindow()
    QObject::connect(&Globals::instance(), &Globals::signal_showTransactionsTab,
                     this, &MainWindow::slot_showTransactionsTab);
 
-   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountBalance,
-                    this, &MainWindow::slot_updateAccountBalance);
+   QObject::connect(&Globals::instance(), &Globals::signal_updateAccountAssets,
+                    this, &MainWindow::slot_updateAccountAssets);
    
    QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &MainWindow::DisplayWalletContentGUI);
@@ -406,6 +376,15 @@ MainWindow::~MainWindow()
 #endif
 }
 
+void MainWindow::slot_daemonFinished(int ret)
+{
+   if(ret != 0)
+      QMessageBox::critical(this, tr("DECENT Daemon"),
+                         tr("The background processing thread finished unexpectedly. Application will terminate.\nError code: %1").arg(ret),
+                         QMessageBox::Close);
+   close();
+}
+
 void MainWindow::slot_setSplash()
 {
    Q_ASSERT(0 == m_iSplashWidgetIndex);
@@ -421,7 +400,6 @@ void MainWindow::slot_setSplash()
    pPleaseWaitLabel->setText(tr("Please wait..."));
 
    m_pConnectingLabel = new DecentLabel(pSplashScreen, DecentLabel::SplashInfo);
-   m_pConnectingLabel->setText(tr("Connecting..."));
    m_pConnectingLabel->setFont(gui_wallet::ProgressInfoFont());
 
    StatusLabel* pSyncUpLabel = new StatusLabel(pSplashScreen, DecentLabel::SplashInfo);
@@ -445,8 +423,10 @@ void MainWindow::slot_setSplash()
    
    pSplashScreen->setLayout(pLayoutSplash);
    
-   QObject::connect(&Globals::instance(), &Globals::statusShowMessage,
-                    this, &MainWindow::slot_ConnectingUpdate);
+   QObject::connect(&Globals::instance(), &Globals::progressSyncMessage,
+                    this, &MainWindow::slot_SyncProgressUpdate);
+   QObject::connect(&Globals::instance(), &Globals::progressCommonTextMessage,
+      this, &MainWindow::slot_CommonTextProgressUpdate);
    QObject::connect(&Globals::instance(), &Globals::statusClearMessage,
                     pSyncUpLabel, &StatusLabel::clearMessage);
    QObject::connect(&Globals::instance(), &Globals::updateProgress,
@@ -475,7 +455,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
    StackLayerWidget* pLayer = nullptr;
 
    emit signal_setSplashMainText(QString());
-   Globals::instance().statusShowMessage(QString());
+   Globals::instance().progressSyncMessage(QString());
 
    if (!bGonnaCoverAgain)
    {
@@ -556,10 +536,16 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
    }
 }
 
-void MainWindow::slot_ConnectingUpdate(const QString& time_text, int)
+void MainWindow::slot_SyncProgressUpdate(const QString& time_text, int)
 {
    Q_ASSERT(m_pConnectingLabel);
    m_pConnectingLabel->setText(QString(tr("currently synchronized block is %1 old.")).arg(time_text));
+}
+
+void MainWindow::slot_CommonTextProgressUpdate(const QString& text)
+{
+   Q_ASSERT(m_pConnectingLabel);
+   m_pConnectingLabel->setText(text);
 }
 
 void MainWindow::slot_BlockchainUpdate(int value, int max)
@@ -618,27 +604,54 @@ void MainWindow::slot_stackWidgetPop()
    }
 }
 
-void MainWindow::slot_updateAccountBalance(Asset const& balance)
+void MainWindow::slot_updateAccountAssets(const QList<Asset>& assets)
 {
-   QString blalanceText = balance.getStringBalance();
+   QMenu *pAssetMenu = m_pAssetSymbol->menu();
+   pAssetMenu->clear();
 
+   std::string symbolText = m_pAssetSymbol->text().toStdString();
+   for (const Asset &a : assets)
+   {
+      pAssetMenu->addAction(QString::fromStdString(a.m_str_symbol))->setData(a.getBalance());
+      if (a.m_str_symbol == symbolText)
+      {
+         updateBalance(a.getBalance());
+         m_pAssetSymbol->setText(QString::fromStdString(a.m_str_symbol));
+      }
+   }
+
+   if (symbolText.empty() && !assets.empty())
+   {
+      updateBalance(assets.front().getBalance());
+      m_pAssetSymbol->setText(QString::fromStdString(assets.front().m_str_symbol));
+   }
+}
+
+void MainWindow::slot_updateAccountBalance(QAction *pAsset)
+{
+   m_pAssetSymbol->setText(pAsset->text());
+   updateBalance(pAsset->data().toString());
+}
+
+void MainWindow::updateBalance(const QString& balance)
+{
    QFontMetrics fm(m_pBalance->font());
-   int pxWidth = fm.width(blalanceText);
+   int pxWidth = fm.width(balance);
 
    m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
-   m_pBalance->setText(blalanceText);
+   m_pBalance->setText(balance);
 }
 
 void MainWindow::slot_replayBlockChain()
 {
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Replay);
+   Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file);
 }
 
 void MainWindow::slot_resyncBlockChain()
 {
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Resync);
+   Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file);
 }
 
 void MainWindow::slot_importKey()
@@ -883,7 +896,7 @@ void MainWindow::slot_checkDownloads()
       return;
    }
 
-   json contents;
+   nlohmann::json contents;
 
    try
    {
@@ -1059,7 +1072,6 @@ void MainWindow::DisplayWalletContentGUI()
       //ALERT_DETAILS("Failed to get account information", ex.what());
       QMessageBox::critical(this, "Error", QString(tr("Failed to get account information - %1")).arg(QString::fromStdString(exception_text)));
    }
-
 }
 
-
+}

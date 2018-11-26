@@ -424,6 +424,7 @@ using namespace decent::encrypt;
    struct content_keys {
        fc::sha256                 key;
        vector<ciphertext_type>    parts;
+       uint32_t                   quorum = 2;
    };
 
    class content_object : public graphene::db::abstract_object<content_object>
@@ -618,4 +619,4 @@ FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(stat
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
 FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )
 
-FC_REFLECT( graphene::chain::content_keys, (key)(parts) )
+FC_REFLECT( graphene::chain::content_keys, (key)(parts)(quorum) )

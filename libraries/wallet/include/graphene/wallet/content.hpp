@@ -79,9 +79,10 @@ signed_transaction submit_content(const string& author,
  * @param seeders list of the seeders, which will publish the content
  * @param expiration the expiration time of the content. The content is available to buy till it's expiration time
  * @param synopsis the description of the content
+ * @return generated key, key parts and quorum
  * @ingroup WalletAPI_Content
  */
-void submit_content_async( const string& author,
+content_keys submit_content_async( const string& author,
                            const vector< pair< string, uint32_t>>& co_authors,
                            const string& content_dir,
                            const string& samples_dir,

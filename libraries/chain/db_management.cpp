@@ -49,56 +49,66 @@ database::~database()
 
 void database::reindex(fc::path data_dir, const genesis_state_type& initial_allocation)
 { try {
-   ilog( "reindexing blockchain" );
-   wipe(data_dir, false);
-   open(data_dir, [&initial_allocation]{return initial_allocation;});
+   try {
+      ilog("reindexing blockchain");
+      _reindexing_percent = 0;
+      wipe(data_dir, false);
+      open(data_dir, [&initial_allocation] {return initial_allocation; });
 
-   auto start = fc::time_point::now();
-   auto last_block = _block_id_to_block.last();
-   if( !last_block ) {
-      elog( "!no last block" );
-      edump((last_block));
-      return;
-   }
-
-   const auto last_block_num = last_block->block_num();
-
-   ilog( "Replaying blocks..." );
-   _undo_db.disable();
-   for( uint32_t i = 1; i <= last_block_num; ++i )
-   {
-      if( i % 2000 == 0 ) std::cerr << "   " << double(i*100)/last_block_num << "%   "<<i << " of " <<last_block_num<<"   \n";
-      fc::optional< signed_block > block = _block_id_to_block.fetch_by_number(i);
-      if( !block.valid() )
-      {
-         wlog( "Reindexing terminated due to gap:  Block ${i} does not exist!", ("i", i) );
-         uint32_t dropped_count = 0;
-         while( true )
-         {
-            fc::optional< block_id_type > last_id = _block_id_to_block.last_id();
-            // this can trigger if we attempt to e.g. read a file that has block #2 but no block #1
-            if( !last_id.valid() )
-               break;
-            // we've caught up to the gap
-            if( block_header::num_from_id( *last_id ) <= i )
-               break;
-            _block_id_to_block.remove( *last_id );
-            dropped_count++;
-         }
-         wlog( "Dropped ${n} blocks from after the gap", ("n", dropped_count) );
-         break;
+      auto start = fc::time_point::now();
+      auto last_block = _block_id_to_block.last();
+      if (!last_block) {
+         elog("!no last block");
+         edump((last_block));
+         _reindexing_percent = 100;
+         return;
       }
-      apply_block(*block, skip_miner_signature |
-                          skip_transaction_signatures |
-                          skip_transaction_dupe_check |
-                          skip_tapos_check |
-                          skip_miner_schedule_check |
-                          skip_authority_check);
 
+      const auto last_block_num = last_block->block_num();
+
+      ilog("Replaying blocks...");
+      _undo_db.disable();
+      for (uint32_t i = 1; i <= last_block_num; ++i)
+      {
+         _reindexing_percent = double(i * 100) / last_block_num;
+         if (i % 2000 == 0) std::cerr << "   " << _reindexing_percent << "%   " << i << " of " << last_block_num << "   \n";
+         fc::optional< signed_block > block = _block_id_to_block.fetch_by_number(i);
+         if (!block.valid())
+         {
+            wlog("Reindexing terminated due to gap:  Block ${i} does not exist!", ("i", i));
+            uint32_t dropped_count = 0;
+            while (true)
+            {
+               fc::optional< block_id_type > last_id = _block_id_to_block.last_id();
+               // this can trigger if we attempt to e.g. read a file that has block #2 but no block #1
+               if (!last_id.valid())
+                  break;
+               // we've caught up to the gap
+               if (block_header::num_from_id(*last_id) <= i)
+                  break;
+               _block_id_to_block.remove(*last_id);
+               dropped_count++;
+            }
+            wlog("Dropped ${n} blocks from after the gap", ("n", dropped_count));
+            break;
+         }
+         apply_block(*block, skip_miner_signature |
+            skip_transaction_signatures |
+            skip_transaction_dupe_check |
+            skip_tapos_check |
+            skip_miner_schedule_check |
+            skip_authority_check);
+
+      }
+      _undo_db.enable();
+      auto end = fc::time_point::now();
+      ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
+      _reindexing_percent = 100;
    }
-   _undo_db.enable();
-   auto end = fc::time_point::now();
-   ilog( "Done reindexing, elapsed time: ${t} sec", ("t",double((end-start).count())/1000000.0 ) );
+   catch (...) {
+      _reindexing_percent = -1;
+      throw;
+   }
 } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
 
 void database::wipe(const fc::path& data_dir, bool include_blocks)

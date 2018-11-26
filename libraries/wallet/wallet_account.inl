@@ -1,7 +1,7 @@
 
 fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
 {
-   return detail::derive_private_key( prefix_string, sequence_number );
+   return graphene::utilities::derive_private_key( prefix_string, sequence_number );
 }
 
 uint64_t wallet_api::get_account_count() const
@@ -152,20 +152,14 @@ vector<transaction_detail_object> wallet_api::search_account_history(string cons
          {
             item.m_str_description += " - ";
             auto it = my->_keys.find(memo->to);
-            if (it == my->_keys.end())
+            auto it2 = it == my->_keys.end() ? my->_keys.find(memo->from) : it;
+
+            if (it2 == my->_keys.end())
                // memo is encrypted for someone else
                item.m_str_description += "{encrypted}";
             else
-            {
-               // here the memo is encrypted for me
-               // so I can decrypt it
-               string mykey = it->second;
-               auto wtok = *wif_to_key(mykey);
-               string str_memo =
-                  memo->get_message(wtok, memo->from);
-
-               item.m_str_description += str_memo;
-            }
+               // here the memo is encrypted for/by me so I can decrypt it
+               item.m_str_description += memo->get_message(*wif_to_key(it2->second), it == it2 ? memo->from : memo->to);
          }
       }
    }
@@ -182,33 +176,13 @@ account_object wallet_api::get_account(const string& account_name_or_id) const
 brain_key_info wallet_api::suggest_brain_key() const
 {
    brain_key_info result;
-   // create a private key for secure entropy
-   fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-   fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-   fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
-   fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
-   fc::bigint entropy(entropy1);
-   entropy <<= 8*sha_entropy1.data_size();
-   entropy += entropy2;
-   string brain_key;
+   result.brain_priv_key = graphene::utilities::generate_brain_key();
 
-   for( int i=0; i<BRAIN_KEY_WORD_COUNT; i++ )
-   {
-      fc::bigint choice = entropy % graphene::words::word_list_size;
-      entropy /= graphene::words::word_list_size;
-      if( i > 0 )
-         brain_key += " ";
-      brain_key += graphene::words::word_list[ choice.to_int64() ];
-   }
-
-   brain_key = detail::normalize_brain_key(brain_key);
-   fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
-   result.brain_priv_key = brain_key;
+   fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(result.brain_priv_key);
    result.wif_priv_key = key_to_wif( priv_key );
    result.pub_key = priv_key.get_public_key();
    return result;
 }
-
 
 signed_transaction wallet_api::register_account(const string& name,
                                                 public_key_type owner_pubkey,
@@ -268,10 +242,9 @@ pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_
 brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
 {
    brain_key_info result;
+   result.brain_priv_key = graphene::utilities::normalize_brain_key( brain_key );
 
-   string str_brain_key = detail::normalize_brain_key(brain_key);
-   fc::ecc::private_key priv_key = derive_private_key( str_brain_key, 0 );
-   result.brain_priv_key = str_brain_key;
+   fc::ecc::private_key priv_key = graphene::utilities::derive_private_key( result.brain_priv_key );
    result.wif_priv_key = key_to_wif( priv_key );
    result.pub_key = priv_key.get_public_key();
    return result;
@@ -295,4 +268,3 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string&
    auto trx = transfer( from, to, amount, asset_symbol, memo, true );
    return std::make_pair(trx.id(),trx);
 }
-

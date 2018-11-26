@@ -1,7 +1,9 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
+#ifndef STDAFX_H
 #include <QLineEdit>
+#endif
 
 namespace gui_wallet
 {
@@ -19,7 +21,8 @@ namespace gui_wallet
       enum eName
       {
          None,
-         DlgImport
+         DlgImport,
+         Amount
       };
       
       DecentLineEdit(QWidget* pParent, eType enType = Default, eName = None);

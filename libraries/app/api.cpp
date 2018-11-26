@@ -1,5 +1,4 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-/* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
@@ -23,31 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <cctype>
+
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
 
 #include <graphene/app/api.hpp>
-#include <graphene/app/api_access.hpp>
 #include <graphene/app/application.hpp>
-#include <graphene/app/impacted.hpp>
-#include <graphene/chain/database.hpp>
-#include <graphene/chain/get_config.hpp>
-#include <graphene/utilities/key_conversion.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/transaction_object.hpp>
-#include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/seeding/seeding_utility.hpp>
 #include <graphene/app/balance.hpp>
-
-#include <fc/crypto/hex.hpp>
-#include <fc/smart_ref_impl.hpp>
-
-#include <boost/spirit/home/support/container.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
+#include <graphene/app/impacted.hpp>
+#include <graphene/app/seeding_utility.hpp>
 
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
 }}
-
+using namespace monitoring;
 namespace graphene { namespace app {
 
     login_api::login_api(application& a)
@@ -101,19 +90,16 @@ namespace graphene { namespace app {
        }
        else if( api_name == "crypto_api" )
        {
-          _crypto_api = std::make_shared< crypto_api >();
+          _crypto_api = std::make_shared< crypto_api >( std::ref(_app) );
        }
        else if (api_name == "messaging_api")
        {
           _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
        }
-       else if( api_name == "debug_api" )
+       else if (api_name == "monitoring_api")
        {
-          // can only enable this API if the plugin was loaded
-          if( _app.get_plugin( "debug_miner" ) )
-             _debug_api = std::make_shared< graphene::debug_miner::debug_api >( std::ref(_app) );
+          _monitoring_api = std::make_shared< monitoring_api >();
        }
-       return;
     }
 
     network_broadcast_api::network_broadcast_api(application& a):_app(a)
@@ -139,7 +125,7 @@ namespace graphene { namespace app {
                 transaction_confirmation conf{ id, block_num, trx_num, trx};
                 fc::variant confv(conf);
                 
-                fc::async( [capture_this,this,confv, callback](){ callback( confv ); } );
+                fc::async( [capture_this,confv, callback](){ callback( confv ); } );
              }
           }
        }
@@ -265,16 +251,16 @@ namespace graphene { namespace app {
        return *_crypto_api;
     }
 
-    fc::api<graphene::debug_miner::debug_api> login_api::debug() const
-    {
-       FC_ASSERT(_debug_api);
-       return *_debug_api;
-    }
-
     fc::api<graphene::app::messaging_api> login_api::messaging() const
     {
        FC_ASSERT(_messaging_api);
        return *_messaging_api;
+    }
+    
+    fc::api<monitoring_api> login_api::monitoring() const
+    {
+       FC_ASSERT(_monitoring_api);
+       return *_monitoring_api;
     }
 
     vector<operation_history_object> history_api::get_account_history( account_id_type account,
@@ -289,18 +275,24 @@ namespace graphene { namespace app {
        const auto& stats = account(db).statistics(db);
        if( stats.most_recent_op == account_transaction_history_id_type() ) return result;
        const account_transaction_history_object* node = &stats.most_recent_op(db);
-       if( start == operation_history_id_type() )
+       if( start == operation_history_id_type() || start.instance.value > node->operation_id.instance.value )
           start = node->operation_id;
-          
-       while(node && node->operation_id.instance.value > stop.instance.value && result.size() < limit)
+
+       const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+       const auto& by_op_idx = hist_idx.indices().get<by_op>();
+       auto index_start = by_op_idx.begin();
+       auto itr = by_op_idx.lower_bound(boost::make_tuple(account, start));
+
+       while( itr != index_start && itr->account == account && itr->operation_id.instance.value > stop.instance.value && result.size() < limit )
        {
-          if( node->operation_id.instance.value <= start.instance.value )
-             result.push_back( node->operation_id(db) );
-          if( node->next == account_transaction_history_id_type() )
-             node = nullptr;
-          else node = &node->next(db);
+          if( itr->operation_id.instance.value <= start.instance.value )
+             result.push_back(itr->operation_id(db));
+          --itr;
        }
-       
+
+       if( stop.instance.value == 0 && result.size() < limit && itr->account == account )
+          result.push_back(itr->operation_id(db));
+
        return result;
     }
     
@@ -316,19 +308,22 @@ namespace graphene { namespace app {
        if( start == 0 )
          start = account(db).statistics(db).total_ops;
        else start = min( account(db).statistics(db).total_ops, start );
-       const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
-       const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
-       
-       auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
-       auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
-       --itr;
-       
-       while ( itr != itr_stop && result.size() < limit )
+
+       if( start >= stop )
        {
-          result.push_back( itr->operation_id(db) );
-          --itr;
+          const auto& hist_idx = db.get_index_type<account_transaction_history_index>();
+          const auto& by_seq_idx = hist_idx.indices().get<by_seq>();
+          auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
+          auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
+
+          do
+          {
+             --itr;
+             result.push_back( itr->operation_id(db) );
+          }
+          while( itr != itr_stop && result.size() < limit );
        }
-       
+
        return result;
     }
 
@@ -423,76 +418,31 @@ namespace graphene { namespace app {
         return result;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    crypto_api::crypto_api(){};
-    
-    blind_signature crypto_api::blind_sign( const extended_private_key_type& key, const blinded_hash& hash, int i )
+    crypto_api::crypto_api(application& a) : _app(a)
     {
-       return fc::ecc::extended_private_key( key ).blind_sign( hash, i );
     }
-         
-    signature_type crypto_api::unblind_signature( const extended_private_key_type& key,
-                                                     const extended_public_key_type& bob,
-                                                     const blind_signature& sig,
-                                                     const fc::sha256& hash,
-                                                     int i )
+
+    private_key_type crypto_api::wif_to_private_key(const string &wif)
     {
-       return fc::ecc::extended_private_key( key ).unblind_signature( extended_public_key( bob ), sig, hash, i );
+        fc::optional<private_key_type> key = graphene::utilities::wif_to_key(wif);
+        FC_ASSERT(key.valid(), "Malformed private key");
+        return *key;
     }
-                                                               
-    commitment_type crypto_api::blind( const blind_factor_type& blind, uint64_t value )
+
+    signed_transaction crypto_api::sign_transaction(signed_transaction trx, const private_key_type &key)
     {
-       return fc::ecc::blind( blind, value );
+        trx.sign(key, _app.chain_database()->get_chain_id());
+        return trx;
     }
-   
-    blind_factor_type crypto_api::blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg )
+
+    memo_data crypto_api::encrypt_message(const std::string &message, const private_key_type &key, const public_key_type &pub, uint64_t nonce) const
     {
-       return fc::ecc::blind_sum( blinds_in, non_neg );
+        return memo_data(message, key, pub, nonce);
     }
-   
-    bool crypto_api::verify_sum( const std::vector<commitment_type>& commits_in, const std::vector<commitment_type>& neg_commits_in, int64_t excess )
+
+    std::string crypto_api::decrypt_message(const memo_data::message_type &message, const private_key_type &key, const public_key_type &pub, uint64_t nonce) const
     {
-       return fc::ecc::verify_sum( commits_in, neg_commits_in, excess );
-    }
-    
-    verify_range_result crypto_api::verify_range( const commitment_type& commit, const std::vector<char>& proof )
-    {
-       verify_range_result result;
-       result.success = fc::ecc::verify_range( result.min_val, result.max_val, commit, proof );
-       return result;
-    }
-    
-    std::vector<char> crypto_api::range_proof_sign( uint64_t min_value, 
-                                                    const commitment_type& commit, 
-                                                    const blind_factor_type& commit_blind, 
-                                                    const blind_factor_type& nonce,
-                                                    int8_t base10_exp,
-                                                    uint8_t min_bits,
-                                                    uint64_t actual_value )
-    {
-       return fc::ecc::range_proof_sign( min_value, commit, commit_blind, nonce, base10_exp, min_bits, actual_value );
-    }
-                               
-    verify_range_proof_rewind_result crypto_api::verify_range_proof_rewind( const blind_factor_type& nonce,
-                                                                            const commitment_type& commit, 
-                                                                            const std::vector<char>& proof )
-    {
-       verify_range_proof_rewind_result result;
-       result.success = fc::ecc::verify_range_proof_rewind( result.blind_out, 
-                                                            result.value_out, 
-                                                            result.message_out, 
-                                                            nonce, 
-                                                            result.min_val, 
-                                                            result.max_val, 
-                                                            const_cast< commitment_type& >( commit ), 
-                                                            proof );
-       return result;
-    }
-                                    
-    range_proof_info crypto_api::range_get_info( const std::vector<char>& proof )
-    {
-       return fc::ecc::range_get_info( proof );
+       return memo_data::decrypt_message(message, key, pub, nonce);
     }
 
     messaging_api::messaging_api(application& a) : _app(a)
@@ -567,6 +517,27 @@ namespace graphene { namespace app {
           }
        }
        
+       return result;
+    }
+
+    monitoring_api::monitoring_api()
+    {
+    }
+
+    std::string monitoring_api::info() const
+    {
+       return "monitoring_api";
+    }
+
+    void monitoring_api::reset_counters(const std::vector<std::string>& names)
+    {
+       monitoring_counters_base::reset_counters(names);
+    }
+
+    std::vector<counter_item> monitoring_api::get_counters(const std::vector<std::string>& names) const
+    {
+       std::vector<counter_item> result;
+       monitoring_counters_base::get_counters(names, result);
        return result;
     }
 } } // graphene::app

@@ -1,11 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
+#ifndef STDAFX_H
 #include <QWidget>
-#include <string>
-#include <vector>
 
 class QTimer;
+#endif
 
 namespace gui_wallet {
 
@@ -44,6 +44,4 @@ private:
    QTimer* m_pRefreshTimer;
 };
 
-   
 }
-

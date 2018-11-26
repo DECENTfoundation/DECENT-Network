@@ -1,49 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
+
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
 
 #include "gui_wallet_global.hpp"
 #include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QMessageBox>
-#include <QThread>
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#include <QTimer>
-#include <QHeaderView>
-#include <QObject>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLocale>
-#include <QApplication>
-#include <QFont>
-
-// used for running daemons
-//
-#include <graphene/miner/miner.hpp>
-#include <graphene/seeding/seeding.hpp>
-#include <graphene/account_history/account_history_plugin.hpp>
-#include <graphene/utilities/dirhelper.hpp>
-#include <graphene/messaging/messaging.hpp>
-
-#include <fc/exception/exception.hpp>
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-#include <fc/filesystem.hpp>
-#include <fc/interprocess/signals.hpp>
-#include <fc/thread/thread.hpp>
-
-#include <decent/config/decent_log_config.hpp>
-
-#include <QProcess>
-#include <QDir>
-//
-// //
-#endif
-
 
 //#define DECENT_WITHOUT_DAEMON
 
@@ -51,8 +13,6 @@
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir);
-
-using  std::string;
 
 namespace gui_wallet
 {
@@ -82,7 +42,7 @@ uint64_t json_to_int64(nlohmann::json const& o)
    if (o.is_number())
       return o.get<uint64_t>();
    else
-      return std::stoll(o.get<string>());
+      return std::stoll(o.get<std::string>());
 }
 
 struct CalendarDuration
@@ -498,8 +458,8 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator() : QObject()
-, m_wallet_api()
+WalletOperator::WalletOperator(const fc::path &wallet_file) : QObject()
+, m_wallet_api(wallet_file)
 , m_cancellation_token(false)
 {
 }
@@ -557,11 +517,14 @@ QString Asset::getString() const
    }
 }
 
-QString Asset::getStringBalance() const
+QString Asset::getBalance() const
 {
    QLocale& locale = Globals::instance().locale();
-   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places) + " " + QString::fromStdString(m_str_symbol);
+   return locale.toString(to_value(), 'g' , g_max_number_of_decimal_places);
 }
+
+const std::string Asset::dct_id("1.3.0");
+
 //
 // DaemonDetails
 //
@@ -590,7 +553,7 @@ public:
 // Globals
 //
 Globals::Globals() : QObject()
-, m_connected_state(ConnectionState::Connecting)
+, m_connected_state(ConnectionState::NoState)
 , m_p_wallet_operator(nullptr)
 , m_p_wallet_operator_thread(nullptr)
 , m_p_timer(new QTimer(this))
@@ -617,7 +580,22 @@ Globals& Globals::instance()
    return theOne;
 }
 
-void Globals::startDaemons(BlockChainStartType type)
+void Globals::setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options)
+{
+   bpo::options_description cli, cfg;
+   graphene::app::application::set_program_options(cli, cfg);
+   gui_wallet::Globals::Plugins::set_program_options(cli, cfg);
+   cli.add_options()
+      ("generate-keys,g", "Generate brain, wif private and public keys.")
+      ("wallet-file,w", bpo::value<std::string>()->default_value(
+          (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
+   ;
+
+   app_options.add(cli);
+   cfg_options.add(cfg);
+}
+
+void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_file)
 {
    if (m_p_daemon_details)
       return;
@@ -633,7 +611,7 @@ void Globals::startDaemons(BlockChainStartType type)
 
 
       bNeedNewConnection = true;
-      m_p_wallet_operator = new WalletOperator();
+      m_p_wallet_operator = new WalletOperator(wallet_file);
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
       QObject::connect(this, &Globals::signal_connect,
                        m_p_wallet_operator, &WalletOperator::slot_connect);
@@ -679,9 +657,12 @@ void Globals::startDaemons(BlockChainStartType type)
                                                             {
                                                                return ::runDecentD(type, exit_promise);
                                                             });
+   m_p_daemon_details->future_decentd.on_complete([this](int ret, const fc::exception_ptr& e) { emit signal_daemonFinished(e ? -1 : ret); });
 #endif
 
    m_tp_started = std::chrono::steady_clock::now();
+
+   emit walletConnectionStatusChanged(Globals::ConnectionState::NoState, Globals::ConnectionState::NoState);
 
    if (bNeedNewConnection)
       emit signal_connect();
@@ -776,17 +757,13 @@ void Globals::clear()
    }
 }
 
-Asset Globals::asset(uint64_t amount, const string& symbol_id/* = string()*/)
+Asset Globals::asset(uint64_t amount, const std::string& assetId)
 {
-   string str_symbol_id = symbol_id;
-   if (str_symbol_id.empty())
-      str_symbol_id = "1.3.0";
-
    Asset ast_amount;
    uint8_t precision = 0;
 
    graphene::chain::asset_id_type asset_id;
-   fc::from_variant( str_symbol_id, asset_id );
+   fc::from_variant(assetId, asset_id);
 
    getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision, asset_id);
    ast_amount.m_scale = pow(10, precision);
@@ -795,14 +772,14 @@ Asset Globals::asset(uint64_t amount, const string& symbol_id/* = string()*/)
    return ast_amount;
 }
 
-string Globals::runTask(string const& str_command)
+std::string Globals::runTask(std::string const& str_command)
 {
    return getWallet().RunTask(str_command);
 }
 
-nlohmann::json Globals::runTaskParse(string const& str_command)
+nlohmann::json Globals::runTaskParse(std::string const& str_command)
 {
-   string str_result = runTask(str_command);
+   std::string str_result = runTask(str_command);
    return nlohmann::json::parse(str_result);
 }
 
@@ -819,7 +796,7 @@ std::vector<Publisher> Globals::getPublishers()
 
       publisher.m_str_name = publishers[iIndex]["seeder"].get<std::string>();
       uint64_t iPrice = json_to_int64(publishers[iIndex]["price"]["amount"]);
-      string iSymbolId = publishers[iIndex]["price"]["asset_id"];
+      std::string iSymbolId = publishers[iIndex]["price"]["asset_id"];
       publisher.m_price = asset(iPrice, iSymbolId);
       publisher.m_storage_size = publishers[iIndex]["free_space"].get<int>();
    }
@@ -832,13 +809,13 @@ bool Globals::connected() const
    return m_connected_state != ConnectionState::Connecting;
 }
 
-QString Globals::getAssetName() const
+QString Globals::getAssetName(const std::string& assetId) const
 {
    uint8_t precision = 0;
    std::string assetName;
 
    graphene::chain::asset_id_type asset_id;
-   fc::from_variant("1.3.0", asset_id );
+   fc::from_variant(assetId, asset_id );
    getWallet().LoadAssetInfo(assetName, precision, asset_id);
 
    return QString::fromStdString(assetName);
@@ -854,7 +831,7 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
-std::string Globals::getAccountName(string const& accountId)
+std::string Globals::getAccountName(std::string const& accountId)
 {
    auto search = m_map_user_id_cache.find(accountId);
    if (search == m_map_user_id_cache.end())
@@ -895,21 +872,30 @@ void Globals::slot_updateAccountBalance()
    {
       nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
 
-      if (allBalances.empty())
-         emit signal_updateAccountBalance(asset(0));
-      else
+      QList<Asset> assets;
+      if (!allBalances.empty())
       {
-         Asset ast_balance = asset(0);
-         for ( auto balance : allBalances ) {
-            if(balance["asset_id"].get<string>() == "1.3.0") {
-               if( balance[ "amount" ].is_number())
-                  ast_balance.m_amount = balance[ "amount" ].get<uint64_t>();
-               else
-                  ast_balance.m_amount = std::stoll(balance[ "amount" ].get<string>());
-            }
+         for ( const auto &balance : allBalances )
+         {
+            const std::string& assetId = balance["asset_id"].get<std::string>();
+            uint64_t amount =  balance[ "amount" ].is_number() ?
+               balance[ "amount" ].get<uint64_t>() :
+               static_cast<uint64_t>(std::stoll(balance[ "amount" ].get<std::string>()));
+
+            Asset a = asset(amount, assetId);
+            if (assetId == Asset::dct_id)
+               assets.prepend(a);
+            else
+               assets.append(a);
          }
-         emit signal_updateAccountBalance(ast_balance);
       }
+
+      if (assets.empty())
+      {
+         assets << asset(0);
+      }
+
+      emit signal_updateAccountAssets(assets);
    }
 }
 
@@ -971,20 +957,37 @@ std::string Globals::TransferFunds(const std::string& from, const std::string to
 
 void Globals::slot_showTransferDialog(const QString& user)
 {
-   if(getCurrentUser().empty())
+   if(m_str_currentUser.empty())
       return;
 
-   TransferWidget* pTransferDialog = new TransferWidget(nullptr, user);
+   nlohmann::json allBalances = runTaskParse("list_account_balances " + m_str_currentUser);
+
+   QList<QPair<QString, QString>> assets;
+   if (!allBalances.empty())
+   {
+      for ( const auto &balance : allBalances )
+      {
+         const std::string& assetId = balance["asset_id"].get<std::string>();
+         auto a = qMakePair(getAssetName(assetId), QString::fromStdString(assetId));
+         if (assetId == Asset::dct_id)
+            assets.prepend(a);
+         else
+            assets.append(a);
+      }
+   }
+
+   if (assets.empty())
+   {
+      assets << qMakePair(QString::fromStdString(asset(0).m_str_symbol), QString::fromStdString(Asset::dct_id));
+   }
+
+   TransferWidget* pTransferDialog = new TransferWidget(nullptr, assets, user);
    signal_stackWidgetPush(pTransferDialog);
 }
 
 void Globals::slot_showTransferDialog()
 {
-   if(getCurrentUser().empty())
-      return;
-
-   TransferWidget* pTransferDialog = new TransferWidget(nullptr);
-   signal_stackWidgetPush(pTransferDialog);
+   slot_showTransferDialog(QString());
 }
 
 void Globals::slot_connected(std::string const& str_error)
@@ -1001,7 +1004,7 @@ void Globals::slot_connected(std::string const& str_error)
 
 void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState to)
 {
-   if (ConnectionState::Connecting == from) {
+   if (ConnectionState::NoState == from) {
 
       m_p_timer->start(1000);
       QObject::connect(m_p_timer, &QTimer::timeout, this, &Globals::slot_timer);
@@ -1009,27 +1012,58 @@ void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState 
    else if (ConnectionState::SyncingUp == from && ConnectionState::Up == to) {
       m_p_timer->stop();
    }
-
-
-
 }
+
+static graphene::app::application* s_node = nullptr;
 
 void Globals::slot_timer()
 {
-   auto duration = std::chrono::steady_clock::now() - m_tp_started;
-
    auto backup_state = m_connected_state;
 
+   if (m_exceptionMsgBoxParam1.size()) {
+      QMessageBox* msgBox = new QMessageBox();
+      msgBox->setWindowTitle(m_exceptionMsgBoxParam1.c_str());
+      msgBox->setText(QString::fromStdString(m_exceptionMsgBoxParam3.c_str()));
+      msgBox->exec();
+
+      m_p_timer->stop();
+      exit(1);
+      return;
+   }
+
+   double reindexing_percent = 0;
+   if (s_node && m_connected_state == ConnectionState::NoState) {
+      reindexing_percent = s_node->chain_database()->get_reindexing_percent();
+      if (reindexing_percent >= 0 && reindexing_percent < 100) {
+         m_connected_state = ConnectionState::Reindexing;
+         emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Reindexing);
+      }
+      else
+      if (reindexing_percent == 100) {
+         m_connected_state = ConnectionState::Connecting;
+         emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Connecting);
+      }
+   } else
+   if (s_node && ConnectionState::Reindexing == m_connected_state)
+   {
+      double reindexing_percent = s_node->chain_database()->get_reindexing_percent();
+      if (reindexing_percent != -1) {
+         if (reindexing_percent == 100) {
+            m_connected_state = ConnectionState::Connecting;
+            emit walletConnectionStatusChanged(ConnectionState::Reindexing, ConnectionState::Connecting);
+         }
+         else {
+            QString showMsg = QString::number((int)reindexing_percent);
+            emit progressCommonTextMessage("reindexing database...");
+            emit updateProgress((int)reindexing_percent, 100);
+         }
+      }
+   } else
    if (ConnectionState::Connecting == m_connected_state)
    {
-      if (duration > std::chrono::seconds(40))
-         emit connectingProgress(tr("still connecting"));
-      else if (duration > std::chrono::seconds(20))
-         emit connectingProgress(tr("verifying the local database"));
-      else
-         emit connectingProgress(tr("connecting"));
+      emit progressCommonTextMessage("connecting...");
    }
-   else
+   else 
    {
       auto currBlockTime = Globals::instance().getWallet().HeadBlockTime();
       uint64_t value = std::chrono::duration_cast<std::chrono::seconds>(currBlockTime - m_blockStart).count();
@@ -1046,7 +1080,7 @@ void Globals::slot_timer()
 
       QString str_result = CalculateRemainingTime_Behind(qdt, QDateTime::currentDateTime());
       if (!str_result.isEmpty()) {
-         emit statusShowMessage(str_result, 5000);
+         emit progressSyncMessage(str_result, 5000);
       }
 
       bool justbehind = false, farbehind = false;
@@ -1080,6 +1114,12 @@ void Globals::slot_timer()
    }
 }
 
+void Globals::display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3)
+{
+   m_exceptionMsgBoxParam1 = param1;
+   m_exceptionMsgBoxParam2 = param2;
+   m_exceptionMsgBoxParam3 = param3;
+}
 
 //**
 // DecentTable and DecentColumn
@@ -1233,9 +1273,6 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
 // below is decent and ipfs daemon staff, that's executed in a parallel thread
 //
 using namespace graphene;
-namespace bpo = boost::program_options;
-
-
 
 bool check_for_ipfs(QObject* parent, const QString& program) {
 
@@ -1327,64 +1364,39 @@ void RemoveDebugLevelFromIniFile(const std::string& path)
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise)
 {
+   bpo::options_description app_options("DECENT Daemon");
+   bpo::options_description cfg_options("DECENT Daemon");
+   bpo::variables_map options;
+
+   try
+   {
+      gui_wallet::Globals::setCommandLine(app_options, cfg_options);
+
+      const QStringList app_args = QCoreApplication::arguments();
+      std::vector<std::string> args(std::vector<std::string>::size_type(app_args.count() - 1));
+      std::transform(app_args.begin() + 1, app_args.end(), args.begin(), [](const QString &s) { return s.toStdString(); });
+      if (type == gui_wallet::BlockChainStartType::Replay)
+      {
+         args.push_back("--replay-blockchain");
+      }
+      else if (type == gui_wallet::BlockChainStartType::Resync)
+      {
+         args.push_back("--resync-blockchain");
+      }
+
+      bpo::command_line_parser parser(args);
+      bpo::store(parser.options(app_options).style(0).extra_parser(bpo::ext_parser()).run(), options);
+   }
+   catch (const bpo::error& e)
+   {
+      std::cerr << "Error parsing command line: " << e.what() << "\n";
+      return EXIT_FAILURE;
+   }
+
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Daemon");
-      bpo::options_description cfg_options("DECENT Daemon");
-      app_options.add_options()
-      ("help,h", "Print this help message and exit.")
-      ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.");
-
-
-      bpo::variables_map options;
-
-      auto miner_plug = node->register_plugin<miner_plugin::miner_plugin>();
-      auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
-      auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
-
-      try
-      {
-         bpo::options_description cli, cfg;
-         node->set_program_options(cli, cfg);
-         app_options.add(cli);
-         cfg_options.add(cfg);
-
-         int argc = 1;
-         char str_dummy[] = "dummy";
-         char str_replay[] = "--replay-blockchain";
-         char str_resync[] = "--resync-blockchain";
-
-         char* argvEmpty[] = {str_dummy};
-         char* argvReplay[] = {str_dummy, str_replay};
-         char* argvResync[] = {str_dummy, str_resync};
-         char** argv = argvEmpty;
-
-         if (type == gui_wallet::BlockChainStartType::Replay)
-         {
-            argc = 2;
-            argv = argvReplay;
-         }
-         else if (type == gui_wallet::BlockChainStartType::Resync)
-         {
-            argc = 2;
-            argv = argvResync;
-         }
-
-         bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
-      }
-      catch (const boost::program_options::error& e)
-      {
-         std::cerr << "Error parsing command line: " << e.what() << "\n";
-         return 1;
-      }
-
-      if( options.count("help") )
-      {
-         std::cout << app_options << "\n";
-         return 0;
-      }
+      gui_wallet::Globals::Plugins::types plugins = gui_wallet::Globals::Plugins::create(*node);
 
       fc::path data_dir;
       if( options.count("data-dir") )
@@ -1461,13 +1473,15 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
-
+      
+      gui_wallet::s_node = node;
       node->startup();
       node->startup_plugins();
 
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
+      auto seeding_plug = std::get<2>(plugins);
       if( !seeding_plug->my )
       {
          decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");
@@ -1493,6 +1507,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
+      gui_wallet::Globals::instance().display_error_and_stop_slot_timer("Error", "Unhandled exception", unhandled_exception->to_detail_string());
       node->shutdown();
       delete node;
       return 1;
@@ -1591,4 +1606,3 @@ QFont gui_wallet::MainFont()
    font.setPointSizeF(FontSize(12));
    return font;
 }
-

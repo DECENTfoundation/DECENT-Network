@@ -24,8 +24,10 @@
  */
 #pragma once
 
+#ifndef STDAFX_APP_H
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#endif
 
 namespace graphene { namespace app {
    using namespace graphene::chain;

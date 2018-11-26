@@ -39,6 +39,8 @@ namespace graphene { namespace chain {
     */
    struct memo_data
    {
+      typedef std::vector<std::string::value_type> message_type;
+
       public_key_type from;
       public_key_type to;
       /**
@@ -56,14 +58,58 @@ namespace graphene { namespace chain {
       /**
        * This field contains the AES encrypted packed @ref memo_message
        */
-      vector<char> message;
+      message_type message;
 
-      /// @note custom_nonce is for debugging only; do not set to a nonzero value in production
-      void        set_message(const fc::ecc::private_key& priv,
-                              const fc::ecc::public_key& pub, const string& msg, uint64_t custom_nonce = 0);
+      memo_data() = default;
 
-      std::string get_message(const fc::ecc::private_key& priv,
-                              const fc::ecc::public_key& pub)const;
+      /**
+       * @brief Construct encrypted message
+       * @param msg the message to encrypt
+       * @param priv the private key of sender
+       * @param pub the public key of receiver
+       * @param nonce the salt number to use for message encryption (will be generated if zero)
+       */
+      memo_data(const std::string& msg, const private_key_type& priv, const public_key_type& pub, uint64_t nonce = 0);
+
+      /**
+       * @brief Decrypt message
+       * @param priv the private key of sender/receiver
+       * @param pub the public key of receiver/sender
+       * @return decrypted message
+       */
+      std::string get_message(const private_key_type& priv, const public_key_type& pub) const;
+
+      /**
+       * @brief Encrypt message
+       * @param message the message to encrypt
+       * @param priv the private key of sender
+       * @param pub the public key of receiver
+       * @param nonce the salt number to use for message encryption
+       * @return encrypted message
+       */
+      static message_type encrypt_message(const std::string &message,
+                                          const private_key_type &priv,
+                                          const public_key_type &pub,
+                                          uint64_t nonce);
+
+      /**
+       * @brief Decrypt message
+       * @param message the message to decrypt
+       * @param priv the private key of sender/receiver
+       * @param pub the public key of receiver/sender
+       * @param nonce the salt number used for message encryption
+       * @return decrypted message
+       */
+      static std::string decrypt_message(const message_type &message,
+                                          const private_key_type &priv,
+                                          const public_key_type &pub,
+                                          uint64_t nonce);
+
+      /**
+       * @brief Generate salt number for encryption
+       * @return salt number
+       */
+      static uint64_t generate_nonce();
    };
 
    /**

@@ -1,20 +1,24 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#include <QObject>
-#include <QMouseEvent>
+#ifndef STDAFX_H
 #include <QEvent>
-#include <QWidget>
-#include <QLabel>
 #include <QTableWidget>
-#include <QString>
 #include <chrono>
 #include <vector>
 #include <atomic>
 
+#include <json.hpp>
 #include <decent/wallet_utility/wallet_utility.hpp>
+#include <graphene/miner/miner.hpp>
+#include <graphene/seeding/seeding.hpp>
+#include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/transaction_history/transaction_history_plugin.hpp>
+#include <graphene/utilities/dirhelper.hpp>
+#include <graphene/messaging/messaging.hpp>
 
-#include "json.hpp"
+class QTimer;
+#endif
 
 #include <numeric>
 #if defined( _MSC_VER )
@@ -66,8 +70,7 @@ delete msgBox;                                      \
    Q_ASSERT(_b_condition_); \
 }
 
-class QEvent;
-class QTimer;
+namespace bpo = boost::program_options;
 
 namespace gui_wallet
 {
@@ -99,7 +102,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      WalletOperator();
+      WalletOperator(const fc::path &wallet_file);
       ~WalletOperator() override;
 
       void cancel();
@@ -123,11 +126,13 @@ namespace gui_wallet
       bool hasDecimals() const;
 
       QString getString() const;
-      QString getStringBalance() const;
+      QString getBalance() const;
 
       uint64_t m_amount = 0;
       uint64_t m_scale = 1;
       std::string m_str_symbol;
+
+      static const std::string dct_id;
    };
 
    //
@@ -156,21 +161,32 @@ namespace gui_wallet
       ~Globals();
       
    public:
-      enum class ConnectionState { Connecting, SyncingUp, Up };
+      enum class ConnectionState { NoState, Reindexing, Connecting, SyncingUp, Up };
       static Globals& instance();
 
-      void startDaemons(BlockChainStartType type);
+      using Plugins = graphene::app::plugin_set<
+         graphene::miner_plugin::miner_plugin,
+         graphene::account_history::account_history_plugin,
+         decent::seeding::seeding_plugin,
+         decent::messaging::messaging_plugin,
+         graphene::transaction_history::transaction_history_plugin
+      >;
+
+      static void setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options);
+
+      void startDaemons(BlockChainStartType type, const std::string &wallet_file);
       void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
-      Asset asset(uint64_t amount, const std::string& symbol = std::string());
+      Asset asset(uint64_t amount, const std::string& assetId = Asset::dct_id);
       std::string runTask(std::string const& str_command);
       nlohmann::json runTaskParse(std::string const& str_command);
       std::vector<Publisher> getPublishers();
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
-      QString getAssetName() const;
+      QString getAssetName(const std::string& assetId = Asset::dct_id) const;
+      void display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3);
 
       //functions
       std::string ImportAccount(const std::string& name, const std::string& key);
@@ -186,8 +202,9 @@ namespace gui_wallet
       void signal_stackWidgetPush(gui_wallet::StackLayerWidget*);
       void signal_showPurchasedTab();
       void signal_showTransactionsTab(std::string const&);
-      void signal_updateAccountBalance(Asset const&);
+      void signal_updateAccountAssets(const QList<Asset>& assets);
       void signal_keyImported();
+      void signal_daemonFinished(int ret);
 
    public:
       void setWalletUnlocked();
@@ -205,9 +222,10 @@ namespace gui_wallet
       void slot_ConnectionStatusChange(ConnectionState from, ConnectionState to);
 
    signals:
-      void connectingProgress(const QString& str_progress);
+      //void connectingProgress(const QString& str_progress);
       void currentUserChanged(const QString& user);
-      void statusShowMessage(const QString& str_message, int timeout = 0);
+      void progressSyncMessage(const QString& str_message, int timeout = 0);
+      void progressCommonTextMessage(const QString& str_message);
       void updateProgress(int value, int maxVal);
       void statusClearMessage();
       void walletUnlocked();
@@ -228,6 +246,10 @@ namespace gui_wallet
 
 
       std::map<std::string, std::string> m_map_user_id_cache;
+
+      std::string m_exceptionMsgBoxParam1;
+      std::string m_exceptionMsgBoxParam2;
+      std::string m_exceptionMsgBoxParam3;
    };
 
    
@@ -302,13 +324,10 @@ namespace gui_wallet
       bool                           _is_ascending = true;
    };
 
-
-
    // DCT stands for Digital Contex Actions
    namespace DCT {
       enum DIG_CONT_TYPES {GENERAL, BOUGHT, WAITING_DELIVERY};
    }
-
 
    struct SDigitalContent
    {
@@ -340,6 +359,4 @@ namespace gui_wallet
    QFont PaginationFont();
    QFont ProgressInfoFont();
    QFont MainFont();
-
 }
-

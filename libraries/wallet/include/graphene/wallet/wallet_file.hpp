@@ -37,7 +37,6 @@ vector<account_object> list_my_accounts();
 
 /** @brief Returns the current wallet filename.
  * @note This is the filename that will be used when automatically saving the wallet.
- * @see set_wallet_filename()
  * @return the wallet filename
  * @ingroup WalletAPI_Wallet
  */
@@ -96,9 +95,7 @@ void set_password(const string& password);
 /**
  * @brief Loads a specified wallet file.
  * The current wallet is closed before the new wallet is loaded.
- * @warning This does not change the filename that will be used for future
- * wallet writes, so this may cause you to overwrite your original
- * wallet unless you also call \c set_wallet_filename()
+ * @warning This changes the filename that will be used for future wallet writes.
  * @param wallet_filename the filename of the wallet JSON file to load.
  *                        If \c wallet_filename is empty, it reloads the
  *                        existing wallet file
@@ -110,24 +107,13 @@ bool load_wallet_file(const string& wallet_filename = string());
 /**
  * @brief Saves the current wallet to the given filename.
  * @warning This does not change the wallet filename that will be used for future
- * writes, so think of this function as 'Save a Copy As...' instead of
- * 'Save As...'.  Use \c set_wallet_filename() to make the filename
- * persist.
+ * writes, so think of this function as 'Save a Copy As...' instead of 'Save As...'.
  * @param wallet_filename the filename of the new wallet JSON file to create
  *                        or overwrite.  If \c wallet_filename is empty,
  *                        save to the current filename.
  * @ingroup WalletAPI_Wallet
  */
 void save_wallet_file(const string& wallet_filename = string());
-
-/**
- * @brief Sets the wallet filename used for future writes.
- * This does not trigger a save, it only changes the default filename
- * that will be used the next time a save is triggered.
- * @param wallet_filename the new filename to use for future saves
- * @ingroup WalletAPI_Wallet
- */
-void set_wallet_filename(const string& wallet_filename);
 
 /**
  * @brief Imports the private key for an existing account.

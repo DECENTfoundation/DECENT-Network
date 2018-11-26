@@ -37,10 +37,15 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/smart_ref_impl.hpp>
 
+
 #include <graphene/app/api.hpp>
+
+
+
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <decent/package/package.hpp>
@@ -48,6 +53,9 @@
 
 #include <fc/interprocess/signals.hpp>
 #include <boost/program_options.hpp>
+#include <boost/version.hpp>
+
+#include <openssl/opensslv.h>
 
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
@@ -64,7 +72,6 @@ using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
 using namespace graphene::wallet;
-using namespace std;
 namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
@@ -84,97 +91,87 @@ int main( int argc, char** argv )
 
    try {
 
-      boost::program_options::options_description opts;
+      bpo::options_description opts;
          opts.add_options()
          ("help,h", "Print this help message and exit.")
-         ("version,v", "Print version information")
-         ("server-rpc-endpoint,s", bpo::value<string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
-         ("server-rpc-user,u", bpo::value<string>(), "Server Username")
-         ("server-rpc-password,p", bpo::value<string>(), "Server Password")
-         ("rpc-endpoint,r", bpo::value<string>()->default_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
-         ("rpc-tls-endpoint,t", bpo::value<string>()->default_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
-         ("rpc-tls-certificate,c", bpo::value<string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
-         ("rpc-http-endpoint,H", bpo::value<string>()->default_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
-         ("daemon,d", "Run the wallet in daemon mode" )
-         ("wallet-file,w", bpo::value<string>()->default_value("wallet.json"), "wallet to load")
-         ("chain-id", bpo::value<string>(), "chain ID to connect to");
+         ("version,v", "Print version information and exit.")
+         ("generate-keys,g", "Generate brain, wif private and public keys.")
+         ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
+         ("daemon", "Run the wallet in daemon mode.")
+         ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
+         ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
+         ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
+         ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
+         ("rpc-endpoint,r", bpo::value<std::string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
+         ("rpc-tls-endpoint,t", bpo::value<std::string>()->implicit_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
+         ("rpc-tls-certificate,c", bpo::value<std::string>()->default_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
+         ("rpc-http-endpoint,H", bpo::value<std::string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
+         ("from-command-file,f", bpo::value<std::string>(), "Load commands from a command file")
+      ;
 
       bpo::variables_map options;
-
       bpo::store( bpo::parse_command_line(argc, argv, opts), options );
-
-      if( options.count("version") )
-      {
-         string client_version( graphene::utilities::git_revision_description );
-         const size_t pos = client_version.find( '/' );
-         if( pos != string::npos && client_version.size() > pos )
-            client_version = client_version.substr( pos + 1 );
-
-         std::cout << "CLI Wallet version " << client_version << "\n";
-      }
-
 
       if( options.count("help") )
       {
-         if( options.count("version") )
-            std::cout << "\n";
-
          std::cout << opts << "\n";
+         return EXIT_SUCCESS;
+      }
+      else if( options.count("version") )
+      {
+         unsigned int boost_major_version = BOOST_VERSION / 100000;
+         unsigned int boost_minor_version = BOOST_VERSION / 100 - boost_major_version * 1000;
+         string boost_version_text = to_string(boost_major_version) + "." + to_string(boost_minor_version) + "." + to_string(BOOST_VERSION % 100);
+         string openssl_version_text = string(OPENSSL_VERSION_TEXT);
+         openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
+
+         std::cout << "CLI Wallet " << graphene::utilities::git_version() << "\nBoost " << boost_version_text << "\n" << openssl_version_text << std::endl;
+         return EXIT_SUCCESS;
+      }
+      else if( options.count("generate-keys") )
+      {
+         try
+         {
+            std::string brain_key = graphene::utilities::generate_brain_key();
+            fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(brain_key);
+            graphene::chain::public_key_type pub_key(priv_key.get_public_key());
+
+            std::cout << "Brain key:    " << brain_key << std::endl;
+            std::cout << "Private key:  " << graphene::utilities::key_to_wif(priv_key) << std::endl;
+            std::cout << "Public key:   " << std::string(pub_key) << std::endl;
+            return EXIT_SUCCESS;
+         }
+         catch (const fc::exception& e)
+         {
+            std::cerr << e.to_detail_string() << std::endl;
+         }
+         catch (const std::exception& e)
+         {
+            std::cerr << e.what() << std::endl;
+         }
+
+         return EXIT_FAILURE;
       }
 
-      if( options.count("help") || options.count("version") )
-         return 0;
-
-
-      fc::path data_dir;
-      fc::logging_config cfg;
       const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
       fc::file_appender::config ac_default;
-
-      fc::file_appender::config ac_rpc;
-      ac_rpc.filename             = log_dir / "rpc" / "rpc.log";
-      ac_rpc.flush                = true;
-      ac_rpc.rotate               = true;
-      ac_rpc.rotation_interval    = fc::hours( 1 );
-      ac_rpc.rotation_limit       = fc::days( 1 );
-
-      fc::file_appender::config ac_transfer;
-      ac_transfer.format               = "${timestamp} ${thread_name} ${context} ${level}]  ${message}";
-      ac_transfer.filename             = log_dir / "transfer.log";
-      ac_transfer.flush                = true;
-      ac_transfer.rotate               = true;
-      ac_transfer.rotation_interval    = fc::hours( 1 );
-      ac_transfer.rotation_limit       = fc::days( 1 );
-
-//    cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(ac_default)));
-//    cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac_rpc)));
-      cfg.appenders.push_back(fc::appender_config( "transfer", "file", fc::variant(ac_transfer)));
+      ac_default.filename             = log_dir / "cli_wallet.log";
+      ac_default.flush                = true;
+      ac_default.rotate               = true;
+      ac_default.rotation_interval    = fc::hours( 1 );
+      ac_default.rotation_limit       = fc::days( 1 );
 
       fc::logger_config lc_default("default");
       lc_default.level          = fc::log_level::info;
       lc_default.appenders      = {"default"};
 
-      fc::logger_config lc_rpc("rpc");
-      lc_rpc.level              = fc::log_level::debug;
-      lc_rpc.appenders          = {"rpc"};
-
-      fc::logger_config lc_transfer("transfer");
-      lc_transfer.level         = fc::log_level::debug;
-      lc_transfer.appenders     = {"transfer"};
-
-//    cfg.loggers.push_back(lc_default);
-//    cfg.loggers.push_back(lc_rpc);
-      cfg.loggers.push_back(lc_transfer);
-
-      std::clog << "Logging RPC to file: " << ac_rpc.filename.preferred_string() << std::endl;
-      std::clog << "Logging transfers to file: " << ac_transfer.filename.preferred_string() << std::endl;
+      fc::logging_config cfg;
+      cfg.appenders.push_back(fc::appender_config( "default", "file", fc::variant(ac_default)));
+      cfg.loggers.push_back(lc_default);
+      std::clog << "Logging to file: " << ac_default.filename.preferred_string() << std::endl;
 
       fc::configure_logging( cfg );
-
-      fc::ecc::private_key committee_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
-
-      idump( (key_to_wif( committee_private_key ) ) );
 
       //
       // TODO:  We read wallet_data twice, once in main() to grab the
@@ -183,34 +180,11 @@ int main( int argc, char** argv )
       //    designed.
       //
       wallet_data wdata;
-
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
-       
-      if( fc::exists( wallet_file ) )
+      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
+      bool has_wallet_file = fc::exists( wallet_file );
+      if( has_wallet_file )
       {
          wdata = fc::json::from_file( wallet_file ).as<wallet_data>();
-         if( options.count("chain-id") )
-         {
-            // the --chain-id on the CLI must match the chain ID embedded in the wallet file
-            if( chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
-            {
-               std::cout << "Chain ID in wallet file does not match specified chain ID\n";
-               return 1;
-            }
-         }
-      }
-      else
-      {
-         if( options.count("chain-id") )
-         {
-            wdata.chain_id = chain_id_type(options.at("chain-id").as<std::string>());
-            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
-         }
-         else
-         {
-            wdata.chain_id = chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000"); //graphene::egenesis::get_egenesis_chain_id();
-            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (empty one)\n";
-         }
       }
 
       // but allow CLI to override
@@ -222,18 +196,55 @@ int main( int argc, char** argv )
          wdata.ws_password = options.at("server-rpc-password").as<std::string>();
 
       fc::http::websocket_client client;
-      idump((wdata.ws_server));
+      ilog( "Connecting to server at ${s}", ("s", wdata.ws_server) );
       auto con  = client.connect( wdata.ws_server );
       auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
       auto remote_api = apic->get_remote_api< login_api >(1);
-      edump((wdata.ws_user)(wdata.ws_password) );
       // TODO:  Error message here
       FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
 
+      if( !has_wallet_file )
+      {
+         if( options.count("chain-id") )
+         {
+            wdata.chain_id = chain_id_type(options.at("chain-id").as<std::string>());
+            // the --chain-id on the CLI must match the chain ID of database we connect to
+            if( remote_api->database()->get_chain_id() != wdata.chain_id )
+            {
+               std::cerr << "Chain ID from CLI does not match database chain ID\n";
+               return 1;
+            }
+
+            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (from CLI)\n";
+         }
+         else
+         {
+            wdata.chain_id = remote_api->database()->get_chain_id();
+            std::cout << "Starting a new wallet with chain ID " << wdata.chain_id.str() << " (empty one)\n";
+         }
+      }
+      else if( options.count("chain-id") )
+      {
+         // the --chain-id on the CLI must match the chain ID embedded in the wallet file
+         if( chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
+         {
+            std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match specified chain ID\n";
+            return 1;
+         }
+      }
+      else if( remote_api->database()->get_chain_id() != wdata.chain_id )
+      {
+         std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match database chain ID\n";
+         return 1;
+      }
+
       auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
-      wapiptr->set_wallet_filename( wallet_file.generic_string() );
-      wapiptr->load_wallet_file();
+      if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
+      {
+         std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
+         return 1;
+      }
 
       fc::api<wallet_api> wapi(wapiptr);
 
@@ -242,7 +253,7 @@ int main( int argc, char** argv )
          wallet_cli->format_result( name_formatter.first, name_formatter.second );
 
       boost::signals2::scoped_connection closed_connection(con->closed.connect([=]{
-         cerr << "Server has disconnected us.\n";
+         std::cerr << "Server has disconnected us.\n";
          wallet_cli->stop();
       }));
       (void)(closed_connection);
@@ -258,43 +269,50 @@ int main( int argc, char** argv )
          wallet_cli->set_prompt(  locked ? "locked >>> " : "unlocked >>> " );
       }));
 
-      auto _websocket_server = std::make_shared<fc::http::websocket_server>();
-      if( options.count("rpc-endpoint") )
+      auto _websocket_server = options.count("rpc-endpoint") ?
+               std::make_shared<fc::http::websocket_server>() :
+               std::shared_ptr<fc::http::websocket_server>();
+
+      if( _websocket_server )
       {
-         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
-            std::cout << "here... \n";
+         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
+            is_tls = false;
             wlog("." );
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
-         ilog( "Listening for incoming RPC requests on ${p}", ("p", options.at("rpc-endpoint").as<string>() ));
-         _websocket_server->listen( fc::ip::endpoint::from_string(options.at("rpc-endpoint").as<string>()) );
+         ilog( "Listening for incoming RPC requests on ${p}", ("p", options.at("rpc-endpoint").as<std::string>() ));
+         _websocket_server->listen( fc::ip::endpoint::from_string(options.at("rpc-endpoint").as<std::string>()) );
          _websocket_server->start_accept();
       }
 
-      string cert_pem = "server.pem";
-      if( options.count( "rpc-tls-certificate" ) )
-         cert_pem = options.at("rpc-tls-certificate").as<string>();
+      auto _websocket_tls_server = options.count("rpc-tls-endpoint") ?
+               std::make_shared<fc::http::websocket_tls_server>(options.at("rpc-tls-certificate").as<std::string>()) :
+               std::shared_ptr<fc::http::websocket_tls_server>();
 
-      auto _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>(cert_pem);
-      if( options.count("rpc-tls-endpoint") )
+      if( _websocket_tls_server )
       {
-         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls ){
+            is_tls = true;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
-         ilog( "Listening for incoming TLS RPC requests on ${p}", ("p", options.at("rpc-tls-endpoint").as<string>() ));
-         _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<string>()) );
+         ilog( "Listening for incoming TLS RPC requests on ${p}, certificate file ${c}",
+               ("p", options.at("rpc-tls-endpoint").as<std::string>() )("c", options.at("rpc-tls-certificate").as<std::string>() ));
+         _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<std::string>()) );
          _websocket_tls_server->start_accept();
       }
 
-      auto _http_server = std::make_shared<fc::http::server>();
-      if( options.count("rpc-http-endpoint" ) )
+      auto _http_server = options.count("rpc-http-endpoint" ) ?
+               std::make_shared<fc::http::server>() :
+               std::shared_ptr<fc::http::server>();
+
+      if( _http_server )
       {
-         ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<string>() ) );
-         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<string>() ) );
+         ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<std::string>() ) );
+         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<std::string>() ) );
          //
          // due to implementation, on_request() must come AFTER listen()
          //
@@ -311,6 +329,10 @@ int main( int argc, char** argv )
       if( !options.count( "daemon" ) )
       {
          wallet_cli->register_api( wapi );
+         if( options.count("from-command-file") )
+         {
+             wallet_cli->set_command_file(options.at( "from-command-file" ).as<std::string>());
+         }
          wallet_cli->start();
          wallet_cli->wait();
       }

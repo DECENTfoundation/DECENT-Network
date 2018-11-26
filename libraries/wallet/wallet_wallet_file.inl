@@ -108,17 +108,14 @@ void wallet_api::set_password(const string& password )
 
 bool wallet_api::load_wallet_file(const string& wallet_filename )
 {
+   if( !wallet_filename.empty() )
+      my->set_wallet_filename(wallet_filename);
    return my->load_wallet_file( wallet_filename );
 }
 
 void wallet_api::save_wallet_file(const string& wallet_filename )
 {
    my->save_wallet_file( wallet_filename );
-}
-
-void wallet_api::set_wallet_filename(const string& wallet_filename)
-{
-   my->_wallet_filename = wallet_filename;
 }
 
 bool wallet_api::import_key(const string& account_name_or_id, const string& wif_key)

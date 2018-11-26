@@ -66,11 +66,6 @@ namespace package {
     class IPFSDownloadPackageTask;
     class IPFSStartSeedingPackageTask;
     class IPFSStopSeedingPackageTask;
-    class TorrentTransferEngine;
-    class TorrentPackageTask;
-    class TorrentDownloadPackageTask;
-    class TorrentStartSeedingPackageTask;
-    class TorrentStopSeedingPackageTask;
     class LocalDownloadPackageTask;
 
 
@@ -138,10 +133,6 @@ namespace package {
         friend class IPFSStartSeedingPackageTask;
         friend class IPFSStopSeedingPackageTask;
         friend class LocalDownloadPackageTask;
-        friend class TorrentPackageTask;
-        friend class TorrentDownloadPackageTask;
-        friend class TorrentStartSeedingPackageTask;
-        friend class TorrentStopSeedingPackageTask;
 
         friend class detail::CreatePackageTask;
         friend class detail::RemovePackageTask;
@@ -435,7 +426,6 @@ namespace package {
         bool release_package(package_handle_t& package);
 
         boost::filesystem::path get_packages_path() const;
-        //void set_libtorrent_config(const boost::filesystem::path& libtorrent_config_file);
 
         TransferEngineInterface& get_proto_transfer_engine(const std::string& proto) const;
 

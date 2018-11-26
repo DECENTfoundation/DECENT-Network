@@ -100,7 +100,6 @@ namespace graphene { namespace wallet {
          string                    ws_user;
          string                    ws_password;
          string                    packages_path = "./packages/";
-         string                    libtorrent_config_path;
          string                    update_time;
       };
 
@@ -282,6 +281,7 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_Subscription Subscription
  * @defgroup WalletAPI_Content Content
  * @defgroup WalletAPI_Messaging Messaging
+ * @defgroup WalletAPI_Monitoring Monitoring
  * @defgroup WalletAPI_Seeding Seeding
  * @defgroup WalletAPI_Mining Mining
  * @defgroup WalletAPI_Proposals Proposals
@@ -307,6 +307,7 @@ namespace graphene { namespace wallet {
 #include "content.hpp"
 #include "subscription.hpp"
 #include "messaging.hpp"
+#include "monitoring.hpp"
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
@@ -316,6 +317,7 @@ namespace graphene { namespace wallet {
 
       };
    } }
+
 
 
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -402,9 +404,11 @@ FC_API( graphene::wallet::wallet_api,
         (network_get_connected_peers)
         (get_transaction_id)
         (get_transaction_by_id)
+        (from_command_file)
 
         //Wallet file
         (list_my_accounts)
+        (get_wallet_filename)
         (get_private_key)
         (is_new)
         (is_locked)
@@ -537,21 +541,13 @@ FC_API( graphene::wallet::wallet_api,
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
+
+        //Monitoring
+        (reset_counters)
+        (get_counters)
    )
 
 #if 0
-        //Debug
-        (dbg_make_mia)
-        (dbg_push_blocks)
-        (dbg_generate_blocks)
-        (dbg_stream_json_objects)
-        (dbg_update_object)
-        (set_transfer_logs)
-        (sign_buffer)
-        (verify_signature)
-
         //Network
         (flood_network)
 #endif
-
-

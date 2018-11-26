@@ -26,37 +26,19 @@
 
 #include <graphene/app/full_account.hpp>
 
-#include <graphene/chain/protocol/types.hpp>
+#ifndef STDAFX_APP_H
+#include <fc/api.hpp>
 
 #include <graphene/chain/database.hpp>
-
-#include <graphene/chain/account_object.hpp>
-#include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/message_object.hpp>
-#include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/operation_history_object.hpp>
-#include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/miner_object.hpp>
-#include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/content_object.hpp>
-#include <graphene/chain/seeder_object.hpp>
-#include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
-#include <graphene/chain/transaction_history_object.hpp>
-
-#include <fc/api.hpp>
-#include <fc/optional.hpp>
-#include <fc/variant_object.hpp>
-
-#include <fc/network/ip.hpp>
-
-#include <boost/container/flat_set.hpp>
-
-#include <functional>
-#include <map>
-#include <memory>
-#include <vector>
+#include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/miner_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
+#endif
 
 /**
  * @defgroup DatabaseAPI Database API
@@ -627,14 +609,13 @@ namespace graphene { namespace app {
          processed_transaction validate_transaction( const signed_transaction& trx )const;
 
          /**
-          *  @brief For each operation calculate the required fee in the specified asset type. If the asset type does
-          *  not have a valid core_exchange_rate.
+          *  @brief For each operation calculates the required fee in the specified asset type.
           *  @param ops the set of operations
           *  @param id the asset ID
           *  @return the required fees
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
+         fc::variants get_required_fees( const vector<operation>& ops, asset_id_type id )const;
 
          ///////////////////////////
          // Proposed transactions //
@@ -751,7 +732,7 @@ namespace graphene { namespace app {
          /**
           * @brief Generate keys for new content submission.
           * @param seeders list of seeder account IDs
-          * @return generated key and key parts
+          * @return generated key, key parts and quorum
           * @ingroup DatabaseAPI_Decent
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
@@ -886,6 +867,14 @@ namespace graphene { namespace app {
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
          /**
+          * @brief Get miner pay from accumulated fees from given time.
+          * @param block_time reference time
+          * @return miner pay from accumulated fees
+          * @ingroup DatabaseAPI_Globals
+          */
+         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
+
+         /**
           * @brief Get the number of votes each miner actually has.
           * @return a list mapping account names to the number of votes
           * @ingroup DatabaseAPI_Mining
@@ -986,6 +975,7 @@ FC_API(graphene::app::database_api,
           (lookup_miner_accounts)
           (get_miner_count)
           (get_feeds_by_miner)
+          (get_miner_pay_from_fees_by_block_time)
 
           // Votes
           (lookup_vote_ids)

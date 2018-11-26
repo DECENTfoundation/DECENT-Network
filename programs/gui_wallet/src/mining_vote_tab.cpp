@@ -1,32 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
+#include "mining_vote_tab.hpp"
 #include "gui_wallet_global.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "mining_vote_tab.hpp"
-
-#include <boost/algorithm/string/replace.hpp>
-
-#include <QMessageBox>
-
-#ifndef _MSC_VER
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#include <QTimer>
-#include <QLabel>
-#include <QLineEdit>
-#include <QCheckBox>
-#include <QDesktopServices>
-
-#include <graphene/chain/content_object.hpp>
-
-#include "json.hpp"
-
-#endif
 
 namespace gui_wallet {
 
@@ -340,7 +321,6 @@ void MinerVotingTab::submit_vote(const std::string& miner_name, bool voteFlag)
    if (!error.isEmpty()) {
       ShowMessageBox(tr("Error"), tr("Failed to submit voting"), error);
    }
-
 }
 
 void MinerVotingTab::getDesiredMinersCount()
@@ -354,9 +334,6 @@ void MinerVotingTab::getDesiredMinersCount()
 
    m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
    m_curMinersVotedFor = account_obj["options"]["votes"].size();
-
 }
-
-
 
 } //namespace

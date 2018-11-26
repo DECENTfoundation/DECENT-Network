@@ -1,7 +1,8 @@
 #pragma once
 
-
+#ifndef STDAFX_H
 #include <QProgressDialog>
+#endif
 
 class CProgBar : protected QProgressDialog
 {
@@ -42,5 +43,3 @@ protected:
     //void timerEvent(QTimerEvent *event);
     void closeEvent(QCloseEvent* e);
 };
-
-

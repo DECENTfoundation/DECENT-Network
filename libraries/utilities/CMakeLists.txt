@@ -11,6 +11,7 @@ file(GLOB headers "include/graphene/utilities/*.hpp")
 
 set(sources
    key_conversion.cpp
+   keys_generator.cpp
    string_escape.cpp
    dirhelper.cpp
    words.cpp

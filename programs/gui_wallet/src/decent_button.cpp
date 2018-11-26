@@ -1,11 +1,10 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
+
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
 
 #include "decent_button.hpp"
-
-#include <QVariant>
-#include <QStyle>
-#include <QEvent>
 
 namespace gui_wallet
 {
@@ -42,6 +41,9 @@ DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPush
    case PasswordView:
       setProperty("type", "pass_view");
       break;
+   case Asset:
+      setProperty("type", "asset");
+      break;
    case Default:
    default:
       break;
@@ -63,6 +65,9 @@ DecentButton::DecentButton(QWidget* pParent, eType enType, eName enName) : QPush
          break;
       case Resubmit:
          setProperty("name", "resubmit");
+         break;
+      case Amount:
+         setProperty("name", "amount");
          break;
       case None:
       default:
@@ -88,5 +93,5 @@ void DecentButton::changeEvent(QEvent* event)
 
    QPushButton::changeEvent(event);
 }
-}
 
+}

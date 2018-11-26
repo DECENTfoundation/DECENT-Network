@@ -23,30 +23,16 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/app/database_api.hpp>
-#include <graphene/chain/get_config.hpp>
-
-
-#include <fc/bloom_filter.hpp>
-#include <fc/smart_ref_impl.hpp>
-
-#include <fc/crypto/hex.hpp>
-
-#include <boost/range/iterator_range.hpp>
-#include <boost/rational.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
-#include <decent/encrypt/custodyutils.hpp>
-#include <decent/encrypt/encryptionutils.hpp>
-
-#include <cctype>
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
 
 #include <cfenv>
 #include <iostream>
 #include <memory>
 #include "json.hpp"
+
+#include <graphene/app/database_api.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -62,7 +48,7 @@ namespace {
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
          return t1;
-      };
+      }
    };
    
    template <>
@@ -71,7 +57,7 @@ namespace {
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
          return t2;
-      };
+      }
    };
 }
 
@@ -102,6 +88,7 @@ namespace graphene { namespace app {
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       fc::time_point_sec head_block_time()const;
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+      share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
       optional<signed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
       
       // Globals
@@ -165,7 +152,7 @@ namespace graphene { namespace app {
       bool verify_authority( const signed_transaction& trx )const;
       bool verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
       processed_transaction validate_transaction( const signed_transaction& trx )const;
-      vector< fc::variant > get_required_fees( const vector<operation>& ops, asset_id_type id )const;
+      fc::variants get_required_fees( vector<operation> ops, asset_id_type id )const;
       
       // Proposed transactions
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
@@ -1414,11 +1401,20 @@ namespace graphene { namespace app {
    
    bool database_api_impl::verify_authority( const signed_transaction& trx )const
    {
-      trx.verify_authority( _db.get_chain_id(),
-                           [&]( account_id_type id ){ return &id(_db).active; },
-                           [&]( account_id_type id ){ return &id(_db).owner; },
-                           _db.get_global_properties().parameters.max_authority_depth );
-      return true;
+      try
+      {
+         trx.verify_authority( trx.get_signature_keys(_db.get_chain_id()),
+                              [&]( account_id_type id ){ return &id(_db).active; },
+                              [&]( account_id_type id ){ return &id(_db).owner; },
+                              _db.get_global_properties().parameters.max_authority_depth );
+         return true;
+      }
+      catch( const transaction_exception &e )
+      {
+         dlog(e.to_string(fc::log_level::debug));
+      }
+
+      return false;
    }
    
    bool database_api::verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const
@@ -1440,15 +1436,26 @@ namespace graphene { namespace app {
             account = &*itr;
       }
       FC_ASSERT( account, "no such account" );
-      
-      
-      /// reuse trx.verify_authority by creating a dummy transfer
-      signed_transaction trx;
-      transfer_operation op;
-      op.from = account->id;
-      trx.operations.emplace_back(op);
-      
-      return verify_authority( trx );
+
+      try
+      {
+         /// reuse trx.verify_authority by creating a dummy transfer
+         signed_transaction trx;
+         transfer_operation op;
+         op.from = account->id;
+         trx.operations.emplace_back(op);
+         trx.verify_authority( keys,
+                               [&]( account_id_type id ){ return &id(_db).active; },
+                               [&]( account_id_type id ){ return &id(_db).owner; },
+                               _db.get_global_properties().parameters.max_authority_depth );
+         return true;
+      }
+      catch( const transaction_exception &e )
+      {
+         dlog(e.to_string(fc::log_level::debug));
+      }
+
+      return false;
    }
    
    processed_transaction database_api::validate_transaction( const signed_transaction& trx )const
@@ -1461,7 +1468,7 @@ namespace graphene { namespace app {
       return _db.validate_transaction(trx);
    }
    
-   vector< fc::variant > database_api::get_required_fees( const vector<operation>& ops, asset_id_type id )const
+   fc::variants database_api::get_required_fees( const vector<operation>& ops, asset_id_type id )const
    {
       return my->get_required_fees( ops, id );
    }
@@ -1474,9 +1481,11 @@ namespace graphene { namespace app {
    {
       get_required_fees_helper(
                                const fee_schedule& _current_fee_schedule,
+                               const price& _core_exchange_rate,
                                uint32_t _max_recursion
                                )
       : current_fee_schedule(_current_fee_schedule),
+      core_exchange_rate(_core_exchange_rate),
       max_recursion(_max_recursion)
       {}
       
@@ -1488,7 +1497,6 @@ namespace graphene { namespace app {
          }
          else
          {
-            price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
             asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
             fc::variant result;
             fc::to_variant( fee, result );
@@ -1509,7 +1517,6 @@ namespace graphene { namespace app {
          }
          // we need to do this on the boxed version, which is why we use
          // two mutually recursive functions instead of a visitor
-         price core_exchange_rate( asset(1, asset_id_type()), asset(1, asset_id_type()));
          result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
          fc::variant vresult;
          fc::to_variant( result, vresult );
@@ -1517,28 +1524,26 @@ namespace graphene { namespace app {
       }
       
       const fee_schedule& current_fee_schedule;
+      const price& core_exchange_rate;
       uint32_t max_recursion;
       uint32_t current_recursion = 0;
    };
-   
-   vector< fc::variant > database_api_impl::get_required_fees( const vector<operation>& ops, asset_id_type id )const
+
+   fc::variants database_api_impl::get_required_fees( vector<operation> ops, asset_id_type id )const
    {
-      vector< operation > _ops = ops;
       //
       // we copy the ops because we need to mutate an operation to reliably
       // determine its fee, see #435
       //
-      
-      vector< fc::variant > result;
-      result.reserve(ops.size());
-      id(_db);
+
+      const asset_object& a = id(_db);
       get_required_fees_helper helper(
                                       _db.current_fee_schedule(),
+                                      a.options.core_exchange_rate,
                                       GET_REQUIRED_FEES_MAX_RECURSION );
-      for( operation& op : _ops )
-      {
-         result.push_back( helper.set_op_fees( op ) );
-      }
+
+      fc::variants result(ops.size());
+      std::transform(ops.begin(), ops.end(), result.begin(), [&](operation &op) { return helper.set_op_fees( op ); } );
       return result;
    }
    
@@ -1905,9 +1910,8 @@ namespace
          secret.Encode((byte*)keys.key._hash, 32);
 #endif
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)1, seeders.size()/3); // TODO_DECENT - quorum >= 2 see also content_submit_operation::validate
-
-         ShamirSecret ss(quorum, seeders.size(), secret);
+         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
+         ShamirSecret ss(keys.quorum, seeders.size(), secret);
          ss.calculate_split();
          
 
@@ -2416,17 +2420,13 @@ namespace
    miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
    {
       const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
+      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
       graphene::chain::miner_reward_input miner_reward_input;
       memset(&miner_reward_input, 0, sizeof(miner_reward_input));
 
-      auto itr = idx.begin();
-  
       fc::time_point_sec next_time = (fc::time_point_sec)0;
-      fc::time_point_sec prev_time = (fc::time_point_sec)0;
-
-      for (itr = itr; (itr != idx.end()) && (next_time == (fc::time_point_sec)0); ++itr)
+      for (auto itr = idx.cbegin(), itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr )
       {
-         budget_record_object bro = (*itr);
          if (itr->record.next_maintenance_time > block_time)
          {
             next_time = itr->record.next_maintenance_time;
@@ -2436,26 +2436,53 @@ namespace
       }
 
       FC_ASSERT(next_time != (fc::time_point_sec)0);
-      
+      miner_reward_input.time_to_maint = (next_time - block_time).to_seconds();
+      return miner_reward_input;
+   }
+
+   share_type database_api_impl::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+   {
+      const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
+      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
+      graphene::chain::miner_reward_input miner_reward_input;
+      memset(&miner_reward_input, 0, sizeof(miner_reward_input));
+
+      fc::time_point_sec next_time = (fc::time_point_sec)0;
+      fc::time_point_sec prev_time = (fc::time_point_sec)0;
+
+      auto itr = idx.cbegin();
+      for (auto itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr)
+      {
+         if (itr->record.next_maintenance_time > block_time)
+         {
+            next_time = itr->record.next_maintenance_time;
+            miner_reward_input.from_accumulated_fees = itr->record.from_accumulated_fees;
+            miner_reward_input.block_interval = itr->record.block_interval;
+         }
+      }
+
+      FC_ASSERT(next_time != (fc::time_point_sec)0);
+
       itr--;
-      
+
       if (itr == idx.begin())
       {
          fc::optional<signed_block> first_block = get_block(1);
          prev_time = first_block->timestamp;
          miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
+      }
+      else
+      {
+         itr--;
 
-         return miner_reward_input;
+         prev_time = (*itr).record.next_maintenance_time;
+         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
       }
 
-      itr--;
-      
-      prev_time = (*itr).record.next_maintenance_time;
-      miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
-      
-      return miner_reward_input;
+      uint32_t blocks_in_interval = (uint64_t(miner_reward_input.time_to_maint) + miner_reward_input.block_interval - 1) / miner_reward_input.block_interval;
+      return blocks_in_interval > 0 ? miner_reward_input.from_accumulated_fees / blocks_in_interval : 0;
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Private methods                                                  //
@@ -2576,6 +2603,11 @@ namespace
    miner_reward_input database_api::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
    {
       return my->get_time_to_maint_by_block_time(block_time);
+   }
+
+   share_type database_api::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+   {
+      return my->get_miner_pay_from_fees_by_block_time(block_time);
    }
 
    vector<database::votes_gained> database_api::get_actual_votes() const{

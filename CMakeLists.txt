@@ -1,27 +1,29 @@
-cmake_minimum_required( VERSION 2.8.12 FATAL_ERROR )
+if (POLICY CMP0025)
+    # Compiler id for Apple Clang is now AppleClang
+    cmake_policy(SET CMP0025 NEW)
+endif()
 
-project( Decent )
+if (POLICY CMP0048)
+    # The ``project()`` command manages VERSION variables.
+    cmake_policy(SET CMP0048 NEW)
+endif()
+
+cmake_minimum_required( VERSION 3.1.0 FATAL_ERROR )
+project( Decent LANGUAGES CXX )
 
 set( BLOCKCHAIN_NAME "Decent" )
 
-set( CLI_CLIENT_EXECUTABLE_NAME "decent_client" )
-set( GUI_CLIENT_EXECUTABLE_NAME "decent" )
-set( CUSTOM_URL_SCHEME "gcs" )
-set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
-
-if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2 )
         message( FATAL_ERROR "GCC version must be at least 4.9.2!" )
     endif()
-elseif( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+elseif( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5 )
         message( FATAL_ERROR "Clang version must be at least 3.5!" )
     endif()
 endif()
 
-set(CMAKE_C_FLAGS_DEBUG "-DDEBUG")
-
-
+# Compile in C++11 mode
 set( CMAKE_CXX_STANDARD 11 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
 
@@ -47,7 +49,6 @@ if( APPLE )
               "${HOMEBREW_PREFIX}/opt/pbc"
               "${HOMEBREW_PREFIX}/opt/gmp"
               "${HOMEBREW_PREFIX}/opt/cryptopp"
-              "${HOMEBREW_PREFIX}/opt/berkeley-db"
               "${HOMEBREW_PREFIX}/opt/qt5"
             )
     endif()
@@ -63,45 +64,12 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
-# check for OpenSSL version
-
-set( Boost_SELECT_VERSION 1.60)
-
-find_package(OpenSSL 1.1 EXACT)
-if (OpenSSL_FOUND)
-    set( Boost_SELECT_VERSION 1.63 )
-endif()
-
-if( WIN32 )
-    set( BOOST_ROOT $ENV{BOOST_ROOT} )
-    set( Boost_USE_MULTITHREADED ON )
-    set( BOOST_ALL_DYN_LINK OFF ) # force dynamic linking for all libraries
-endif()
-
-set( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
-
-find_package( Boost ${Boost_SELECT_VERSION} REQUIRED
-    COMPONENTS thread
-               date_time
-               system
-               filesystem
-               program_options
-               signals
-               serialization
-               chrono
-               unit_test_framework
-               context
-               coroutine
-               locale )
-
 find_package( CryptoPP REQUIRED )
 find_package( PBC REQUIRED )
 
 if( WIN32 )
 
     message( STATUS "Configuring Decent on WIN32" )
-    set( DB_VERSION 60 )
-    set( BDB_STATIC_LIBS 1 )
 
     set( ZLIB_LIBRARIES "" )
     set( DEFAULT_EXECUTABLE_INSTALL_DIR "bin/" )
@@ -115,21 +83,6 @@ if( WIN32 )
     # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
     set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG" )
 
-    # On windows tcl should be installed to the directory pointed by setenv.bat script
-    set( TCL_INCLUDE_PATH "$ENV{TCL_ROOT}/include" )
-    message( STATUS "tcl INCLUDE PATH: ${TCL_INCLUDE_PATH}" )
-
-    find_package( TCL )
-    message( STATUS "tcl_library: ${TCL_LIBRARY}" )
-
-    set( TCL_LIBS "optimized;${TCL_LIBRARY};debug;" )
-    get_filename_component( TCL_LIB_PATH "${TCL_LIBRARY}" PATH )
-    get_filename_component( TCL_LIB_NAME "${TCL_LIBRARY}" NAME_WE )
-    get_filename_component( TCL_LIB_EXT "${TCL_LIBRARY}" EXT )
-
-    set( TCL_LIBS "${TCL_LIBS}${TCL_LIB_PATH}/${TCL_LIB_NAME}g${TCL_LIB_EXT}" )
-    set( TCL_LIBRARY ${TCL_LIBS} )
-    
     add_definitions(-D_WIN32_WINNT=0x0601)
     add_definitions(-DCRYPTOPP_IMPORTS)
 
@@ -161,15 +114,15 @@ else() # Apple and Linux
         endif()
     endif()
 
-    if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-memcmp" )
         if( NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6 )
             set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive" )
         endif()
     endif()
 
-    if( "${CMAKE_GENERATOR}" STREQUAL "Ninja" )
-        if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+    if( CMAKE_GENERATOR STREQUAL "Ninja" )
+        if( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
             set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics" )
         endif()
     endif()
@@ -179,8 +132,6 @@ else() # Apple and Linux
 #    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
 
 endif()
-
-find_package( BerkeleyDB )
 
 set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis" )
 

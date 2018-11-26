@@ -79,7 +79,7 @@ Then, execute in console:
     $ brew doctor
     $ brew tap homebrew/versions
     $ brew update
-    $ brew install automake autoconf libtool cmake berkeley-db boost@1.60 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake boost@1.60 qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
 
 ### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
 
@@ -95,7 +95,7 @@ After all the prerequisites are installed, execute the following commands in con
     # Build and install Decent.
      mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
      cd ~/dev/DECENTfoundation/DECENT-Network-build
-     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug ~/dev/DECENTfoundation/DECENT-Network
+     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ~/dev/DECENTfoundation/DECENT-Network
      cmake --build . --target all -- -j -l 3.0
      cmake --build . --target install
 
