@@ -22,47 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/app/api.hpp>
-#include <graphene/app/api_access.hpp>
+
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
+
 #include <graphene/app/application.hpp>
+#include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
-
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/time/time.hpp>
-
-#include <graphene/egenesis/egenesis.hpp>
-
-#include <graphene/net/core_messages.hpp>
-#include <graphene/net/exceptions.hpp>
-
-#include <graphene/time/time.hpp>
-
-#include <graphene/utilities/dirhelper.hpp>
-#include <graphene/utilities/key_conversion.hpp>
-
-
-#include <fc/smart_ref_impl.hpp>
-
-#include <fc/io/fstream.hpp>
-#include <fc/rpc/api_connection.hpp>
-#include <fc/rpc/websocket_api.hpp>
-#include <fc/network/resolve.hpp>
-
-#include <boost/filesystem/path.hpp>
-#include <boost/signals2.hpp>
-#include <boost/range/algorithm/reverse.hpp>
-
-#include <iostream>
-
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-
-#include <boost/range/adaptor/reversed.hpp>
-#include <decent/package/package_config.hpp>
-#include <decent/ipfs_check.hpp>
-#include <decent/monitoring/monitoring.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -75,8 +42,6 @@ using chain::block_header;
 using chain::signed_block_header;
 using chain::signed_block;
 using chain::block_id_type;
-
-using std::vector;
 
 namespace bpo = boost::program_options;
 
@@ -1021,7 +986,7 @@ namespace detail {
       bool _is_finished_syncing = false;
    };
 
-}
+} // namespace detail
 
 application::application()
    : my(new detail::application_impl(this))
@@ -1184,5 +1149,4 @@ void application::startup_plugins()
    return;
 }
 
-// namespace detail
-} }
+} } // graphene::app

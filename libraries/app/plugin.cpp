@@ -22,8 +22,11 @@
  * THE SOFTWARE.
  */
 
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
+
 #include <graphene/app/plugin.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
 
 namespace graphene { namespace app {
 

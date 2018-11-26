@@ -26,37 +26,19 @@
 
 #include <graphene/app/full_account.hpp>
 
-#include <graphene/chain/protocol/types.hpp>
+#ifndef STDAFX_APP_H
+#include <fc/api.hpp>
 
 #include <graphene/chain/database.hpp>
-
-#include <graphene/chain/account_object.hpp>
-#include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/message_object.hpp>
-#include <graphene/chain/chain_property_object.hpp>
-#include <graphene/chain/operation_history_object.hpp>
-#include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/miner_object.hpp>
-#include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/content_object.hpp>
-#include <graphene/chain/seeder_object.hpp>
-#include <graphene/chain/budget_record_object.hpp>
-#include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
-#include <graphene/chain/transaction_history_object.hpp>
-
-#include <fc/api.hpp>
-#include <fc/optional.hpp>
-#include <fc/variant_object.hpp>
-
-#include <fc/network/ip.hpp>
-
-#include <boost/container/flat_set.hpp>
-
-#include <functional>
-#include <map>
-#include <memory>
-#include <vector>
+#include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/miner_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
+#endif
 
 /**
  * @defgroup DatabaseAPI Database API

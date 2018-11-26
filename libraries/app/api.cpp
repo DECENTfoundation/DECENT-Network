@@ -1,5 +1,4 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-/* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 /*
  * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
  *
@@ -23,27 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <cctype>
+
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
 
 #include <graphene/app/api.hpp>
-#include <decent/monitoring/monitoring.hpp>
-#include <graphene/app/api_access.hpp>
 #include <graphene/app/application.hpp>
-#include <graphene/app/impacted.hpp>
-#include <graphene/chain/database.hpp>
-#include <graphene/chain/get_config.hpp>
-#include <graphene/utilities/key_conversion.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/transaction_object.hpp>
-#include <graphene/chain/withdraw_permission_object.hpp>
-#include <graphene/seeding/seeding_utility.hpp>
 #include <graphene/app/balance.hpp>
-
-#include <fc/crypto/hex.hpp>
-#include <fc/smart_ref_impl.hpp>
-
-#include <boost/spirit/home/support/container.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
+#include <graphene/app/impacted.hpp>
+#include <graphene/app/seeding_utility.hpp>
 
 namespace decent { namespace seeding {
       fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;

@@ -1,18 +1,19 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
+
+#ifndef STDAFX_APP_H
 #include <fc/thread/future.hpp>
+
 #include <graphene/chain/protocol/types.hpp>
+#endif
 
 namespace decent { namespace seeding {
-
-
-//using namespace graphene::chain;
 
    struct seeding_plugin_startup_options
    {
       graphene::chain::account_id_type seeder;
       decent::encrypt::DInteger content_private_key;
-      fc::ecc::private_key seeder_private_key;
+      graphene::chain::private_key_type seeder_private_key;
       uint64_t free_space;
       std::string seeding_price;
       std::string seeding_symbol;

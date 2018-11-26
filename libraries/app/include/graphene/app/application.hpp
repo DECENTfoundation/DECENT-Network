@@ -24,14 +24,18 @@
 #pragma once
 
 #include <graphene/app/api_access.hpp>
-#include <graphene/net/node.hpp>
-#include <graphene/chain/database.hpp>
 
+#ifndef STDAFX_APP_H
 #include <boost/program_options.hpp>
+
+#include <fc/filesystem.hpp>
+
+#include <graphene/chain/database.hpp>
+#include <graphene/net/node.hpp>
+#endif
 
 namespace graphene { namespace app {
    namespace detail { class application_impl; }
-   using std::string;
 
    class abstract_plugin;
 
@@ -59,10 +63,10 @@ namespace graphene { namespace app {
             return plug;
          }
 
-         std::shared_ptr<abstract_plugin> get_plugin( const string& name )const;
+         std::shared_ptr<abstract_plugin> get_plugin( const std::string& name ) const;
 
          template<typename PluginType>
-         std::shared_ptr<PluginType> get_plugin( const string& name ) const
+         std::shared_ptr<PluginType> get_plugin( const std::string& name ) const
          {
             std::shared_ptr<abstract_plugin> abs_plugin = get_plugin( name );
             std::shared_ptr<PluginType> result = std::dynamic_pointer_cast<PluginType>( abs_plugin );
@@ -74,8 +78,8 @@ namespace graphene { namespace app {
          std::shared_ptr<chain::database> chain_database()const;
 
          void set_block_production(bool producing_blocks);
-         fc::optional< api_access_info > get_api_access_info( const string& username )const;
-         void set_api_access_info(const string& username, api_access_info&& permissions);
+         fc::optional< api_access_info > get_api_access_info( const std::string& username )const;
+         void set_api_access_info(const std::string& username, api_access_info&& permissions);
 
          bool is_finished_syncing()const;
          /// Emitted when syncing finishes (is_finished_syncing will return true)
@@ -84,8 +88,8 @@ namespace graphene { namespace app {
          uint64_t get_processed_transactions();
 
       private:
-         void add_plugin( const string& name, std::shared_ptr<abstract_plugin> p );
+         void add_plugin( const std::string& name, std::shared_ptr<abstract_plugin> p );
          std::shared_ptr<detail::application_impl> my;
    };
 
-} }
+} } // graphene::app

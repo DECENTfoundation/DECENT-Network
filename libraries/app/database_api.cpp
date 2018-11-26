@@ -23,29 +23,11 @@
  * THE SOFTWARE.
  */
 
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
+
 #include <graphene/app/database_api.hpp>
-#include <graphene/chain/get_config.hpp>
-
-
-#include <fc/bloom_filter.hpp>
-#include <fc/smart_ref_impl.hpp>
-
-#include <fc/crypto/hex.hpp>
-
-#include <boost/range/iterator_range.hpp>
-#include <boost/rational.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
-#include <decent/encrypt/custodyutils.hpp>
-#include <decent/encrypt/encryptionutils.hpp>
-
-#include <cctype>
-
-#include <cfenv>
-#include <iostream>
-#include "json.hpp"
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -61,7 +43,7 @@ namespace {
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
          return t1;
-      };
+      }
    };
    
    template <>
@@ -70,7 +52,7 @@ namespace {
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
          return t2;
-      };
+      }
    };
 }
 

@@ -25,8 +25,9 @@
 
 #include <graphene/app/application.hpp>
 
-#include <boost/program_options.hpp>
+#ifndef STDAFX_APP_H
 #include <fc/io/json.hpp>
+#endif
 
 namespace graphene { namespace app {
 
@@ -158,7 +159,7 @@ private:
 /// @group Some useful tools for boost::program_options arguments using vectors of JSON strings
 /// @{
 template<typename T>
-T dejsonify(const string& s)
+T dejsonify(const std::string& s)
 {
    return fc::json::from_string(s).as<T>();
 }

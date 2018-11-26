@@ -1,9 +1,9 @@
+#ifndef STDAFX_APP_H
+#include "stdafx.h"
+#endif
 
-#include <graphene/chain/protocol/authority.hpp>
 #include <graphene/app/balance.hpp>
 #include <graphene/app/api.hpp>
-
-#include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace app {
 
@@ -340,5 +340,4 @@ void operation_get_balance_history( const operation& op, account_id_type account
    op.visit( vtor );
 }
 
-
-} }
+} } // graphene::app

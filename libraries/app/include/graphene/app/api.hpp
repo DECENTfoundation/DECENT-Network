@@ -25,23 +25,20 @@
 #pragma once
 
 #include <graphene/app/database_api.hpp>
-#include <graphene/chain/protocol/types.hpp>
 
-#include <graphene/net/node.hpp>
-#include <graphene/chain/message_object.hpp>
-
-#include <decent/monitoring/monitoring_fc.hpp>
-
-#include <fc/api.hpp>
-#include <fc/optional.hpp>
-#include <fc/network/ip.hpp>
-
+#ifndef STDAFX_APP_H
 #include <boost/container/flat_set.hpp>
 
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
+#include <fc/crypto/elliptic.hpp>
+
+#include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/message_object.hpp>
+#include <graphene/chain/transaction_object.hpp>
+#include <graphene/chain/operation_history_object.hpp>
+#include <graphene/net/node.hpp>
+
+#include <decent/monitoring/monitoring_fc.hpp>
+#endif
 
 /**
  * @defgroup HistoryAPI History API
