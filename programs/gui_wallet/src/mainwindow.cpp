@@ -1,32 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
-#include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QMenuBar>
-#include <QMoveEvent>
-#include <QMessageBox>
-#include <QDateTime>
-#include <QProgressBar>
-#include <QGridLayout>
-#include <QStackedWidget>
-#include <QComboBox>
-#include <QStyleFactory>
-#include <QTimer>
-#include <QButtonGroup>
-#include <QFontDatabase>
-#else
-
+#ifndef STDAFX_H
+#include "../stdafx.h"
 #endif
-
 
 #include "mainwindow.hpp"
 #include "decent_label.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "richdialog.hpp"
 #include "browse_content_tab.hpp"
 #include "transactions_tab.hpp"
 #include "upload_tab.hpp"
@@ -35,28 +16,10 @@
 #include "mining_vote_tab.hpp"
 #include "mining_vote_popup.hpp"
 
-#include "json.hpp"
-
-#ifndef _MSC_VER
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <graphene/utilities/dirhelper.hpp>
-#include <graphene/wallet/wallet.hpp>
-
-#include <QCloseEvent>
-#include <QMessageBox>
-#include <QCheckBox>
-#include <QtGlobal>
-#endif
-
 #include "update_manager.hpp"
 
-using namespace nlohmann;
-using namespace gui_wallet;
-using namespace std;
-using namespace graphene;
-using namespace utilities;
+namespace gui_wallet
+{
 
 MainWindow::MainWindow(const std::string &wallet_file)
 : QMainWindow()
@@ -933,7 +896,7 @@ void MainWindow::slot_checkDownloads()
       return;
    }
 
-   json contents;
+   nlohmann::json contents;
 
    try
    {
@@ -1109,7 +1072,6 @@ void MainWindow::DisplayWalletContentGUI()
       //ALERT_DETAILS("Failed to get account information", ex.what());
       QMessageBox::critical(this, "Error", QString(tr("Failed to get account information - %1")).arg(QString::fromStdString(exception_text)));
    }
-
 }
 
-
+}

@@ -1,14 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#ifndef _MSC_VER
-#include <QDialog>
+#ifndef STDAFX_H
+#include <QWidget>
 #include <QVector>
-#endif
 
-class QTextEdit;
-class QCloseEvent;
+class QLabel;
 class QPushButton;
+#endif
 
 namespace gui_wallet
 {
@@ -217,4 +216,3 @@ private:
 };
 
 }
-

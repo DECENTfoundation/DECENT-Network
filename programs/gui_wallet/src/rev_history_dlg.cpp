@@ -1,20 +1,13 @@
-#include "stdafx.h"
-
-
-#ifndef _MSC_VER
-#include <QPlainTextEdit>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#ifndef STDAFX_H
+#include "../stdafx.h"
 #endif
 
 #include "rev_history_dlg.hpp"
 #include "decent_button.hpp"
 #include "gui_wallet_global.hpp"
 
-
-
-
-using namespace gui_wallet;
+namespace gui_wallet
+{
 
 Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : QDialog(pParent)
    , m_revHistory(revHistory)
@@ -78,4 +71,6 @@ void Rev_history_dlg::slot_btn_ok(void)
 void Rev_history_dlg::slot_btn_cancel(void)
 {
    reject();
+}
+
 }

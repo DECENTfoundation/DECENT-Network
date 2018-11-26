@@ -1,7 +1,5 @@
-#include "stdafx.h"
-
-#ifndef _MSC_VER
-#include <QCloseEvent>
+#ifndef STDAFX_H
+#include "../stdafx.h"
 #endif
 
 #include "update_prog_bar.hpp"

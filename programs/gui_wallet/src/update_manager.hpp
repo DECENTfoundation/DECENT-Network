@@ -3,11 +3,12 @@
 //#define UPDATE_MANAGER
 #ifdef UPDATE_MANAGER
 
-#ifndef _MSC_VER
+#ifndef STDAFX_H
 #include <QObject>
-#endif
 
 class QTimer;
+#endif
+
 class CProgBar;
 class CDetectUpdateThreadParams;
 

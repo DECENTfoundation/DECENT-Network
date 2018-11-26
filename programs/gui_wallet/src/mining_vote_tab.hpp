@@ -1,14 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#include <string>
-
 #include "gui_wallet_tabcontentmanager.hpp"
+
+#ifndef STDAFX_H
 #include <QMap>
 
-class QSignalMapper;
-class QWidget;
 class QCheckBox;
+#endif
 
 namespace gui_wallet
 {

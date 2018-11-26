@@ -1,24 +1,14 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
 #include "purchased_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
 #include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QFileDialog>
-#include <QLineEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QSignalMapper>
-#include <graphene/chain/config.hpp>
-#include <graphene/chain/content_object.hpp>
-#include "json.hpp"
-#endif
-
-using std::string;
 
 namespace gui_wallet
 {
@@ -151,7 +141,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
-      set_next_page_iterator(string());
+      set_next_page_iterator(std::string());
 
    ShowDigitalContentsGUI();
 }
@@ -370,5 +360,3 @@ void PurchasedTab::slot_SortingChanged(int index)
 }
 
 }  // end namespace gui_wallet
-
-

@@ -1,11 +1,10 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
+
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
 
 #include "decent_line_edit.hpp"
-
-#include <QEvent>
-#include <QStyle>
-#include <QVariant>
 
 namespace gui_wallet
 {
@@ -50,6 +49,4 @@ namespace gui_wallet
       }
       QLineEdit::changeEvent(event);
    }
-
 }
-

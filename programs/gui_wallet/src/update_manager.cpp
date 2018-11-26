@@ -1,8 +1,8 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
-
-#include "stdafx.h"
-
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
 
 #include "update_manager.hpp"
 #ifdef UPDATE_MANAGER
@@ -13,14 +13,9 @@
 #include "update_prog_bar.hpp"
 
 #ifndef _MSC_VER
-#include <QTimer>
-#include <QApplication>
 #include <pthread.h>
-
 typedef void* DCTHANDLE;
 #endif
-
-#include <QMainWindow>
 
 static UpdateManager* s_updateManager = nullptr;
 

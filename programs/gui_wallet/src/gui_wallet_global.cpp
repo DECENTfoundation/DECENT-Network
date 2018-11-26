@@ -1,44 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
+
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
 
 #include "gui_wallet_global.hpp"
 #include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QMessageBox>
-#include <QThread>
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#include <QTimer>
-#include <QHeaderView>
-#include <QObject>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLocale>
-#include <QApplication>
-#include <QFont>
-
-// used for running daemons
-//
-
-#include <fc/exception/exception.hpp>
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-#include <fc/filesystem.hpp>
-#include <fc/interprocess/signals.hpp>
-#include <fc/thread/thread.hpp>
-
-#include <decent/config/decent_log_config.hpp>
-
-#include <QProcess>
-#include <QDir>
-//
-// //
-#endif
-
 
 //#define DECENT_WITHOUT_DAEMON
 
@@ -46,8 +13,6 @@
 
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir);
-
-using  std::string;
 
 namespace gui_wallet
 {
@@ -77,7 +42,7 @@ uint64_t json_to_int64(nlohmann::json const& o)
    if (o.is_number())
       return o.get<uint64_t>();
    else
-      return std::stoll(o.get<string>());
+      return std::stoll(o.get<std::string>());
 }
 
 struct CalendarDuration
@@ -807,14 +772,14 @@ Asset Globals::asset(uint64_t amount, const std::string& assetId)
    return ast_amount;
 }
 
-string Globals::runTask(string const& str_command)
+std::string Globals::runTask(std::string const& str_command)
 {
    return getWallet().RunTask(str_command);
 }
 
-nlohmann::json Globals::runTaskParse(string const& str_command)
+nlohmann::json Globals::runTaskParse(std::string const& str_command)
 {
-   string str_result = runTask(str_command);
+   std::string str_result = runTask(str_command);
    return nlohmann::json::parse(str_result);
 }
 
@@ -831,7 +796,7 @@ std::vector<Publisher> Globals::getPublishers()
 
       publisher.m_str_name = publishers[iIndex]["seeder"].get<std::string>();
       uint64_t iPrice = json_to_int64(publishers[iIndex]["price"]["amount"]);
-      string iSymbolId = publishers[iIndex]["price"]["asset_id"];
+      std::string iSymbolId = publishers[iIndex]["price"]["asset_id"];
       publisher.m_price = asset(iPrice, iSymbolId);
       publisher.m_storage_size = publishers[iIndex]["free_space"].get<int>();
    }
@@ -866,7 +831,7 @@ void Globals::setWalletError(std::string const& error)
    emit walletConnectionError(error);
 }
 
-std::string Globals::getAccountName(string const& accountId)
+std::string Globals::getAccountName(std::string const& accountId)
 {
    auto search = m_map_user_id_cache.find(accountId);
    if (search == m_map_user_id_cache.end())
@@ -1641,4 +1606,3 @@ QFont gui_wallet::MainFont()
    font.setPointSizeF(FontSize(12));
    return font;
 }
-

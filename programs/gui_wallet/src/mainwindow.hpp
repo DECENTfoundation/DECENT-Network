@@ -1,9 +1,10 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
+#include "gui_wallet_global.hpp"
+
+#ifndef STDAFX_H
 #include <QMainWindow>
-#include <string>
-#include <set>
 
 class QStackedWidget;
 class QComboBox;
@@ -11,6 +12,8 @@ class QCheckBox;
 class QTimer;
 class QAction;
 class QProgressBar;
+#endif
+
 class UpdateManager;
 
 namespace gui_wallet
@@ -127,8 +130,6 @@ private:
 
    QProgressBar* m_pConnectingProgress;
    DecentLabel* m_pConnectingLabel;
-
 };
 
 }
-

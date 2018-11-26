@@ -1,25 +1,14 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
 #include "overview_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
 #include "richdialog.hpp"
-
-#ifndef _MSC_VER
-#include <QPixmap>
-#include <QRect>
-#include <QSignalMapper>
-#include <QLabel>
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <graphene/chain/config.hpp>
-#include "json.hpp"
-#endif
-
-using std::string;
 
 namespace gui_wallet
 {
@@ -143,7 +132,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
    if (contents.size() > m_i_page_size)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
-      set_next_page_iterator(string());
+      set_next_page_iterator(std::string());
 }
 
 std::string Overview_tab::getUpdateCommand() {

@@ -1,39 +1,19 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
 #include "richdialog.hpp"
-
-
+#include "gui_wallet_global.hpp"
 #include "decent_button.hpp"
 #include "decent_label.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_text_edit.hpp"
 
-#ifndef _MSC_VER
-#include <graphene/chain/content_object.hpp>
-
-
-#include <QIntValidator>
-#include <QMessageBox>
-#include <QKeyEvent>
-#include <QDateTime>
-#include <QTextEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QLocale>
-#include <QInputMethod>
-#include <QApplication>
-#include <QMenu>
-#include <vector>
-#include <string>
-#endif
-
-
 namespace gui_wallet
 {
+
 void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 {
    pParent->show();
@@ -46,6 +26,7 @@ void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pParent->setLayout(pMainLayout);
 }
+
 //
 // RatingWidget
 //

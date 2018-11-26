@@ -1,30 +1,14 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
 #include "browse_content_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_button.hpp"
 #include "richdialog.hpp"
-
-#include <boost/algorithm/string/replace.hpp>
-
-#ifndef _MSC_VER
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QSignalMapper>
-#include "json.hpp"
-
-#include <graphene/chain/config.hpp>
-#include <graphene/chain/content_object.hpp>
-#include <graphene/wallet/wallet.hpp>
-
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#endif
 
 namespace gui_wallet
 {
@@ -112,7 +96,7 @@ void BrowseContentTab::timeToUpdate(const std::string& result)
       if (contents.size() > m_i_page_size)
          set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
       else
-         set_next_page_iterator(string());
+         set_next_page_iterator(std::string());
    }
    catch(const std::exception& ex) {
       //TODO: exception...
@@ -130,10 +114,10 @@ std::string BrowseContentTab::getUpdateCommand()
 {
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
-   string str_type;
+   std::string str_type;
    type.to_string(str_type);
 
-   return   string("search_content ") +
+   return std::string("search_content ") +
             "\"" + m_strSearchTerm.toStdString() + "\" " +
             "\"" + m_pTableWidget->getSortedColumn() + "\" " +
             "\"\" " +   // user
@@ -269,10 +253,10 @@ void BrowseContentTab::slot_SearchTermChanged(QString const& strSearchTerm)
    m_strSearchTerm = strSearchTerm;
    reset(false);
 }
+
 void BrowseContentTab::slot_SortingChanged(int index)
 {
    reset();
 }
+
 } // end namespace gui_wallet
-
-

@@ -1,38 +1,15 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include "../stdafx.h"
+#endif
+
 #include "upload_popup.hpp"
+#include "gui_wallet_global.hpp"
 #include "decent_button.hpp"
 #include "decent_text_edit.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_label.hpp"
-
-#ifndef _MSC_VER
-#include <QLocale>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QFileDialog>
-#include <QStringList>
-#include <QComboBox>
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#include <QTimer>
-#include <QDateEdit>
-#include <QCheckBox>
-#include <QStyleFactory>
-#include <QSignalMapper>
-#include <QLocale>
-#include <QFileInfo>
-
-#include <graphene/chain/config.hpp>
-#include <graphene/chain/content_object.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
-#endif
-
-using std::string;
 
 namespace gui_wallet
 {
@@ -271,7 +248,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
 
    if (!m_id_modify.empty())
    {
-      string title, description, price, expiration;
+      std::string title, description, price, expiration;
       getContents(m_id_modify, title, description, price, expiration);
 
       QDateTime time = QDateTime::fromString(QString::fromStdString(expiration), "yyyy-MM-ddTHH:mm:ss");
@@ -539,18 +516,18 @@ void Upload_popup::slot_BrowseSamples()
    emit signal_SamplesPathChange(sampleDir);
 }
    
-void Upload_popup::getContents(string const& id,
-                               string& hash,
-                               string& str_expiration,
-                               string& str_size,
-                               string& str_quorum,
-                               string& str_fee,
-                               string& str_cd,
-                               string& uri) const
+void Upload_popup::getContents(std::string const& id,
+                               std::string& hash,
+                               std::string& str_expiration,
+                               std::string& str_size,
+                               std::string& str_quorum,
+                               std::string& str_fee,
+                               std::string& str_cd,
+                               std::string& uri) const
 {
    try
    {
-      string command =  "search_content "
+      std::string command =  "search_content "
                         "\"\" "
                         "\"\" "
                         "\"\" "
@@ -562,7 +539,7 @@ void Upload_popup::getContents(string const& id,
       nlohmann::json contents = Globals::instance().runTaskParse(command);
       nlohmann::json content_summary = contents[0];
       hash = content_summary["_hash"];
-      str_expiration = content_summary["expiration"].get<string>();
+      str_expiration = content_summary["expiration"].get<std::string>();
       str_size = std::to_string( content_summary["size"].get<uint64_t>() );
       uri = content_summary["URI"];
 
@@ -572,10 +549,10 @@ void Upload_popup::getContents(string const& id,
 
       str_quorum = std::to_string( quorum.get<uint32_t>() );
 
-      str_cd = string();
+      str_cd = std::string();
       str_cd += " {\"n\": " + std::to_string( cd["n"].get<uint>() ) + ",";
-      str_cd += " \"u_seed\": \"" + cd["u_seed"].get<string>() + "\",";
-      str_cd += " \"pubKey\": \"" + cd["pubKey"].get<string>() + "\"}";
+      str_cd += " \"u_seed\": \"" + cd["u_seed"].get<std::string>() + "\",";
+      str_cd += " \"pubKey\": \"" + cd["pubKey"].get<std::string>() + "\"}";
    }
    catch(const std::exception& ex) {
       std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
@@ -585,15 +562,15 @@ void Upload_popup::getContents(string const& id,
    }
 
 }
-void Upload_popup::getContents(string const& id,
-                               string& title,
-                               string& description,
-                               string& price,
-                               string& str_expiration)
+void Upload_popup::getContents(std::string const& id,
+                               std::string& title,
+                               std::string& description,
+                               std::string& price,
+                               std::string& str_expiration)
 {
    try
    {
-      string command =  "search_content "
+      std::string command =  "search_content "
                         "\"\" "
                         "\"\" "
                         "\"\" "
@@ -605,13 +582,13 @@ void Upload_popup::getContents(string const& id,
       nlohmann::json contents = Globals::instance().runTaskParse(command);
       nlohmann::json content_summary = contents[0];
 
-      string synopsis = content_summary["synopsis"].get<std::string>();
+      std::string synopsis = content_summary["synopsis"].get<std::string>();
       uint64_t iPrice = json_to_int64(content_summary["price"]["amount"]);
-      string iSymbolId = content_summary["price"]["asset_id"];
+      std::string iSymbolId = content_summary["price"]["asset_id"];
       Asset asset_price = Globals::instance().asset(iPrice, iSymbolId);
       price = std::to_string(asset_price.to_value());
-      str_expiration = content_summary["expiration"].get<string>();
-      string uri = content_summary["URI"];
+      str_expiration = content_summary["expiration"].get<std::string>();
+      std::string uri = content_summary["URI"];
 
       graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
       title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
@@ -620,13 +597,13 @@ void Upload_popup::getContents(string const& id,
       nlohmann::json const content_object = Globals::instance().runTaskParse("get_content \"" + uri + "\"");
       nlohmann::json const& key_parts = content_object["key_parts"];
 
-      std::map<string, size_t> indexPublishers;
+      std::map<std::string, size_t> indexPublishers;
       for (size_t index = 0; index < m_arrPublishers.size(); ++index)
          indexPublishers.insert(std::make_pair(m_arrPublishers[index].first.m_str_name, index));
 
       for (size_t index = 0; index < key_parts.size(); ++index)
       {
-         string seeder_name = key_parts[index][0].get<string>();
+         std::string seeder_name = key_parts[index][0].get<std::string>();
          auto it = indexPublishers.find(seeder_name);
          if (it != indexPublishers.end())
          {
@@ -665,23 +642,23 @@ void Upload_popup::slot_UploadContent()
    synopsis_construct.set<graphene::chain::ContentObjectDescription>(desc);
    std::string synopsis = synopsis_construct.m_str_synopsis;
 
-   string str_seeders = getChosenPublishers().join(", ").toStdString();
+   std::string str_seeders = getChosenPublishers().join(", ").toStdString();
 
    std::string submitCommand;
    
    if (!m_id_modify.empty())
    {
-      string hash;
-      string str_expiration;
-      string str_size;
-      string str_quorum;
-      string str_fee;
-      string cd;
-      string uri;
+      std::string hash;
+      std::string str_expiration;
+      std::string str_size;
+      std::string str_quorum;
+      std::string str_fee;
+      std::string cd;
+      std::string uri;
 
       getContents(m_id_modify, hash, str_expiration, str_size, str_quorum, str_fee, cd, uri);
 
-      string str_AES_key = Globals::instance().runTask("generate_encryption_key");
+      std::string str_AES_key = Globals::instance().runTask("generate_encryption_key");
       
       //submit content
       submitCommand = "submit_content";
@@ -742,4 +719,3 @@ void Upload_popup::slot_UploadContent()
 }
 
 } // end namespace gui_wallet
-
