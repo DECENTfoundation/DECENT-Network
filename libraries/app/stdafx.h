@@ -2,6 +2,8 @@
 #define STDAFX_APP_H
 
 #include <iostream>
+#include <cfenv>
+#include <memory>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/container/flat_set.hpp>
@@ -48,3 +50,5 @@
 #include <decent/ipfs_check.hpp>
 #include <decent/monitoring/monitoring_fc.hpp>
 #include <decent/package/package_config.hpp>
+
+#include "json.hpp"

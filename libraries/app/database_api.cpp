@@ -27,11 +27,6 @@
 #include "stdafx.h"
 #endif
 
-#include <cfenv>
-#include <iostream>
-#include <memory>
-#include "json.hpp"
-
 #include <graphene/app/database_api.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
