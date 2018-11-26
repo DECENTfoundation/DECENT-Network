@@ -122,6 +122,8 @@ namespace gui_wallet
    class Asset
    {
    public:
+      Asset() = default;
+      Asset(const std::string &str_symbol, uint8_t precision, uint64_t amount = 0u);
       double to_value() const;
       bool hasDecimals() const;
 
@@ -185,7 +187,6 @@ namespace gui_wallet
       std::vector<Publisher> getPublishers();
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
-      QString getAssetName(const std::string& assetId = Asset::dct_id) const;
       void display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3);
 
       //functions
@@ -244,7 +245,7 @@ namespace gui_wallet
       std::chrono::steady_clock::time_point m_tp_started;
       std::chrono::system_clock::time_point m_blockStart;
 
-
+      std::map<std::string, Asset> m_asset_symbols_cache;
       std::map<std::string, std::string> m_map_user_id_cache;
 
       std::string m_exceptionMsgBoxParam1;

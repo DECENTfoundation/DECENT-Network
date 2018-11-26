@@ -2519,7 +2519,7 @@ signed_transaction content_cancellation(const string& author,
                FC_THROW("File not found or an I/O error");
            }
 
-           myApi.Connent(cancelToken);
+           myApi.Connect(cancelToken);
 
            while (std::getline(cf_in, current_line))
            {

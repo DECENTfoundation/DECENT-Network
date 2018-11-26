@@ -476,7 +476,7 @@ void WalletOperator::slot_connect()
    std::string str_error;
    try
    {
-      m_wallet_api.Connent(m_cancellation_token);
+      m_wallet_api.Connect(m_cancellation_token);
    }
    catch(const std::exception& ex)
    {
@@ -489,6 +489,11 @@ void WalletOperator::slot_connect()
 //
 // Asset
 //
+Asset::Asset(const std::string &str_symbol, uint8_t precision, uint64_t amount)
+   : m_amount(amount), m_scale(pow(10, precision)), m_str_symbol(str_symbol)
+{
+}
+
 double Asset::to_value() const
 {
    uint64_t amount = m_amount / m_scale;
@@ -759,17 +764,31 @@ void Globals::clear()
 
 Asset Globals::asset(uint64_t amount, const std::string& assetId)
 {
-   Asset ast_amount;
-   uint8_t precision = 0;
+   auto search = m_asset_symbols_cache.find(assetId);
+   if (search == m_asset_symbols_cache.end())
+   {
+      uint32_t limit = 100;
+      std::string lowerbound;
+      do
+      {
+         nlohmann::json assets = runTaskParse("list_assets \"" + lowerbound + "\" 100");
+         limit = assets.size();
+         if (!assets.empty())
+            lowerbound = assets.back()["symbol"].get<std::string>();
 
-   graphene::chain::asset_id_type asset_id;
-   fc::from_variant(assetId, asset_id);
+         std::for_each(assets.begin(), assets.end(), [&](const nlohmann::json& asset) {
+            m_asset_symbols_cache[asset["id"].get<std::string>()] = Asset(asset["symbol"].get<std::string>(), asset["precision"].get<uint8_t>());
+         } );
+      } while (limit == 100);
 
-   getWallet().LoadAssetInfo(ast_amount.m_str_symbol, precision, asset_id);
-   ast_amount.m_scale = pow(10, precision);
-   ast_amount.m_amount = amount;
+      search = m_asset_symbols_cache.find(assetId);
+      if (search == m_asset_symbols_cache.end())
+         return Asset();
+   }
 
-   return ast_amount;
+   Asset asset(search->second);
+   asset.m_amount = amount;
+   return asset;
 }
 
 std::string Globals::runTask(std::string const& str_command)
@@ -807,18 +826,6 @@ std::vector<Publisher> Globals::getPublishers()
 bool Globals::connected() const
 {
    return m_connected_state != ConnectionState::Connecting;
-}
-
-QString Globals::getAssetName(const std::string& assetId) const
-{
-   uint8_t precision = 0;
-   std::string assetName;
-
-   graphene::chain::asset_id_type asset_id;
-   fc::from_variant(assetId, asset_id );
-   getWallet().LoadAssetInfo(assetName, precision, asset_id);
-
-   return QString::fromStdString(assetName);
 }
 
 void Globals::setWalletUnlocked()
@@ -968,11 +975,12 @@ void Globals::slot_showTransferDialog(const QString& user)
       for ( const auto &balance : allBalances )
       {
          const std::string& assetId = balance["asset_id"].get<std::string>();
-         auto a = qMakePair(getAssetName(assetId), QString::fromStdString(assetId));
+         Asset a = asset(0, assetId);
+         auto asset = qMakePair(QString::fromStdString(a.m_str_symbol), QString::fromStdString(assetId));
          if (assetId == Asset::dct_id)
-            assets.prepend(a);
+            assets.prepend(asset);
          else
-            assets.append(a);
+            assets.append(asset);
       }
    }
 

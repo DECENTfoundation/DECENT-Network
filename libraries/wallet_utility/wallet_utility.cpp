@@ -63,8 +63,7 @@ namespace wallet_utility
       {
       public:
          WalletAPIHelper(const fc::path &wallet_file)
-         : m_asset_precision(0)
-         ,m_ptr_wallet_api(nullptr)
+         : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
@@ -122,13 +121,10 @@ namespace wallet_utility
             m_ptr_fc_api_connection->register_api(*ptr_fc_api);
          }
 
-         uint8_t m_asset_precision;
-         std::map<graphene::chain::asset_id_type, std::string> m_asset_symbols;
-         std::map<std::string, uint8_t> m_asset_precisions;
          wallet_api_ptr m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
-         string m_str_asset_symbol; //<core asset
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
+         std::map<graphene::chain::asset_id_type, std::pair<std::string, uint8_t>> m_asset_symbols;
       };
    }
    //
@@ -146,9 +142,9 @@ namespace wallet_utility
    {
    }
 
-   void WalletAPI::Connent(std::atomic_bool& cancellation_token)
+   void WalletAPI::Connect(std::atomic_bool& cancellation_token)
    {
-      if (Connected())
+      if (IsConnected())
          throw wallet_exception("already connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -195,7 +191,7 @@ namespace wallet_utility
          throw wallet_exception(str_result);
    }
 
-   bool WalletAPI::Connected()
+   bool WalletAPI::IsConnected()
    {
       std::lock_guard<std::mutex> lock(m_mutex);
       return nullptr != m_pimpl;
@@ -203,7 +199,7 @@ namespace wallet_utility
 
    bool WalletAPI::IsNew()
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -218,7 +214,7 @@ namespace wallet_utility
    }
    bool WalletAPI::IsLocked()
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -233,7 +229,7 @@ namespace wallet_utility
    }
    std::chrono::system_clock::time_point WalletAPI::HeadBlockTime()
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -249,7 +245,7 @@ namespace wallet_utility
    }
    void WalletAPI::SetPassword(string const& str_password)
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -264,7 +260,7 @@ namespace wallet_utility
    }
    void WalletAPI::Unlock(string const& str_password)
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -278,48 +274,9 @@ namespace wallet_utility
       return future_unlock.wait();
    }
 
-   void WalletAPI::LoadAssetInfo(string &str_symbol, uint8_t &precision, const graphene::chain::asset_id_type asset_id)
-   {
-      if ( !Connected() )
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl;
-
-      if (m_pimpl->m_str_asset_symbol.empty())
-      {
-         fc::future<void> future_load =
-         m_pthread->async([&pimpl] ()
-                          {
-                             vector<asset_object> assets = pimpl->m_ptr_wallet_api->list_assets(string(), 100);
-
-                             for( auto asset: assets ){
-                                pimpl->m_asset_precisions [asset.symbol] = asset.precision;
-                                pimpl->m_asset_symbols [ asset.id ] = asset.symbol;
-                             }
-                             pimpl->m_str_asset_symbol = assets[0].symbol;
-
-                          });
-         future_load.wait();
-      }
-
-      auto& impl = *m_pimpl;
-      if ( !impl.m_str_asset_symbol.empty() )
-      {
-         if( impl.m_asset_symbols.count( asset_id ) ) {
-            str_symbol = impl.m_asset_symbols[ asset_id ];
-            if( impl.m_asset_precisions.count(str_symbol))
-               precision = impl.m_asset_precisions[ str_symbol ];
-            else if( impl.m_asset_precisions.count(str_symbol))
-               precision = impl.m_asset_precisions[ impl.m_str_asset_symbol ];
-         }
-      }
-   }
-
    void WalletAPI::SaveWalletFile()
    {
-      if (!Connected())
+      if (!IsConnected())
          throw wallet_exception("not yet connected");
 
       string str_file = m_wallet_file.to_native_ansi_path();
@@ -337,7 +294,7 @@ namespace wallet_utility
    /*
    std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
    {
-      if (false == Connected())
+      if (false == IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -354,7 +311,7 @@ namespace wallet_utility
 
    string WalletAPI::RunTask(string const& str_command)
    {
-      if (false == Connected())
+      if (false == IsConnected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);

@@ -75,7 +75,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    dblValidator->setLocale(Globals::instance().locale());
 
    m_pPriceEditor = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   m_pPriceEditor->setPlaceholderText(QString(tr("Price in %1")).arg(Globals::instance().getAssetName()) );
+   m_pPriceEditor->setPlaceholderText(QString(tr("Price in %1")).arg(QString::fromStdString(Globals::instance().asset(0).m_str_symbol)));
    m_pPriceEditor->setValidator(dblValidator);
    m_pPriceEditor->setAttribute(Qt::WA_MacShowFocusRect, 0);
    m_pPriceEditor->setTextMargins(5, 5, 5, 5);
