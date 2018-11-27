@@ -42,8 +42,7 @@ public:
                                                "network_broadcast_api",
                                                "history_api",
                                                "crypto_api",
-                                               "messaging_api",
-                                               "monitoring_api" };
+                                               "messaging_api" };
 };
 
 class api_access

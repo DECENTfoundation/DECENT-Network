@@ -8,7 +8,7 @@ if( GPERFTOOLS_FOUND )
 endif()
 
 target_link_libraries( cli_wallet
-        PRIVATE graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt
+        PRIVATE decent_monitoring graphene_app graphene_net graphene_chain graphene_egenesis_decent graphene_utilities graphene_wallet package_manager decent_encrypt
         pbc
         fc
         ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}

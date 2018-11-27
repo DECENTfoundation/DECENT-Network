@@ -18,7 +18,7 @@ add_library( graphene_app
              ${HEADERS}
            )
 
-target_link_libraries( graphene_app graphene_chain fc graphene_db graphene_net graphene_time graphene_utilities decent_monitoring nlohmann_json package_manager )
+target_link_libraries( graphene_app graphene_chain fc graphene_db graphene_net graphene_time graphene_utilities nlohmann_json package_manager )
 target_include_directories( graphene_app PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/include"
                             "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include"
