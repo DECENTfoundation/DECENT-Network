@@ -57,7 +57,7 @@ namespace monitoring {
          });
 
          if (_pending_save.size()) {
-            std::move(_pending_save.begin(), _pending_save.end(), result.end());
+            result.insert(result.end(), _pending_save.begin(), _pending_save.end());
             _pending_save.clear();
          }
 
