@@ -155,6 +155,11 @@ if(UNIX)
     endif()
 endif()
 
+SET(BOOST_COMPONENTS)
+LIST(APPEND BOOST_COMPONENTS thread date_time system filesystem program_options signals serialization chrono unit_test_framework context coroutine locale iostreams)
+SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
+
+find_package(Boost 1.60 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
