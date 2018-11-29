@@ -92,6 +92,9 @@ string memo_message::serialize() const
 
 memo_message memo_message::deserialize(const string& serial)
 {
+   if( serial.empty() )
+      return memo_message();
+
    memo_message result;
    FC_ASSERT( serial.size() >= sizeof(result.checksum) );
    result.checksum = ((uint32_t&)(*serial.data()));
