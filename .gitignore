@@ -8,7 +8,6 @@ Makefile
 compile_commands.json
 moc_*
 *.moc
-hardfork.hpp
 
 Graphene.cbp
 
@@ -59,7 +58,7 @@ object_database/*
 *.pyc
 *.pyo
 
-
+.vs/
 .idea/
 # vendors mut not be in repository
 */**/vendor/
