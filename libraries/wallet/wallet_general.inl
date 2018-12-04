@@ -194,3 +194,13 @@ void wallet_api::from_command_file( const std::string& command_file_name ) const
 {
    return my->from_command_file( command_file_name );
 }
+
+void wallet_api::exit() const
+{
+   // do not write any code here. This part of code is never executed. The logic of this command is specified elsewhere.
+}
+
+void wallet_api::quit() const
+{
+   // do not write any code here. This part of code is never executed. The logic of this command is specified elsewhere.
+}

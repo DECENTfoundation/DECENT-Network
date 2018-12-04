@@ -405,6 +405,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_transaction_id)
         (get_transaction_by_id)
         (from_command_file)
+        (exit)
+        (quit)
 
         //Wallet file
         (list_my_accounts)
@@ -416,6 +418,7 @@ FC_API( graphene::wallet::wallet_api,
         (load_wallet_file)
         (save_wallet_file)
         (import_key)
+        (import_single_key)
         (dump_private_keys)
         (list_operations)
 
@@ -430,9 +433,15 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_balance_for_transaction)
         (get_relative_account_history)
         (get_account)
+        (derive_private_key)
+        (get_public_key)
         (suggest_brain_key)
+        (register_account_with_keys)
         (register_account)
+        (register_multisig_account)
         (create_account_with_brain_key)
+        (update_account_keys)
+        (update_account_keys_to_multisig)
         (transfer)
         (transfer2)
         (generate_el_gamal_keys)
@@ -546,8 +555,3 @@ FC_API( graphene::wallet::wallet_api,
         (reset_counters)
         (get_counters)
    )
-
-#if 0
-        //Network
-        (flood_network)
-#endif

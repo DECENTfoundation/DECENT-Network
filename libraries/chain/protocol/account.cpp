@@ -163,6 +163,23 @@ void account_options::validate() const
 
 }
 
+bool operator == (const graphene::chain::account_options &a, const graphene::chain::account_options &b)
+{
+   return ( a.memo_key == b.memo_key ) &&
+          ( a.voting_account == b.voting_account ) &&
+          ( a.num_miner == b.num_miner ) &&
+          ( a.votes == b.votes ) &&
+          ( a.extensions == b.extensions ) &&
+          ( a.allow_subscription == b.allow_subscription ) &&
+          ( a.price_per_subscribe == b.price_per_subscribe ) &&
+          ( a.subscription_period == b.subscription_period );
+}
+
+bool operator != (const graphene::chain::account_options &a, const graphene::chain::account_options &b)
+{
+   return !( a == b );
+}
+
 share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
 {
    auto core_fee_required = k.basic_fee;
@@ -207,12 +224,12 @@ void account_update_operation::validate()const
    if( owner )
    {
       FC_ASSERT( owner->num_auths() != 0 );
-      FC_ASSERT( !owner->is_impossible(), "cannot update an account with an imposible owner authority threshold" );
+      FC_ASSERT( !owner->is_impossible(), "cannot update an account with an impossible owner authority threshold" );
    }
    if( active )
    {
       FC_ASSERT( active->num_auths() != 0 );
-      FC_ASSERT( !active->is_impossible(), "cannot update an account with an imposible active authority threshold" );
+      FC_ASSERT( !active->is_impossible(), "cannot update an account with an impossible active authority threshold" );
    }
 
    if( new_options )

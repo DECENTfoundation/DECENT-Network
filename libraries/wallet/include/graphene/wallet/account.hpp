@@ -159,7 +159,15 @@ account_object                    get_account(const string& account_name_or_id) 
  * @return derived private key
  * @ingroup WalletAPI_Account
  */
-fc::ecc::private_key derive_private_key(const std::string& prefix_string, int sequence_number) const;
+std::string derive_private_key(const std::string& prefix_string, int sequence_number) const;
+
+/**
+ * @brief Get public key from given private key.
+ * @param wif_private_key the private key in wallet import format
+ * @return corresponding public key
+ * @ingroup WalletAPI_Account
+ */
+graphene::chain::public_key_type get_public_key( const std::string& wif_private_key ) const;
 
 /**
  * @brief Suggests a safe brain key to use for creating your account.
@@ -202,6 +210,35 @@ pair<brain_key_info, el_gamal_key_pair> generate_brain_key_el_gamal_key() const;
  * is to update the active key.
  * @note The active key represents the hot key of the account. This key has control over nearly all
  * operations the account may perform.
+ * @note The memo key is the key this account will typically use to encrypt/sign transaction memos and other non-
+   validated account activities.
+ * @see suggest_brain_key()
+ * @param name the name of the account, must be unique on the blockchain and contains at least 5 characters
+ * @param owner the owner key for the new account
+ * @param active the active key for the new account
+ * @param memo the memo key for the new account
+ * @param registrar_account the account which will pay the fee to register the user
+ * @param broadcast \c true to broadcast the transaction on the network
+ * @return the signed transaction registering the account
+ * @ingroup WalletAPI_Account
+ */
+signed_transaction register_account_with_keys(const string& name,
+                                              public_key_type owner_pubkey,
+                                              public_key_type active_pubkey,
+                                              public_key_type memo_pubkey,
+                                              const string& registrar_account,
+                                              bool broadcast = false);
+
+/**
+ * @brief Registers a third party's account on the blockckain.
+ * This function is used to register an account for which you do not own the private keys.
+ * When acting as a registrar, an end user will generate their own private keys and send
+ * you the public keys.  The registrar will use this function to register the account
+ * on behalf of the end user.
+ * @note The owner key represents absolute control over the account. Generally, the only time the owner key is required
+ * is to update the active key.
+ * @note The active key represents the hot key of the account. This key has control over nearly all
+ * operations the account may perform.
  * @see suggest_brain_key()
  * @param name the name of the account, must be unique on the blockchain and contains at least 5 characters
  * @param owner the owner key for the new account
@@ -218,6 +255,35 @@ signed_transaction register_account(const string& name,
                                     bool broadcast = false);
 
 /**
+ * @brief Registers a third party's multisignature account on the blockckain.
+ * This function is used to register an account for which you do not own the private keys.
+ * When acting as a registrar, an end user will generate their own private keys and send
+ * you the public keys or account ID/IDs.  The registrar will use this function to register the account
+ * on behalf of the end user.
+ * @note The owner authority represents absolute control over the account. Generally, the only time the owner authority
+ * is required is to update the active authority.
+ * @note The active authority represents the hot key/keys of the account. This authority has control over nearly all
+ * operations the account may perform.
+ * @note The memo key is the key this account will typically use to encrypt/sign transaction memos and other non-
+   validated account activities.
+ * @see suggest_brain_key()
+ * @param name the name of the account, must be unique on the blockchain and contains at least 5 characters
+ * @param owner the owner authority for the new account
+ * @param active the active authority for the new account
+ * @param memo the memo public_key_type for the new account
+ * @param registrar_account the account which will pay the fee to register the user
+ * @param broadcast \c true to broadcast the transaction on the network
+ * @return the signed transaction registering the account
+ * @ingroup WalletAPI_Account
+ */
+signed_transaction register_multisig_account(const string& name,
+                                             authority owner_authority,
+                                             authority active_authority,
+                                             public_key_type memo_pubkey,
+                                             const string& registrar_account,
+                                             bool broadcast = false);
+
+/**
  * @brief Creates a new account and registers it on the blockchain.
  * @see suggest_brain_key()
  * @see register_account()
@@ -232,6 +298,56 @@ signed_transaction create_account_with_brain_key(const string& brain_key,
                                                  const string& account_name,
                                                  const string& registrar_account,
                                                  bool broadcast = false);
+
+/**
+ * @brief Updates an account keys.
+ * This function is used to update an account keys.
+ * At least one account key needs to be specified. Use empty string to specify keys you do not want to update.
+ * @note The owner key represents absolute control over the account. Generally, the only time the owner key is required
+ * is to update the active key.
+ * @note The active key represents the hot key of the account. This key has control over nearly all
+ * operations the account may perform.
+ * @note The memo key is the key this account will typically use to encrypt/sign transaction memos and other non-
+   validated account activities.
+ * @see suggest_brain_key()
+ * @param name the name of the account to update
+ * @param owner the new owner key for the account
+ * @param active the new active key for the account
+ * @param memo the new memo key for the account
+ * @param broadcast \c true to broadcast the transaction on the network
+ * @return the signed transaction registering the account
+ * @ingroup WalletAPI_Account
+ */
+signed_transaction update_account_keys(const string& name,
+                                       const string& owner_pubkey,
+                                       const string& active_pubkey,
+                                       const string& memo_pubkey,
+                                       bool broadcast = false);
+
+/**
+ * @brief Updates an account keys.
+ * This function is used to update an account authorities.
+ * At least one account key needs to be specified. Use empty string to specify keys you do not want to update.
+ * @note The owner authority represents absolute control over the account. Generally, the only time the owner authority
+ * is required is to update the active authority.
+ * @note The active authority represents the hot key/keys of the account. This authority has control over nearly all
+ * operations the account may perform.
+ * @note The memo key is the key this account will typically use to encrypt/sign transaction memos and other non-
+   validated account activities.
+ * @see suggest_brain_key()
+ * @param name the name of the account to update
+ * @param owner the new owner authority for the account
+ * @param active the new active authority for the account
+ * @param memo the new memo key for the account
+ * @param broadcast \c true to broadcast the transaction on the network
+ * @return the signed transaction registering the account
+ * @ingroup WalletAPI_Account
+ */
+signed_transaction update_account_keys_to_multisig(const string& name,
+                                                   authority owner_authority,
+                                                   authority active_authority,
+                                                   public_key_type memo_pubkey,
+                                                   bool broadcast = false);
 
 /**
  * @brief Transfer an amount from one account to another account or to content.

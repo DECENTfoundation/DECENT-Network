@@ -121,11 +121,16 @@ void wallet_api::save_wallet_file(const string& wallet_filename )
 bool wallet_api::import_key(const string& account_name_or_id, const string& wif_key)
 {
    FC_ASSERT(!is_locked());
-   fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
-   if (!optional_private_key)
-      FC_THROW("Invalid private key");
-
    bool result = my->import_key(account_name_or_id, wif_key);
+   save_wallet_file();
+
+   return result;
+}
+
+bool wallet_api::import_single_key(const string& account_name_or_id, const string& wif_key)
+{
+   FC_ASSERT(!is_locked());
+   bool result = my->import_single_key(account_name_or_id, wif_key);
    save_wallet_file();
 
    return result;

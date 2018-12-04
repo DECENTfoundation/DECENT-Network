@@ -74,6 +74,8 @@ namespace graphene { namespace chain {
       uint32_t subscription_period = 0;
 
       void validate()const;
+      friend bool operator == ( const account_options& a, const account_options& b );
+      friend bool operator != ( const account_options& a, const account_options& b );
    };
 
    /**
