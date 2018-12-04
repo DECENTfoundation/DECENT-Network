@@ -379,7 +379,6 @@ int main(int argc, char** argv) {
             seeding_plug->plugin_startup();
          }
       }
-      monitoring::monitoring_counters_base::stop_monitoring_thread();
 
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
