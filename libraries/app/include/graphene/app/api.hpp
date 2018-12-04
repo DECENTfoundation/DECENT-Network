@@ -325,6 +325,14 @@ namespace graphene { namespace app {
          string info() { return "crypto_api";}
 
          /**
+          * @brief Get public key from private key.
+          * @param wif_priv_key the wif private key
+          * @return corresponding public key
+          * @ingroup CryptoAPI
+          */
+         public_key_type get_public_key(const string& wif_priv_key );
+
+         /**
           * @brief Convert wif key to private key.
           * @param wif the wif key to convert
           * @return private key
@@ -538,6 +546,7 @@ FC_API(graphene::app::network_node_api,
      )
 FC_API(graphene::app::crypto_api,
        (info)
+       (get_public_key)
        (wif_to_private_key)
        (sign_transaction)
        (encrypt_message)

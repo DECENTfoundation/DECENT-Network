@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
          active = 1,
          key    = 2
       };
-       
+
       void add_authority( const public_key_type& k, weight_type w )
       {
          key_auths[k] = w;
@@ -59,7 +59,7 @@ namespace graphene { namespace chain {
       {
          account_auths[k] = w;
       }
-       
+
       bool is_impossible()const
       {
          uint64_t auth_weights = 0;
@@ -89,12 +89,25 @@ namespace graphene { namespace chain {
          return result;
       }
 
+      authority& operator = ( const authority& auth )
+      {
+         if( this == &auth )
+            return *this;
+         weight_threshold = auth.weight_threshold;
+         account_auths = auth.account_auths;
+         key_auths = auth.key_auths;
+         return *this;
+      }
+
       friend bool operator == ( const authority& a, const authority& b )
       {
          return (a.weight_threshold == b.weight_threshold) &&
                 (a.account_auths == b.account_auths) &&
                 (a.key_auths == b.key_auths);
       }
+
+      friend bool operator != ( const authority& a, const authority& b ) { return !( a == b ); }
+
       uint32_t num_auths()const { return account_auths.size() + key_auths.size(); }
       void     clear() { account_auths.clear(); key_auths.clear(); }
 

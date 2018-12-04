@@ -117,8 +117,10 @@ void save_wallet_file(const string& wallet_filename = string());
 
 /**
  * @brief Imports the private key for an existing account.
- * The private key should match either an owner key or an active key for the
+ * The private key should match an owner key, an active key or a memo key for the
  * named account.
+ * @note This command also automatically derives and imports active and memo key
+ * if the private key match the owner key.
  * @see dump_private_keys()
  * @see list_my_accounts()
  * @param account_name_or_id the account owning the key
@@ -127,6 +129,19 @@ void save_wallet_file(const string& wallet_filename = string());
  * @ingroup WalletAPI_Wallet
  */
 bool import_key(const string& account_name_or_id, const string& wif_key);
+
+/**
+ * @brief Imports a private key for an existing account.
+ * The private key should match an owner key, an active key or a memo key for the
+ * named account.
+ * @see dump_private_keys()
+ * @see list_my_accounts()
+ * @param account_name_or_id the account owning the key
+ * @param wif_key the private key in WIF format
+ * @return \c true if the key was imported
+ * @ingroup WalletAPI_Wallet
+ */
+bool import_single_key(const string& account_name_or_id, const string& wif_key);
 
 /**
  * @brief Dumps all private keys successfully imported in the wallet.

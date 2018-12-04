@@ -176,4 +176,16 @@ vector<operation_info> list_operations();
  */
 void from_command_file( const std::string& command_file_name ) const;
 
+/**
+ * @brief Exits the CLI Wallet
+ * @ingroup WalletAPI_General
+ */
+void exit() const;
+
+/**
+ * @brief Exits the CLI Wallet
+ * @ingroup WalletAPI_General
+ */
+void quit() const;
+
 #endif //DECENT_WALLET_GENERAL_H
