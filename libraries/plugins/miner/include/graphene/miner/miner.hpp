@@ -52,10 +52,8 @@ namespace block_production_condition
 MONITORING_COUNTERS_BEGIN(miner_plugin)
 MONITORING_DEFINE_COUNTER(transactions_in_generated_blocks)
 MONITORING_DEFINE_COUNTER(blocks_generated)
-MONITORING_COUNTERS_END()
-
-
-
+MONITORING_COUNTERS_DEPENDENCIES
+MONITORING_COUNTERS_END
 
 class miner_plugin : public graphene::app::plugin PUBLIC_DERIVATION_FROM_MONITORING_CLASS(miner_plugin) {
 public:

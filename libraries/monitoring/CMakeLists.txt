@@ -6,7 +6,7 @@ add_library(decent_monitoring
             ${HEADERS}
 )
 
-target_link_libraries( decent_monitoring fc graphene_utilities)
+target_link_libraries( decent_monitoring graphene_utilities)
 
 target_include_directories( decent_monitoring
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"

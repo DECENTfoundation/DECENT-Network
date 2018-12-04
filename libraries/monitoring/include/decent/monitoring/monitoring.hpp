@@ -40,6 +40,12 @@ namespace monitoring {
       bool persistent;
    };
 
+   struct counter_item_dependency
+   {
+      std::string name;
+      std::string depends_on_name;
+   };
+
    class monitoring_counters_base
    {
    public:
@@ -54,7 +60,7 @@ namespace monitoring {
 
    protected:
       static bool _end_thread;
-      static std::shared_ptr<std::thread> _monitoring_thread;
+      static std::thread* _monitoring_thread;
       static std::mutex wait_mutex;
       static std::set<monitoring_counters_base*> registered_instances;
       static std::mutex registered_instances_mutex;
@@ -67,7 +73,7 @@ namespace monitoring {
       void register_instance();
       void unregister_instance();
 
-      void reset_local_counters_internal(uint32_t seconds, counter_item* first_counter, int size, const std::vector<std::string>& names);
+      void reset_local_counters_internal(uint32_t seconds, counter_item* first_counter, int size, counter_item_dependency* first_dep, int dep_size, const std::vector<std::string>& names);
       void get_local_counters_internal(const counter_item* first_counter, int size, const std::vector<std::string>& names, bool only_persistent, std::vector<monitoring::counter_item>& result) const;
       bool load_local_counters_internal(counter_item* first_counter, int size);
       void save_local_counters_internal(counter_item* first_counter, int size);
@@ -99,18 +105,25 @@ namespace monitoring {
 #define MONITORING_COUNTERS_BEGIN(provider_class_name) class MONITORING_COUNTERS_CLASS_NAME(provider_class_name) : public monitoring::monitoring_counters_base \
 { \
 public: \
-MONITORING_COUNTERS_CLASS_NAME(provider_class_name) () {std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex);load_local_counters(); register_instance();} \
-virtual ~MONITORING_COUNTERS_CLASS_NAME(provider_class_name) () {std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex);save_local_counters();unregister_instance();} \
-struct counters_array { \
+MONITORING_COUNTERS_CLASS_NAME(provider_class_name) () {std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex); \
+   load_local_counters(); register_instance();} \
+virtual ~MONITORING_COUNTERS_CLASS_NAME(provider_class_name) () {std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex); \
+   save_local_counters();unregister_instance();} \
+struct counters_array { 
 
 
-#define MONITORING_COUNTERS_END() } _counters; \
+#define MONITORING_COUNTERS_DEPENDENCIES } _counters; struct counters_dependencies_array { \
+
+
+#define MONITORING_COUNTERS_END } _counters_dependencies; \
 protected: \
 void reset_local_counters(uint32_t seconds, const std::vector<std::string>& names) override { \
-   monitoring_counters_base::reset_local_counters_internal(seconds, (monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), names); \
+   monitoring_counters_base::reset_local_counters_internal(seconds, (monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), \
+   (monitoring::counter_item_dependency*)&_counters_dependencies, sizeof(_counters_dependencies)/sizeof(monitoring::counter_item_dependency), names); \
 } \
 void get_local_counters(const std::vector<std::string>& names, std::vector<monitoring::counter_item>& result, bool only_persistent) const override { \
-   monitoring_counters_base::get_local_counters_internal((const monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), names, only_persistent, result); \
+   monitoring_counters_base::get_local_counters_internal((const monitoring::counter_item*)&_counters, sizeof(_counters)/sizeof(monitoring::counter_item), \
+   names, only_persistent, result); \
 } \
 void load_local_counters() override \
 { \
@@ -134,6 +147,8 @@ int get_counters_size() const override \
 #define MONITORING_DEFINE_COUNTER(name) monitoring::counter_item name = {COUNTER_NAME_STR(name), 0LL, 0LL, true};
 #define MONITORING_DEFINE_TRANSIENT_COUNTER(name) monitoring::counter_item name = {COUNTER_NAME_STR(name), 0LL, 0LL, false};
 #define MONITORING_COUNTER_VALUE(name) _counters.name.value
+
+#define MONITORING_COUNTER_DEPENDENCY(name,depends_on) monitoring::counter_item_dependency name = {COUNTER_NAME_STR(name), COUNTER_NAME_STR(depends_on)};
 
 
 

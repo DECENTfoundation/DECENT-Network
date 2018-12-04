@@ -425,7 +425,10 @@ namespace graphene { namespace net { namespace detail {
     MONITORING_DEFINE_COUNTER(connections_node_inbound_active_max)
     MONITORING_DEFINE_TRANSIENT_COUNTER(connections_node_outbound_active)
     MONITORING_DEFINE_COUNTER(connections_node_outbound_active_max)
-    MONITORING_COUNTERS_END()
+    MONITORING_COUNTERS_DEPENDENCIES
+    MONITORING_COUNTER_DEPENDENCY(connections_node_inbound_active_max, connections_node_inbound_active)
+    MONITORING_COUNTER_DEPENDENCY(connections_node_outbound_active_max, connections_node_outbound_active)
+    MONITORING_COUNTERS_END
 
     class node_impl : public peer_connection_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(node_impl)
     {

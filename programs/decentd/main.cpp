@@ -384,6 +384,7 @@ int main(int argc, char** argv) {
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
       node->shutdown_plugins();
+      monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
 #ifdef _MSC_VER
@@ -400,6 +401,7 @@ int main(int argc, char** argv) {
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
+      monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
       return 1;

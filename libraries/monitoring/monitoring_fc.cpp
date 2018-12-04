@@ -23,6 +23,7 @@
 * THE SOFTWARE.
 */
 #include <decent/monitoring/monitoring_fc.hpp>
+
 #include <graphene/utilities/dirhelper.hpp>
 
 #include <fc/reflect/variant.hpp>

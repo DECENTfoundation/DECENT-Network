@@ -78,7 +78,8 @@ namespace detail {
    }
    MONITORING_COUNTERS_BEGIN(application_impl)
    MONITORING_DEFINE_COUNTER(blocks_unhandled)
-   MONITORING_COUNTERS_END()
+   MONITORING_COUNTERS_DEPENDENCIES
+   MONITORING_COUNTERS_END
 
    class application_impl : public net::node_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(application_impl)
    {

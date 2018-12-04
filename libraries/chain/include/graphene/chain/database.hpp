@@ -58,7 +58,8 @@ namespace graphene { namespace chain {
    MONITORING_COUNTERS_BEGIN(database)
    MONITORING_DEFINE_COUNTER(blocks_applied)
    MONITORING_DEFINE_COUNTER(transactions_in_applied_blocks)
-   MONITORING_COUNTERS_END()
+   MONITORING_COUNTERS_DEPENDENCIES
+   MONITORING_COUNTERS_END
 
    /**
     *   @class database

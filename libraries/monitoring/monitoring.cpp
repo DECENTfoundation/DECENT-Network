@@ -25,9 +25,6 @@
 
 #include <decent/monitoring/monitoring.hpp>
 
-#include <fc/variant.hpp>
-#include <fc/io/json.hpp>
-
 #include <algorithm>
 
 
@@ -36,11 +33,10 @@ namespace monitoring {
 
    std::set<monitoring_counters_base*> monitoring_counters_base::registered_instances;
    std::mutex monitoring_counters_base::registered_instances_mutex;
-   std::shared_ptr<std::thread> monitoring_counters_base::_monitoring_thread(nullptr);
+   std::thread* monitoring_counters_base::_monitoring_thread = nullptr;
    bool monitoring_counters_base::_end_thread = false;
    std::condition_variable monitoring_counters_base::cv;
    std::mutex  monitoring_counters_base::wait_mutex;
-   bool monitoring_counters_base::_thread_is_running = false;
    std::vector<counter_item> monitoring_counters_base::_initializing_cache;
    bool monitoring_counters_base::_cache_is_loaded = false;
    std::vector<counter_item> monitoring_counters_base::_pending_save;
@@ -119,14 +115,13 @@ namespace monitoring {
 
    std::thread& monitoring_counters_base::start_monitoring_thread()
    {
-      _monitoring_thread = std::make_shared<std::thread>(monitoring_thread_function);
-      _thread_is_running = true;
+      _monitoring_thread = new std::thread(monitoring_thread_function);
       return *_monitoring_thread;
    }
 
    void monitoring_counters_base::stop_monitoring_thread()
    {
-      if (!_thread_is_running)
+      if (!_monitoring_thread)
          return;
 
       std::unique_lock<std::mutex> lck(wait_mutex);
@@ -139,13 +134,11 @@ namespace monitoring {
 
    void monitoring_counters_base::register_instance()
    {
-      //std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex); moved to constructor
       monitoring_counters_base::registered_instances.insert(this);
    }
 
    void monitoring_counters_base::unregister_instance()
    {
-      //std::lock_guard<std::mutex> lock(monitoring_counters_base::registered_instances_mutex); moved to destructor
       std::set<monitoring_counters_base*>::iterator it = registered_instances.find(this);
       if (it != registered_instances.end())
          registered_instances.erase(it);
@@ -164,7 +157,7 @@ namespace monitoring {
       }
    }
 
-   void monitoring_counters_base::reset_local_counters_internal(uint32_t seconds, counter_item* first_counter, int size, const std::vector<std::string>& names)
+   void monitoring_counters_base::reset_local_counters_internal(uint32_t seconds, counter_item* first_counter, int size, counter_item_dependency* first_dep, int dep_size, const std::vector<std::string>& names)
    {
       monitoring::counter_item* it = (monitoring::counter_item*)first_counter;
       if (names.size() == 0) {
@@ -173,7 +166,24 @@ namespace monitoring {
             if (it->persistent) {
                it->last_reset = seconds;
                it->value = 0LL;
-            }
+
+               monitoring::counter_item_dependency* itd = first_dep;
+               
+               for (int j = 0; j < dep_size; j++) {
+                  if (itd->name == it->name) {
+                     monitoring::counter_item* it_dep_on = (monitoring::counter_item*)first_counter;
+                     for (int k = 0; k < size; k++) {
+                        if (itd->depends_on_name == it_dep_on->name) {
+                           it->value = it_dep_on->value;
+                           break;
+                        }
+                        it_dep_on++;
+                     }
+                     break;
+                  }
+                  itd++;
+               }
+            } // if(it->persistent)
             it++;
          }
       }
@@ -187,7 +197,24 @@ namespace monitoring {
                if (it->persistent) {
                   it->last_reset = seconds;
                   it->value = 0LL;
-               }
+
+                  monitoring::counter_item_dependency* itd = first_dep;
+
+                  for (int j = 0; j < dep_size; j++) {
+                     if (itd->name == it->name) {
+                        monitoring::counter_item* it_dep_on = (monitoring::counter_item*)first_counter;
+                        for (int k = 0; k < size; k++) {
+                           if (itd->depends_on_name == it_dep_on->name) {
+                              it->value = it_dep_on->value;
+                              break;
+                           }
+                           it_dep_on++;
+                        }
+                        break;
+                     }
+                     itd++;
+                  }
+               } // if(it->persistent)
             }
             it++;
          }
