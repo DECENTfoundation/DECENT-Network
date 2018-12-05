@@ -19,9 +19,9 @@ For Ubuntu 16.04 LTS, execute in console:
      sudo apt-get update
      sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
-     # Download and build Boost 1.65.1
-     Note, that the default version of Boost installed in Ubuntu 16.04 LTS is too old and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note, that the default version of Boost installed in Ubuntu 16.04 LTS is too old and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
+    # Download and build Boost 1.65.1
      mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
      cd ~/dev/DECENTfoundation/DECENT-Network-third-party
      wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
@@ -34,7 +34,7 @@ For Ubuntu 16.04 LTS, execute in console:
      cd ..
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
-     At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
+> At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 For Fedora 28 or later, execute in console:
 
