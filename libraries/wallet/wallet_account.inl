@@ -193,13 +193,13 @@ brain_key_info wallet_api::suggest_brain_key() const
 }
 
 signed_transaction wallet_api::register_account_with_keys(const string& name,
-                                                          public_key_type owner_pubkey,
-                                                          public_key_type active_pubkey,
-                                                          public_key_type memo_pubkey,
+                                                          public_key_type owner,
+                                                          public_key_type active,
+                                                          public_key_type memo,
                                                           const string& registrar_account,
                                                           bool broadcast /* = false */)
 {
-   return my->register_account( name, owner_pubkey, active_pubkey, memo_pubkey, registrar_account,  broadcast );
+   return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
 signed_transaction wallet_api::register_account(const string& name,
@@ -212,13 +212,13 @@ signed_transaction wallet_api::register_account(const string& name,
 }
 
 signed_transaction wallet_api::register_multisig_account(const string& name,
-                                                         authority owner_authority,
-                                                         authority active_authority,
-                                                         public_key_type memo_pubkey,
+                                                         authority owner,
+                                                         authority active,
+                                                         public_key_type memo,
                                                          const string& registrar_account,
                                                          bool broadcast /* = false */)
 {
-   return my->register_multisig_account( name, owner_authority, active_authority, memo_pubkey, registrar_account,  broadcast );
+   return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
 signed_transaction wallet_api::create_account_with_brain_key(const string& brain_key,
@@ -232,50 +232,49 @@ signed_transaction wallet_api::create_account_with_brain_key(const string& brain
 }
 
 signed_transaction wallet_api::update_account_keys(const string& name,
-                                                   const string& owner_pubkey,
-                                                   const string& active_pubkey,
-                                                   const string& memo_pubkey,
+                                                   const string& owner,
+                                                   const string& active,
+                                                   const string& memo,
                                                    bool broadcast /* = false */)
 {
-   fc::optional<authority> owner, active;
-   fc::optional<public_key_type> memo;
+   fc::optional<authority> new_owner, new_active;
+   fc::optional<public_key_type> new_memo;
    account_object acc = my->get_account( name );
 
-   if( !owner_pubkey.empty() )
-      owner = authority( 1, public_key_type( owner_pubkey ), 1 );
+   if( !owner.empty() )
+      new_owner = authority( 1, public_key_type( owner ), 1 );
 
-   if( !active_pubkey.empty() )
-      active = authority( 1, public_key_type( active_pubkey ), 1 );
+   if( !active.empty() )
+      new_active = authority( 1, public_key_type( active ), 1 );
 
-   if( !memo_pubkey.empty() )
-      memo = public_key_type( memo_pubkey );
+   if( !memo.empty() )
+      new_memo = public_key_type( memo );
 
-   return my->update_account_keys( name, owner, active, memo, broadcast );
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
 signed_transaction wallet_api::update_account_keys_to_multisig(const string& name,
-                                                               authority owner_authority,
-                                                               authority active_authority,
-                                                               public_key_type memo_pubkey,
+                                                               authority owner,
+                                                               authority active,
+                                                               public_key_type memo,
                                                                bool broadcast /* = false */)
 {
-   fc::optional<authority> owner, active;
-   fc::optional<public_key_type> memo;
+   fc::optional<authority> new_owner, new_active;
+   fc::optional<public_key_type> new_memo;
    account_object acc = my->get_account( name );
 
-   if( acc.owner != owner_authority )
-      owner = owner_authority;
+   if( acc.owner != owner )
+      new_owner = owner;
 
-   if( acc.active != active_authority )
-      active = active_authority;
+   if( acc.active != active )
+      new_active = active;
 
-   if( acc.options.memo_key != memo_pubkey )
-      memo = memo_pubkey;
+   if( acc.options.memo_key != memo )
+      new_memo = memo;
 
-   FC_ASSERT( owner || active || memo, "new authority needs to be different from the existing one" );
+   FC_ASSERT( new_owner || new_active || new_memo, "new authority needs to be different from the existing one" );
 
-   std::cout<<owner_authority.weight_threshold<<std::endl;
-   return my->update_account_keys( name, owner, active, memo, broadcast );
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
 el_gamal_key_pair wallet_api::generate_el_gamal_keys() const

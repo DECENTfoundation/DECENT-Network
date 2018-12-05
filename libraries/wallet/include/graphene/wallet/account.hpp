@@ -223,9 +223,9 @@ pair<brain_key_info, el_gamal_key_pair> generate_brain_key_el_gamal_key() const;
  * @ingroup WalletAPI_Account
  */
 signed_transaction register_account_with_keys(const string& name,
-                                              public_key_type owner_pubkey,
-                                              public_key_type active_pubkey,
-                                              public_key_type memo_pubkey,
+                                              public_key_type owner,
+                                              public_key_type active,
+                                              public_key_type memo,
                                               const string& registrar_account,
                                               bool broadcast = false);
 
@@ -277,9 +277,9 @@ signed_transaction register_account(const string& name,
  * @ingroup WalletAPI_Account
  */
 signed_transaction register_multisig_account(const string& name,
-                                             authority owner_authority,
-                                             authority active_authority,
-                                             public_key_type memo_pubkey,
+                                             authority owner,
+                                             authority active,
+                                             public_key_type memo,
                                              const string& registrar_account,
                                              bool broadcast = false);
 
@@ -319,9 +319,9 @@ signed_transaction create_account_with_brain_key(const string& brain_key,
  * @ingroup WalletAPI_Account
  */
 signed_transaction update_account_keys(const string& name,
-                                       const string& owner_pubkey,
-                                       const string& active_pubkey,
-                                       const string& memo_pubkey,
+                                       const string& owner,
+                                       const string& active,
+                                       const string& memo,
                                        bool broadcast = false);
 
 /**
@@ -344,9 +344,9 @@ signed_transaction update_account_keys(const string& name,
  * @ingroup WalletAPI_Account
  */
 signed_transaction update_account_keys_to_multisig(const string& name,
-                                                   authority owner_authority,
-                                                   authority active_authority,
-                                                   public_key_type memo_pubkey,
+                                                   authority owner,
+                                                   authority active,
+                                                   public_key_type memo,
                                                    bool broadcast = false);
 
 /**
