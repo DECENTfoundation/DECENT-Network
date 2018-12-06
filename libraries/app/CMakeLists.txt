@@ -26,15 +26,15 @@ target_include_directories( graphene_app PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/../package/include"
  )
 
-if(MSVC)
-  set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
-endif(MSVC)
-
 if(WIN32)
     set_target_properties(graphene_app PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
     set_target_properties(graphene_app PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT ${GRAPHENE_APP_PRECOMPILED_HEADER_FILE})
     cotire(graphene_app)
 endif()
+
+if(MSVC)
+  set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_OPTIONS "/bigobj" )
+endif(MSVC)
 
 #install( TARGETS
 #   graphene_app

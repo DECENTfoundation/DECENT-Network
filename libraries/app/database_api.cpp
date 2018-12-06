@@ -24,6 +24,7 @@
  */
 
 #ifndef STDAFX_APP_H
+#include <cctype>
 #include <boost/algorithm/string.hpp>
 #include <fc/bloom_filter.hpp>
 #include <fc/crypto/hex.hpp>
