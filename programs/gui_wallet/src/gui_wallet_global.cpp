@@ -1,7 +1,18 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QHeaderView>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QProcess>
+#include <QThread>
+#include <QTimer>
+
+#include <fc/interprocess/signals.hpp>
+#include <decent/config/decent_log_config.hpp>
 #endif
 
 #include "gui_wallet_global.hpp"

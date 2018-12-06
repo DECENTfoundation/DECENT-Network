@@ -1,7 +1,17 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QButtonGroup>
+#include <QBoxLayout>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QFontDatabase>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QProgressBar>
+#include <QStackedWidget>
+#include <QStyleFactory>
+#include <QTimer>
 #endif
 
 #include "mainwindow.hpp"

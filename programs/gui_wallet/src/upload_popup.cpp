@@ -1,7 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QBoxLayout>
+#include <QCheckBox>
+#include <QDateEdit>
+#include <QFileDialog>
+#include <QSignalMapper>
+#include <QStyleFactory>
+#include <QTimer>
 #endif
 
 #include "upload_popup.hpp"

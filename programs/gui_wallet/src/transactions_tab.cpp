@@ -1,7 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QBoxLayout>
+#include <QHeaderView>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
 #endif
 
 #include "transactions_tab.hpp"

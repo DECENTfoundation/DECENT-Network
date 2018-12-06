@@ -1,5 +1,7 @@
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QBoxLayout>
+#include <QPlainTextEdit>
+#include <QTextCursor>
 #endif
 
 #include "rev_history_dlg.hpp"

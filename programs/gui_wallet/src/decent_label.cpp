@@ -1,7 +1,10 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QEvent>
+#include <QStyle>
+#include <QVariant>
+#include <QTimer>
 #endif
 
 #include "decent_label.hpp"

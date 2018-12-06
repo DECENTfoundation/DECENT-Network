@@ -1,7 +1,16 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QApplication>
+#include <QDir>
+#include <QFile>
+#include <QMessageBox>
+#include <QTextStream>
+#include <QTranslator>
+
+#include <graphene/utilities/git_revision.hpp>
+#include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 #endif
 
 #include "gui_wallet_global.hpp"

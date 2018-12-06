@@ -1,7 +1,8 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #ifndef STDAFX_H
-#include "../stdafx.h"
+#include <QBoxLayout>
+#include <QSignalMapper>
 #endif
 
 #include "overview_tab.hpp"
