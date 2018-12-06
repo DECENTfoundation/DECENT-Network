@@ -1,5 +1,5 @@
 #ifndef STDAFX_APP_H
-#include "stdafx.h"
+#include <boost/multiprecision/cpp_int.hpp>
 #endif
 
 #include <graphene/app/balance.hpp>

@@ -24,7 +24,19 @@
  */
 
 #ifndef STDAFX_APP_H
-#include "stdafx.h"
+#include <iostream>
+#include <boost/filesystem/path.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/algorithm/reverse.hpp>
+#include <fc/io/fstream.hpp>
+#include <fc/network/resolve.hpp>
+#include <fc/rpc/websocket_api.hpp>
+#include <graphene/time/time.hpp>
+#include <graphene/utilities/dirhelper.hpp>
+#include <graphene/egenesis/egenesis.hpp>
+#include <graphene/net/exceptions.hpp>
+#include <decent/ipfs_check.hpp>
+#include <decent/package/package_config.hpp>
 #endif
 
 #include <graphene/app/application.hpp>

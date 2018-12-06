@@ -24,7 +24,7 @@
  */
 
 #ifndef STDAFX_APP_H
-#include "stdafx.h"
+#include <graphene/chain/custom_evaluator.hpp>
 #endif
 
 #include <graphene/app/impacted.hpp>

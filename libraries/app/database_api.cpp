@@ -24,7 +24,12 @@
  */
 
 #ifndef STDAFX_APP_H
-#include "stdafx.h"
+#include <boost/algorithm/string.hpp>
+#include <fc/bloom_filter.hpp>
+#include <fc/crypto/hex.hpp>
+#include <graphene/chain/get_config.hpp>
+#include <graphene/chain/transaction_history_object.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
 #endif
 
 #include <graphene/app/database_api.hpp>

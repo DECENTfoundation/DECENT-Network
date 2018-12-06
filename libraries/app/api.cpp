@@ -24,7 +24,7 @@
  */
 
 #ifndef STDAFX_APP_H
-#include "stdafx.h"
+#include <graphene/utilities/key_conversion.hpp>
 #endif
 
 #include <graphene/app/api.hpp>
