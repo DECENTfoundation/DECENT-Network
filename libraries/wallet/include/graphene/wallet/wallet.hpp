@@ -405,8 +405,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_transaction_id)
         (get_transaction_by_id)
         (from_command_file)
-        (exit)
-        (quit)
 
         //Wallet file
         (list_my_accounts)
