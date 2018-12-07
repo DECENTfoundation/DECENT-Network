@@ -102,7 +102,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      WalletOperator(const fc::path &wallet_file);
+      WalletOperator(const fc::path &wallet_file, const graphene::wallet::server_data &ws);
       ~WalletOperator() override;
 
       void cancel();
@@ -176,7 +176,7 @@ namespace gui_wallet
 
       static void setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options);
 
-      void startDaemons(BlockChainStartType type, const std::string &wallet_file);
+      void startDaemons(BlockChainStartType type, const std::string &wallet_file, const graphene::wallet::server_data &ws);
       void stopDaemons();
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;

@@ -29,7 +29,7 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 public:
-   MainWindow(const std::string &wallet_file);
+   MainWindow(const std::string &wallet_file, const graphene::wallet::server_data &ws);
    virtual ~MainWindow();
 
    const std::string& walletFile() const { return m_wallet_file; }
@@ -84,6 +84,7 @@ private:
 
    int m_daemon_restart = 0;
    std::string m_wallet_file;
+   graphene::wallet::server_data m_ws;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;
    QTimer* m_pOneShotUpdateTimer;

@@ -52,6 +52,13 @@ namespace graphene { namespace wallet {
 
       object* create_object( const variant& v );
 
+      struct server_data
+      {
+         string                    server;
+         string                    user;
+         string                    password;
+      };
+
       struct wallet_data
       {
          int version = 0;
@@ -292,7 +299,7 @@ namespace graphene { namespace wallet {
       class wallet_api
       {
       public:
-         wallet_api( const wallet_data& initial_data, fc::api<login_api> rapi );
+         wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws );
          virtual ~wallet_api();
 
 
