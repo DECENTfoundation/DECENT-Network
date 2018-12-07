@@ -623,6 +623,8 @@ void MainWindow::slot_updateAccountAssets(const QList<Asset>& assets)
    pAssetMenu->clear();
 
    std::string symbolText = m_pAssetSymbol->text().toStdString();
+   m_pAssetSymbol->setText(QString());
+
    for (const Asset &a : assets)
    {
       pAssetMenu->addAction(QString::fromStdString(a.m_str_symbol))->setData(a.getBalance());
@@ -633,7 +635,7 @@ void MainWindow::slot_updateAccountAssets(const QList<Asset>& assets)
       }
    }
 
-   if (symbolText.empty() && !assets.empty())
+   if ((symbolText.empty() || symbolText != m_pAssetSymbol->text().toStdString()) && !assets.empty())
    {
       updateBalance(assets.front().getBalance());
       m_pAssetSymbol->setText(QString::fromStdString(assets.front().m_str_symbol));
