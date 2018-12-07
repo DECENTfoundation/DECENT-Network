@@ -2,13 +2,8 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
 #include <mutex>
-#include <vector>
-#include <chrono>
-#include <graphene/chain/protocol/types.hpp>
-#include <atomic>
+#include <graphene/wallet/wallet.hpp>
 
 namespace graphene
 {
@@ -38,7 +33,7 @@ namespace wallet_utility
    class WalletAPI
    {
    public:
-      WalletAPI(const fc::path &wallet_file);
+      WalletAPI(const fc::path &wallet_file, const graphene::wallet::server_data &ws);
       ~WalletAPI();
 
       void Connect(std::atomic_bool& cancellation_token);
@@ -55,6 +50,7 @@ namespace wallet_utility
 
    private:
       fc::path m_wallet_file;
+      graphene::wallet::server_data m_ws;
       // wallet_api does not like to be accessed from several threads
       // so all the access is encapsulated inside m_pthread :(
       std::unique_ptr<fc::thread> m_pthread;

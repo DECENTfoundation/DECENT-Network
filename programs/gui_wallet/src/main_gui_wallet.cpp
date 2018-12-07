@@ -97,12 +97,14 @@ int main(int argc, char* argv[])
    }
 
    app.setFont(gui_wallet::MainFont());
-   gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<std::string>());
+
+   graphene::wallet::server_data ws{ "ws://" + options["rpc-endpoint"].as<std::string>() };
+   gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<std::string>(), ws);
    QObject::connect(&gui_wallet::Globals::instance(), &gui_wallet::Globals::signal_daemonFinished,
                     &aMainWindow, &gui_wallet::MainWindow::slot_daemonFinished);
 
    try {
-      gui_wallet::Globals::instance().startDaemons(gui_wallet::BlockChainStartType::Simple, aMainWindow.walletFile());
+      gui_wallet::Globals::instance().startDaemons(gui_wallet::BlockChainStartType::Simple, aMainWindow.walletFile(), ws);
    } catch (const std::exception& ex) {
       QMessageBox* msgBox = new QMessageBox();
       msgBox->setWindowTitle("Error");

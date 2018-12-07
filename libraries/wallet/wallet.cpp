@@ -382,9 +382,9 @@ private:
 
 public:
    wallet_api& self;
-   wallet_api_impl( wallet_api& s, const wallet_data& initial_data, fc::api<login_api> rapi )
+   wallet_api_impl( wallet_api& s, const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws )
       : self(s),
-        _chain_id(initial_data.chain_id),
+        _chain_id(chain_id),
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
@@ -405,11 +405,10 @@ public:
          on_block_applied( block_id );
       } );
 
-      _wallet.chain_id = remote_chain_id;
-      _chain_id = _wallet.chain_id;
-      _wallet.ws_server = initial_data.ws_server;
-      _wallet.ws_user = initial_data.ws_user;
-      _wallet.ws_password = initial_data.ws_password;
+      _wallet.chain_id = _chain_id;
+      _wallet.ws_server = ws.server;
+      _wallet.ws_user = ws.user;
+      _wallet.ws_password = ws.password;
       decent::package::PackageManager::instance().recover_all_packages();
    }
    virtual ~wallet_api_impl()
@@ -2598,7 +2597,7 @@ signed_transaction content_cancellation(const string& author,
    void from_command_file( const std::string& command_file_name ) const
    {
        std::atomic_bool cancel_token(false);
-       decent::wallet_utility::WalletAPI my_api(get_wallet_filename());
+       decent::wallet_utility::WalletAPI my_api(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
 
        try
        {
@@ -3594,8 +3593,8 @@ signed_transaction content_cancellation(const string& author,
 
    namespace graphene { namespace wallet {
 
-   wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
-      : my(new detail::wallet_api_impl(*this, initial_data, rapi))
+   wallet_api::wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws )
+      : my(new detail::wallet_api_impl(*this, rapi, chain_id, ws))
    {
    }
 

@@ -31,9 +31,10 @@
 namespace gui_wallet
 {
 
-MainWindow::MainWindow(const std::string &wallet_file)
+MainWindow::MainWindow(const std::string &wallet_file, const graphene::wallet::server_data &ws)
 : QMainWindow()
 , m_wallet_file(wallet_file)
+, m_ws(ws)
 , m_iSplashWidgetIndex(0)
 , m_pTimerBalance(new QTimer(this))
 , m_pOneShotUpdateTimer(new QTimer(this))
@@ -659,14 +660,14 @@ void MainWindow::slot_replayBlockChain()
 {
    ++m_daemon_restart;
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file);
+   Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file, m_ws);
 }
 
 void MainWindow::slot_resyncBlockChain()
 {
    ++m_daemon_restart;
    Globals::instance().stopDaemons();
-   Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file);
+   Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file, m_ws);
 }
 
 void MainWindow::slot_importKey()

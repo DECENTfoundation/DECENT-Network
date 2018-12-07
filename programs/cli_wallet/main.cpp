@@ -239,7 +239,8 @@ int main( int argc, char** argv )
          return 1;
       }
 
-      auto wapiptr = std::make_shared<wallet_api>( wdata, remote_api );
+      server_data ws{ wdata.ws_server, wdata.ws_user, wdata.ws_password };
+      auto wapiptr = std::make_shared<wallet_api>( remote_api, wdata.chain_id, ws );
       if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
       {
          std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;

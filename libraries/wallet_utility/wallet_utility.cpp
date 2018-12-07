@@ -4,7 +4,6 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/network/http/websocket.hpp>
 #include <fc/filesystem.hpp>
-#include <graphene/wallet/wallet.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <decent/package/package.hpp>
 #include <iostream>
@@ -62,7 +61,7 @@ namespace wallet_utility
       class WalletAPIHelper
       {
       public:
-         WalletAPIHelper(const fc::path &wallet_file)
+         WalletAPIHelper(const fc::path &wallet_file, graphene::wallet::server_data ws)
          : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
@@ -71,8 +70,15 @@ namespace wallet_utility
             if (has_wallet_file)
                wdata = fc::json::from_file(wallet_file).as<wallet_data>();
 
+            if (ws.server.empty())
+               ws.server = wdata.ws_server;
+            if (ws.user.empty())
+               ws.user = wdata.ws_user;
+            if (ws.password.empty())
+               ws.password = wdata.ws_password;
+
             websocket_client_ptr ptr_ws_client(new websocket_client());
-               websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(wdata.ws_server);
+               websocket_connection_ptr ptr_ws_connection = ptr_ws_client->connect(ws.server);
 
             //  capture ptr_ws_connection and ptr_ws_client own the lifetime
             websocket_api_connection_ptr ptr_api_connection =
@@ -87,14 +93,14 @@ namespace wallet_utility
 
             fc_remote_api_ptr ptr_remote_api =
                fc_remote_api_ptr(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
-            if (false == (*ptr_remote_api)->login(wdata.ws_user, wdata.ws_password))
+            if (false == (*ptr_remote_api)->login(ws.user, ws.password))
                throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
             if (!has_wallet_file)
                wdata.chain_id = (*ptr_remote_api)->database()->get_chain_id();
 
             //  capture ptr_api_connection and ptr_remote_api too. encapsulate all inside wallet_api
-            m_ptr_wallet_api.reset(new wallet_api(wdata, *ptr_remote_api),
+            m_ptr_wallet_api.reset(new wallet_api(*ptr_remote_api, wdata.chain_id, ws),
                                    [ptr_api_connection, ptr_remote_api](wallet_api* &p_wallet_api) mutable
                                    {
                                       delete p_wallet_api;
@@ -130,8 +136,9 @@ namespace wallet_utility
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI(const fc::path &wallet_file)
+   WalletAPI::WalletAPI(const fc::path &wallet_file, const graphene::wallet::server_data &ws)
    : m_wallet_file(wallet_file)
+   , m_ws(ws)
    , m_pthread(nullptr)
    , m_pimpl(nullptr)
    , m_mutex()
@@ -159,7 +166,7 @@ namespace wallet_utility
                           {
                              try
                              {
-                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file));
+                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file, m_ws));
                                 break;
                              }
                              catch(wallet_exception const& ex)

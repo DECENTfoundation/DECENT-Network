@@ -469,8 +469,8 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator(const fc::path &wallet_file) : QObject()
-, m_wallet_api(wallet_file)
+WalletOperator::WalletOperator(const fc::path &wallet_file, const graphene::wallet::server_data &ws)
+: m_wallet_api(wallet_file, ws)
 , m_cancellation_token(false)
 {
 }
@@ -611,7 +611,7 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
    cfg_options.add(cfg);
 }
 
-void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_file)
+void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_file, const graphene::wallet::server_data &ws)
 {
    if (m_p_daemon_details)
       return;
@@ -627,7 +627,7 @@ void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_f
 
 
       bNeedNewConnection = true;
-      m_p_wallet_operator = new WalletOperator(wallet_file);
+      m_p_wallet_operator = new WalletOperator(wallet_file, ws);
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
       QObject::connect(this, &Globals::signal_connect,
                        m_p_wallet_operator, &WalletOperator::slot_connect);
