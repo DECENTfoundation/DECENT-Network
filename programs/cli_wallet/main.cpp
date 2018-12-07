@@ -245,6 +245,7 @@ int main( int argc, char** argv )
          std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
          return 1;
       }
+      wapiptr->set_wallet_filename( wallet_file.generic_string() );
 
       fc::api<wallet_api> wapi(wapiptr);
 

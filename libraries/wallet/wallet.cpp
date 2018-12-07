@@ -634,6 +634,7 @@ public:
 
    void set_wallet_filename(const string &wallet_filename)
    {
+      FC_ASSERT( !wallet_filename.empty() );
       _wallet_filename = wallet_filename;
    }
 

@@ -9,6 +9,11 @@ string wallet_api::get_wallet_filename() const
    return my->get_wallet_filename();
 }
 
+void wallet_api::set_wallet_filename( const string& wallet_filename )
+{
+   return my->set_wallet_filename( wallet_filename );
+}
+
 string wallet_api::get_private_key( public_key_type pubkey )const
 {
    return key_to_wif( my->get_private_key( pubkey ) );

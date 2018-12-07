@@ -35,12 +35,20 @@
  */
 vector<account_object> list_my_accounts();
 
-/** @brief Returns the current wallet filename.
+/**
+ * @brief Returns the current wallet filename.
  * @note This is the filename that will be used when automatically saving the wallet.
  * @return the wallet filename
  * @ingroup WalletAPI_Wallet
  */
 string get_wallet_filename() const;
+
+/**
+ * @brief Sets the wallet filename used for future writes.
+ * @param wallet_filename the wallet filename that will be used when automatically saving the wallet
+ * @ingroup WalletAPI_Wallet
+ */
+void set_wallet_filename( const string& wallet_filename );
 
 /**
  * @brief Get the WIF private key corresponding to a public key.  The
