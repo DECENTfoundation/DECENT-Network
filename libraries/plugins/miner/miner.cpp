@@ -296,7 +296,7 @@ block_production_condition::block_production_condition_enum miner_plugin::maybe_
    uint32_t prate = db.miner_participation_rate();
    if( prate < _required_miner_participation )
    {
-      capture("pct", uint32_t(100*uint64_t(prate) / GRAPHENE_1_PERCENT));
+      capture("pct", prate / GRAPHENE_1_PERCENT);
       return block_production_condition::low_participation;
    }
 
