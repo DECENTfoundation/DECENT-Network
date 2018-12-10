@@ -1,10 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
+#ifndef STDAFX_H
 #include <QPushButton>
+#endif
 
 namespace gui_wallet
 {
+
 class DecentButton : public QPushButton
 {
    Q_OBJECT
@@ -20,7 +23,8 @@ public:
       DialogTextButton,
       SplashAction,
       TabChoice,
-      PasswordView
+      PasswordView,
+      Asset
    };
 
    enum eName
@@ -30,7 +34,8 @@ public:
       Detail,
       Transfer,
       Export,
-      Resubmit
+      Resubmit,
+      Amount
    };
    DecentButton(QWidget* pParent, eType enType = Default, eName = None);
 

@@ -22,44 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/app/api.hpp>
-#include <graphene/app/api_access.hpp>
-#include <graphene/app/application.hpp>
-#include <graphene/app/plugin.hpp>
 
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/time/time.hpp>
-
-#include <graphene/egenesis/egenesis.hpp>
-
-#include <graphene/net/core_messages.hpp>
-#include <graphene/net/exceptions.hpp>
-
-#include <graphene/time/time.hpp>
-
-#include <graphene/utilities/key_conversion.hpp>
-
-#include <fc/smart_ref_impl.hpp>
-
-#include <fc/io/fstream.hpp>
-#include <fc/rpc/api_connection.hpp>
-#include <fc/rpc/websocket_api.hpp>
-#include <fc/network/resolve.hpp>
-
-#include <boost/filesystem/path.hpp>
-#include <boost/signals2.hpp>
-#include <boost/range/algorithm/reverse.hpp>
-
+#ifndef STDAFX_APP_H
 #include <iostream>
-
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-
+#include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <decent/package/package_config.hpp>
+#include <boost/range/algorithm/reverse.hpp>
+#include <fc/io/fstream.hpp>
+#include <fc/network/resolve.hpp>
+#include <fc/rpc/websocket_api.hpp>
+#include <graphene/time/time.hpp>
+#include <graphene/utilities/dirhelper.hpp>
+#include <graphene/egenesis/egenesis.hpp>
+#include <graphene/net/exceptions.hpp>
 #include <decent/ipfs_check.hpp>
+#include <decent/package/package_config.hpp>
+#endif
+
+#include <graphene/app/application.hpp>
+#include <graphene/app/api.hpp>
+#include <graphene/app/plugin.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -72,8 +54,6 @@ using chain::block_header;
 using chain::signed_block_header;
 using chain::signed_block;
 using chain::block_id_type;
-
-using std::vector;
 
 namespace bpo = boost::program_options;
 
@@ -108,14 +88,17 @@ namespace detail {
 
       return initial_state;
    }
+   MONITORING_COUNTERS_BEGIN(application_impl)
+   MONITORING_DEFINE_COUNTER(blocks_unhandled)
+   MONITORING_COUNTERS_DEPENDENCIES
+   MONITORING_COUNTERS_END
 
-   class application_impl : public net::node_delegate
+   class application_impl : public net::node_delegate PUBLIC_DERIVATION_FROM_MONITORING_CLASS(application_impl)
    {
    public:
-      fc::optional<fc::temp_file> _lock_file;
       bool _is_block_producer = false;
       bool _force_validate = false;
-      uint64_t _processed_transactions;
+      uint64_t _processed_transactions = 0;
 
       void reset_p2p_node(const fc::path& data_dir)
       { try {
@@ -256,13 +239,17 @@ namespace detail {
                }
                else if( api_name == "crypto_api" )
                {
-                  auto crypto_api = std::make_shared<graphene::app::crypto_api>();
+                  auto crypto_api = std::make_shared<graphene::app::crypto_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::crypto_api>(crypto_api));
                }
                else if( api_name == "messaging_api" )
                {
                   auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
+               }
+               else if( api_name == "monitoring_api" ) {
+                  auto monitoring_api = std::make_shared<graphene::app::monitoring_api>();
+                  wsc->register_api(fc::api<graphene::app::monitoring_api>(monitoring_api));
                }
             }
          }
@@ -281,7 +268,8 @@ namespace detail {
             _websocket_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
          }
 
-         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
+            is_tls = false;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
 
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
@@ -320,7 +308,8 @@ namespace detail {
             _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
          }
 
-         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
+         _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
+            is_tls = true;
             auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
 
             auto db_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database()) );
@@ -338,14 +327,12 @@ namespace detail {
 
       application_impl(application* self)
          : _self(self),
-           _chain_db(std::make_shared<chain::database>()),
-         _processed_transactions(0)
+           _chain_db(std::make_shared<chain::database>())
       {
       }
 
       ~application_impl()
       {
-         fc::remove_all(_data_dir / "blockchain/dblock");
       }
 
       void set_dbg_init_key( genesis_state_type& genesis, const std::string& init_key )
@@ -354,13 +341,20 @@ namespace detail {
          public_key_type init_pubkey( init_key );
          for( uint64_t i=0; i<genesis.initial_active_miners; i++ )
             genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
-         return;
       }
 
       void startup()
       { try {
          bool clean = !fc::exists(_data_dir / "blockchain/dblock");
+  
          fc::create_directories(_data_dir / "blockchain/dblock");
+         FC_ASSERT(!_db_lock, "Database is already opened");
+         _db_lock.reset(new fc::simple_lock_file(_data_dir / "blockchain/dblock/decentd"));
+         if( !_db_lock->try_lock() )
+         {
+            _db_lock.reset();
+            FC_THROW_EXCEPTION(fc::invalid_operation_exception, "Database is already used by another process");
+         }
 
          auto initial_state = [&] {
             ilog("Initializing database...");
@@ -473,22 +467,19 @@ namespace detail {
 
                _chain_db->reindex(_data_dir / "blockchain", initial_state());
 
-               // doing this down here helps ensure that DB will be wiped
-               // if any of the above steps were interrupted on a previous run
-               if( !fc::exists( _data_dir / "db_version" ) )
-               {
-                  std::ofstream db_version(
-                     (_data_dir / "db_version").generic_string().c_str(),
-                     std::ios::out | std::ios::binary | std::ios::trunc );
-                  std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
-                  db_version.write( version_string.c_str(), version_string.size() );
-                  db_version.close();
-               }
+               std::ofstream db_version(
+                  (_data_dir / "db_version").generic_string().c_str(),
+                  std::ios::out | std::ios::binary | std::ios::trunc );
+               std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
+               db_version.write( version_string.c_str(), version_string.size() );
+               db_version.close();
             }
          } else {
             wlog("Detected unclean shutdown. Replaying blockchain...");
             _chain_db->reindex(_data_dir / "blockchain", initial_state());
          }
+
+         _chain_db->set_no_need_reindexing();
 
          if (!_options->count("genesis-json") &&
              _chain_db->get_chain_id() != graphene::egenesis::get_egenesis_chain_id()) {
@@ -521,6 +512,24 @@ namespace detail {
          reset_p2p_node(_data_dir);
          reset_websocket_server();
          reset_websocket_tls_server();
+      } FC_LOG_AND_RETHROW() }
+
+      void shutdown()
+      { try {
+         if( _p2p_network )
+         {
+            _p2p_network->close();
+             _p2p_network.reset();
+         }
+         if( _chain_db )
+            _chain_db->close();
+
+         if( _db_lock )
+         {
+            _db_lock->unlock();
+            _db_lock.reset();
+            fc::remove_all(_data_dir / "blockchain/dblock");
+         }
       } FC_LOG_AND_RETHROW() }
 
       optional< api_access_info > get_api_access_info(const string& username)const
@@ -610,6 +619,7 @@ namespace detail {
             return result;
          } catch ( const graphene::chain::unlinkable_block_exception& e ) {
             // translate to a graphene::net exception
+            MONITORING_COUNTER_VALUE(blocks_unhandled)++;
             elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
             FC_THROW_EXCEPTION(graphene::net::unlinkable_block_exception, "Error when pushing block:\n${e}", ("e", e.to_detail_string()));
          } catch( const fc::exception& e ) {
@@ -978,6 +988,7 @@ namespace detail {
       const bpo::variables_map* _options = nullptr;
       api_access _apiaccess;
 
+      std::unique_ptr<fc::simple_lock_file> _db_lock;
       std::shared_ptr<graphene::chain::database>            _chain_db;
       std::shared_ptr<graphene::net::node>                  _p2p_network;
       std::shared_ptr<fc::http::websocket_server>      _websocket_server;
@@ -988,7 +999,7 @@ namespace detail {
       bool _is_finished_syncing = false;
    };
 
-}
+} // namespace detail
 
 application::application()
    : my(new detail::application_impl(this))
@@ -996,21 +1007,16 @@ application::application()
 
 application::~application()
 {
-   if( my->_p2p_network )
-   {
-      my->_p2p_network->close();
-      my->_p2p_network.reset();
-   }
-   if( my->_chain_db )
-   {
-      my->_chain_db->close();
-   }
 }
 
 void application::set_program_options(boost::program_options::options_description& command_line_options,
-                                      boost::program_options::options_description& configuration_file_options) const
+                                      boost::program_options::options_description& configuration_file_options)
 {
-   vector<string> seed_nodes;
+   command_line_options.add_options()
+      ("help,h", "Print this help message and exit.")
+      ("version,v", "Print version information and exit.")
+      ;
+
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
 
@@ -1031,8 +1037,11 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
          ("ipfs-api", bpo::value<string>(), "IPFS control API")
          ;
-   command_line_options.add(configuration_file_options);
-   command_line_options.add_options()
+
+   bpo::options_description common_options("Common options");
+   common_options.add_options()
+         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value(utilities::decent_path_finder::instance().get_decent_data() / "decentd"),
+          "Directory containing databases, configuration file, etc.")
          ("create-genesis-json", bpo::value<boost::filesystem::path>(),
           "Path to create a Genesis State at. If a well-formed JSON file exists at the path, it will be parsed and any "
           "missing fields in a Genesis State will be added, and any unknown fields will be removed. If no file or an "
@@ -1042,8 +1051,8 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("force-validate", "Force validation of all transactions")
          ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ;
-   command_line_options.add(_cli_options);
-   configuration_file_options.add(_cfg_options);
+   command_line_options.add(common_options);
+   command_line_options.add(configuration_file_options);
 }
 
 void application::initialize(const fc::path& data_dir, const boost::program_options::variables_map& options)
@@ -1079,15 +1088,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
 
 void application::startup()
 {
-   try {
    my->startup();
-   } catch ( const fc::exception& e ) {
-      elog( "${e}", ("e",e.to_detail_string()) );
-      throw;
-   } catch ( ... ) {
-      elog( "unexpected exception" );
-      throw;
-   }
 }
 
 std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) const
@@ -1141,12 +1142,10 @@ void application::shutdown_plugins()
       entry.second->plugin_shutdown();
    return;
 }
+
 void application::shutdown()
 {
-   if( my->_p2p_network )
-      my->_p2p_network->close();
-   if( my->_chain_db )
-      my->_chain_db->close();
+   my->shutdown();
 }
 
 void application::initialize_plugins( const boost::program_options::variables_map& options )
@@ -1163,5 +1162,4 @@ void application::startup_plugins()
    return;
 }
 
-// namespace detail
-} }
+} } // graphene::app

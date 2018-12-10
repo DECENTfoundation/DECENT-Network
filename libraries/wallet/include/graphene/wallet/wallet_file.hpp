@@ -35,13 +35,20 @@
  */
 vector<account_object> list_my_accounts();
 
-/** @brief Returns the current wallet filename.
+/**
+ * @brief Returns the current wallet filename.
  * @note This is the filename that will be used when automatically saving the wallet.
- * @see set_wallet_filename()
  * @return the wallet filename
  * @ingroup WalletAPI_Wallet
  */
 string get_wallet_filename() const;
+
+/**
+ * @brief Sets the wallet filename used for future writes.
+ * @param wallet_filename the wallet filename that will be used when automatically saving the wallet
+ * @ingroup WalletAPI_Wallet
+ */
+void set_wallet_filename( const string& wallet_filename );
 
 /**
  * @brief Get the WIF private key corresponding to a public key.  The
@@ -96,9 +103,7 @@ void set_password(const string& password);
 /**
  * @brief Loads a specified wallet file.
  * The current wallet is closed before the new wallet is loaded.
- * @warning This does not change the filename that will be used for future
- * wallet writes, so this may cause you to overwrite your original
- * wallet unless you also call \c set_wallet_filename()
+ * @warning This changes the filename that will be used for future wallet writes.
  * @param wallet_filename the filename of the wallet JSON file to load.
  *                        If \c wallet_filename is empty, it reloads the
  *                        existing wallet file
@@ -110,9 +115,7 @@ bool load_wallet_file(const string& wallet_filename = string());
 /**
  * @brief Saves the current wallet to the given filename.
  * @warning This does not change the wallet filename that will be used for future
- * writes, so think of this function as 'Save a Copy As...' instead of
- * 'Save As...'.  Use \c set_wallet_filename() to make the filename
- * persist.
+ * writes, so think of this function as 'Save a Copy As...' instead of 'Save As...'.
  * @param wallet_filename the filename of the new wallet JSON file to create
  *                        or overwrite.  If \c wallet_filename is empty,
  *                        save to the current filename.
@@ -121,18 +124,11 @@ bool load_wallet_file(const string& wallet_filename = string());
 void save_wallet_file(const string& wallet_filename = string());
 
 /**
- * @brief Sets the wallet filename used for future writes.
- * This does not trigger a save, it only changes the default filename
- * that will be used the next time a save is triggered.
- * @param wallet_filename the new filename to use for future saves
- * @ingroup WalletAPI_Wallet
- */
-void set_wallet_filename(const string& wallet_filename);
-
-/**
  * @brief Imports the private key for an existing account.
- * The private key should match either an owner key or an active key for the
+ * The private key should match an owner key, an active key or a memo key for the
  * named account.
+ * @note This command also automatically derives and imports active and memo key
+ * if the private key match the owner key.
  * @see dump_private_keys()
  * @see list_my_accounts()
  * @param account_name_or_id the account owning the key
@@ -143,6 +139,19 @@ void set_wallet_filename(const string& wallet_filename);
 bool import_key(const string& account_name_or_id, const string& wif_key);
 
 /**
+ * @brief Imports a private key for an existing account.
+ * The private key should match an owner key, an active key or a memo key for the
+ * named account.
+ * @see dump_private_keys()
+ * @see list_my_accounts()
+ * @param account_name_or_id the account owning the key
+ * @param wif_key the private key in WIF format
+ * @return \c true if the key was imported
+ * @ingroup WalletAPI_Wallet
+ */
+bool import_single_key(const string& account_name_or_id, const string& wif_key);
+
+/**
  * @brief Dumps all private keys successfully imported in the wallet.
  * @note The keys are printed in WIF format.  You can import these keys into another wallet
  * using \c import_key()
@@ -150,6 +159,5 @@ bool import_key(const string& account_name_or_id, const string& wif_key);
  * @ingroup WalletAPI_Wallet
  */
 variant dump_private_keys();
-
 
 #endif //DECENT_WALLET_WALLET_FILE_H

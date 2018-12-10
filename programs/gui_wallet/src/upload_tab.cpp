@@ -1,32 +1,16 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include <QBoxLayout>
+#include <QDateTime>
+#include <QSignalMapper>
+#endif
+
 #include "upload_tab.hpp"
+#include "gui_wallet_global.hpp"
 #include "upload_popup.hpp"
 #include "decent_button.hpp"
 #include "decent_line_edit.hpp"
-#include "richdialog.hpp"
-
-#include <boost/algorithm/string/replace.hpp>
-
-#ifndef _MSC_VER
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QDateTime>
-#include <QDate>
-#include <QTime>
-#include <QTimer>
-#include <QSignalMapper>
-#include <QLabel>
-#include <QLineEdit>
-
-#include <graphene/chain/content_object.hpp>
-
-#include "json.hpp"
-#endif
-
-using std::string;
 
 namespace gui_wallet
 {
@@ -77,7 +61,7 @@ Upload_tab::Upload_tab(QWidget* pParent,
 // this becomes necessary
 Upload_tab::~Upload_tab() = default;
 
-void Upload_tab::timeToUpdate(const string& result)
+void Upload_tab::timeToUpdate(const std::string& result)
 {
    _digital_contents.clear();
 
@@ -97,17 +81,17 @@ void Upload_tab::timeToUpdate(const string& result)
       auto const& json_content = contents[iIndex];
       
       content.type = DCT::GENERAL;
-      content.author = json_content["author"].get<string>();
+      content.author = json_content["author"].get<std::string>();
       uint64_t iPrice = json_to_int64(json_content["price"]["amount"]);
       std::string iSymbolId = json_content["price"]["asset_id"];
       content.price = Globals::instance().asset(iPrice, iSymbolId);
-      content.synopsis = json_content["synopsis"].get<string>();
-      content.URI = json_content["URI"].get<string>();
-      content.created = json_content["created"].get<string>();
-      content.expiration = json_content["expiration"].get<string>();
+      content.synopsis = json_content["synopsis"].get<std::string>();
+      content.URI = json_content["URI"].get<std::string>();
+      content.created = json_content["created"].get<std::string>();
+      content.expiration = json_content["expiration"].get<std::string>();
       content.size = json_content["size"].get<int>();
-      content.status = json_content["status"].get<string>();
-      content.id = json_content["id"].get<string>();
+      content.status = json_content["status"].get<std::string>();
+      content.id = json_content["id"].get<std::string>();
 
       QDateTime time = QDateTime::fromString(QString::fromStdString(content.expiration), "yyyy-MM-ddTHH:mm:ss");
 
@@ -128,22 +112,22 @@ void Upload_tab::timeToUpdate(const string& result)
    }
 
    if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
-      set_next_page_iterator(string());
+      set_next_page_iterator(std::string());
    
    ShowDigitalContentsGUI();
 }
 
-string Upload_tab::getUpdateCommand()
+std::string Upload_tab::getUpdateCommand()
 {
-   string currentUserName = Globals::instance().getCurrentUser();
+   std::string currentUserName = Globals::instance().getCurrentUser();
    if (currentUserName.empty())
-      return string();
+      return std::string();
 
    graphene::chain::ContentObjectPropertyManager type_composer;
    graphene::chain::ContentObjectTypeValue type(graphene::chain::EContentObjectApplication::DecentCore);
-   string str_type;
+   std::string str_type;
    type.to_string(str_type);
 
    return   "search_user_content "

@@ -1,38 +1,21 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
+#ifndef STDAFX_H
+#include <QBoxLayout>
+#include <QDateTime>
+#include <QMenu>
+#endif
+
 #include "richdialog.hpp"
-
-
+#include "gui_wallet_global.hpp"
 #include "decent_button.hpp"
 #include "decent_label.hpp"
 #include "decent_line_edit.hpp"
 #include "decent_text_edit.hpp"
 
-#ifndef _MSC_VER
-#include <graphene/chain/content_object.hpp>
-
-
-#include <QIntValidator>
-#include <QMessageBox>
-#include <QKeyEvent>
-#include <QDateTime>
-#include <QTextEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QLocale>
-#include <QInputMethod>
-#include <QApplication>
-#include <vector>
-#include <string>
-#endif
-
-
 namespace gui_wallet
 {
+
 void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
 {
    pParent->show();
@@ -45,6 +28,7 @@ void PlaceInsideLabel(QWidget* pParent, QWidget* pChild)
    pMainLayout->setContentsMargins(0, 0, 0, 0);
    pParent->setLayout(pMainLayout);
 }
+
 //
 // RatingWidget
 //
@@ -118,11 +102,12 @@ StackLayerWidget::StackLayerWidget(QWidget* pParent) : QWidget(pParent)
 //
 // TransferWidget
 //
-TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : StackLayerWidget(parent)
+TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QString>>& assets, const QString & userName)
+   : StackLayerWidget(parent)
    , m_toUserName(userName)
 {
    QVBoxLayout* mainLayout       = new QVBoxLayout();
-   QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
+   QHBoxLayout* assetLayout      = new QHBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
    
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
@@ -138,16 +123,29 @@ TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : Stac
    pLabel->setText(tr("Transfer of funds"));
 
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
+   DecentLineEdit* amount = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::Amount);
    DecentLineEdit* memo = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit);
-   
-   name->setPlaceholderText(tr("Reciever account name"));
+
+   m_pAssetSymbol = new DecentButton(this, DecentButton::Asset, DecentButton::Amount);
+   if (assets.size() > 1)
+   {
+      QMenu *pAssetMenu = new QMenu(m_pAssetSymbol);
+      std::for_each(assets.begin(), assets.end(), [&](const QPair<QString, QString>& a) { pAssetMenu->addAction(a.first)->setData(a.second); });
+      connect(pAssetMenu, &QMenu::triggered, this, &TransferWidget::assetChanged);
+      m_pAssetSymbol->setMenu(pAssetMenu);
+   }
+
+   m_pAssetSymbol->setText(assets.empty() ?
+      QString::fromStdString(Globals::instance().asset(0).m_str_symbol) : assets.front().first);
+   m_assetId = assets.empty() ? QString::fromStdString(Asset::dct_id) : assets.front().second;
+
+   name->setPlaceholderText(tr("Receiver account name"));
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    name->setText(m_toUserName);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &TransferWidget::nameChanged);
-   
-   amount->setPlaceholderText(QString(tr("Amount of %1")).arg(Globals::instance().getAssetName())  );
+
+   amount->setPlaceholderText(tr("Amount"));
    amount->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
    Asset min_price_asset = Globals::instance().asset(1);
@@ -167,17 +165,18 @@ TransferWidget::TransferWidget(QWidget* parent, const QString & userName) : Stac
    QObject::connect(memo, &QLineEdit::textChanged,
                     this, &TransferWidget::memoChanged);
 
-   lineEditsLayout->addWidget(pLabel);
-   lineEditsLayout->addWidget(name);
-   lineEditsLayout->addWidget(amount);
-   lineEditsLayout->addWidget(memo);
+   assetLayout->addWidget(amount);
+   assetLayout->addWidget(m_pAssetSymbol);
+   assetLayout->setSpacing(0);
 
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
-   
-   
+
    mainLayout->setContentsMargins(40, 10, 40, 10);
-   mainLayout->addLayout(lineEditsLayout);
+   mainLayout->addWidget(pLabel);
+   mainLayout->addWidget(name);
+   mainLayout->addLayout(assetLayout);
+   mainLayout->addWidget(memo);
    mainLayout->addLayout(buttonsLayout);
    
    setLayout(mainLayout);
@@ -198,7 +197,7 @@ void TransferWidget::nameChanged(const QString & name)
 
 void TransferWidget::amountChanged(const QString & amount)
 {
-   m_amount = amount.toDouble();
+   m_amount = Globals::instance().locale().toDouble(amount);
 }
 
 void TransferWidget::memoChanged(const QString & memo)
@@ -206,16 +205,17 @@ void TransferWidget::memoChanged(const QString & memo)
    m_memo = memo;
 }
 
+void TransferWidget::assetChanged(QAction* pAsset)
+{
+   m_pAssetSymbol->setText(pAsset->text());
+   m_assetId = pAsset->data().toString();
+}
+
 void TransferWidget::Transfer()
 {
-   if (m_fromUserName.isEmpty())
-       m_fromUserName = Globals::instance().getCurrentUser().c_str();
-
-   std::string strAssetSymbol = Globals::instance().asset(0).m_str_symbol;
-
-   auto result = Globals::instance().TransferFunds(m_fromUserName.toStdString(),
+   auto result = Globals::instance().TransferFunds(Globals::instance().getCurrentUser(),
                                                    m_toUserName.toStdString(),
-                                                   m_amount, strAssetSymbol,
+                                                   m_amount, m_assetId.toStdString(),
                                                    m_memo.toStdString());
 
    if (result.empty())
@@ -1041,7 +1041,7 @@ void PasswordWidget::slot_action()
    {
       try
       {
-         Globals::instance().runTask("set_password \"" + pass1.toStdString() + "\"");
+         Globals::instance().getWallet().SetPassword(pass1.toStdString());
       }
       catch(const std::exception& ex) {
          error = ex.what();
@@ -1059,7 +1059,7 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().runTask("unlock \"" + pass1.toStdString() + "\"");
+      Globals::instance().getWallet().Unlock(pass1.toStdString());
    }
    catch(const std::exception& ex) {
       error = ex.what();

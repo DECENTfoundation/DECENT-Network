@@ -1,12 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "decent_label.hpp"
-
+#ifndef STDAFX_H
 #include <QEvent>
 #include <QStyle>
 #include <QVariant>
 #include <QTimer>
+#endif
+
+#include "decent_label.hpp"
 
 namespace gui_wallet
 {
@@ -110,4 +111,3 @@ namespace gui_wallet
       setText(QString());
    }
 }
-

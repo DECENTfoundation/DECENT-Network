@@ -23,8 +23,10 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/chain/protocol/authority.hpp>
+#ifndef STDAFX_APP_H
 #include <graphene/chain/custom_evaluator.hpp>
+#endif
+
 #include <graphene/app/impacted.hpp>
 
 namespace graphene { namespace app {
@@ -175,12 +177,12 @@ struct get_impacted_account_visitor
    void operator()( const return_escrow_submission_operation& op) {  _impacted.insert(op.author);}
    void operator()( const return_escrow_buying_operation& op) {  _impacted.insert(op.consumer);}
    void operator()( const report_stats_operation& op) { _impacted.insert(op.consumer);}
-   void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); };
+   void operator()( const pay_seeder_operation& op) { _impacted.insert(op.author); _impacted.insert(op.seeder); }
    void operator()( const finish_buying_operation& op) {
       _impacted.insert(op.author);
       for(auto& item : op.co_authors)
          _impacted.insert( item.first );
-   };
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -195,4 +197,4 @@ void transaction_get_impacted_accounts( const transaction& tx, flat_set<account_
       operation_get_impacted_accounts( op, result );
 }
 
-} }
+} } // graphene::app

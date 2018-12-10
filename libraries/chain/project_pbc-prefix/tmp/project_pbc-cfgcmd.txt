@@ -1,1 +1,0 @@
-cmd='/Users/richardroznovjak/working/decent-core/libraries/contrib/pbc/setup;&&;/Users/richardroznovjak/working/decent-core/libraries/contrib/pbc/configure;--prefix=/Users/richardroznovjak/working/decent-core/libraries/contrib/pbc'

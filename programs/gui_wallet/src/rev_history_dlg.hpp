@@ -1,8 +1,11 @@
 #pragma once
 
-#ifndef _MSC_VER
+#ifndef STDAFX_H
 #include <QDialog>
 #endif
+
+namespace gui_wallet
+{
 
 class Rev_history_dlg : public QDialog
 {
@@ -20,3 +23,5 @@ private slots:
    void slot_btn_ok(void);
    void slot_btn_cancel(void);
 };
+
+}

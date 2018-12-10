@@ -1,20 +1,15 @@
-#include "stdafx.h"
-
-
-#ifndef _MSC_VER
+#ifndef STDAFX_H
+#include <QBoxLayout>
 #include <QPlainTextEdit>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#include <QTextCursor>
 #endif
 
 #include "rev_history_dlg.hpp"
 #include "decent_button.hpp"
 #include "gui_wallet_global.hpp"
 
-
-
-
-using namespace gui_wallet;
+namespace gui_wallet
+{
 
 Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : QDialog(pParent)
    , m_revHistory(revHistory)
@@ -24,6 +19,7 @@ Rev_history_dlg::Rev_history_dlg(const QString& revHistory, QWidget* pParent) : 
    pRevHistory->setReadOnly(true);
    pRevHistory->setLineWrapMode(QPlainTextEdit::WidgetWidth);
    pRevHistory->setPlainText(revHistory);
+   pRevHistory->moveCursor(QTextCursor::MoveOperation::End);
    pRevHistory->resize(500, 600);
 
    DecentButton* pOKButton = new DecentButton(this, DecentButton::DialogAction);
@@ -77,4 +73,6 @@ void Rev_history_dlg::slot_btn_ok(void)
 void Rev_history_dlg::slot_btn_cancel(void)
 {
    reject();
+}
+
 }

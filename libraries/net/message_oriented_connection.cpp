@@ -55,6 +55,7 @@ namespace graphene { namespace net {
       fc::future<void> _read_loop_done;
       uint64_t _bytes_received;
       uint64_t _bytes_sent;
+      bool _run_loop;
 
       fc::time_point _connected_time;
       fc::time_point _last_message_received_time;
@@ -97,7 +98,8 @@ namespace graphene { namespace net {
       _delegate(delegate),
       _bytes_received(0),
       _bytes_sent(0),
-      _send_message_in_progress(false)
+      _send_message_in_progress(false),
+      _run_loop(true)
 #ifndef NDEBUG
       ,_thread(&fc::thread::current())
 #endif
@@ -149,11 +151,14 @@ namespace graphene { namespace net {
 
       fc::oexception exception_to_rethrow;
       bool call_on_connection_closed = false;
+      fc::ip::endpoint rep = _sock.get_socket().remote_endpoint();
+      std::string rep_addr_str = rep.operator fc::string();
 
       try
       {
         message m;
-        while( true )
+        _run_loop = true;
+        while(true)
         {
           char buffer[BUFFER_SIZE];
           _sock.read(buffer, BUFFER_SIZE);
@@ -197,29 +202,41 @@ namespace graphene { namespace net {
       }
       catch ( const fc::eof_exception& e )
       {
-        wlog( "disconnected ${e}", ("e", e.to_detail_string() ) );
-        call_on_connection_closed = true;
+         call_on_connection_closed = true;
+         if (_run_loop)
+            dlog( "disconnected ${a} ${e}", ("a", rep_addr_str)("e", e.to_detail_string() ));
+         else {
+            wlog("disconnected ${a} ${e}", ("a", rep_addr_str)("e", e.to_detail_string()));
+         }
       }
       catch ( const fc::exception& e )
       {
-        elog( "disconnected ${er}", ("er", e.to_detail_string() ) );
         call_on_connection_closed = true;
-        exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: ${e}", ("e", e.to_detail_string())));
+        if (_run_loop)
+           dlog("disconnected ${a} ${e}", ("a", rep_addr_str)("e", e.to_detail_string()));
+        else {
+           elog("disconnected ${a} ${e}", ("a", rep_addr_str)("e", e.to_detail_string()));
+           exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: ${a} ${e}", ("a", rep_addr_str)("e", e.to_detail_string())));
+        }
       }
       catch ( const std::exception& e )
       {
-        elog( "disconnected ${er}", ("er", e.what() ) );
         call_on_connection_closed = true;
-        exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: ${e}", ("e", e.what())));
+        if (_run_loop)
+         dlog( "disconnected ${a} ${er}", ("a", rep_addr_str)("er", e.what() ));
+        else {
+           elog("disconnected ${a} ${er}", ("a", rep_addr_str)("er", e.what()));
+           exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: $a{} ${e}", ("a", rep_addr_str)("e", e.what())));
+        }
       }
       catch ( ... )
       {
         elog( "unexpected exception" );
         call_on_connection_closed = true;
-        exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: ${e}", ("e", fc::except_str())));
+        exception_to_rethrow = fc::unhandled_exception(FC_LOG_MESSAGE(warn, "disconnected: ${a} ${e}", ("a", rep_addr_str)("e", fc::except_str())));
       }
 
-      if (call_on_connection_closed)
+      if (call_on_connection_closed || _run_loop == false)
         _delegate->on_connection_closed(_self);
 
       if (exception_to_rethrow)
@@ -273,6 +290,7 @@ namespace graphene { namespace net {
     void message_oriented_connection_impl::close_connection()
     {
       VERIFY_CORRECT_THREAD();
+      _run_loop = false;
       _sock.close();
     }
 
@@ -280,6 +298,7 @@ namespace graphene { namespace net {
     {
       VERIFY_CORRECT_THREAD();
 
+      _run_loop = false;
       fc::optional<fc::ip::endpoint> remote_endpoint;
       if (_sock.get_socket().is_open())
         remote_endpoint = _sock.get_socket().remote_endpoint();

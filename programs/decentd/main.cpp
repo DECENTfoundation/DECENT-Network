@@ -40,8 +40,12 @@
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 
-#include <decent/config/decent_log_config.hpp>
+#include <boost/version.hpp>
 
+#include <openssl/opensslv.h>
+
+#include <decent/config/decent_log_config.hpp>
+#include <decent/monitoring/monitoring_fc.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -162,44 +166,62 @@ int main(int argc, char** argv) {
    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 #endif
 
+   bpo::options_description app_options("DECENT Daemon");
+   bpo::options_description cfg_options("DECENT Daemon");
+   bpo::variables_map options;
+
+   using decent_plugins = graphene::app::plugin_set<
+      miner_plugin::miner_plugin,
+      account_history::account_history_plugin,
+      decent::seeding::seeding_plugin,
+      decent::messaging::messaging_plugin,
+      transaction_history::transaction_history_plugin
+   >;
+
+   try
+   {
+      bpo::options_description cli, cfg;
+      app::application::set_program_options(cli, cfg);
+      decent_plugins::set_program_options(cli, cfg);
+      cli.add_options()
+         ("daemon", "Run DECENT as daemon.")
+      ;
+
+      app_options.add(cli);
+      cfg_options.add(cfg);
+      bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
+   }
+   catch (const boost::program_options::error& e)
+   {
+     std::cerr << "Error parsing command line: " << e.what() << "\n";
+     return EXIT_FAILURE;
+   }
+
+   if( options.count("help") )
+   {
+      std::cout << app_options << std::endl;
+      return EXIT_SUCCESS;
+   }
+   else if( options.count("version") )
+   {
+      unsigned int boost_major_version = BOOST_VERSION / 100000;
+      unsigned int boost_minor_version = BOOST_VERSION / 100 - boost_major_version * 1000;
+      std::string boost_version_text = std::to_string(boost_major_version) + "." + std::to_string(boost_minor_version) + "." + std::to_string(BOOST_VERSION % 100);
+      std::string openssl_version_text = std::string(OPENSSL_VERSION_TEXT);
+      openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
+
+      std::cout << "DECENT Daemon " << graphene::utilities::git_version() << "\nBoost " << boost_version_text << "\n" << openssl_version_text << std::endl;
+      return EXIT_SUCCESS;
+   }
+
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
-      bpo::options_description app_options("DECENT Daemon");
-      bpo::options_description cfg_options("DECENT Daemon");
-      app_options.add_options()
-         ("help,h", "Print this help message and exit.")
-         ("version,v", "Print version information")
-         ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value( utilities::decent_path_finder::instance().get_decent_data() / "decentd"), "Directory containing databases, configuration file, etc.")
-         ("daemon", "Run Decent as daemon");
-
-      bpo::variables_map options;
-
-      auto miner_plug = node->register_plugin<miner_plugin::miner_plugin>();
-      auto history_plug = node->register_plugin<account_history::account_history_plugin>();
-      auto seeding_plug = node->register_plugin<decent::seeding::seeding_plugin>();
-      auto messaging_plug = node->register_plugin<decent::messaging::messaging_plugin>();
-      auto transaction_history_plug = node->register_plugin<transaction_history::transaction_history_plugin>();
-
-      try
-      {
-         bpo::options_description cli, cfg;
-         node->set_program_options(cli, cfg);
-         app_options.add(cli);
-         cfg_options.add(cfg);
-         bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
-      }
-      catch (const boost::program_options::error& e)
-      {
-        std::cerr << "Error parsing command line: " << e.what() << "\n";
-        return 1;
-      }
+      decent_plugins::types plugins = decent_plugins::create(*node);
 
       bool run_as_daemon = false;
       fc::path logs_dir, data_dir, temp_dir, config_filename;
-
       auto& path_finder = utilities::decent_path_finder::instance();
-
       if (options.count("daemon")) {
          int ret = start_as_daemon();
          if (ret < 0) {
@@ -224,7 +246,6 @@ int main(int argc, char** argv) {
          path_finder.set_decent_temp_path(temp_dir);
       }
       else {
-
          data_dir   = path_finder.get_decent_data();
          logs_dir   = path_finder.get_decent_logs();
          temp_dir   = path_finder.get_decent_temp();
@@ -241,27 +262,6 @@ int main(int argc, char** argv) {
          //NOTE: make it work as till now...
          logs_dir = fc::absolute(config_filename).parent_path();
       }
-
-      if( options.count("version") )
-         {
-            std::string client_version( graphene::utilities::git_revision_description );
-            const size_t pos = client_version.find( '/' );
-            if( pos != std::string::npos && client_version.size() > pos )
-               client_version = client_version.substr( pos + 1 );
-
-            std::cout << "decentd version " << client_version << "\n";
-         }
-
-      if( options.count("help") )
-      {
-         if( options.count("version") )
-            std::cout << "\n";
-
-         std::cout << app_options << "\n";
-      }
-
-      if( options.count("help") || options.count("version") )
-         return 0;
 
       if( fc::exists(config_filename) )
       {
@@ -325,6 +325,8 @@ int main(int argc, char** argv) {
          if (logging_config)
             fc::configure_logging(*logging_config);
       }
+      monitoring::set_data_dir(data_dir);
+      monitoring::monitoring_counters_base::start_monitoring_thread();
 
       bpo::notify(options);
       node->initialize(data_dir, options);
@@ -332,6 +334,8 @@ int main(int argc, char** argv) {
 
       node->startup();
       node->startup_plugins();
+
+      
 
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 #ifdef _MSC_VER
@@ -361,6 +365,7 @@ int main(int argc, char** argv) {
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
 
+      auto seeding_plug = std::get<2>(plugins);
       if( !seeding_plug->my )
       {
          decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");
@@ -378,6 +383,7 @@ int main(int argc, char** argv) {
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));
       node->shutdown_plugins();
+      monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
 #ifdef _MSC_VER
@@ -394,6 +400,7 @@ int main(int argc, char** argv) {
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
+      monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
       return 1;

@@ -64,21 +64,25 @@
 #include <fc/crypto/hex.hpp>
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
+#include <fc/rpc/api_connection.hpp>
 
 #include <graphene/app/api.hpp>
+
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/string_escape.hpp>
 #include <graphene/utilities/words.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
-#include <graphene/debug_miner/debug_api.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
+#include <decent/monitoring/monitoring.hpp>
+#include <decent/wallet_utility/wallet_utility.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
@@ -90,8 +94,6 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif
-
-#define BRAIN_KEY_WORD_COUNT 16
 
 CryptoPP::AutoSeededRandomPool randomGenerator;
 
@@ -216,72 +218,6 @@ optional<T> maybe_id( const string& name_or_id )
       }
    }
    return optional<T>();
-}
-
-fc::ecc::private_key derive_private_key( const std::string& prefix_string,
-                                         int sequence_number )
-{
-   std::string sequence_string = std::to_string(sequence_number);
-   fc::sha512 h = fc::sha512::hash(prefix_string + " " + sequence_string);
-   fc::ecc::private_key derived_key = fc::ecc::private_key::regenerate(fc::sha256::hash(h));
-   return derived_key;
-}
-
-string normalize_brain_key(const string& s )
-{
-   size_t i = 0, n = s.length();
-   std::string result;
-   char c;
-   result.reserve( n );
-
-   bool preceded_by_whitespace = false;
-   bool non_empty = false;
-   while( i < n )
-   {
-      c = s[i++];
-      switch( c )
-      {
-      case ' ':  case '\t': case '\r': case '\n': case '\v': case '\f':
-         preceded_by_whitespace = true;
-         continue;
-
-      case 'a': c = 'A'; break;
-      case 'b': c = 'B'; break;
-      case 'c': c = 'C'; break;
-      case 'd': c = 'D'; break;
-      case 'e': c = 'E'; break;
-      case 'f': c = 'F'; break;
-      case 'g': c = 'G'; break;
-      case 'h': c = 'H'; break;
-      case 'i': c = 'I'; break;
-      case 'j': c = 'J'; break;
-      case 'k': c = 'K'; break;
-      case 'l': c = 'L'; break;
-      case 'm': c = 'M'; break;
-      case 'n': c = 'N'; break;
-      case 'o': c = 'O'; break;
-      case 'p': c = 'P'; break;
-      case 'q': c = 'Q'; break;
-      case 'r': c = 'R'; break;
-      case 's': c = 'S'; break;
-      case 't': c = 'T'; break;
-      case 'u': c = 'U'; break;
-      case 'v': c = 'V'; break;
-      case 'w': c = 'W'; break;
-      case 'x': c = 'X'; break;
-      case 'y': c = 'Y'; break;
-      case 'z': c = 'Z'; break;
-
-      default:
-         break;
-      }
-      if( preceded_by_whitespace && non_empty )
-         result.push_back(' ');
-      result.push_back(c);
-      preceded_by_whitespace = false;
-      non_empty = true;
-   }
-   return result;
 }
 
 struct op_prototype_visitor
@@ -446,9 +382,9 @@ private:
 
 public:
    wallet_api& self;
-   wallet_api_impl( wallet_api& s, const wallet_data& initial_data, fc::api<login_api> rapi )
+   wallet_api_impl( wallet_api& s, const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws )
       : self(s),
-        _chain_id(initial_data.chain_id),
+        _chain_id(chain_id),
         _remote_api(rapi),
         _remote_db(rapi->database()),
         _remote_net_broadcast(rapi->network_broadcast()),
@@ -456,7 +392,7 @@ public:
         _seeders_tracker(*this)
    {
       chain_id_type remote_chain_id = _remote_db->get_chain_id();
-      if( remote_chain_id != _chain_id && _chain_id != chain_id_type ("0000000000000000000000000000000000000000000000000000000000000000") )
+      if( remote_chain_id != _chain_id )
       {
          FC_THROW( "Remote server gave us an unexpected chain_id",
             ("remote_chain_id", remote_chain_id)
@@ -469,11 +405,10 @@ public:
          on_block_applied( block_id );
       } );
 
-      _wallet.chain_id = remote_chain_id;
-      _chain_id = _wallet.chain_id;
-      _wallet.ws_server = initial_data.ws_server;
-      _wallet.ws_user = initial_data.ws_user;
-      _wallet.ws_password = initial_data.ws_password;
+      _wallet.chain_id = _chain_id;
+      _wallet.ws_server = ws.server;
+      _wallet.ws_user = ws.user;
+      _wallet.ws_password = ws.password;
       decent::package::PackageManager::instance().recover_all_packages();
    }
    virtual ~wallet_api_impl()
@@ -696,6 +631,12 @@ public:
       return _wallet_filename;
    }
 
+   void set_wallet_filename(const string &wallet_filename)
+   {
+      FC_ASSERT( !wallet_filename.empty() );
+      _wallet_filename = wallet_filename;
+   }
+
    fc::ecc::private_key get_private_key(const public_key_type& id)const
    {
       auto it = _keys.find(id);
@@ -733,7 +674,7 @@ public:
       std::vector<public_key_type> active_keys = account.active.get_keys();
       std::vector<public_key_type> owner_keys = account.owner.get_keys();
 
-      if( std::find( owner_keys.begin(), owner_keys.end(), wif_pub_key ) !=owner_keys.end() )
+      if( std::find( owner_keys.begin(), owner_keys.end(), wif_pub_key ) != owner_keys.end() )
       {
          //we have the owner keys
          int active_key_index = find_first_unused_derived_key_index( *optional_private_key );
@@ -747,9 +688,13 @@ public:
          _keys[active_pubkey] = key_to_wif( active_privkey );
          _keys[memo_pubkey] = key_to_wif( memo_privkey );
 
+         DInteger active_el_gamal_priv_key = generate_private_el_gamal_key_from_secret( active_privkey.get_secret() );
+         _el_gamal_keys[get_public_el_gamal_key( active_el_gamal_priv_key )] = active_el_gamal_priv_key;
+         DInteger memo_el_gamal_priv_key = generate_private_el_gamal_key_from_secret( memo_privkey.get_secret() );
+         _el_gamal_keys[get_public_el_gamal_key( memo_el_gamal_priv_key )] = memo_el_gamal_priv_key;
+
          _wallet.extra_keys[account.id].insert( active_pubkey );
          _wallet.extra_keys[account.id].insert( memo_pubkey );
-
       }
 
       std::copy(active_keys.begin(), active_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
@@ -759,9 +704,35 @@ public:
       _keys[wif_pub_key] = wif_key;
       DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
       _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
-
       _wallet.update_account(account);
+      _wallet.extra_keys[account.id].insert(wif_pub_key);
 
+      return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
+   }
+
+   // @returns true if the key matches a current active/owner/memo key for the named
+   //          account, false otherwise (but it is stored either way)
+   bool import_single_key(const string& account_name_or_id, const string& wif_key)
+   {
+      fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
+      if (!optional_private_key)
+         FC_THROW("Invalid private key");
+      graphene::chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
+
+      account_object account = get_account( account_name_or_id );
+
+      // make a list of all current public keys for the named account
+      flat_set<public_key_type> all_keys_for_account;
+      std::vector<public_key_type> active_keys = account.active.get_keys();
+      std::vector<public_key_type> owner_keys = account.owner.get_keys();
+      std::copy(active_keys.begin(), active_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
+      std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
+      all_keys_for_account.insert(account.options.memo_key);
+
+      _keys[wif_pub_key] = wif_key;
+      DInteger el_gamal_priv_key = generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
+      _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
+      _wallet.update_account(account);
       _wallet.extra_keys[account.id].insert(wif_pub_key);
 
       return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
@@ -820,11 +791,6 @@ public:
       //        instead of replacing it
       if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
-
-      if( ! fc::exists( wallet_filename ) ) {
-         dlog("load_wallet_file() end (file not found)");
-         return false;
-      }
 
       bool result = false;
       wallet_data load_data;
@@ -1088,6 +1054,7 @@ public:
    signed_transaction register_account(const string& name,
                                        public_key_type owner,
                                        public_key_type active,
+                                       public_key_type memo,
                                        const string&  registrar_account,
                                        bool broadcast = false)
    { try {
@@ -1106,7 +1073,7 @@ public:
       account_create_op.name = name;
       account_create_op.owner = authority(1, owner, 1);
       account_create_op.active = authority(1, active, 1);
-      account_create_op.options.memo_key = active;
+      account_create_op.options.memo_key = memo;
 
       signed_transaction tx;
 
@@ -1139,8 +1106,36 @@ public:
       if( broadcast )
          _remote_net_broadcast->broadcast_transaction( tx );
       return tx;
-   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(memo)(registrar_account)(broadcast) ) }
 
+   signed_transaction register_multisig_account(const string& name,
+                                                authority owner_authority,
+                                                authority active_authority,
+                                                public_key_type memo_pubkey,
+                                                const string&  registrar_account,
+                                                bool broadcast = false)
+   {
+      try
+      {
+         FC_ASSERT( !self.is_locked() );
+         FC_ASSERT( is_valid_name(name) );
+         account_create_operation account_create_op;
+         account_object acc = get_account( registrar_account );
+
+         account_create_op.registrar = acc.id;
+         account_create_op.name = name;
+         account_create_op.owner = owner_authority;
+         account_create_op.active = active_authority;
+         account_create_op.options.memo_key = memo_pubkey;
+
+         signed_transaction tx;
+         tx.operations.push_back( account_create_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (name)(owner_authority)(active_authority)(memo_pubkey)(registrar_account)(broadcast) )
+   }
 
    // This function generates derived keys starting with index 0 and keeps incrementing
    // the index until it finds a key that isn't registered in the block chain.  To be
@@ -1177,8 +1172,6 @@ public:
       }
    }
 
-//#define DECENTGO
-
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
                                                       const string& account_name,
                                                       const string& registrar_account,
@@ -1207,13 +1200,8 @@ public:
          account_create_op.registrar = registrar_account_id;
          account_create_op.name = account_name;
          account_create_op.owner = authority(1, owner_pubkey, 1);
-#ifdef DECENTGO
-         account_create_op.active = authority(1, owner_pubkey, 1);
-         account_create_op.options.memo_key = owner_pubkey;
-#else
          account_create_op.active = authority(1, active_pubkey, 1);
          account_create_op.options.memo_key = memo_pubkey;
-#endif
 
          // current_fee_schedule()
          // find_account(pay_from_account)
@@ -1221,9 +1209,7 @@ public:
          // account_create_op.fee = account_create_op.calculate_fee(db.current_fee_schedule());
 
          signed_transaction tx;
-
          tx.operations.push_back( account_create_op );
-
          set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
 
          vector<public_key_type> paying_keys = registrar_account_object.active.get_keys();
@@ -1267,12 +1253,53 @@ public:
    { try {
 
       FC_ASSERT( !self.is_locked() );
-      string normalized_brain_key = detail::normalize_brain_key( brain_key );
+      string normalized_brain_key = graphene::utilities::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
-      fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
+      fc::ecc::private_key owner_privkey = graphene::utilities::derive_private_key( normalized_brain_key );
       return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
+   signed_transaction update_account_keys( const string& name,
+                                           fc::optional<authority> owner_auth,
+                                           fc::optional<authority> active_auth,
+                                           fc::optional<public_key_type> memo_pubkey,
+                                           bool broadcast )
+   { try {
+         FC_ASSERT( !self.is_locked(), "wallet is locked" );
+         FC_ASSERT( owner_auth || active_auth || memo_pubkey, "at least one authority/public key needs to be specified");
+
+         account_object acc = get_account( name );
+         account_update_operation account_update_op;
+
+         // TODO: move the following asserts into evaluator.
+         if( owner_auth )
+         {
+            FC_ASSERT( acc.owner != *owner_auth, "new authority needs to be different from the existing one" );
+         }
+
+         if( active_auth )
+         {
+            FC_ASSERT( acc.active != *active_auth, "new authority needs to be different from the existing one" );
+         }
+
+         account_update_op.account = acc.id;
+         account_update_op.owner = owner_auth;
+         account_update_op.active = active_auth;
+
+         if( memo_pubkey )
+         {
+            FC_ASSERT( acc.options.memo_key != *memo_pubkey, "new authority needs to be different from the existing one" );
+            acc.options.memo_key = *memo_pubkey;
+            account_update_op.new_options = acc.options;
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back( account_update_op );
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+         tx.validate();
+
+         return sign_transaction( tx, broadcast );
+      } FC_CAPTURE_AND_RETHROW( (name)(owner_auth)(active_auth)(memo_pubkey)(broadcast) ) }
 
    signed_transaction create_user_issued_asset(const string& issuer,
                                                const string& symbol,
@@ -1331,13 +1358,9 @@ public:
       issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
       issue_op.issue_to_account = to.id;
 
-      if( memo.size() )
+      if( !memo.empty() )
       {
-         issue_op.memo = memo_data();
-         issue_op.memo->from = issuer.options.memo_key;
-         issue_op.memo->to = to.options.memo_key;
-         issue_op.memo->set_message(get_private_key(issuer.options.memo_key),
-                                    to.options.memo_key, memo);
+         issue_op.memo = memo_data(memo, get_private_key(issuer.options.memo_key), to.options.memo_key);
       }
 
       signed_transaction tx;
@@ -1987,13 +2010,9 @@ public:
          xfer_op.to = to_obj_id;
          xfer_op.amount = asset_obj->amount_from_string(amount);
 
-         if( memo.size() )
+         if( !memo.empty() )
          {
-            xfer_op.memo = memo_data();
-            xfer_op.memo->from = from_account.options.memo_key;
-            xfer_op.memo->to = to_account.options.memo_key;
-            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                      to_account.options.memo_key, memo);
+            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
          }
 
          tx.operations.push_back(xfer_op);
@@ -2006,13 +2025,9 @@ public:
          xfer_op.to = to_obj_id;
          xfer_op.amount = asset_obj->amount_from_string(amount);
 
-         if( memo.size() )
+         if( !memo.empty() )
          {
-            xfer_op.memo = memo_data();
-            xfer_op.memo->from = from_account.options.memo_key;
-            xfer_op.memo->to = to_account.options.memo_key;
-            xfer_op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                      to_account.options.memo_key, memo);
+            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
          }
 
          tx.operations.push_back(xfer_op);
@@ -2041,13 +2056,9 @@ public:
       fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
       FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
       op.amount = asset_obj->amount_from_string(amount);
-      if( memo.size() )
+      if( !memo.empty() )
       {
-         op.memo = memo_data();
-         op.memo->from = from_account.options.memo_key;
-         op.memo->to = to_account.options.memo_key;
-         op.memo->set_message(get_private_key(from_account.options.memo_key),
-                                   to_account.options.memo_key, memo);
+         op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
       }
 
       add_operation_to_builder_transaction(propose_num, op);
@@ -2156,114 +2167,9 @@ public:
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
       std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
-      m["help"] = [](variant result, const fc::variants& a)
+      m["help"] = m["get_help"] = [](variant result, const fc::variants& a)
       {
          return result.get_string();
-      };
-
-      m["gethelp"] = [](variant result, const fc::variants& a)
-      {
-         return result.get_string();
-      };
-/*
-      m["list_account_balances"] = [this](variant result, const fc::variants& a)
-      {
-         auto r = result.as<vector<asset>>();
-         vector<asset_object> asset_recs;
-         std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
-            return get_asset(a.asset_id);
-         });
-
-         std::stringstream ss;
-         for( unsigned i = 0; i < asset_recs.size(); ++i )
-            ss << asset_recs[i].amount_to_pretty_string(r[i]) << "\n";
-
-         return ss.str();
-      };
-*/
-      m["get_order_book"] = [this](variant result, const fc::variants& a)
-      {
-         auto orders = result.as<order_book>();
-         auto bids = orders.bids;
-         auto asks = orders.asks;
-         std::stringstream ss;
-         std::stringstream sum_stream;
-         sum_stream << "Sum(" << orders.base << ')';
-         double bid_sum = 0;
-         double ask_sum = 0;
-         const int spacing = 20;
-
-         auto prettify_num = [&]( double n )
-         {
-            //ss << n;
-            if (abs( round( n ) - n ) < 0.00000000001 )
-            {
-               //ss << setiosflags( !ios::fixed ) << (int) n;     // doesn't compile on Linux with gcc
-               ss << (int) n;
-            }
-            else if (n - floor(n) < 0.000001)
-            {
-               ss << setiosflags( ios::fixed ) << setprecision(10) << n;
-            }
-            else
-            {
-               ss << setiosflags( ios::fixed ) << setprecision(6) << n;
-            }
-         };
-
-         ss << setprecision( 8 ) << setiosflags( ios::fixed ) << setiosflags( ios::left );
-
-         ss << ' ' << setw( (spacing * 4) + 6 ) << "BUY ORDERS" << "SELL ORDERS\n"
-            << ' ' << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
-            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
-            << "   " << setw( spacing + 1 ) << "Price" << setw( spacing ) << orders.quote << ' ' << setw( spacing )
-            << orders.base << ' ' << setw( spacing ) << sum_stream.str()
-            << "\n"
-            << "|=====================================================================================\n";
-
-         for (int i = 0; i < (int)bids.size() || i < (int)asks.size() ; i++)
-         {
-            if ( i < (int)bids.size() )
-            {
-                bid_sum += bids[i].base;
-                ss << ' ' << setw( spacing );
-                prettify_num( bids[i].price );
-                ss << ' ' << setw( spacing );
-                prettify_num( bids[i].quote );
-                ss << ' ' << setw( spacing );
-                prettify_num( bids[i].base );
-                ss << ' ' << setw( spacing );
-                prettify_num( bid_sum );
-                ss << ' ';
-            }
-            else
-            {
-                ss << setw( (spacing * 4) + 5 ) << ' ';
-            }
-
-            ss << '|';
-
-            if ( i < (int)asks.size() )
-            {
-               ask_sum += asks[i].base;
-               ss << ' ' << setw( spacing );
-               prettify_num( asks[i].price );
-               ss << ' ' << setw( spacing );
-               prettify_num( asks[i].quote );
-               ss << ' ' << setw( spacing );
-               prettify_num( asks[i].base );
-               ss << ' ' << setw( spacing );
-               prettify_num( ask_sum );
-            }
-
-            ss << '\n';
-         }
-
-         ss << endl
-            << "Buy Total:  " << bid_sum << ' ' << orders.base << endl
-            << "Sell Total: " << ask_sum << ' ' << orders.base << endl;
-
-         return ss.str();
       };
 
       return m;
@@ -2419,8 +2325,8 @@ public:
    }
 
 
-   void                                submit_content_utility(content_submit_operation& submit_op,
-                                      vector<regional_price_info> const& price_amounts)
+   void submit_content_utility(content_submit_operation& submit_op,
+                               vector<regional_price_info> const& price_amounts)
    {
       vector<regional_price> arr_prices;
 
@@ -2515,7 +2421,7 @@ public:
       } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
    }
 
-   void submit_content_async( string const& author,
+   content_keys submit_content_async( string const& author,
                                        vector< pair< string, uint32_t>> co_authors,
                                        string const& content_dir,
                                        string const& samples_dir,
@@ -2554,18 +2460,16 @@ public:
             secret = tmp;
          }
 
-         fc::sha256 sha_key;
+         content_keys keys;
 #if CRYPTOPP_VERSION >= 600
-         secret.Encode((CryptoPP::byte*)sha_key._hash, 32);
+         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
 #else
-         secret.Encode((byte*)sha_key._hash, 32);
+         secret.Encode((byte*)keys.key._hash, 32);
 #endif
 
-         uint32_t quorum = std::max((vector<account_id_type>::size_type)2, seeders.size()/3);
-         ShamirSecret ss(quorum, seeders.size(), secret);
+         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
+         ShamirSecret ss(keys.quorum, seeders.size(), secret);
          ss.calculate_split();
-         
-         content_submit_operation submit_op;
 
          for( int i =0; i < (int)seeders.size(); i++ )
          {
@@ -2580,16 +2484,17 @@ public:
             elog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
 
             decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
-            submit_op.key_parts.push_back(cp);
-
+            keys.parts.push_back(cp);
          }
 
+         content_submit_operation submit_op;
+         submit_op.key_parts = keys.parts;
          submit_op.author = author_account.id;
          submit_op.co_authors = co_authors_id_to_split;
          submit_content_utility(submit_op, price_amounts);
 
          submit_op.seeders = seeders;
-         submit_op.quorum = quorum;
+         submit_op.quorum = keys.quorum;
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
 
@@ -2598,7 +2503,7 @@ public:
             sectors = DECENT_SECTORS;
          else
             sectors = DECENT_SECTORS_BIG;
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, sha_key, sectors);
+         auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key, sectors);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
          
@@ -2606,7 +2511,7 @@ public:
          package_handle->create(false);
 
          //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
-         return ;
+         return keys;
       }
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
@@ -2681,6 +2586,46 @@ signed_transaction content_cancellation(const string& author,
       asset price = price_o.amount_from_string(amount);
       asset result = _remote_db->price_to_dct(price);
       return to_string(result.amount.value);
+   }
+
+   vector<operation_info> list_operations()
+   {
+       return _remote_db->list_operations();
+   }
+
+
+
+   void from_command_file( const std::string& command_file_name ) const
+   {
+       std::atomic_bool cancel_token(false);
+       decent::wallet_utility::WalletAPI my_api(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
+
+       try
+       {
+           std::ifstream cf_in(command_file_name);
+           std::string current_line;
+
+           if (! cf_in.good())
+           {
+               FC_THROW("File not found or an I/O error");
+           }
+
+           my_api.Connect(cancel_token);
+
+           while (std::getline(cf_in, current_line))
+           {
+               if (current_line.size() > 0)
+               {
+                   fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
+                   if( args.size() == 0 )
+                      continue;
+
+                   std::cout << my_api.RunTask(current_line) << "\n";
+               }
+           }
+       } FC_CAPTURE_AND_RETHROW( (command_file_name) )
+
+       cancel_token = true;
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
@@ -2962,13 +2907,13 @@ signed_transaction content_cancellation(const string& author,
          
          for (message_object& obj : objects) {
 
-            for (message_object_receivers_data& receivers_data_item : obj.receivers_data) {
+            for (const auto& receivers_data_item : obj.receivers_data) {
 
                try {
 
                   if( obj.sender_pubkey == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type() )
                   {
-                     message_payload::get_message( fc::ecc::private_key(), public_key_type(), receivers_data_item.data, obj.text, 0 );
+                     obj.text = receivers_data_item.get_message(private_key_type(), public_key_type());
                      break;
                   }
 
@@ -2976,7 +2921,7 @@ signed_transaction content_cancellation(const string& author,
                   if (it != _keys.end()) {
                      fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                      if (privkey)
-                        message_payload::get_message(*privkey, obj.sender_pubkey, receivers_data_item.data, obj.text, receivers_data_item.nonce);
+                        obj.text = receivers_data_item.get_message(*privkey, obj.sender_pubkey );
                      else
                         std::cout << "Cannot decrypt message." << std::endl;
                   }
@@ -2985,7 +2930,7 @@ signed_transaction content_cancellation(const string& author,
                      if (it != _keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
-                           message_payload::get_message(*privkey, receivers_data_item.receiver_pubkey, receivers_data_item.data, obj.text, receivers_data_item.nonce);
+                           obj.text = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
                         else
                            std::cout << "Cannot decrypt message." << std::endl;
                      }
@@ -3079,27 +3024,19 @@ signed_transaction content_cancellation(const string& author,
 
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
+
          message_payload pl;
+         pl.from = from_id;
+         pl.pub_from = from_account.options.memo_key;
 
-         for (auto& receiver : to) {
+         for (const auto& receiver : to) {
             account_object to_account = get_account(receiver);
-            message_payload_receivers_data receivers_data_item;
-            receivers_data_item.to = get_account(receiver).get_id();
-
-            if (text.size()) {
-               pl.set_message(get_private_key(from_account.options.memo_key),
-                  to_account.options.memo_key, text, receivers_data_item);
-            }
-            pl.receivers_data.push_back(receivers_data_item);
+            pl.receivers_data.emplace_back(text, get_private_key(from_account.options.memo_key), to_account.options.memo_key, to_account.get_id());
          }
 
          custom_operation cust_op;
-
          cust_op.id = graphene::chain::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-
-         pl.from = from_id;
-         pl.pub_from = from_account.options.memo_key;
          cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
@@ -3124,25 +3061,17 @@ signed_transaction content_cancellation(const string& author,
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
          message_payload pl;
+         pl.from = from_id;
+         pl.pub_from = public_key_type();
 
-         for (auto &receiver : to) {
+         for (const auto &receiver : to) {
             account_object to_account = get_account(receiver);
-            message_payload_receivers_data receivers_data_item;
-            receivers_data_item.to = get_account(receiver).get_id();
-
-            if (text.size()) {
-               pl.set_message(fc::ecc::private_key(), public_key_type(), text, receivers_data_item);
-            }
-            pl.receivers_data.push_back(receivers_data_item);
+            pl.receivers_data.emplace_back(text, private_key_type(), public_key_type(), to_account.get_id());
          }
 
          custom_operation cust_op;
-
          cust_op.id = graphene::chain::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-
-         pl.from = from_id;
-         pl.pub_from = public_key_type();
          cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
@@ -3156,37 +3085,31 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
-   void dbg_make_mia(const std::string& creator, const std::string& symbol)
+   void reset_counters(const std::vector<std::string>& names)
    {
-      create_monitored_asset(get_account(creator).name, symbol, 2, "abcd", 3600, 1, true);
+      const auto& monapi = _remote_api->monitoring();
+      monapi->reset_counters(names);
    }
 
-   void dbg_push_blocks( const std::string& src_filename, uint32_t count )
+   std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names)
    {
-      use_debug_api();
-      (*_remote_debug)->debug_push_blocks( src_filename, count );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
+      const auto& monapi = _remote_api->monitoring();
+      std::vector<monitoring::counter_item_cli> cli_result;  
+      std::vector<monitoring::counter_item> result;
+      result = monapi->get_counters(names);
+      std::for_each(result.begin(), result.end(), [&](monitoring::counter_item& item) {
+         monitoring::counter_item_cli item_cli;
+         item_cli.name = item.name;
+         item_cli.value = item.value;
+         item_cli.last_reset = fc::time_point_sec(item.last_reset);
+         item_cli.persistent = item.persistent;
+         
+         cli_result.push_back(item_cli);
+      });
 
-   void dbg_generate_blocks( const std::string& debug_wif_key, uint32_t count )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_generate_blocks( debug_wif_key, count );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
-   void dbg_stream_json_objects( const std::string& filename )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_stream_json_objects( filename );
-      (*_remote_debug)->debug_stream_json_objects_flush();
-   }
-
-   void dbg_update_object( const fc::variant_object& update )
-   {
-      use_debug_api();
-      (*_remote_debug)->debug_update_object( update );
-      (*_remote_debug)->debug_stream_json_objects_flush();
+      std::sort(cli_result.begin(), cli_result.end(), [&](monitoring::counter_item_cli& item1, monitoring::counter_item_cli& item2) {return item1.name < item2.name; });
+      
+      return cli_result;
    }
 
    void use_network_node_api()
@@ -3204,26 +3127,6 @@ signed_transaction content_cancellation(const string& author,
          "connecting to.  Please follow the instructions in README.md to set up an apiaccess file.\n"
          "\n";
          throw(e);
-      }
-   }
-
-   void use_debug_api()
-   {
-      if( _remote_debug )
-         return;
-      try
-      {
-        _remote_debug = _remote_api->debug();
-      }
-      catch( const fc::exception& e )
-      {
-         std::cerr << "\nCouldn't get debug node API.  You probably are not configured\n"
-         "to access the debug API on the node you are connecting to.\n"
-         "\n"
-         "To fix this problem:\n"
-         "- Please ensure you are running debug_node, not decentd.\n"
-         "- Please follow the instructions in README.md to set up an apiaccess file.\n"
-         "\n";
       }
    }
 
@@ -3249,48 +3152,6 @@ signed_transaction content_cancellation(const string& author,
          result.push_back( v );
       }
       return result;
-   }
-
-   void flood_network(const string& prefix, uint32_t number_of_transactions)
-   {
-      try
-      {
-         const account_object& master = *_wallet.my_accounts.get<by_name>().lower_bound("decent");
-         int number_of_accounts = number_of_transactions / 2;
-         number_of_transactions -= number_of_accounts;
-         //auto key = derive_private_key("floodshill", 0);
-
-         fc::time_point start = fc::time_point::now();
-         for( int i = 0; i < number_of_accounts; ++i )
-         {
-            std::ostringstream brain_key;
-            brain_key << "brain key for account " << prefix << i;
-            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name,
-                                                                   /* import = */ true,
-                                                                   /* broadcast = */ true,
-                                                                   /* save wallet = */ false);
-         }
-         fc::time_point end = fc::time_point::now();
-         ilog("Created ${n} accounts in ${time} milliseconds",
-              ("n", number_of_accounts)("time", (end - start).count() / 1000));
-
-         start = fc::time_point::now();
-         for( int i = 0; i < number_of_accounts; ++i )
-         {
-            signed_transaction trx = transfer(master.name, prefix + fc::to_string(i), "0.1", "DCT", "", true);
-            trx = transfer(master.name, prefix + fc::to_string(i), "0.09", "DCT", "", true);
-         }
-         end = fc::time_point::now();
-         ilog("Transferred to ${n} accounts in ${time} milliseconds",
-              ("n", number_of_accounts*2)("time", (end - start).count() / 1000));
-
-
-      }
-      catch (...)
-      {
-         throw;
-      }
-
    }
 
    operation get_prototype_operation( const string& operation_name )
@@ -3319,7 +3180,6 @@ signed_transaction content_cancellation(const string& author,
    fc::api<network_broadcast_api>   _remote_net_broadcast;
    fc::api<history_api>    _remote_hist;
    optional< fc::api<network_node_api> > _remote_net_node;
-   optional< fc::api<graphene::debug_miner::debug_api> > _remote_debug;
 
    flat_map<string, operation> _prototype_ops;
 
@@ -3518,14 +3378,14 @@ signed_transaction content_cancellation(const string& author,
          }
          else
          {
-            for (message_payload_receivers_data& receivers_data_item : pl.receivers_data) {
+            for (const auto& receivers_data_item : pl.receivers_data) {
                try
                {
                   try {
 
                      if (pl.pub_from == public_key_type() || receivers_data_item.pub_to == public_key_type())
                      {
-                        message_payload::get_message(fc::ecc::private_key(), public_key_type(), receivers_data_item.data, memo, 0);
+                        memo = receivers_data_item.get_message(private_key_type(), public_key_type());
                         break;
                      }
 
@@ -3533,7 +3393,7 @@ signed_transaction content_cancellation(const string& author,
                      if (it != wallet._keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
-                           message_payload::get_message(*privkey, pl.pub_from, receivers_data_item.data, memo, receivers_data_item.nonce);
+                           memo = receivers_data_item.get_message(*privkey, pl.pub_from);
                         else
                            std::cout << "Cannot decrypt message." << std::endl;
                      }
@@ -3542,7 +3402,7 @@ signed_transaction content_cancellation(const string& author,
                         if (it != wallet._keys.end()) {
                            fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                            if (privkey)
-                              message_payload::get_message(*privkey, receivers_data_item.pub_to, receivers_data_item.data, memo, receivers_data_item.nonce);
+                              memo = receivers_data_item.get_message(*privkey, receivers_data_item.pub_to);
                            else
                               std::cout << "Cannot decrypt message." << std::endl;
                         }
@@ -3734,8 +3594,8 @@ signed_transaction content_cancellation(const string& author,
 
    namespace graphene { namespace wallet {
 
-   wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
-      : my(new detail::wallet_api_impl(*this, initial_data, rapi))
+   wallet_api::wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws )
+      : my(new detail::wallet_api_impl(*this, rapi, chain_id, ws))
    {
    }
 
@@ -3754,35 +3614,7 @@ signed_transaction content_cancellation(const string& author,
 #include "wallet_content.inl"
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
-
-
-#if 0
-   void wallet_api::dbg_make_mia(string creator, string symbol)
-   {
-      FC_ASSERT(!is_locked());
-      my->dbg_make_mia(creator, symbol);
-   }
-
-   void wallet_api::dbg_push_blocks( std::string src_filename, uint32_t count )
-   {
-      my->dbg_push_blocks( src_filename, count );
-   }
-
-   void wallet_api::dbg_generate_blocks( std::string debug_wif_key, uint32_t count )
-   {
-      my->dbg_generate_blocks( debug_wif_key, count );
-   }
-
-   void wallet_api::dbg_stream_json_objects( const std::string& filename )
-   {
-      my->dbg_stream_json_objects( filename );
-   }
-
-   void wallet_api::dbg_update_object( fc::variant_object update )
-   {
-      my->dbg_update_object( update );
-   }
-#endif
+#include "wallet_monitoring.inl"
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
    {

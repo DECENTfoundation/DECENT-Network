@@ -52,6 +52,13 @@ namespace graphene { namespace wallet {
 
       object* create_object( const variant& v );
 
+      struct server_data
+      {
+         string                    server;
+         string                    user;
+         string                    password;
+      };
+
       struct wallet_data
       {
          int version = 0;
@@ -100,7 +107,6 @@ namespace graphene { namespace wallet {
          string                    ws_user;
          string                    ws_password;
          string                    packages_path = "./packages/";
-         string                    libtorrent_config_path;
          string                    update_time;
       };
 
@@ -282,6 +288,7 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_Subscription Subscription
  * @defgroup WalletAPI_Content Content
  * @defgroup WalletAPI_Messaging Messaging
+ * @defgroup WalletAPI_Monitoring Monitoring
  * @defgroup WalletAPI_Seeding Seeding
  * @defgroup WalletAPI_Mining Mining
  * @defgroup WalletAPI_Proposals Proposals
@@ -292,7 +299,7 @@ namespace graphene { namespace wallet {
       class wallet_api
       {
       public:
-         wallet_api( const wallet_data& initial_data, fc::api<login_api> rapi );
+         wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws );
          virtual ~wallet_api();
 
 
@@ -307,6 +314,7 @@ namespace graphene { namespace wallet {
 #include "content.hpp"
 #include "subscription.hpp"
 #include "messaging.hpp"
+#include "monitoring.hpp"
 
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
@@ -316,6 +324,7 @@ namespace graphene { namespace wallet {
 
       };
    } }
+
 
 
 FC_REFLECT( graphene::wallet::wallet_data,
@@ -402,9 +411,11 @@ FC_API( graphene::wallet::wallet_api,
         (network_get_connected_peers)
         (get_transaction_id)
         (get_transaction_by_id)
+        (from_command_file)
 
         //Wallet file
         (list_my_accounts)
+        (get_wallet_filename)
         (get_private_key)
         (is_new)
         (is_locked)
@@ -412,7 +423,9 @@ FC_API( graphene::wallet::wallet_api,
         (load_wallet_file)
         (save_wallet_file)
         (import_key)
+        (import_single_key)
         (dump_private_keys)
+        (list_operations)
 
         //Account
         (get_account_count)
@@ -425,9 +438,15 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_balance_for_transaction)
         (get_relative_account_history)
         (get_account)
+        (derive_private_key)
+        (get_public_key)
         (suggest_brain_key)
+        (register_account_with_keys)
         (register_account)
+        (register_multisig_account)
         (create_account_with_brain_key)
+        (update_account_keys)
+        (update_account_keys_to_multisig)
         (transfer)
         (transfer2)
         (generate_el_gamal_keys)
@@ -536,21 +555,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_message_objects)
         (get_messages)
         (get_sent_messages)
+
+        //Monitoring
+        (reset_counters)
+        (get_counters)
    )
-
-#if 0
-        //Debug
-        (dbg_make_mia)
-        (dbg_push_blocks)
-        (dbg_generate_blocks)
-        (dbg_stream_json_objects)
-        (dbg_update_object)
-        (set_transfer_logs)
-        (sign_buffer)
-        (verify_signature)
-
-        //Network
-        (flood_network)
-#endif
-
-

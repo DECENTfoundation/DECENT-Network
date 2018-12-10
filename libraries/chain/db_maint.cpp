@@ -42,17 +42,16 @@
 namespace graphene { namespace chain {
 
 template<class Index>
-vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects(size_t count) const
+vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects() const
 {
    using ObjectType = typename Index::object_type;
    const auto& all_objects = get_index_type<Index>().indices();
-   count = std::min(count, all_objects.size());
    vector<std::reference_wrapper<const ObjectType>> refs;
    refs.reserve(all_objects.size());
    std::transform(all_objects.begin(), all_objects.end(),
                   std::back_inserter(refs),
                   [](const ObjectType& o) { return std::cref(o); });
-   std::partial_sort(refs.begin(), refs.begin() + count, refs.end(),
+   std::stable_sort(refs.begin(), refs.end(),
                    [this](const ObjectType& a, const ObjectType& b)->bool {
       share_type oa_vote = _vote_tally_buffer[a.vote_id];
       share_type ob_vote = _vote_tally_buffer[b.vote_id];
@@ -61,7 +60,6 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
       return a.vote_id < b.vote_id;
    });
 
-   refs.resize(count, refs.front());
    return refs;
 }
 
@@ -93,16 +91,17 @@ void database::update_active_miners()
    }
 
    const chain_property_object& cpo = get_chain_properties();
-   auto wits = sort_votable_objects<miner_index>(std::max(miner_count*2+1, (size_t)cpo.immutable_parameters.min_miner_count));
+   auto wits = sort_votable_objects<miner_index>();
+   size_t count = std::min(std::max(miner_count*2+1, (size_t)cpo.immutable_parameters.min_miner_count), wits.size());
 
    const global_property_object& gpo = get_global_properties();
 
-   const auto& all_miners = get_index_type<miner_index>().indices();
-
-   for( const miner_object& wit : all_miners )
+   uint32_t ranking = 0;
+   for( const miner_object& wit : wits )
    {
       modify( wit, [&]( miner_object& obj ){
               obj.total_votes = _vote_tally_buffer[wit.vote_id];
+              obj.vote_ranking = ranking++;
               });
    }
 
@@ -118,7 +117,7 @@ void database::update_active_miners()
    modify(gpo, [&]( global_property_object& gp ){
       gp.active_miners.clear();
       gp.active_miners.reserve(wits.size());
-      std::transform(wits.begin(), wits.end(),
+      std::transform(wits.begin(), wits.begin() + count,
                      std::inserter(gp.active_miners, gp.active_miners.end()),
                      [](const miner_object& w) {
          return w.id;
@@ -285,7 +284,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    update_active_miners();
    decent_housekeeping();
 
-   modify(gpo, [this](global_property_object& p) {
+   modify(gpo, [&](global_property_object& p) {
       if( p.pending_parameters )
       {
          p.parameters = std::move(*p.pending_parameters);

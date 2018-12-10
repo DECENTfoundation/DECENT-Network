@@ -570,7 +570,8 @@ void seeding_plugin_impl::restore_state(){
 }// end namespace detail
 
 
-seeding_plugin::seeding_plugin():my(nullptr) {}
+seeding_plugin::seeding_plugin(graphene::app::application* app) : graphene::app::plugin(app), my(nullptr)
+{}
 
 void seeding_plugin::plugin_startup()
 {
@@ -714,7 +715,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
    ilog("seeding plugin:  plugin_pre_startup() end");
 }
 
-std::string seeding_plugin::plugin_name()const
+std::string seeding_plugin::plugin_name()
 {
    return "seeding";
 }

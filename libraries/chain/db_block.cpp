@@ -557,11 +557,12 @@ void database::_apply_block( const signed_block& next_block )
    // to be called for header validation?
    update_maintenance_flag( maint_needed );
    update_miner_schedule();
-   if( !_node_property_object.debug_updates.empty() )
-      apply_debug_updates();
 
    // notify observers that the block has been applied
    applied_block( next_block ); //emit
+
+   MONITORING_COUNTER_VALUE(blocks_applied)++;
+   MONITORING_COUNTER_VALUE(transactions_in_applied_blocks) += _current_trx_in_block;
 
    _applied_ops.clear();
 
@@ -617,7 +618,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    {
       auto get_active = [&]( account_id_type id ) { return &id(*this).active; };
       auto get_owner  = [&]( account_id_type id ) { return &id(*this).owner;  };
-      trx.verify_authority( chain_id, get_active, get_owner, get_global_properties().parameters.max_authority_depth );
+      trx.verify_authority( trx.get_signature_keys(chain_id), get_active, get_owner, get_global_properties().parameters.max_authority_depth );
    }
 
    //Skip all manner of expiration and TaPoS checking if we're on block 1; It's impossible that the transaction is

@@ -175,7 +175,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 
 
 
-account_history_plugin::account_history_plugin() :
+account_history_plugin::account_history_plugin(graphene::app::application* app) : graphene::app::plugin(app),
    my( new detail::account_history_plugin_impl(*this) )
 {
 }
@@ -184,7 +184,7 @@ account_history_plugin::~account_history_plugin()
 {
 }
 
-std::string account_history_plugin::plugin_name()const
+std::string account_history_plugin::plugin_name()
 {
    return "account_history";
 }

@@ -23,18 +23,16 @@
  */
 #pragma once
 
+#ifndef STDAFX_APP_H
 #include <fc/reflect/reflect.hpp>
-
-#include <map>
-#include <string>
-#include <vector>
+#endif
 
 namespace graphene { namespace app {
 
 class api_access_info
 {
 public:
-   api_access_info() {};
+   api_access_info() {}
    api_access_info( std::string pw_hash, std::string pw_salt, std::vector<std::string> apis)
    : password_hash_b64( pw_hash), password_salt_b64( pw_salt), allowed_apis( apis){}
 
@@ -44,13 +42,13 @@ public:
                                                "network_broadcast_api",
                                                "history_api",
                                                "crypto_api",
-                                               "messaging_api"};
+                                               "messaging_api" };
 };
 
 class api_access
 {
 public:
-   api_access() {};
+   api_access() {}
    api_access( std::string username, api_access_info access)
    {
       permission_map.insert( std::make_pair(username, access));

@@ -1,9 +1,10 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
+#include "gui_wallet_global.hpp"
+
+#ifndef STDAFX_H
 #include <QMainWindow>
-#include <string>
-#include <set>
 
 class QStackedWidget;
 class QComboBox;
@@ -11,6 +12,8 @@ class QCheckBox;
 class QTimer;
 class QAction;
 class QProgressBar;
+#endif
+
 class UpdateManager;
 
 namespace gui_wallet
@@ -26,8 +29,13 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 public:
-   MainWindow();
+   MainWindow(const std::string &wallet_file, const graphene::wallet::server_data &ws);
    virtual ~MainWindow();
+
+   const std::string& walletFile() const { return m_wallet_file; }
+
+public slots:
+   void slot_daemonFinished(int ret);
 
 protected slots:
    void slot_setSplash();
@@ -36,7 +44,8 @@ protected slots:
    void slot_showTransactionsTab(std::string const&);
    void slot_stackWidgetPush(StackLayerWidget* pWidget);
    void slot_stackWidgetPop();
-   void slot_updateAccountBalance(Asset const&);
+   void slot_updateAccountAssets(const QList<Asset>& assets);
+   void slot_updateAccountBalance(QAction *pAsset);
    void slot_connectionStatusChanged(Globals::ConnectionState from, Globals::ConnectionState to);
    void slot_replayBlockChain();
    void slot_resyncBlockChain();
@@ -51,7 +60,8 @@ protected slots:
    void slot_PublishToggled(bool toggled);
    void slot_UsersToggled(bool toggled);
    void slot_PurchasedToggled(bool toggled);
-   void slot_ConnectingUpdate(const QString& time_text, int);
+   void slot_SyncProgressUpdate(const QString& time_text, int);
+   void slot_CommonTextProgressUpdate(const QString& time_text);
    void slot_BlockchainUpdate(int value, int max);
    void slot_currentAccountChanged(int iIndex);
    void slot_MinerVotingToggled(bool toggled);
@@ -69,7 +79,12 @@ protected:
 
    void resizeEvent(QResizeEvent* event) override;
 
-protected:
+private:
+   void updateBalance(const QString& balance);
+
+   int m_daemon_restart = 0;
+   std::string m_wallet_file;
+   graphene::wallet::server_data m_ws;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;
    QTimer* m_pOneShotUpdateTimer;
@@ -77,6 +92,7 @@ protected:
    QStackedWidget* m_pStackedWidget;
    QComboBox* m_pAccountList;
    DecentLabel* m_pBalance;
+   DecentButton* m_pAssetSymbol;
 
    DecentButton* m_pButtonBrowse;
    DecentButton* m_pButtonTransactions;
@@ -116,8 +132,6 @@ protected:
 
    QProgressBar* m_pConnectingProgress;
    DecentLabel* m_pConnectingLabel;
-
 };
 
 }
-

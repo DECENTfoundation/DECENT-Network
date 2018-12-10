@@ -1,6 +1,4 @@
-#include "stdafx.h"
-
-#ifndef _MSC_VER
+#ifndef STDAFX_H
 #include <QCloseEvent>
 #endif
 

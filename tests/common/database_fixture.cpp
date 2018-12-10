@@ -70,7 +70,12 @@ database_fixture::database_fixture()
         if( arg == "--show-test-names" )
            std::cout << "running test " << boost::unit_test::framework::current_test_case().p_name << std::endl;
      }
-     auto ahplugin = app.register_plugin<graphene::account_history::account_history_plugin>();
+
+     using test_plugins = graphene::app::plugin_set<
+        account_history::account_history_plugin
+     >;
+
+     auto ahplugin = std::get<0>(test_plugins::create(app));
      init_account_pub_key = init_account_priv_key.get_public_key();
 
      boost::program_options::variables_map options;
@@ -89,7 +94,6 @@ database_fixture::database_fixture()
      genesis_state.initial_parameters.current_fees->zero_all_fees();
      open_database();
      // app.initialize();
-     ahplugin->plugin_set_app(&app);
      ahplugin->plugin_initialize(options);
 
      ahplugin->plugin_startup();
@@ -509,7 +513,7 @@ const miner_object& database_fixture::get_miner(account_id_type id)const
          return wit;
    }
    assert(0);// not found
-   return miner_object();
+   //return miner_object();
 }
 
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)

@@ -40,6 +40,8 @@
 
 #include <graphene/chain/protocol/protocol.hpp>
 
+#include <decent/monitoring/monitoring.hpp>
+
 #include <fc/log/logger.hpp>
 
 #include <map>
@@ -53,11 +55,17 @@ namespace graphene { namespace chain {
    struct budget_record;
    struct real_supply;
 
+   MONITORING_COUNTERS_BEGIN(database)
+   MONITORING_DEFINE_COUNTER(blocks_applied)
+   MONITORING_DEFINE_COUNTER(transactions_in_applied_blocks)
+   MONITORING_COUNTERS_DEPENDENCIES
+   MONITORING_COUNTERS_END
+
    /**
     *   @class database
     *   @brief tracks the blockchain state in an extensible manner
     */
-   class database : public db::object_database
+   class database : public db::object_database PUBLIC_DERIVATION_FROM_MONITORING_CLASS(database)
    {
       public:
          //////////////////// db_management.cpp ////////////////////
@@ -353,13 +361,6 @@ namespace graphene { namespace chain {
           */
          bool are_assets_exchangeable( const asset_object& payment, const asset_object& price );
 
-         //////////////////// db_debug.cpp ////////////////////
-
-         void debug_dump();
-         void apply_debug_updates();
-         void debug_update( const fc::variant_object& update );
-
-
          //////////////////// db_decent.cpp ////////////////////
 
          /**
@@ -420,6 +421,9 @@ namespace graphene { namespace chain {
                return fhd->data.block_num();
             return 0;
          }
+         
+         double get_reindexing_percent() { return _reindexing_percent; } // helper for retrieving reindexing progress - gui can use it
+         void set_no_need_reindexing() { _reindexing_percent = 100; } // called from main when there is no need to reindex
          /**
           * @}
           */
@@ -433,7 +437,7 @@ namespace graphene { namespace chain {
          vector< unique_ptr<op_evaluator> >     _operation_evaluators;
 
          template<class Index>
-         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(size_t count)const;
+         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects()const;
 
          //////////////////// db_block.cpp ////////////////////
 
@@ -512,6 +516,7 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
+         double                            _reindexing_percent = 0;
    };
 
    namespace detail

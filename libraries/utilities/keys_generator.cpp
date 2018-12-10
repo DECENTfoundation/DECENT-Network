@@ -23,51 +23,17 @@
  * THE SOFTWARE.
  */
 
-
-#include <algorithm>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-
-#include <fc/io/json.hpp>
-#include <fc/io/stdio.hpp>
-#include <fc/network/http/server.hpp>
-#include <fc/network/http/websocket.hpp>
-#include <fc/rpc/cli.hpp>
-#include <fc/rpc/http_api.hpp>
-#include <fc/rpc/websocket_api.hpp>
-#include <fc/smart_ref_impl.hpp>
-
+#include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/words.hpp>
-#include <graphene/chain/protocol/types.hpp>
 
+#include <fc/io/raw.hpp>
 
-#include <fc/interprocess/signals.hpp>
-#include <boost/program_options.hpp>
-#include <boost/algorithm/string.hpp>
+#include <iostream>
 
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
+namespace graphene { namespace utilities {
 
-
-#include <cstdlib>
-
-#ifdef WIN32
-# include <signal.h>
-#else
-# include <csignal>
-#endif
-
-using namespace graphene::utilities;
-using namespace graphene::chain;
-
-using namespace std;
-namespace bpo = boost::program_options;
-
-string normalize_brain_key( string s )
+std::string normalize_brain_key(const std::string &s)
 {
    size_t i = 0, n = s.length();
    std::string result;
@@ -124,60 +90,36 @@ string normalize_brain_key( string s )
    return result;
 }
 
-fc::ecc::private_key derive_private_key( const std::string& prefix_string,
-                                         int sequence_number )
+fc::ecc::private_key derive_private_key( const std::string& brain_key, int sequence_number )
 {
    std::string sequence_string = std::to_string(sequence_number);
-   fc::sha512 h = fc::sha512::hash(prefix_string + " " + sequence_string);
+   fc::sha512 h = fc::sha512::hash(brain_key + " " + sequence_string);
    fc::ecc::private_key derived_key = fc::ecc::private_key::regenerate(fc::sha256::hash(h));
    return derived_key;
 }
 
-
-int main( int argc, char** argv )
+std::string generate_brain_key()
 {
-   try {
+   // create a private key for secure entropy
+   fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
+   fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
+   fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
+   fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
+   fc::bigint entropy(entropy1);
+   entropy <<= 8*sha_entropy1.data_size();
+   entropy += entropy2;
+   std::string brain_key = "";
 
-         // create a private key for secure entropy
-         fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-         fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-         fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
-         fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
-         fc::bigint entropy(entropy1);
-         entropy <<= 8*sha_entropy1.data_size();
-         entropy += entropy2;
-         string brain_key = "";
-
-         for( int i=0; i<16; i++ )
-         {
-            fc::bigint choice = entropy % graphene::words::word_list_size;
-            entropy /= graphene::words::word_list_size;
-            if( i > 0 )
-               brain_key += " ";
-            brain_key += graphene::words::word_list[ choice.to_int64() ];
-         }
-
-         brain_key = normalize_brain_key(brain_key);
-         fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
-         public_key_type pub_key(priv_key.get_public_key());
-
-         std::cout << "Brain key:    " << brain_key << "\n";
-         std::cout << "Private key:  " << key_to_wif( priv_key ) << "\n";
-         std::cout << "Public key:   " << std::string(pub_key) << "\n";
-
-         return 0;
-      }
-   catch ( const fc::exception& e )
+   for( int i=0; i<16; i++ )
    {
-      std::cerr << e.to_detail_string() << "\n";
-      return 1;
+      fc::bigint choice = entropy % graphene::words::word_list_size;
+      entropy /= graphene::words::word_list_size;
+      if( i > 0 )
+         brain_key += " ";
+      brain_key += graphene::words::word_list[ choice.to_int64() ];
    }
-   catch (std::exception const& e)
-   {
-      std::cerr << e.what() << endl;
-      return 1;
-   }
-   
-   
-   return 0;
+
+   return normalize_brain_key(brain_key);
 }
+
+} } // end namespace graphene::utilities

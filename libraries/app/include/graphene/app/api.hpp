@@ -26,24 +26,19 @@
 
 #include <graphene/app/database_api.hpp>
 
-#include <graphene/chain/protocol/types.hpp>
-
-#include <graphene/debug_miner/debug_api.hpp>
-
-#include <graphene/net/node.hpp>
-#include <graphene/chain/message_object.hpp>
-
-#include <fc/api.hpp>
-#include <fc/optional.hpp>
-#include <fc/crypto/elliptic.hpp>
-#include <fc/network/ip.hpp>
-
+#ifndef STDAFX_APP_H
 #include <boost/container/flat_set.hpp>
 
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
+#include <fc/crypto/elliptic.hpp>
+
+#include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/message_object.hpp>
+#include <graphene/chain/transaction_object.hpp>
+#include <graphene/chain/operation_history_object.hpp>
+#include <graphene/net/node.hpp>
+
+#include <decent/monitoring/monitoring_fc.hpp>
+#endif
 
 /**
  * @defgroup HistoryAPI History API
@@ -57,25 +52,9 @@ namespace graphene { namespace app {
    using namespace graphene::chain;
    using namespace fc::ecc;
    using namespace std;
+   
 
    class application;
-
-   struct verify_range_result
-   {
-      bool        success;
-      uint64_t    min_val;
-      uint64_t    max_val;
-   };
-   
-   struct verify_range_proof_rewind_result
-   {
-      bool                          success;
-      uint64_t                      min_val;
-      uint64_t                      max_val;
-      uint64_t                      value_out;
-      fc::ecc::blind_factor_type    blind_out;
-      string                        message_out;
-   };
 
    struct asset_array
    {
@@ -101,7 +80,7 @@ namespace graphene { namespace app {
          history_api(application& app):_app(app){}
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup HistoryAPI
           */
@@ -192,7 +171,7 @@ namespace graphene { namespace app {
          typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup Network_broadcastAPI
           */
@@ -257,7 +236,7 @@ namespace graphene { namespace app {
          network_node_api(application& a);
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup Network_NodeAPI
           */
@@ -331,104 +310,75 @@ namespace graphene { namespace app {
    };
 
    /**
-    *
+    * @brief The crypto_api class implements cryptograhic operations
     */
    class crypto_api
    {
       public:
-         crypto_api();
+         crypto_api(application& a);
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup CryptoAPI
           */
          string info() { return "crypto_api";}
 
          /**
-          * @param key
-          * @param hash
-          * @param i
+          * @brief Get public key from private key.
+          * @param wif_priv_key the wif private key
+          * @return corresponding public key
           * @ingroup CryptoAPI
           */
-         fc::ecc::blind_signature blind_sign( const extended_private_key_type& key, const fc::ecc::blinded_hash& hash, int i );
+         public_key_type get_public_key(const string& wif_priv_key );
 
          /**
-          * @param key
-          * @param bob
-          * @param sig
-          * @param hash
-          * @param i
+          * @brief Convert wif key to private key.
+          * @param wif the wif key to convert
+          * @return private key
           * @ingroup CryptoAPI
           */
-         signature_type unblind_signature( const extended_private_key_type& key,
-                                              const extended_public_key_type& bob,
-                                              const fc::ecc::blind_signature& sig,
-                                              const fc::sha256& hash,
-                                              int i );
+         private_key_type wif_to_private_key(const string &wif);
 
          /**
-          * @param blind
-          * @param value
+          * @brief Sign transaction with given private key.
+          * @param trx the transaction to sign
+          * @param key the private key to sign the given transaction
+          * @return signed transaction
           * @ingroup CryptoAPI
           */
-         fc::ecc::commitment_type blind( const fc::ecc::blind_factor_type& blind, uint64_t value );
+         signed_transaction sign_transaction(signed_transaction trx, const private_key_type &key);
 
          /**
-          * @param blinds_in
-          * @param non_neg
-          * @param CryptoAPI
+          * @brief Encrypt message.
+          * @param message the message to encrypt
+          * @param key the private key of sender
+          * @param pub the public key of receiver
+          * @param nonce the salt number to use for message encryption (will be generated if zero)
+          * @return encrypted memo data
+          * @ingroup CryptoAPI
           */
-         fc::ecc::blind_factor_type blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg );
+         memo_data encrypt_message(const std::string &message,
+                                   const private_key_type &key,
+                                   const public_key_type &pub,
+                                   uint64_t nonce = 0) const;
 
          /**
-          * @param commits_in
-          * @param neg_commits_in
-          * @param excess
+          * @brief Decrypt message.
+          * @param message the message to decrypt
+          * @param key the private key of sender/receiver
+          * @param pub the public key of receiver/sender
+          * @param nonce the salt number used for message encryption
+          * @return decrypted message
           * @ingroup CryptoAPI
           */
-         bool verify_sum( const std::vector<commitment_type>& commits_in, const std::vector<commitment_type>& neg_commits_in, int64_t excess );
+         std::string decrypt_message(const memo_data::message_type &message,
+                                     const private_key_type &key,
+                                     const public_key_type &pub,
+                                     uint64_t nonce) const;
 
-         /**
-          * @param commit
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         verify_range_result verify_range( const fc::ecc::commitment_type& commit, const std::vector<char>& proof );
-
-         /**
-          * @param min_value
-          * @param commit
-          * @param commit_blind
-          * @param nonce
-          * @param base10_exp
-          * @param min_bits
-          * @param actual_value
-          * @ingroup CryptoAPI
-          */
-         std::vector<char> range_proof_sign( uint64_t min_value, 
-                                             const commitment_type& commit, 
-                                             const blind_factor_type& commit_blind, 
-                                             const blind_factor_type& nonce,
-                                             int8_t base10_exp,
-                                             uint8_t min_bits,
-                                             uint64_t actual_value );
-                                       
-         /**
-          * @param nonce
-          * @param commit
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         verify_range_proof_rewind_result verify_range_proof_rewind( const blind_factor_type& nonce,
-                                                                     const fc::ecc::commitment_type& commit, 
-                                                                     const std::vector<char>& proof );
-         
-         /**
-          * @param proof
-          * @ingroup CryptoAPI
-          */
-         range_proof_info range_get_info( const std::vector<char>& proof );
+      private:
+         application& _app;
    };
 
    /**
@@ -440,7 +390,7 @@ namespace graphene { namespace app {
       messaging_api(application& a);
 
       /**
-       * @brieg Get the name of the API.
+       * @brief Get the name of the API.
        * @return the name of the API
        * @ingroup MessagingAPI
        */
@@ -459,6 +409,25 @@ namespace graphene { namespace app {
       application& _app;
    };
 
+   class monitoring_api
+   {
+   public:
+      monitoring_api();
+      /**
+      * @brieg Get the name of the API.
+      * @return the name of the API
+      * @ingroup MessagingAPI
+      */
+      std::string info() const;
+      void reset_counters(const std::vector<std::string>& names);
+      std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;
+   };
+
+
+
+
+
+
    /**
     * @brief The login_api class implements the bottom layer of the RPC API
     *
@@ -471,7 +440,7 @@ namespace graphene { namespace app {
          ~login_api();
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup LoginAPI
           */
@@ -519,10 +488,10 @@ namespace graphene { namespace app {
          */
          fc::api<messaging_api> messaging()const;
          /**
-          * @brief Retrieve the debug API (if available).
-          * @ingroup LoginAPI
-          */
-         fc::api<graphene::debug_miner::debug_api> debug()const;
+         * @brief Retrieve the monitoring API.
+         * @ingroup LoginAPI
+         */
+         fc::api<monitoring_api> monitoring()const;
 
       private:
          /**
@@ -539,21 +508,18 @@ namespace graphene { namespace app {
          optional< fc::api<history_api> >  _history_api;
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<messaging_api> > _messaging_api;
-         optional< fc::api<graphene::debug_miner::debug_api> > _debug_api;
+         optional< fc::api<monitoring_api> > _monitoring_api;
    };
 
 }}  // graphene::app
 
 FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
         (id)(block_num)(trx_num)(trx) )
-FC_REFLECT( graphene::app::verify_range_result,
-        (success)(min_val)(max_val) )
-FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
-        (success)(min_val)(max_val)(value_out)(blind_out)(message_out) )
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
+
 
 FC_API(graphene::app::history_api,
        (info)
@@ -580,20 +546,21 @@ FC_API(graphene::app::network_node_api,
      )
 FC_API(graphene::app::crypto_api,
        (info)
-       (blind_sign)
-       (unblind_signature)
-       (blind)
-       (blind_sum)
-       (verify_sum)
-       (verify_range)
-       (range_proof_sign)
-       (verify_range_proof_rewind)
-       (range_get_info)
+       (get_public_key)
+       (wif_to_private_key)
+       (sign_transaction)
+       (encrypt_message)
+       (decrypt_message)
      )
 FC_API(graphene::app::messaging_api,
        (info)
        (get_message_objects)
      )
+FC_API(graphene::app::monitoring_api,
+   (info)
+      (reset_counters)
+      (get_counters)
+   )
 FC_API(graphene::app::login_api,
        (info)
        (login)
@@ -602,6 +569,6 @@ FC_API(graphene::app::login_api,
        (history)
        (network_node)
        (crypto)
-       (debug)
        (messaging)
+       (monitoring)
      )

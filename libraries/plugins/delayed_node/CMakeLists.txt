@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/delayed_node/*.hpp")
 
 add_library( graphene_delayed_node 
              delayed_node_plugin.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( graphene_delayed_node graphene_chain graphene_app )

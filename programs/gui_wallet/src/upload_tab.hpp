@@ -2,9 +2,10 @@
 #pragma once
 
 #include "gui_wallet_tabcontentmanager.hpp"
-#include <vector>
 
+#ifndef STDAFX_H
 class QSignalMapper;
+#endif
 
 namespace gui_wallet
 {
@@ -44,4 +45,3 @@ namespace gui_wallet
       std::vector<SDigitalContent> _digital_contents;
    };
 }
-

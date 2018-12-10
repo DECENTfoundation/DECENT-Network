@@ -1,7 +1,15 @@
 
-fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
+std::string wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
 {
-   return detail::derive_private_key( prefix_string, sequence_number );
+   fc::ecc::private_key private_key = graphene::utilities::derive_private_key( prefix_string, sequence_number );
+   return graphene::utilities::key_to_wif( private_key );
+}
+
+graphene::chain::public_key_type wallet_api::get_public_key( const std::string& wif_private_key ) const
+{
+   fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key( wif_private_key );
+   FC_ASSERT( private_key , "invalid wif private key");
+   return private_key->get_public_key();
 }
 
 uint64_t wallet_api::get_account_count() const
@@ -152,20 +160,14 @@ vector<transaction_detail_object> wallet_api::search_account_history(string cons
          {
             item.m_str_description += " - ";
             auto it = my->_keys.find(memo->to);
-            if (it == my->_keys.end())
+            auto it2 = it == my->_keys.end() ? my->_keys.find(memo->from) : it;
+
+            if (it2 == my->_keys.end())
                // memo is encrypted for someone else
                item.m_str_description += "{encrypted}";
             else
-            {
-               // here the memo is encrypted for me
-               // so I can decrypt it
-               string mykey = it->second;
-               auto wtok = *wif_to_key(mykey);
-               string str_memo =
-                  memo->get_message(wtok, memo->from);
-
-               item.m_str_description += str_memo;
-            }
+               // here the memo is encrypted for/by me so I can decrypt it
+               item.m_str_description += memo->get_message(*wif_to_key(it2->second), it == it2 ? memo->from : memo->to);
          }
       }
    }
@@ -182,41 +184,41 @@ account_object wallet_api::get_account(const string& account_name_or_id) const
 brain_key_info wallet_api::suggest_brain_key() const
 {
    brain_key_info result;
-   // create a private key for secure entropy
-   fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-   fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-   fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
-   fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
-   fc::bigint entropy(entropy1);
-   entropy <<= 8*sha_entropy1.data_size();
-   entropy += entropy2;
-   string brain_key;
+   result.brain_priv_key = graphene::utilities::generate_brain_key();
 
-   for( int i=0; i<BRAIN_KEY_WORD_COUNT; i++ )
-   {
-      fc::bigint choice = entropy % graphene::words::word_list_size;
-      entropy /= graphene::words::word_list_size;
-      if( i > 0 )
-         brain_key += " ";
-      brain_key += graphene::words::word_list[ choice.to_int64() ];
-   }
-
-   brain_key = detail::normalize_brain_key(brain_key);
-   fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
-   result.brain_priv_key = brain_key;
+   fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(result.brain_priv_key);
    result.wif_priv_key = key_to_wif( priv_key );
    result.pub_key = priv_key.get_public_key();
    return result;
 }
 
+signed_transaction wallet_api::register_account_with_keys(const string& name,
+                                                          public_key_type owner,
+                                                          public_key_type active,
+                                                          public_key_type memo,
+                                                          const string& registrar_account,
+                                                          bool broadcast /* = false */)
+{
+   return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
+}
 
 signed_transaction wallet_api::register_account(const string& name,
-                                                public_key_type owner_pubkey,
-                                                public_key_type active_pubkey,
+                                                public_key_type owner,
+                                                public_key_type active,
                                                 const string& registrar_account,
-                                                bool broadcast)
+                                                bool broadcast /* = false */)
 {
-   return my->register_account( name, owner_pubkey, active_pubkey, registrar_account,  broadcast );
+   return my->register_account( name, owner, active, active, registrar_account, broadcast );
+}
+
+signed_transaction wallet_api::register_multisig_account(const string& name,
+                                                         authority owner,
+                                                         authority active,
+                                                         public_key_type memo,
+                                                         const string& registrar_account,
+                                                         bool broadcast /* = false */)
+{
+   return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
 signed_transaction wallet_api::create_account_with_brain_key(const string& brain_key,
@@ -227,6 +229,52 @@ signed_transaction wallet_api::create_account_with_brain_key(const string& brain
    return my->create_account_with_brain_key(
             brain_key, account_name, registrar_account, true,
             broadcast);
+}
+
+signed_transaction wallet_api::update_account_keys(const string& name,
+                                                   const string& owner,
+                                                   const string& active,
+                                                   const string& memo,
+                                                   bool broadcast /* = false */)
+{
+   fc::optional<authority> new_owner, new_active;
+   fc::optional<public_key_type> new_memo;
+   account_object acc = my->get_account( name );
+
+   if( !owner.empty() )
+      new_owner = authority( 1, public_key_type( owner ), 1 );
+
+   if( !active.empty() )
+      new_active = authority( 1, public_key_type( active ), 1 );
+
+   if( !memo.empty() )
+      new_memo = public_key_type( memo );
+
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
+}
+
+signed_transaction wallet_api::update_account_keys_to_multisig(const string& name,
+                                                               authority owner,
+                                                               authority active,
+                                                               public_key_type memo,
+                                                               bool broadcast /* = false */)
+{
+   fc::optional<authority> new_owner, new_active;
+   fc::optional<public_key_type> new_memo;
+   account_object acc = my->get_account( name );
+
+   if( acc.owner != owner )
+      new_owner = owner;
+
+   if( acc.active != active )
+      new_active = active;
+
+   if( acc.options.memo_key != memo )
+      new_memo = memo;
+
+   FC_ASSERT( new_owner || new_active || new_memo, "new authority needs to be different from the existing one" );
+
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
 el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
@@ -268,10 +316,9 @@ pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_
 brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
 {
    brain_key_info result;
+   result.brain_priv_key = graphene::utilities::normalize_brain_key( brain_key );
 
-   string str_brain_key = detail::normalize_brain_key(brain_key);
-   fc::ecc::private_key priv_key = derive_private_key( str_brain_key, 0 );
-   result.brain_priv_key = str_brain_key;
+   fc::ecc::private_key priv_key = graphene::utilities::derive_private_key( result.brain_priv_key );
    result.wif_priv_key = key_to_wif( priv_key );
    result.pub_key = priv_key.get_public_key();
    return result;
@@ -295,4 +342,3 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string&
    auto trx = transfer( from, to, amount, asset_symbol, memo, true );
    return std::make_pair(trx.id(),trx);
 }
-

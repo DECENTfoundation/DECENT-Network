@@ -26,25 +26,14 @@
 
 namespace graphene { namespace chain {
 
-void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::public_key& pub,
-                            const string& msg, uint64_t custom_nonce)
+memo_data::memo_data(const std::string& msg, const private_key_type& priv, const public_key_type& pub, uint64_t _nonce)
 {
-   if( priv != fc::ecc::private_key() && public_key_type(pub) != public_key_type() )
+   if( priv != private_key_type() && pub != public_key_type() )
    {
       from = priv.get_public_key();
       to = pub;
-      if( custom_nonce == 0 )
-      {
-         uint64_t entropy = fc::sha224::hash(fc::ecc::private_key::generate())._hash[0];
-         entropy <<= 32;
-         entropy                                                     &= 0xff00000000000000;
-         nonce = (fc::time_point::now().time_since_epoch().count()   &  0x00ffffffffffffff) | entropy;
-      } else
-         nonce = custom_nonce;
-      auto secret = priv.get_shared_secret(pub);
-      auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
-      string text = memo_message(digest_type::hash(msg)._hash[0], msg).serialize();
-      message = fc::aes_encrypt( nonce_plus_secret, vector<char>(text.begin(), text.end()) );
+      nonce = _nonce == 0 ? generate_nonce() : _nonce;
+      message = encrypt_message(msg, priv, to, nonce);
    }
    else
    {
@@ -53,23 +42,45 @@ void memo_data::set_message(const fc::ecc::private_key& priv, const fc::ecc::pub
    }
 }
 
-string memo_data::get_message(const fc::ecc::private_key& priv,
-                              const fc::ecc::public_key& pub)const
+std::string memo_data::get_message(const private_key_type& priv, const public_key_type& pub)const
 {
    if( from != public_key_type() )
    {
-      auto secret = priv.get_shared_secret(pub);
-
-      auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
-      auto plain_text = fc::aes_decrypt( nonce_plus_secret, message );
-      auto result = memo_message::deserialize(string(plain_text.begin(), plain_text.end()));
-      FC_ASSERT( result.checksum == uint32_t(digest_type::hash(result.text)._hash[0]) );
-      return result.text;
+      return decrypt_message(message, priv, pub, nonce);
    }
    else
    {
-      return memo_message::deserialize(string(message.begin(), message.end())).text;
+      return memo_message::deserialize(std::string(message.begin(), message.end())).text;
    }
+}
+
+memo_data::message_type memo_data::encrypt_message(const std::string &message, const private_key_type &priv, const public_key_type &pub, uint64_t nonce)
+{
+   auto secret = priv.get_shared_secret(pub);
+   auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
+   std::string text = memo_message(digest_type::hash(message)._hash[0], message).serialize();
+   return fc::aes_encrypt( nonce_plus_secret, vector<char>(text.begin(), text.end()) );
+}
+
+std::string memo_data::decrypt_message(const message_type &message, const private_key_type &priv, const public_key_type &pub, uint64_t nonce)
+{
+   if( message.empty() )
+      return std::string();
+
+   auto secret = priv.get_shared_secret(pub);
+   auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
+   auto plain_text = fc::aes_decrypt( nonce_plus_secret, message );
+   auto result = memo_message::deserialize(std::string(plain_text.begin(), plain_text.end()));
+   FC_ASSERT( result.checksum == uint32_t(digest_type::hash(result.text)._hash[0]) );
+   return result.text;
+}
+
+uint64_t memo_data::generate_nonce()
+{
+   uint64_t entropy = fc::sha224::hash(private_key_type::generate())._hash[0];
+   entropy <<= 32;
+   entropy                                                    &= 0xff00000000000000;
+   return (fc::time_point::now().time_since_epoch().count()   &  0x00ffffffffffffff) | entropy;
 }
 
 string memo_message::serialize() const
@@ -81,6 +92,9 @@ string memo_message::serialize() const
 
 memo_message memo_message::deserialize(const string& serial)
 {
+   if( serial.empty() )
+      return memo_message();
+
    memo_message result;
    FC_ASSERT( serial.size() >= sizeof(result.checksum) );
    result.checksum = ((uint32_t&)(*serial.data()));

@@ -40,13 +40,14 @@ namespace detail
 class transaction_history_plugin : public graphene::app::plugin
 {
 public:
-   transaction_history_plugin();
+   transaction_history_plugin(graphene::app::application* app);
    virtual ~transaction_history_plugin();
 
-   std::string plugin_name()const override;
-   virtual void plugin_set_program_options(
+   static std::string plugin_name();
+   static void plugin_set_program_options(
       boost::program_options::options_description& cli,
-      boost::program_options::options_description& cfg) override;
+      boost::program_options::options_description& cfg);
+
    virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
    virtual void plugin_startup() override;
 

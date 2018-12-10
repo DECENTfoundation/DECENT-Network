@@ -2,13 +2,8 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
 #include <mutex>
-#include <vector>
-#include <chrono>
-#include <graphene/chain/protocol/types.hpp>
-#include <atomic>
+#include <graphene/wallet/wallet.hpp>
 
 namespace graphene
 {
@@ -38,23 +33,24 @@ namespace wallet_utility
    class WalletAPI
    {
    public:
-      WalletAPI();
+      WalletAPI(const fc::path &wallet_file, const graphene::wallet::server_data &ws);
       ~WalletAPI();
 
-      void Connent(std::atomic_bool& cancellation_token);
-      bool Connected();
+      void Connect(std::atomic_bool& cancellation_token);
+      bool IsConnected();
       bool IsNew();
       bool IsLocked();
       std::chrono::system_clock::time_point HeadBlockTime();
       void SetPassword(string const& str_password);
       void Unlock(string const& str_password);
-      void LoadAssetInfo( string &str_symbol, uint8_t &precision, const graphene::chain::asset_id_type id = graphene::chain::asset_id_type() );
       void SaveWalletFile();
-      std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);
+      //std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);
 
       string RunTask(string const& str_command);
 
    private:
+      fc::path m_wallet_file;
+      graphene::wallet::server_data m_ws;
       // wallet_api does not like to be accessed from several threads
       // so all the access is encapsulated inside m_pthread :(
       std::unique_ptr<fc::thread> m_pthread;

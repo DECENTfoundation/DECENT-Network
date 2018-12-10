@@ -9,6 +9,11 @@ string wallet_api::get_wallet_filename() const
    return my->get_wallet_filename();
 }
 
+void wallet_api::set_wallet_filename( const string& wallet_filename )
+{
+   return my->set_wallet_filename( wallet_filename );
+}
+
 string wallet_api::get_private_key( public_key_type pubkey )const
 {
    return key_to_wif( my->get_private_key( pubkey ) );
@@ -108,6 +113,8 @@ void wallet_api::set_password(const string& password )
 
 bool wallet_api::load_wallet_file(const string& wallet_filename )
 {
+   if( !wallet_filename.empty() )
+      my->set_wallet_filename(wallet_filename);
    return my->load_wallet_file( wallet_filename );
 }
 
@@ -116,19 +123,19 @@ void wallet_api::save_wallet_file(const string& wallet_filename )
    my->save_wallet_file( wallet_filename );
 }
 
-void wallet_api::set_wallet_filename(const string& wallet_filename)
-{
-   my->_wallet_filename = wallet_filename;
-}
-
 bool wallet_api::import_key(const string& account_name_or_id, const string& wif_key)
 {
    FC_ASSERT(!is_locked());
-   fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
-   if (!optional_private_key)
-      FC_THROW("Invalid private key");
-
    bool result = my->import_key(account_name_or_id, wif_key);
+   save_wallet_file();
+
+   return result;
+}
+
+bool wallet_api::import_single_key(const string& account_name_or_id, const string& wif_key)
+{
+   FC_ASSERT(!is_locked());
+   bool result = my->import_single_key(account_name_or_id, wif_key);
    save_wallet_file();
 
    return result;

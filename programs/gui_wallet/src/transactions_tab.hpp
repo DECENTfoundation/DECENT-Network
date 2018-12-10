@@ -1,8 +1,6 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-
 #pragma once
 
-#include <QString>
 #include "gui_wallet_tabcontentmanager.hpp"
 
 namespace gui_wallet
@@ -29,5 +27,5 @@ public:
    DecentTable*  m_pTableWidget;
    QString       m_strSearchTerm;   
 };
-}
 
+}

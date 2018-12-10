@@ -114,12 +114,12 @@ namespace detail
 
 } // end namespace detail
 
-transaction_history_plugin::transaction_history_plugin() :
+transaction_history_plugin::transaction_history_plugin(graphene::app::application* app) : graphene::app::plugin(app),
    my( new detail::transaction_history_plugin_impl(*this) ) {}
 
 transaction_history_plugin::~transaction_history_plugin() {}
 
-std::string transaction_history_plugin::plugin_name()const
+std::string transaction_history_plugin::plugin_name()
 {
    return "transaction_id_history";
 }

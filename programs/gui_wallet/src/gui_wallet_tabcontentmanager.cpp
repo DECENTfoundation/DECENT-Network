@@ -1,11 +1,12 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "gui_wallet_global.hpp"
-#include "gui_wallet_tabcontentmanager.hpp"
 
-#include <QTimer>
+#ifndef STDAFX_H
 #include <QApplication>
+#include <QTimer>
+#endif
 
-using std::string;
+#include "gui_wallet_tabcontentmanager.hpp"
+#include "gui_wallet_global.hpp"
 
 namespace gui_wallet
 {
@@ -100,14 +101,14 @@ bool TabContentManager::is_last() const
    return m_next_iterator.empty();
 }
 
-void TabContentManager::set_next_page_iterator(string const& iterator)
+void TabContentManager::set_next_page_iterator(std::string const& iterator)
 {
    m_next_iterator = iterator;
 }
 
 std::string TabContentManager::next_iterator() const
 {
-   string str_iterator;
+   std::string str_iterator;
    if (!m_iterators.empty())
       str_iterator = m_iterators.back();
 
@@ -129,6 +130,5 @@ void TabContentManager::setRefreshTimer(int msec)
       m_pRefreshTimer->setInterval(msec);
    }
 }
-
 
 }  // namespace gui_wallet

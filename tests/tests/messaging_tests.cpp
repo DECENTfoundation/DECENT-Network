@@ -54,9 +54,11 @@ BOOST_FIXTURE_TEST_SUITE( messaging_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( messaging )
 { try {
 
-   
-   auto messaging_plug = app.register_plugin<decent::messaging::messaging_plugin>();
-   messaging_plug->plugin_set_app(&app);
+   using test_plugins = graphene::app::plugin_set<
+      decent::messaging::messaging_plugin
+   >;
+
+   auto messaging_plug = std::get<0>(test_plugins::create(app));
    boost::program_options::variables_map omap;
    messaging_plug->plugin_initialize(omap);
    messaging_plug->plugin_startup();
@@ -79,14 +81,10 @@ BOOST_AUTO_TEST_CASE( messaging )
    message_payload_receivers_data receivers_data_item;
 
    // message for bobian
-   receivers_data_item.to = bobian_id;
-   pl.set_message(nathan_private_key, bobian.options.memo_key, text_sent, receivers_data_item);
-   pl.receivers_data.push_back(receivers_data_item);
+   pl.receivers_data.emplace_back(text_sent, nathan_private_key, bobian.options.memo_key, bobian_id);
    
    // message for alice
-   receivers_data_item.to = alice_id;
-   pl.set_message(nathan_private_key, alice.options.memo_key, text_sent, receivers_data_item);
-   pl.receivers_data.push_back(receivers_data_item);
+   pl.receivers_data.emplace_back(text_sent, nathan_private_key, alice.options.memo_key, alice_id);
 
    custom_operation cust_op;
 
@@ -132,10 +130,8 @@ BOOST_AUTO_TEST_CASE( messaging )
       }
    }
    BOOST_REQUIRE(msg_itr_found != db.get_index_type<message_index>().indices().get<by_id>().end());
-   std::string received_text_bobian;
-   std::string received_text_alice;
-   message_payload::get_message(bobian_private_key, nathan_public_key, (*msg_itr_found).receivers_data[0].data, received_text_bobian, (*msg_itr_found).receivers_data[0].nonce);
-   message_payload::get_message(alice_private_key, nathan_public_key, (*msg_itr_found).receivers_data[1].data, received_text_alice, (*msg_itr_found).receivers_data[1].nonce);
+   std::string received_text_bobian = (*msg_itr_found).receivers_data[0].get_message(bobian_private_key, nathan_public_key);
+   std::string received_text_alice = (*msg_itr_found).receivers_data[1].get_message(alice_private_key, nathan_public_key);
    BOOST_REQUIRE(received_text_bobian == received_text_alice);
    BOOST_REQUIRE(received_text_bobian == received_text_alice);
    BOOST_REQUIRE(received_text_bobian == text_sent);

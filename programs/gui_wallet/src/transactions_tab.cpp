@@ -1,27 +1,16 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include "stdafx.h"
 
-#include "gui_wallet_global.hpp"
-#include "transactions_tab.hpp"
-#include "decent_line_edit.hpp"
-
-#ifndef _MSC_VER
+#ifndef STDAFX_H
+#include <QBoxLayout>
 #include <QHeaderView>
-#include <QTableWidgetItem>
-#include <QStringList>
-#include <QVBoxLayout>
-#include <QLineEdit>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <graphene/chain/config.hpp>
-#include <graphene/chain/content_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
-#include <string>
-
-#include "json.hpp"
 #endif
 
-using std::string;
+#include "transactions_tab.hpp"
+#include "gui_wallet_global.hpp"
+#include "decent_line_edit.hpp"
 
 namespace gui_wallet
 {
@@ -64,7 +53,7 @@ TransactionsTab::TransactionsTab(QWidget* pParent,
    setRefreshTimer(5000);
 }
 
-void TransactionsTab::timeToUpdate(const string& result)
+void TransactionsTab::timeToUpdate(const std::string& result)
 {
    m_pTableWidget->setRowCount(0);
    if (result.empty())
@@ -80,17 +69,17 @@ void TransactionsTab::timeToUpdate(const string& result)
    for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto const& content = contents[iIndex];
-      string from_account = Globals::instance().getAccountName(content["m_from_account"].get<string>());
-      string to_account = Globals::instance().getAccountName(content["m_to_account"].get<string>());
+      std::string from_account = Globals::instance().getAccountName(content["m_from_account"].get<std::string>());
+      std::string to_account = Globals::instance().getAccountName(content["m_to_account"].get<std::string>());
       graphene::chain::transaction_detail_object::eOperationType en_operation_type =
          (graphene::chain::transaction_detail_object::eOperationType)content["m_operation_type"].get<uint8_t>();
-      string description = content["m_str_description"].get<string>();
-      string timestamp = boost::replace_all_copy(content["m_timestamp"].get<string>(), "T", " ");
+      std::string description = content["m_str_description"].get<std::string>();
+      std::string timestamp = boost::replace_all_copy(content["m_timestamp"].get<std::string>(), "T", " ");
 
       Asset transaction_amount_ast = Globals::instance().asset(json_to_int64(content["m_transaction_amount"]["amount"]),
-                                                               content["m_transaction_amount"]["asset_id"].get<string>() );
+                                                               content["m_transaction_amount"]["asset_id"].get<std::string>() );
       Asset transaction_fee_ast = Globals::instance().asset(json_to_int64(content["m_transaction_fee"]["amount"]),
-                                                            content["m_transaction_fee"]["asset_id"].get<string>() );
+                                                            content["m_transaction_fee"]["asset_id"].get<std::string>() );
 
       QString str_operation_type;
       switch (en_operation_type)
@@ -135,15 +124,15 @@ void TransactionsTab::timeToUpdate(const string& result)
    }
    
    if (contents.size() > m_i_page_size)
-      set_next_page_iterator(contents[m_i_page_size]["id"].get<string>());
+      set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
-      set_next_page_iterator(string());
+      set_next_page_iterator(std::string());
 }
 
-string TransactionsTab::getUpdateCommand()
+std::string TransactionsTab::getUpdateCommand()
 {
    if (m_strSearchTerm.isEmpty())
-      return string();
+      return std::string();
 
    return   "search_account_history "
             "\"" + m_strSearchTerm.toStdString() + "\" "
@@ -162,4 +151,5 @@ void TransactionsTab::slot_SearchTermChanged(const QString& strSearchTerm)
    m_strSearchTerm = strSearchTerm;
    reset(true);
 }
+
 }  // end namespace gui_wallet

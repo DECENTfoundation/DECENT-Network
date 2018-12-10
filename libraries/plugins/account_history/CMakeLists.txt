@@ -2,6 +2,7 @@ file(GLOB HEADERS "include/graphene/account_history/*.hpp")
 
 add_library( graphene_account_history 
              account_history_plugin.cpp
+             ${HEADERS}
            )
 
 target_link_libraries( graphene_account_history graphene_chain graphene_app )

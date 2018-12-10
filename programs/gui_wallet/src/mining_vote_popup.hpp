@@ -3,8 +3,6 @@
 
 #include "richdialog.hpp"
 
-class QWidget;
-
 namespace gui_wallet {
 
     class DecentButton;
@@ -35,8 +33,6 @@ namespace gui_wallet {
        DecentLineEdit* m_pMinersNumVote;
        DecentButton* m_pVoteButton;
        DecentButton* m_pResetButton;
-
     };
-
 
 } //namespace
