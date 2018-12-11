@@ -24,9 +24,6 @@
  */
 #pragma once
 
-#include <graphene/app/full_account.hpp>
-
-#ifndef STDAFX_APP_H
 #include <fc/api.hpp>
 
 #include <graphene/chain/database.hpp>
@@ -38,7 +35,7 @@
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
-#endif
+#include <graphene/app/full_account.hpp>
 
 /**
  * @defgroup DatabaseAPI Database API

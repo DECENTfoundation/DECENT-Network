@@ -1,7 +1,4 @@
-#ifndef STDAFX_APP_H
 #include <boost/multiprecision/cpp_int.hpp>
-#endif
-
 #include <graphene/app/balance.hpp>
 #include <graphene/app/api.hpp>
 

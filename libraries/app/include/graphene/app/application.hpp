@@ -23,16 +23,13 @@
  */
 #pragma once
 
-#include <graphene/app/api_access.hpp>
-
-#ifndef STDAFX_APP_H
 #include <boost/program_options.hpp>
 
 #include <fc/filesystem.hpp>
 
 #include <graphene/chain/database.hpp>
 #include <graphene/net/node.hpp>
-#endif
+#include <graphene/app/api_access.hpp>
 
 namespace graphene { namespace app {
    namespace detail { class application_impl; }

@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 
-#ifndef STDAFX_APP_H
 #include <iostream>
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -37,8 +36,6 @@
 #include <graphene/net/exceptions.hpp>
 #include <decent/ipfs_check.hpp>
 #include <decent/package/package_config.hpp>
-#endif
-
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>

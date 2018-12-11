@@ -1,11 +1,9 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#ifndef STDAFX_APP_H
 #include <fc/thread/future.hpp>
 
 #include <graphene/chain/protocol/types.hpp>
-#endif
 
 namespace decent { namespace seeding {
 
