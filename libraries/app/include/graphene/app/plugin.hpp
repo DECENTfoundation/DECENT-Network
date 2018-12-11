@@ -23,11 +23,9 @@
  */
 #pragma once
 
-#include <graphene/app/application.hpp>
-
-#ifndef STDAFX_APP_H
 #include <fc/io/json.hpp>
-#endif
+
+#include <graphene/app/application.hpp>
 
 namespace graphene { namespace app {
 

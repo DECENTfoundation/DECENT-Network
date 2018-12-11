@@ -23,9 +23,7 @@
  */
 #pragma once
 
-#ifndef STDAFX_APP_H
 #include <fc/reflect/reflect.hpp>
-#endif
 
 namespace graphene { namespace app {
 

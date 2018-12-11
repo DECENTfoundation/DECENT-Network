@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 
-#ifndef STDAFX_APP_H
 #include <cctype>
 #include <boost/algorithm/string.hpp>
 #include <fc/bloom_filter.hpp>
@@ -31,8 +30,6 @@
 #include <graphene/chain/get_config.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
-#endif
-
 #include <graphene/app/database_api.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4

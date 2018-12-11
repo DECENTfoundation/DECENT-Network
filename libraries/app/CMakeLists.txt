@@ -1,14 +1,6 @@
 file(GLOB HEADERS "include/graphene/app/*.hpp")
 
-set(GRAPHENE_APP_PRECOMPILED_SOURCE_FILE "")
-set(GRAPHENE_APP_PRECOMPILED_HEADER_FILE stdafx.h)
-if(WIN32)
-    list(APPEND GRAPHENE_APP_PRECOMPILED_SOURCE_FILE stdafx.cpp)
-endif()
-
 add_library( graphene_app
-             ${GRAPHENE_APP_PRECOMPILED_SOURCE_FILE} # must be the first file
-             ${GRAPHENE_APP_PRECOMPILED_HEADER_FILE}
              api.cpp
              application.cpp
              database_api.cpp
@@ -26,14 +18,8 @@ target_include_directories( graphene_app PUBLIC
                             "${CMAKE_CURRENT_SOURCE_DIR}/../package/include"
  )
 
-if(WIN32)
-    set_target_properties(graphene_app PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
-    set_target_properties(graphene_app PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT ${GRAPHENE_APP_PRECOMPILED_HEADER_FILE})
-    cotire(graphene_app)
-endif()
-
 if(MSVC)
-  set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_OPTIONS "/bigobj" )
+  set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 #install( TARGETS

@@ -23,10 +23,7 @@
  * THE SOFTWARE.
  */
 
-#ifndef STDAFX_APP_H
 #include <graphene/chain/custom_evaluator.hpp>
-#endif
-
 #include <graphene/app/impacted.hpp>
 
 namespace graphene { namespace app {

@@ -22,9 +22,6 @@
  * THE SOFTWARE.
  */
 
-#ifndef STDAFX_APP_H
-#endif
-
 #include <graphene/app/plugin.hpp>
 
 namespace graphene { namespace app {

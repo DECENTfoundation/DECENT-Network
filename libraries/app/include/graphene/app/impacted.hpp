@@ -23,10 +23,8 @@
  */
 #pragma once
 
-#ifndef STDAFX_APP_H
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/transaction.hpp>
-#endif
 
 namespace graphene { namespace app {
 
