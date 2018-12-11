@@ -1483,19 +1483,8 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
          try
          {
             fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path, data_dir);
-            if (logging_config) {
-               // Temporary Bugfix: if p2p log level is debug then correct it
-               int  i = 0;
-               for (i = 0; i < (int)logging_config->loggers.size(); i++) {
-                  if (logging_config->loggers[i].name == "p2p" && logging_config->loggers[i].level.valid() && 
-                     logging_config->loggers[i].level == fc::log_level::debug) 
-                  {
-                     logging_config->loggers[i].level = fc::log_level::error;
-                     RemoveDebugLevelFromIniFile(config_ini_path.string());
-                  }
-               }
+            if (logging_config) 
                fc::configure_logging(*logging_config);
-            }
          }
          catch (const fc::exception&)
          {
