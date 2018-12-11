@@ -508,6 +508,12 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    
 void ContentInfoWidget::ButtonWasClicked()
 {
+#ifdef _MSC_VER
+   if (IsIpfsRunning() == false) {
+      ShowMessageBox(tr("Error"), tr("Cannot buy and download content."), tr("IPFS is not running."));
+      return;
+   }
+#endif
    QPushButton* pButton = qobject_cast<QPushButton*>(sender());
    Q_ASSERT(pButton);
 

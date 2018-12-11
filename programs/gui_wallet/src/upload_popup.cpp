@@ -17,6 +17,7 @@
 #include "decent_line_edit.hpp"
 #include "decent_label.hpp"
 
+
 namespace gui_wallet
 {
 
@@ -628,6 +629,12 @@ void Upload_popup::getContents(std::string const& id,
 
 void Upload_popup::slot_UploadContent()
 {
+#ifdef _MSC_VER
+   if (IsIpfsRunning() == false) {
+      ShowMessageBox(tr("Error"), tr("Cannot upload content."), tr("IPFS is not running."));
+      return;
+   }
+#endif
    std::string m_life_time =  m_pLifeTime->date().toString("yyyy-MM-dd").toStdString();
 
    std::string m_price = QString::number(m_dPrice).toStdString();
