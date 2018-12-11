@@ -98,6 +98,20 @@ int main(int argc, char* argv[])
 
    app.setFont(gui_wallet::MainFont());
 
+   fc::path data_dir = options.count("data-dir") ?
+      fc::path(options["data-dir"].as<boost::filesystem::path>()) :
+      graphene::utilities::decent_path_finder::instance().get_decent_data();
+
+   if(data_dir.is_relative())
+      data_dir = fc::current_path() / data_dir;
+
+   fc::path config_filename = data_dir / "config.ini";
+   if( fc::exists(config_filename) )
+   {
+      // get the basic options
+      bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+   }
+
    graphene::wallet::server_data ws{ "ws://" + options["rpc-endpoint"].as<std::string>() };
    gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<std::string>(), ws);
    QObject::connect(&gui_wallet::Globals::instance(), &gui_wallet::Globals::signal_daemonFinished,
