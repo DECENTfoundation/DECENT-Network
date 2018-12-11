@@ -958,7 +958,7 @@ std::string Globals::TransferFunds(const std::string& from, const std::string to
       std::string command = "transfer ";
       command += "\"" + from + "\" ";
       command += "\"" + to + "\" ";
-      command += "\"" + std::to_string(amount) + "\" " + asset_symbol + " ";
+      command += "\"" + QString::number(amount).toStdString() + "\" " + asset_symbol + " ";
       command += "\"" + memo + "\"";
       command += " true";
 
