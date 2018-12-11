@@ -237,6 +237,12 @@ void Upload_tab::ShowDigitalContentsGUI()
 
 void Upload_tab::slot_UploadPopupResubmit(int iIndex)
 {
+#ifdef _MSC_VER
+   if (IsIpfsRunning() == false) {
+      ShowMessageBox(tr("Error"), tr("Cannot resubmit content."), tr("IPFS is not running."));
+      return;
+   }
+#endif
    if (iIndex < 0 || iIndex >= _digital_contents.size())
       throw std::out_of_range("Content index is out of range");
 

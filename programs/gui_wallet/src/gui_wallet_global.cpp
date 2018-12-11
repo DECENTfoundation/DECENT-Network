@@ -22,6 +22,10 @@
 
 #include <signal.h>
 
+#ifdef _MSC_VER
+#include <tlhelp32.h>
+#endif
+
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise);
 QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir);
 
@@ -639,8 +643,15 @@ void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_f
 
    QObject::connect(this, &Globals::walletConnectionStatusChanged, this, &Globals::slot_ConnectionStatusChange);
 
-   QProcess* daemon_process;
-   daemon_process = run_ipfs_daemon(qApp, qApp->applicationDirPath());
+   QProcess* daemon_process = nullptr;
+   if (IsIpfsRunning() == false) {
+      daemon_process = run_ipfs_daemon(qApp, qApp->applicationDirPath());
+      if (daemon_process == nullptr) {
+         elog("Cannot start IPFS.");
+         ShowMessageBox(tr("Error"), tr("Submiting or downloading content will not be functional."), tr("Cannot start IPFS"));
+      }
+   }
+
    m_p_daemon_details->ipfs_process = daemon_process;
 
    fc::set_signal_handler([this](int /*signal*/) {
@@ -1291,6 +1302,33 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
    }
    _current_highlighted_row = row;
 }
+bool IsIpfsRunning()
+{
+#if defined( _MSC_VER )
+   const char* processName = "ipfs.exe";
+   PROCESSENTRY32 entry;
+   entry.dwSize = sizeof(PROCESSENTRY32);
+
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+   if (Process32First(snapshot, &entry))
+      do {
+         if (!stricmp(entry.szExeFile, processName))
+            return true;
+      } while (Process32Next(snapshot, &entry));
+
+   CloseHandle(snapshot);
+     
+   return false;
+#elif defined( __GNUC__ )
+   // add detection of running IPFS process
+   return false;
+#else
+#error "Undefined compiler platform"
+#endif
+}
+
+
 
 }
 
@@ -1366,6 +1404,10 @@ QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir)
    QStringList params;
    params << "daemon" << "--init" << "--migrate";
    daemonProcess->start(program, params);
+   if (daemonProcess->state() == QProcess::NotRunning) {
+      delete daemonProcess;
+      return nullptr;
+   }
    return daemonProcess;
 }
 

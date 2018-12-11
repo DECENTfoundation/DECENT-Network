@@ -360,4 +360,7 @@ namespace gui_wallet
    QFont PaginationFont();
    QFont ProgressInfoFont();
    QFont MainFont();
+
+   bool IsIpfsRunning();
+
 }
