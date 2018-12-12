@@ -2620,6 +2620,13 @@ signed_transaction content_cancellation(const string& author,
                    if( args.size() == 0 )
                       continue;
 
+                   const string& method = args.front().get_string();
+
+                   if (method == "from_command_file")
+                   {
+                       FC_THROW("Method from_command_file cannot be called from within a command file");
+                   }
+
                    std::cout << my_api.RunTask(current_line) << "\n";
                }
            }
