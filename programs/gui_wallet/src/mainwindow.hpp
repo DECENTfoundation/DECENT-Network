@@ -50,7 +50,6 @@ protected slots:
    void slot_replayBlockChain();
    void slot_resyncBlockChain();
    void slot_importKey();
-   void slot_checkDownloads();
    void slot_getContents();
    void slot_PreviousPage();
    void slot_ResetPage();
@@ -81,6 +80,7 @@ protected:
 
 private:
    void updateBalance(const QString& balance);
+   void checkDownloads();
 
    int m_daemon_restart = 0;
    std::string m_wallet_file;
