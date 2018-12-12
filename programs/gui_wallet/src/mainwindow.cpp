@@ -523,7 +523,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
       Globals::instance().slot_updateAccountBalance();
       slot_BrowseToggled(true);
-      slot_checkDownloads();
+      checkDownloads();
       updateActiveTable();
    }
 }
@@ -683,6 +683,7 @@ void MainWindow::slot_currentAccountChanged(int iIndex)
    QString account = m_pAccountList->itemText(iIndex);
    Globals::instance().setCurrentAccount(account);
 
+   checkDownloads();
    slot_getContents();
 }
 
@@ -903,7 +904,7 @@ void MainWindow::slot_MinerVotingToggled(bool toggled)
 
 }
 
-void MainWindow::slot_checkDownloads()
+void MainWindow::checkDownloads()
 {
    auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
@@ -937,8 +938,6 @@ void MainWindow::slot_checkDownloads()
    for (size_t i = 0; i < contents.size(); ++i)
    {
       std::string URI = contents[i]["URI"].get<std::string>();
-      std::string hash = contents[i]["hash"].get<std::string>();
-
       if (URI.empty())
          continue;
 
@@ -946,9 +945,7 @@ void MainWindow::slot_checkDownloads()
       {
          try
          {
-            Globals::instance().runTask("download_package "
-                                        "\"" + URI + "\" "
-                                        "\"" + hash + "\" ");
+            Globals::instance().runTask("download_package \"" + URI + "\"");
 
             m_activeDownloads.insert(URI);
          }
