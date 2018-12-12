@@ -1411,24 +1411,6 @@ QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir)
    return daemonProcess;
 }
 
-// BugFix: If config.ini is created by GUI then p2p log level is set to debug
-void RemoveDebugLevelFromIniFile(const std::string& path)
-{
-   const std::string replace_str = "[logger.p2p]\nlevel=debug\n";
-   std::ifstream ifs;
-   ifs.open(path.c_str());
-   if (ifs.is_open()) {
-      std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-      ifs.close();
-      auto pos = content.find(replace_str);
-      if (pos != std::string::npos) {
-         content.replace(pos, replace_str.length(), "[logger.p2p]\nlevel=error\n");
-         std::ofstream ofs(path.c_str());
-         ofs << content;
-      }
-   }
-}
-
 int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exit_promise)
 {
    bpo::options_description app_options("DECENT Daemon");
