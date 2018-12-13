@@ -42,6 +42,7 @@
  * @defgroup Network_NodeAPI Network NodeAPI
  * @defgroup CryptoAPI Crypto API
  * @defgroup MessagingAPI Messaging API
+ * @defgroup MonitoringAPI Monitoring API
  * @defgroup LoginAPI LoginAPI
  */
 namespace graphene { namespace app {
@@ -394,8 +395,8 @@ namespace graphene { namespace app {
 
       /**
        * @brief Receives message objects by sender and/or receiver.
-       * @param sender name of message sender. If you dont want to filter by sender then let it empty
-       * @param receiver name of message receiver. If you dont want to filter by receiver then let it empty
+       * @param sender name of message sender. If you dont want to filter by sender then pass null
+       * @param receiver name of message receiver. If you dont want to filter by receiver then pass null
        * @param max_count maximal number of last messages to be displayed
        * @return a vector of message objects
        * @ingroup MessagingAPI
@@ -405,17 +406,31 @@ namespace graphene { namespace app {
       application& _app;
    };
 
+   /**
+   * @brief The monitoring_api class provides access to monitoring counters
+   */
    class monitoring_api
    {
    public:
       monitoring_api();
       /**
-      * @brieg Get the name of the API.
+      * @brief Get the name of the API.
       * @return the name of the API
-      * @ingroup MessagingAPI
+      * @ingroup MonitoringAPI
       */
       std::string info() const;
+      /**
+      * @brief Reset persistent monitoring counters by names. It has not impact on non-persistent counters.
+      * @param Counter names. Pass empty vector to reset all counters.
+      * @ingroup MonitoringAPI
+      */
       void reset_counters(const std::vector<std::string>& names);
+      /**
+      * @brief Retrieves monitoring counters by names.
+      * @param Counter names. Pass epmty vector to retrieve all counters.
+      * @return vector of monitoring counters
+      * @ingroup MonitoringAPI
+      */
       std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;
    };
 
