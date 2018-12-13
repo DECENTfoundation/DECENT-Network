@@ -154,7 +154,7 @@ if(UNIX)
     endif()
 endif()
 
-SET(BOOST_COMPONENTS thread date_time system filesystem program_options signals serialization chrono unit_test_framework context coroutine locale iostreams)
+SET(BOOST_COMPONENTS thread filesystem program_options serialization unit_test_framework coroutine locale iostreams)
 SET(Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF")
 
 find_package(Boost 1.65.1 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
