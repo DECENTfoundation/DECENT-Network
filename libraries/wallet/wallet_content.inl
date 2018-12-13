@@ -286,6 +286,7 @@ std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(cons
    else
       sectors = DECENT_SECTORS_BIG;
    auto pack = PackageManager::instance().get_package(content_dir, samples_dir, key1, sectors);
+   pack->create( true );
    decent::encrypt::CustodyData cd = pack->get_custody_data();
    return std::pair<string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
 }
