@@ -108,4 +108,4 @@ FC_REFLECT( graphene::chain::miner_update_operation::fee_parameters_type, (fee) 
 FC_REFLECT( graphene::chain::miner_update_operation, (fee)(miner)(miner_account)(new_url)(new_signing_key) )
 
 FC_REFLECT( graphene::chain::miner_update_global_parameters_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::miner_update_global_parameters_operation, (fee)(new_parameters) );
+FC_REFLECT( graphene::chain::miner_update_global_parameters_operation, (fee)(new_parameters) )

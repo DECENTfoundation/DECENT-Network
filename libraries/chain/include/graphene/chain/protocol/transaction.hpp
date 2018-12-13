@@ -54,8 +54,8 @@ namespace graphene { namespace chain {
     * probably have a longer re-org window to ensure their transaction can still go through in the event of a momentary
     * disruption in service.
     *
-    * @note It is not recommended to set the @ref ref_block_num, @ref ref_block_prefix, and @ref expiration
-    * fields manually. Call the appropriate overload of @ref set_expiration instead.
+    * @note It is not recommended to set the \c ref_block_num, \c ref_block_prefix, and \c expiration
+    * fields manually. Call the appropriate overload of \c set_expiration instead.
     *
     * @{
     */
@@ -66,8 +66,7 @@ namespace graphene { namespace chain {
    struct transaction
    {
       /**
-       * Least significant 16 bits from the reference block number. If @ref relative_expiration is zero, this field
-       * must be zero as well.
+       * Least significant 16 bits from the reference block number.
        */
       uint16_t           ref_block_num    = 0;
       /**
@@ -132,7 +131,7 @@ namespace graphene { namespace chain {
 
       /**
        *  The purpose of this method is to identify some subset of
-       *  @ref available_keys that will produce sufficient signatures
+       *  \c available_keys that will produce sufficient signatures
        *  for a transaction.  The result is not always a minimal set of
        *  signatures, but any non-minimal result will still pass
        *  validation.

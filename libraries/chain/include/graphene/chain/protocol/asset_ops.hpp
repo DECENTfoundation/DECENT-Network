@@ -171,7 +171,6 @@ namespace graphene { namespace chain {
     *
     * @pre @ref issuer SHALL be an existing account and MUST match asset_object::issuer on @ref asset_to_update
     * @pre @ref fee SHALL be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
-    * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
     * @post @ref asset_to_update will have options matching those of new_options
     */
    struct update_user_issued_asset_operation : public base_operation
@@ -262,7 +261,6 @@ namespace graphene { namespace chain {
     *
     * @pre @ref issuer SHALL be an existing account and MUST match asset_object::issuer on @ref asset_to_update
     * @pre @ref fee SHALL be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
-    * @pre @ref new_options SHALL be internally consistent, as verified by @ref validate()
     * @post @ref asset_to_update will have options matching those of new_options
     */
    struct update_monitored_asset_operation : public base_operation

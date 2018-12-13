@@ -122,7 +122,6 @@ namespace graphene { namespace app {
           * @param partner_account_id partner account_id to filter transfers to speccific account or empty
           * @param from_block filtering parameter, starting block number (can be determined by from time) or zero when not used
           * @param to_block filtering parameter, ending block number or zero when not used
-          * @param order ordering parameter, not working yet
           * @param start_offset starting offset from zero
           * @param limit the number of entries to return (starting from the most recent)
           * @return a list of balance operation history objects
@@ -421,13 +420,13 @@ namespace graphene { namespace app {
       std::string info() const;
       /**
       * @brief Reset persistent monitoring counters by names. It has not impact on non-persistent counters.
-      * @param Counter names. Pass empty vector to reset all counters.
+      * @param names Counter names. Pass empty vector to reset all counters.
       * @ingroup MonitoringAPI
       */
       void reset_counters(const std::vector<std::string>& names);
       /**
       * @brief Retrieves monitoring counters by names.
-      * @param Counter names. Pass epmty vector to retrieve all counters.
+      * @param names Counter names. Pass epmty vector to retrieve all counters.
       * @return vector of monitoring counters
       * @ingroup MonitoringAPI
       */

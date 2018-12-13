@@ -177,6 +177,6 @@ FC_REFLECT( graphene::chain::withdraw_permission_create_operation, (fee)(withdra
             (withdrawal_limit)(withdrawal_period_sec)(periods_until_expiration)(period_start_time) )
 FC_REFLECT( graphene::chain::withdraw_permission_update_operation, (fee)(withdraw_from_account)(authorized_account)
             (permission_to_update)(withdrawal_limit)(withdrawal_period_sec)(period_start_time)(periods_until_expiration) )
-FC_REFLECT( graphene::chain::withdraw_permission_claim_operation, (fee)(withdraw_permission)(withdraw_from_account)(withdraw_to_account)(amount_to_withdraw)(memo) );
+FC_REFLECT( graphene::chain::withdraw_permission_claim_operation, (fee)(withdraw_permission)(withdraw_from_account)(withdraw_to_account)(amount_to_withdraw)(memo) )
 FC_REFLECT( graphene::chain::withdraw_permission_delete_operation, (fee)(withdraw_from_account)(authorized_account)
             (withdrawal_permission) )
