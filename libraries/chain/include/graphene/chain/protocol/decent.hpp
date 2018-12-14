@@ -398,8 +398,8 @@ FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buy
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
 FC_REFLECT(graphene::chain::return_escrow_buying_operation,(fee)(consumer)(escrow)(buying))
 FC_REFLECT(graphene::chain::report_stats_operation,(fee)(consumer)(stats))
-FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder));
-FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(co_authors)(buying)(consumer));
+FC_REFLECT(graphene::chain::pay_seeder_operation,(fee)(payout)(author)(seeder))
+FC_REFLECT(graphene::chain::finish_buying_operation,(fee)(payout)(author)(co_authors)(buying)(consumer))
 
 FC_REFLECT( graphene::chain::set_publishing_manager_operation::fee_parameters_type, ( fee ) )
 FC_REFLECT( graphene::chain::set_publishing_right_operation::fee_parameters_type, ( fee ) )

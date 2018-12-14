@@ -249,7 +249,7 @@ namespace graphene { namespace app {
          /////////////
 
          /**
-          * @brieg Get the name of the API.
+          * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup DatabaseAPI_Globals
           */
@@ -883,7 +883,7 @@ namespace graphene { namespace app {
           * @param account_id account name or empty when search without account
           * @param term search term - miner name
           * @param only_my_votes when \c true it selects only votes given by account
-          * @param order order field. Available options are 'name\link|votes'
+          * @param order order field. Available options are 'name|link|votes'
           * @param id the id of the miner to start searching from, or empty when start from beginning
           * @param count maximum number of miners info to fetch (must not exceed 1000)
           * @return the contents found
