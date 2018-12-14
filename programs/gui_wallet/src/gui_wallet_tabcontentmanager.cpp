@@ -22,13 +22,23 @@ TabContentManager::TabContentManager(QWidget* pParent/* = nullptr*/) : QWidget(p
 void TabContentManager::tryToUpdate() {
    try {
 
-      QApplication::setOverrideCursor(Qt::WaitCursor);
+      class CursorGuard
+      {
+      public:
+         CursorGuard()
+         {
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+         }
+
+         ~CursorGuard()
+         {
+            QApplication::restoreOverrideCursor();
+         }
+      } cg;
 
       std::string command = getUpdateCommand();
       if (command.empty()) {
          timeToUpdate(std::string());
-
-         QApplication::restoreOverrideCursor();
          return;
       }
 
@@ -47,8 +57,6 @@ void TabContentManager::tryToUpdate() {
          m_last_result = result;
          timeToUpdate(result);
       }
-
-      QApplication::restoreOverrideCursor();
 
    }
    catch (const std::exception& ex) {
