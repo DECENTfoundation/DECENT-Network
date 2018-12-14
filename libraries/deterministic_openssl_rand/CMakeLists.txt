@@ -13,11 +13,6 @@ target_include_directories( deterministic_openssl_rand
                             "${CMAKE_CURRENT_SOURCE_DIR}/../blockchain/include"
                           )
 
-if (USE_PCH)
-  set_target_properties(deterministic_openssl_rand PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
-  cotire(deterministic_openssl_rand)
-endif(USE_PCH)
-
 #install( TARGETS
 #   deterministic_openssl_rand
 #

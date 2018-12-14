@@ -29,6 +29,12 @@ set( CMAKE_CXX_STANDARD_REQUIRED YES )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
+if( MSVC )
+    option( USE_PCH "Use precompiled header" ON )
+else()
+    option( USE_PCH "Use precompiled header" OFF )
+endif()
+
 if( APPLE )
     find_program( BREW_PROGRAM brew )
     if( BREW_PROGRAM )
