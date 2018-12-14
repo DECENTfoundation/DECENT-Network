@@ -45,7 +45,7 @@ void wallet_api::download_content(const string& consumer, const string& URI, con
    return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
-optional<content_download_status> wallet_api::get_download_status(const string& consumer,
+content_download_status wallet_api::get_download_status(const string& consumer,
                                                                   const string& URI) const
 {
    return my->get_download_status(consumer, URI);
@@ -151,16 +151,13 @@ vector<buying_object_ex> wallet_api::search_my_purchases(const string& account_i
    for (size_t i = 0; i < bobjects.size(); ++i)
    {
       buying_object const& buyobj = bobjects[i];
-
-      optional<content_download_status> status = get_download_status(account_id_or_name, buyobj.URI);
-      if (!status)
-         continue;
+      content_download_status status = get_download_status(account_id_or_name, buyobj.URI);
 
       optional<content_object> content = my->_remote_db->get_content( buyobj.URI );
       if (!content)
          continue;
 
-      result.emplace_back(buying_object_ex(bobjects[i], *status));
+      result.emplace_back(buying_object_ex(bobjects[i], status));
       buying_object_ex& bobj = result.back();
 
       bobj.author_account = my->get_account(content->author).name;

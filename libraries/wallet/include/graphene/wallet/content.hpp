@@ -122,7 +122,7 @@ void download_content(const string& consumer, const string& URI, const string& r
  * @return download status, or \c null if no matching download process was found
  * @ingroup WalletAPI_Content
  */
-optional<content_download_status> get_download_status(const string& consumer, const string& URI) const;
+content_download_status get_download_status(const string& consumer, const string& URI) const;
 
 /**
  * @brief This function is used to send a request to buy a content. This request is caught by seeders.

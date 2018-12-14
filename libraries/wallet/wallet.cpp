@@ -2536,7 +2536,8 @@ signed_transaction content_cancellation(const string& author,
    } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
 }
 
-   optional<content_download_status> get_download_status(const string& consumer, const string& URI) const {
+   content_download_status get_download_status(const string& consumer, const string& URI) const
+   {
       try {
 
          account_id_type acc = get_account(consumer).id;
