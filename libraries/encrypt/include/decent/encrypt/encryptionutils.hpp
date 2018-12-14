@@ -44,13 +44,23 @@ using CryptoPP::ModularArithmetic;
 #define DECENT_MESSAGE_SIZE 32 //bytes
 #define DECENT_HASH_SIZE 32 //bytes
 #define DECENT_PROOF_OF_DELIVERY_SIZE (DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE * 5 + 2 * (DECENT_HASH_SIZE +1)) //bytes
-const CryptoPP::Integer DECENT_EL_GAMAL_MODULUS_512(
-      "11760620558671662461946567396662025495126946227619472274601251081547302009186313201119191293557856181195016058359990840577430081932807832465057884143546419.");
-const CryptoPP::Integer DECENT_EL_GAMAL_GROUP_GENERATOR(3);
 
+struct Params {
+	const CryptoPP::Integer DECENT_EL_GAMAL_MODULUS_512;
+	const CryptoPP::Integer DECENT_EL_GAMAL_GROUP_GENERATOR;
+	const CryptoPP::Integer DECENT_SHAMIR_ORDER;
 
-const CryptoPP::Integer DECENT_SHAMIR_ORDER("115792089237316195423570985008687907852837564279074904382605163141518161494337" );
+	static const Params& instance()
+	{
+		if (!_instance)
+			_instance.reset(new Params());
+		return *_instance;
+	}
 
+private:
+	Params();
+	static std::unique_ptr<Params> _instance;
+};
 
 namespace decent {
 namespace encrypt {

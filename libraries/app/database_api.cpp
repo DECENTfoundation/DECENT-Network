@@ -1914,7 +1914,7 @@ namespace
          content_keys keys;
 
          CryptoPP::Integer secret(randomGenerator, 256);
-         while( secret >= DECENT_SHAMIR_ORDER ){
+         while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
             CryptoPP::Integer tmp(randomGenerator, 256);
             secret = tmp;
          }

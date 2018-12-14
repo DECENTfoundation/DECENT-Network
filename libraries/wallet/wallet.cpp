@@ -2455,7 +2455,7 @@ public:
          FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
 
          CryptoPP::Integer secret(randomGenerator, 256);
-         while( secret >= DECENT_SHAMIR_ORDER ){
+         while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
             CryptoPP::Integer tmp(randomGenerator, 256);
             secret = tmp;
          }

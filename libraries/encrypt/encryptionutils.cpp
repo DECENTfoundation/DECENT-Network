@@ -20,20 +20,14 @@
 #include <fc/exception/exception.hpp>
 #include <iostream>
 
-
-
-
-#ifdef _MSC_VER
-class RunCryptoPPTest
+Params::Params()
+: DECENT_EL_GAMAL_MODULUS_512("11760620558671662461946567396662025495126946227619472274601251081547302009186313201119191293557856181195016058359990840577430081932807832465057884143546419.")
+, DECENT_EL_GAMAL_GROUP_GENERATOR(3)
+, DECENT_SHAMIR_ORDER("115792089237316195423570985008687907852837564279074904382605163141518161494337")
 {
-public:
-	RunCryptoPPTest() 
-	{
-		CryptoPP::DoDllPowerUpSelfTest();
-	}
-};
-RunCryptoPPTest runtest;
-#endif
+}
+
+std::unique_ptr<Params> Params::_instance;
 
 namespace decent{ namespace encrypt{
 
@@ -116,7 +110,7 @@ encryption_results AES_decrypt_file(const std::string &fileIn, const std::string
 
 DInteger generate_private_el_gamal_key()
 {
-    CryptoPP::Integer im (rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 -1);
+    CryptoPP::Integer im (rng, CryptoPP::Integer::One(), Params::instance().DECENT_EL_GAMAL_MODULUS_512 -1);
     DInteger key = im;
     return key;
 }
@@ -129,14 +123,14 @@ DInteger generate_private_el_gamal_key_from_secret(fc::sha256 secret)
 #else
    CryptoPP::Integer key( (byte*)hash._hash, 64 );
 #endif
-   DInteger ret = key.Modulo( DECENT_EL_GAMAL_MODULUS_512 );
+   DInteger ret = key.Modulo(Params::instance().DECENT_EL_GAMAL_MODULUS_512);
    return key;
 }
 
 DInteger get_public_el_gamal_key(const DInteger &privateKey)
 {
-    ModularArithmetic ma(DECENT_EL_GAMAL_MODULUS_512);
-    DInteger publicKey = ma.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, privateKey);
+    ModularArithmetic ma(Params::instance().DECENT_EL_GAMAL_MODULUS_512);
+    DInteger publicKey = ma.Exponentiate(Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR, privateKey);
 
     return publicKey;
 }
@@ -145,10 +139,10 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
 {
     //elog("el_gamal_encrypt called ${m} ${pk} ",("m", message)("pk", publicKey));
     ElGamalKeys::PublicKey key;
-    key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+    key.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPublicElement(publicKey);
 
-    CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
+    CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), Params::instance().DECENT_EL_GAMAL_MODULUS_512 - 1);
 
     try{
 #if CRYPTOPP_VERSION >= 600
@@ -161,8 +155,8 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
         SecByteBlock messageBytes(buffer, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
 
         ElGamal::GroupParameters groupParams;
-        groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
-        ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
+        groupParams.Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
+        ModularArithmetic mr(Params::instance().DECENT_EL_GAMAL_MODULUS_512);
 
         CryptoPP::Integer m;
         m.Decode(messageBytes, DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE);
@@ -185,7 +179,7 @@ encryption_results el_gamal_encrypt(const point &message, const DInteger &public
 encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &privateKey, point &plaintext)
 {
     ElGamalKeys::PrivateKey key;
-    key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+    key.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
     key.SetPrivateExponent(privateKey);
     //elog("el_gamal_decrypt called ${i} ${pk} ",("i", input)("pk", privateKey));
     try{
@@ -195,7 +189,7 @@ encryption_results el_gamal_decrypt(const Ciphertext &input, const DInteger &pri
         byte recovered[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
 #endif
         ElGamal::GroupParameters groupParams;
-        groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+        groupParams.Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
 
         ModularArithmetic mr(groupParams.GetModulus());
 
@@ -277,19 +271,19 @@ verify_delivery_proof(const DeliveryProof &proof, const Ciphertext &first, const
    //elog("verify_delivery_proof called with params ${p} ${f} ${s} ${pk1} ${pk2}",("p", proof)("f", first)("s", second)("pk1", firstPulicKey)("pk2", secondPublicKey));
 
    ElGamalKeys::PublicKey key1;
-   key1.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+   key1.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
    key1.SetPublicElement(firstPulicKey);
 
    ElGamalKeys::PublicKey key2;
-   key2.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+   key2.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
    key2.SetPublicElement(secondPublicKey);
 
    DInteger x = hash_elements(first, second, firstPulicKey, secondPublicKey, proof.G1, proof.G2, proof.G3);
 
    ElGamal::GroupParameters groupParams;
-   ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
+   ModularArithmetic mr(Params::instance().DECENT_EL_GAMAL_MODULUS_512);
 
-   DInteger t1 = mr.Exponentiate(DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
+   DInteger t1 = mr.Exponentiate(Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR, proof.s);
    DInteger t2 = mr.Multiply(mr.Exponentiate(key1.GetPublicElement(), x), proof.G1);
 
 
@@ -320,15 +314,15 @@ encrypt_with_proof(const point &message, const DInteger &privateKey, const DInte
    try{
       //elog("encrypt_with_proof called ${m} ${pk} ${dpk} ${i}",("m", message)("pk", privateKey)("dpk",destinationPublicKey)("i",incoming));
       ElGamalKeys::PrivateKey private_key;
-      private_key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+      private_key.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
       private_key.SetPrivateExponent(privateKey);
 
       ElGamalKeys::PublicKey public_key;
-      public_key.AccessGroupParameters().Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
+      public_key.AccessGroupParameters().Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
       public_key.SetPublicElement(destinationPublicKey);
 
 
-      CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), DECENT_EL_GAMAL_MODULUS_512 - 1);
+      CryptoPP::Integer randomizer(rng, CryptoPP::Integer::One(), Params::instance().DECENT_EL_GAMAL_MODULUS_512 - 1);
 
 #if CRYPTOPP_VERSION >= 600
       CryptoPP::byte messageBytes[DECENT_EL_GAMAL_GROUP_ELEMENT_SIZE];
@@ -340,8 +334,8 @@ encrypt_with_proof(const point &message, const DInteger &privateKey, const DInte
 
       //encrypt message to outgoing
       ElGamal::GroupParameters groupParams;
-      groupParams.Initialize(DECENT_EL_GAMAL_MODULUS_512, DECENT_EL_GAMAL_GROUP_GENERATOR);
-      ModularArithmetic mr(DECENT_EL_GAMAL_MODULUS_512);
+      groupParams.Initialize(Params::instance().DECENT_EL_GAMAL_MODULUS_512, Params::instance().DECENT_EL_GAMAL_GROUP_GENERATOR);
+      ModularArithmetic mr(Params::instance().DECENT_EL_GAMAL_MODULUS_512);
 
 
       CryptoPP::Integer m;
@@ -386,10 +380,10 @@ void ShamirSecret::calculate_split()
    coef.reserve(quorum);
    coef.push_back(secret);
 
-   ModularArithmetic mr(DECENT_SHAMIR_ORDER);
+   ModularArithmetic mr(Params::instance().DECENT_SHAMIR_ORDER);
    for(int i=1; i<quorum; i++)
    {
-      CryptoPP::Integer a(rng, CryptoPP::Integer::One(), DECENT_SHAMIR_ORDER);
+      CryptoPP::Integer a(rng, CryptoPP::Integer::One(), Params::instance().DECENT_SHAMIR_ORDER);
       coef.push_back(a);
    }
 
@@ -405,7 +399,7 @@ void ShamirSecret::calculate_split()
 void ShamirSecret::calculate_secret()
 {
    DInteger res = DInteger::Zero();
-   ModularArithmetic mr(DECENT_SHAMIR_ORDER);
+   ModularArithmetic mr(Params::instance().DECENT_SHAMIR_ORDER);
 
    for( const auto& s: split )
    {
