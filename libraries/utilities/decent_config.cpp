@@ -1,26 +1,16 @@
+#include <decent/decent_config.hpp>
 
-#include <fc/reflect/variant.hpp>
-#include <fc/variant.hpp>
-#include <fc/variant_object.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <fc/exception/exception.hpp>
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-#include <fc/exception/exception.hpp>
-
-#include <decent/config/decent_log_config.hpp>
-
-
-#include <boost/filesystem.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <fc/reflect/variant.hpp>
 
 namespace decent {
 
@@ -262,5 +252,33 @@ namespace decent {
 
     }
 
-} //namespace decent
+    void write_default_config_file(const fc::path& config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
+    {
+       std::ofstream out_cfg(config_ini_filename.preferred_string());
+       for( const auto &od : cfg_options.options() )
+       {
+          if( !od->description().empty() )
+             out_cfg << "# " << od->description() << "\n";
+          boost::any store;
+          if( !od->semantic()->apply_default(store) )
+             out_cfg << "# " << od->long_name() << " = \n";
+          else {
+             auto example = od->format_parameter();
+             if( example.empty() )
+                // This is a boolean switch
+                out_cfg << od->long_name() << " = " << "false\n";
+             else {
+                // The string is formatted "arg (=<interesting part>)"
+                example.erase(0, 6);
+                example.erase(example.length()-1);
+                out_cfg << od->long_name() << " = " << example << "\n";
+             }
+          }
+          out_cfg << "\n";
+       }
 
+       write_default_logging_config_to_stream(out_cfg, is_daemon);
+       out_cfg.close();
+    }
+
+} //namespace decent

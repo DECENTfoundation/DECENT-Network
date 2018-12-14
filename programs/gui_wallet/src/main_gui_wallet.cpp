@@ -8,9 +8,13 @@
 #include <QTextStream>
 #include <QTranslator>
 
+#include <fc/log/file_appender.hpp>
+
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
+
+#include <decent/decent_config.hpp>
 #endif
 
 #include "gui_wallet_global.hpp"
@@ -116,6 +120,64 @@ int main(int argc, char* argv[])
    {
       // get the basic options
       bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+   }
+   else
+   {
+      ilog("Writing new config file at ${path}", ("path", config_filename));
+      if( !fc::exists(data_dir) )
+         fc::create_directories(data_dir);
+
+      decent::write_default_config_file(config_filename, cfg_options, false);
+   }
+
+   // try to get logging options from the config file.
+   try
+   {
+      fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, data_dir);
+      if (logging_config) {
+         if (!fc::configure_logging(*logging_config)) {
+            std::cerr << "Error configure logging." << std::endl;
+            return EXIT_FAILURE;
+         }
+
+         fc::file_appender::config ap_config(decent_path_finder::instance().get_decent_logs() / "gui_wallet.log");
+         ap_config.flush                = true;
+         ap_config.rotate               = true;
+         ap_config.rotation_interval    = fc::hours( 1 );
+         ap_config.rotation_limit       = fc::days( 1 );
+
+         auto ap = fc::appender::create("gui", "file", fc::variant(ap_config));
+         if(ap)
+         {
+            fc::log_level level = fc::log_level::off;
+            switch(options["log-level"].as<char>())
+            {
+               case 'D':
+                  level = fc::log_level::debug;
+                  break;
+               case 'I':
+                  level = fc::log_level::info;
+                  break;
+               case 'W':
+                  level = fc::log_level::warn;
+                  break;
+               case 'E':
+                  level = fc::log_level::error;
+                  break;
+               default:
+                  std::cerr << "Unknown log level: " << options["log-level"].as<char>() << std::endl;
+                  break;
+            }
+            auto lgr = fc::logger::get("gui");
+            lgr.set_name("gui");
+            lgr.set_log_level(level);
+            lgr.add_appender(ap);
+         }
+      }
+   }
+   catch (const fc::exception&)
+   {
+      wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
    }
 
    graphene::wallet::server_data ws{ "ws://" + options["rpc-endpoint"].as<std::string>() };

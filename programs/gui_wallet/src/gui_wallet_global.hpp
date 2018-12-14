@@ -178,6 +178,7 @@ namespace gui_wallet
 
       void startDaemons(BlockChainStartType type, const std::string &wallet_file, const graphene::wallet::server_data &ws);
       void stopDaemons();
+      fc::logger& guiLogger() { return m_logger; }
       std::string getCurrentUser() const;
       WalletAPI& getWallet() const;
       void clear();
@@ -241,6 +242,7 @@ namespace gui_wallet
       QTimer* m_p_timer;
       QLocale* m_p_locale;
       class DaemonDetails* m_p_daemon_details;
+      fc::logger m_logger;
       std::string m_str_currentUser;
       std::chrono::steady_clock::time_point m_tp_started;
       std::chrono::system_clock::time_point m_blockStart;
@@ -253,7 +255,12 @@ namespace gui_wallet
       std::string m_exceptionMsgBoxParam3;
    };
 
-   
+#define GUI_LOGGER gui_wallet::Globals::instance().guiLogger()
+#define GUI_DLOG(FORMAT, ...) fc_dlog(GUI_LOGGER, FORMAT, __VA_ARGS__)
+#define GUI_ILOG(FORMAT, ...) fc_ilog(GUI_LOGGER, FORMAT, __VA_ARGS__)
+#define GUI_WLOG(FORMAT, ...) fc_wlog(GUI_LOGGER, FORMAT, __VA_ARGS__)
+#define GUI_ELOG(FORMAT, ...) fc_elog(GUI_LOGGER, FORMAT, __VA_ARGS__)
+
    //
    // EventPassthrough
    //

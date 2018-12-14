@@ -44,7 +44,7 @@
 #include <openssl/opensslv.h>
 #include <cryptopp/config.h>
 
-#include <decent/config/decent_log_config.hpp>
+#include <decent/decent_config.hpp>
 #include <decent/monitoring/monitoring_fc.hpp>
 
 #include <iostream>
@@ -272,64 +272,32 @@ int main(int argc, char** argv) {
       {
          // get the basic options
          bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
-         // try to get logging options from the config file.
-         try
-         {
-            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
-            if (logging_config) {
-               if (!fc::configure_logging(*logging_config)) {
-                  if (run_as_daemon) {
-                     std::cerr << "Error configure logging!\n";
-                  }
-                  else {
-                     wlog("Error configure logging!");
-                  }
-                  return 1;
-               }
-            }
-         }
-         catch (const fc::exception&)
-         {
-            wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
-         }
       }
-      else 
+      else //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
       {
-         //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
-
          ilog("Writing new config file at ${path}", ("path", config_filename));
          if( !fc::exists(data_dir) )
             fc::create_directories(data_dir);
 
-         std::ofstream out_cfg(config_filename.preferred_string());
-         for( const boost::shared_ptr<bpo::option_description> od : cfg_options.options() )
-         {
-            if( !od->description().empty() )
-               out_cfg << "# " << od->description() << "\n";
-            boost::any store;
-            if( !od->semantic()->apply_default(store) )
-               out_cfg << "# " << od->long_name() << " = \n";
-            else {
-               auto example = od->format_parameter();
-               if( example.empty() )
-                  // This is a boolean switch
-                  out_cfg << od->long_name() << " = " << "false\n";
-               else {
-                  // The string is formatted "arg (=<interesting part>)"
-                  example.erase(0, 6);
-                  example.erase(example.length()-1);
-                  out_cfg << od->long_name() << " = " << example << "\n";
-               }
-            }
-            out_cfg << "\n";
-         }
-         decent::write_default_logging_config_to_stream(out_cfg, run_as_daemon);
-         out_cfg.close(); 
-         // read the default logging config we just wrote out to the file and start using it
-         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
-         if (logging_config)
-            fc::configure_logging(*logging_config);
+         decent::write_default_config_file(config_filename, cfg_options, run_as_daemon);
       }
+
+      // try to get logging options from the config file.
+      try
+      {
+         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_filename, logs_dir);
+         if (logging_config) {
+            if (!fc::configure_logging(*logging_config)) {
+               std::cerr << "Error configure logging!\n";
+               return 1;
+            }
+         }
+      }
+      catch (const fc::exception&)
+      {
+         wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
+      }
+
       monitoring::set_data_dir(data_dir);
       monitoring::monitoring_counters_base::start_monitoring_thread();
 
@@ -339,8 +307,6 @@ int main(int argc, char** argv) {
 
       node->startup();
       node->startup_plugins();
-
-      
 
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 #ifdef _MSC_VER
@@ -411,9 +377,3 @@ int main(int argc, char** argv) {
       return 1;
    }
 }
-
-
-
-
-
-

@@ -10,6 +10,7 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
+#include <fc/log/file_appender.hpp>
 #include <fc/interprocess/signals.hpp>
 #include <fc/thread/thread.hpp>
 
@@ -25,7 +26,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
 
-#include <decent/config/decent_log_config.hpp>
+#include <decent/decent_config.hpp>
 #include <decent/wallet_utility/wallet_utility.hpp>
 
 #ifdef _MSC_VER

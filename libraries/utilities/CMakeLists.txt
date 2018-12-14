@@ -12,6 +12,7 @@ file(GLOB HEADERS "include/decent/*.hpp" "include/graphene/utilities/*.hpp")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/git_revision.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp" @ONLY)
 
 add_library( graphene_utilities
+             decent_config.cpp
              key_conversion.cpp
              keys_generator.cpp
              string_escape.cpp

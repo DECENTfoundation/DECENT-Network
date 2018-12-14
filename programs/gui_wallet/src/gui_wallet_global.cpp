@@ -12,7 +12,6 @@
 #include <QTimer>
 
 #include <fc/interprocess/signals.hpp>
-#include <decent/config/decent_log_config.hpp>
 #endif
 
 #include "gui_wallet_global.hpp"
@@ -579,6 +578,7 @@ Globals::Globals() : QObject()
 , m_p_timer(new QTimer(this))
 , m_p_locale(new QLocale())
 , m_p_daemon_details(nullptr)
+, m_logger(fc::logger::get("gui"))
 , m_str_currentUser()
 , m_tp_started(std::chrono::steady_clock::now())
 {
@@ -609,6 +609,7 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
       ("generate-keys,g", "Generate brain, wif private and public keys.")
       ("wallet-file,w", bpo::value<std::string>()->default_value(
           (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
+      ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
    ;
 
    app_options.add(cli);
@@ -1460,54 +1461,8 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       {
          // get the basic options
          bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
-
-         // try to get logging options from the config file.
-         try
-         {
-            fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path, data_dir);
-            if (logging_config) 
-               fc::configure_logging(*logging_config);
-         }
-         catch (const fc::exception&)
-         {
-            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
-         }
       }
-      else
-      {
-         ilog("Writing new config file at ${path}", ("path", config_ini_path));
-         if( !fc::exists(data_dir) )
-            fc::create_directories(data_dir);
 
-         std::ofstream out_cfg(config_ini_path.preferred_string());
-         for( const boost::shared_ptr<bpo::option_description> od : cfg_options.options() )
-         {
-            if( !od->description().empty() )
-               out_cfg << "# " << od->description() << "\n";
-            boost::any store;
-            if( !od->semantic()->apply_default(store) )
-               out_cfg << "# " << od->long_name() << " = \n";
-            else {
-               auto example = od->format_parameter();
-               if( example.empty() )
-                  // This is a boolean switch
-                  out_cfg << od->long_name() << " = " << "false\n";
-               else {
-                  // The string is formatted "arg (=<interesting part>)"
-                  example.erase(0, 6);
-                  example.erase(example.length()-1);
-                  out_cfg << od->long_name() << " = " << example << "\n";
-               }
-            }
-            out_cfg << "\n";
-         }
-         decent::write_default_logging_config_to_stream(out_cfg, false);
-         out_cfg.close();
-         // read the default logging config we just wrote out to the file and start using it
-         fc::optional<fc::logging_config> logging_config = decent::load_logging_config_from_ini_file(config_ini_path, data_dir);
-         if (logging_config)
-            fc::configure_logging(*logging_config);
-      }
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );

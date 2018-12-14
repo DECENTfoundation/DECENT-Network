@@ -97,6 +97,7 @@ int main( int argc, char** argv )
          ("version,v", "Print version information and exit.")
          ("generate-keys,g", "Generate brain, wif private and public keys.")
          ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
+         ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
@@ -159,6 +160,26 @@ int main( int argc, char** argv )
          return EXIT_FAILURE;
       }
 
+      fc::log_level level = fc::log_level::off;
+      switch(options["log-level"].as<char>())
+      {
+         case 'D':
+            level = fc::log_level::debug;
+            break;
+         case 'I':
+            level = fc::log_level::info;
+            break;
+         case 'W':
+            level = fc::log_level::warn;
+            break;
+         case 'E':
+            level = fc::log_level::error;
+            break;
+         default:
+            std::cerr << "Unknown log level: " << options["log-level"].as<char>() << std::endl;
+            break;
+      }
+
       const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
 
       fc::file_appender::config ac_default;
@@ -169,7 +190,7 @@ int main( int argc, char** argv )
       ac_default.rotation_limit       = fc::days( 1 );
 
       fc::logger_config lc_default("default");
-      lc_default.level          = fc::log_level::info;
+      lc_default.level          = level;
       lc_default.appenders      = {"default"};
 
       fc::logging_config cfg;
