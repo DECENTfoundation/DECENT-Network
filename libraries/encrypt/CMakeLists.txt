@@ -6,7 +6,7 @@ add_library( decent_encrypt
              ${HEADERS} )
 
 target_link_libraries( decent_encrypt
-    PUBLIC fc gmp pbc cryptopp )
+    PUBLIC fc gmp pbc ${CRYPTOPP_NAME} )
 
 target_include_directories( decent_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

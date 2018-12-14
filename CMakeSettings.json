@@ -1,0 +1,96 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "installRoot": "C:\\Projects\\DCore",
+      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static"
+        }
+      ]
+    },
+    {
+      "name": "x64-RelWithDebInfo",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "installRoot": "C:\\Projects\\DCore\\RelWithDebInfo",
+      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static"
+        }
+      ]
+    },
+    {
+      "name": "x64-MinSizeRel",
+      "generator": "Ninja",
+      "configurationType": "MinSizeRel",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "installRoot": "C:\\Projects\\DCore\\MinSizeRel",
+      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static"
+        }
+      ]
+    },
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [
+        "msvc_x64_x64"
+      ],
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "installRoot": "C:\\Projects\\DCore\\Debug",
+      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "buildCommandArgs": "-v",
+      "ctestCommandArgs": "",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static"
+        }
+      ]
+    }
+  ]
+}

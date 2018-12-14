@@ -65,7 +65,51 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
-find_package( CryptoPP REQUIRED )
+if( VCPKG_TARGET_TRIPLET )
+    message( STATUS "Using static Crypto++" )
+    find_package( CryptoPP REQUIRED )
+
+    # vcpkg has only Debug and Release
+    set( CRYPTOPP_NAME cryptopp-static )
+    get_target_property( _CRYPTOPP_LANGUAGES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE )
+    get_target_property( _CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE )
+    get_target_property( _CRYPTOPP_LOCATION ${CRYPTOPP_NAME} IMPORTED_LOCATION_RELEASE )
+
+    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO )
+    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "${_CRYPTOPP_LANGUAGES}"
+        IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO "${_CRYPTOPP_LIBRARIES}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_CRYPTOPP_LOCATION}" )
+
+    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL )
+    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "${_CRYPTOPP_LANGUAGES}"
+        IMPORTED_LINK_INTERFACE_LIBRARIES_MINSIZEREL "${_CRYPTOPP_LIBRARIES}"
+        IMPORTED_LOCATION_MINSIZEREL "${_CRYPTOPP_LOCATION}" )
+
+    string( TOUPPER "IMPORTED_LOCATION_${CMAKE_BUILD_TYPE}" _CRYPTOPP_LOCATION )
+    get_target_property( CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} ${_CRYPTOPP_LOCATION} )
+    get_target_property( CRYPTOPP_INCLUDE_DIR ${CRYPTOPP_NAME} INTERFACE_INCLUDE_DIRECTORIES )
+else()
+    message( STATUS "Looking for Crypto++" )
+    find_path( CRYPTOPP_INCLUDE_DIR "cryptopp/integer.h" )
+    find_library( CRYPTOPP_LIBRARIES NAMES "cryptopp" )
+
+    if( NOT CRYPTOPP_INCLUDE_DIR )
+        message( FATAL_ERROR "Crypto++ includes not found")
+    endif()
+    if( NOT CRYPTOPP_LIBRARIES )
+        message( FATAL_ERROR "Crypto++ libraries not found")
+    endif()
+
+    set( CRYPTOPP_NAME cryptopp )
+    add_library( ${CRYPTOPP_NAME} STATIC IMPORTED )
+    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY IMPORTED_LOCATION "${CRYPTOPP_LIBRARIES}" )
+    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CRYPTOPP_INCLUDE_DIR}" )
+endif()
+
+mark_as_advanced( CRYPTOPP_LIBRARIES CRYPTOPP_INCLUDE_DIR )
+message( STATUS "Crypto++ found at ${CRYPTOPP_INCLUDE_DIR}, ${CRYPTOPP_LIBRARIES}" )
 
 message( STATUS "Looking for GMP" )
 find_path( GMP_INCLUDE_DIR "gmp.h" )
@@ -107,20 +151,21 @@ if( WIN32 )
 
     message( STATUS "Configuring Decent on WIN32" )
 
-    set( ZLIB_LIBRARIES "" )
-    set( DEFAULT_EXECUTABLE_INSTALL_DIR "bin/" )
+    add_compile_options( /D_WIN32_WINNT=0x0601 )
 
-    set( CRYPTO_LIB )
+    if( "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static" )
+        foreach( flag_var FLAGS FLAGS_DEBUG FLAGS_RELEASE FLAGS_MINSIZEREL FLAGS_RELWITHDEBINFO )
+            set( c_flag_var "CMAKE_C_${flag_var}" )
+            if(${c_flag_var} MATCHES "/MD")
+                string(REGEX REPLACE "/MD" "/MT" ${c_flag_var} "${${c_flag_var}}")
+            endif()
 
-    # Looks like this flag can have different default on some machines.
-    set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO" )
-    set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO" )
-
-    # Probably cmake has a bug and vcxproj generated for executable in Debug conf. has disabled debug info
-    set( CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG" )
-
-    add_definitions(-D_WIN32_WINNT=0x0601)
-    add_definitions(-DCRYPTOPP_IMPORTS)
+            set( cxx_flag_var "CMAKE_CXX_${flag_var}" )
+            if(${cxx_flag_var} MATCHES "/MD")
+                string(REGEX REPLACE "/MD" "/MT" ${cxx_flag_var} "${${cxx_flag_var}}")
+            endif()
+        endforeach(flag_var)
+    endif()
 
 else() # Apple and Linux
 
@@ -175,8 +220,11 @@ if(UNIX)
     endif()
 endif()
 
-SET(BOOST_COMPONENTS thread filesystem program_options serialization unit_test_framework coroutine iostreams)
-SET(Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF")
+set(BOOST_COMPONENTS thread filesystem program_options serialization unit_test_framework coroutine iostreams)
+set(Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF")
+if(${Boost_USE_STATIC_LIBS} MATCHES "ON" AND "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static")
+    set(Boost_USE_STATIC_RUNTIME ON)
+endif()
 
 find_package(Boost 1.65.1 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 

@@ -18,11 +18,28 @@ For Ubuntu 16.04 LTS, execute in console:
      sudo apt-get update
      sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
 
-> Note, that the default versions of Boost and CMake installed in Ubuntu 16.04 LTS are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+For Fedora 28 or later, execute in console:
+
+    sudo dnf clean metadata
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+
+And the last step is the same regardless on distribution, execute in console:
+
+    mkdir ~/dev
+    cd ~/dev
+    wget https://github.com/DECENTfoundation/pbc/archive/0.5.14.tar.gz
+    unzip 0.5.14.zip
+    cd pbc-0.5.14
+    ./setup
+    ./configure --prefix=/usr
+    make
+    sudo make install
+    cd ..
+    rm -rf pbc-0.5.14 0.5.14.zip
+
+> Note for Ubuntu 16.04 LTS, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Download and build Boost 1.65.1
-     mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
-     cd ~/dev/DECENTfoundation/DECENT-Network-third-party
      wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
      tar xvf boost_1_65_1.tar.gz
      mkdir boost
@@ -34,7 +51,6 @@ For Ubuntu 16.04 LTS, execute in console:
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
     # Download and build Cmake 3.10.2
-     cd ~/dev/DECENTfoundation/DECENT-Network-third-party
      wget https://cmake.org/files/v3.10/cmake-3.10.2.tar.gz
      tar xvf cmake-3.10.2.tar.gz
      mkdir cmake
@@ -48,23 +64,6 @@ For Ubuntu 16.04 LTS, execute in console:
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
-For Fedora 28 or later, execute in console:
-
-    sudo dnf clean metadata
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
-
-And the last step is the same regardless on distribution, execute in console:
-
-    wget https://github.com/DECENTfoundation/pbc/archive/0.5.14.tar.gz
-    unzip 0.5.14.zip
-    cd pbc-0.5.14
-    ./setup
-    ./configure --prefix=/usr
-    make
-    sudo make install
-    cd ..
-    rm -rf pbc-0.5.14 0.5.14.zip
-
 ### Installing prerequisites in macOS
 
 * Install Xcode and Command Line Tools as described in http://railsapps.github.io/xcode-command-line-tools.html
@@ -76,62 +75,91 @@ Then, execute in console:
     $ brew tap homebrew/versions
     $ brew update
     $ brew install automake autoconf libtool cmake boost qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ mkdir ~/dev
 
-### Obtaining the sources, building, and installing Decent in Unix (macOS or Linux)
+### Installing prerequisites in Windows
 
-After all the prerequisites are installed, execute the following commands in console, in order to clone the repo, build, and install/stage Decent:
+* Install Git for Windows (https://gitforwindows.org)
+* Install CMake tools (https://cmake.org/download)
+* Install Visual Studio 2017 Community (https://visualstudio.microsoft.com/downloads)
+* Install Boost 1.68 MSVC 14.1 (https://sourceforge.net/projects/boost/files/boost-binaries) (choose *C:\Projects\boost_1_68_0* as installation prefix)
+* Install Qt 5.12 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
 
-    # Clone the repo.
-     mkdir -p ~/dev/DECENTfoundation
-     cd ~/dev/DECENTfoundation
-     git clone https://github.com/DECENTfoundation/DECENT-Network.git
-     cd DECENT-Network
-     git submodule update --init --recursive
+Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
-    # Build and install Decent.
-     mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
-     cd ~/dev/DECENTfoundation/DECENT-Network-build
-     cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ~/dev/DECENTfoundation/DECENT-Network
-     cmake --build . --target all -- -j -l 3.0
-     cmake --build . --target install
+    mkdir \Projects
+    cd \Projects
+    git clone git@github.com:Microsoft/vcpkg.git
+    cd vcpkg
+    bootstrap-vcpkg.bat
+    vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc
+
+### Obtaining the sources
+
+After all the prerequisites are installed, execute in console (change current path to `~/dev` in Linux/MacOS or to `C:\Projects` in Windows):
+
+    git clone https://github.com/DECENTfoundation/DECENT-Network.git
+    cd DECENT-Network
+    git submodule update --init --recursive
+
+### Building and installing Decent in Linux or MacOS
+
+In order to build and install Decent, execute in console:
+
+    mkdir -p ~/dev/DECENT-Network-build
+    cd ~/dev/DECENT-Network-build
+    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ~/dev/DECENT-Network
+    cmake --build . --target all -- -j -l 3.0
+    cmake --build . --target install
 
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 > 
 >     $ make -j -l 3.0
 >     $ make install
 
-Decent artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENTfoundation/DECENT-Network-prefix` to the command line.
+Decent artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENT-Network-prefix` to the command line.
 
-You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
+You can use any path instead of `~/dev` in the steps above.
 
 You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` (or `install`) actions from there.
 
-### Installing prerequisites, obtaining the sources, building, and installing Decent in Windows
+### Building and installing Decent in Windows
 
-TODO
+In order to build and install Decent follow the steps:
+* start Visual Studio 2017, navigate to _File > Open > Folder_ and choose `C:\Projects\DECENT-Network`
+* navigate to _CMake > Change CMake Settings > Decent_ and adjust installation path and paths to Boost, Qt and vcpkg (if needed)
+* build and install artifacts using _CMake > Install > Decent_
 
+You can use CMake generator to create a Visual Studio 2017 project files and perform _Build > Build solution_ action from there, just start the _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
+
+    cd \Projects\DECENT-Network
+    cmake -DBOOST_ROOT=C:\Projects\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\Projects\boost_1_68_0\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\Projects\Qt\5.12.0\msvc2017_64\lib\cmake\Qt5Widgets -DCMAKE_TOOLCHAIN_FILE=C:\Projects\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -G "Visual Studio 15 2017 Win64" .
+
+You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=C:\Projects\DECENT-Network-prefix` to the command line.
+
+You can use any path instead of `C:\Projects` in the steps above.
 
 Starting Decent
 ---------------
 
-> In the commands below, change `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` to `~/dev/DECENTfoundation/DECENT-Network-prefix` or to any other install location, that you specified during initial configuration.
+> In the commands below, change `/usr/local` to `~/dev/DECENT-Network-prefix` or to any other install location, that you specified during initial configuration.
 
 On first run `decentd` will create `.decent` in the home directory, if doesn't exist already.
 
-    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/decentd
+    $ /usr/local/bin/decentd
 
 Optionally, now press Ctrl-C to stop `decentd`. You can edit configuration in `~/.decent/data/decentd/config.ini`.
 
 Then, run the decent daemon again:
 
-    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/decentd 
+    $ /usr/local/bin/decentd
     
 This will launch the decent daemon node with the default genesis. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
-    $ cd ~/dev/DECENTfoundation/DECENT-Network-working-dir
-    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/cli_wallet
+    $ cd ~/dev/DECENT-Network-working-dir
+    $ /usr/local/bin/cli_wallet
 
 To set your initial password to `mypassword`, execute:
 
@@ -147,7 +175,7 @@ Decent daemon
 
 The role of the decent daemon is to broadcast transactions, download blocks, and optionally sign them.
 
-    $ ~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix/bin/decentd --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.4.0"' 
+    $ /usr/local/bin/decentd --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.4.0"'
 
 Testing Decent
 --------------
