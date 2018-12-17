@@ -12,7 +12,7 @@
 #include "../../update/include/updatethread.h"
 #include "rev_history_dlg.hpp"
 #include "update_prog_bar.hpp"
-
+using namespace gui_wallet;
 #ifndef _MSC_VER
 #include <pthread.h>
 typedef void* DCTHANDLE;
