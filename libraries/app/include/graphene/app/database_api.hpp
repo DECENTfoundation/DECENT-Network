@@ -441,6 +441,13 @@ namespace graphene { namespace app {
          ////////////
 
          /**
+          * @brief Get the total number of assets registered on the blockchain.
+          * @return the total number of registered assets
+          * @ingroup DatabaseAPI_Account
+          */
+         uint64_t get_asset_count()const;
+
+         /**
           * @brief Get a list of assets by ID.
           * @note This function has semantics identical to \c get_objects().
           * @param asset_ids IDs of the assets to retrieve
@@ -961,6 +968,7 @@ FC_API(graphene::app::database_api,
           (get_vesting_balances)
 
           // Assets
+          (get_asset_count)
           (get_assets)
           (list_assets)
           (lookup_asset_symbols)

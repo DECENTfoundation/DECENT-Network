@@ -120,6 +120,7 @@ namespace graphene { namespace app {
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
       
       // Assets
+      uint64_t get_asset_count()const;
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
@@ -998,7 +999,17 @@ namespace graphene { namespace app {
    // Assets                                                           //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
+   uint64_t database_api::get_asset_count()const
+      {
+      return my->get_asset_count();
+      }
+
+   uint64_t database_api_impl::get_asset_count()const
+      {
+      return _db.get_index_type<asset_index>().indices().size();
+      }
+
    vector<optional<asset_object>> database_api::get_assets(const vector<asset_id_type>& asset_ids)const
    {
       return my->get_assets( asset_ids );
