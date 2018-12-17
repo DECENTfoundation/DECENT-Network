@@ -562,10 +562,10 @@ void Upload_popup::getContents(std::string const& id,
       str_cd += " \"pubKey\": \"" + cd["pubKey"].get<std::string>() + "\"}";
    }
    catch(const std::exception& ex) {
-      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+      GUI_ELOG("Upload_popup::getContents: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+      GUI_ELOG("Upload_popup::getContents: ${e}", ("e", ex.what()));
    }
 
 }
@@ -619,10 +619,10 @@ void Upload_popup::getContents(std::string const& id,
       }
    }
    catch(const std::exception& ex) {
-      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+      GUI_ELOG("Upload_popup::getContents: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "Upload_popup::getContents " << ex.what() << std::endl;
+      GUI_ELOG("Upload_popup::getContents: ${e}", ("e", ex.what()));
    }
 
 }

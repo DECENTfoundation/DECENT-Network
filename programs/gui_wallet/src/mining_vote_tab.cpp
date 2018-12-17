@@ -334,8 +334,6 @@ void MinerVotingTab::getDesiredMinersCount()
 
    nlohmann::json account_obj = Globals::instance().runTaskParse(cmd);
 
-   std::cout << account_obj["options"] << std::endl;
-
    m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
    m_curMinersVotedFor = account_obj["options"]["votes"].size();
 }

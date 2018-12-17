@@ -323,10 +323,8 @@ namespace wallet_utility
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
-      
       auto& pimpl = m_pimpl;
-      std::cout << "Running task " << str_command << std::endl;
-      
+
       fc::future<string> future_run =
       m_pthread->async([&pimpl, &str_command] () -> string
                        {

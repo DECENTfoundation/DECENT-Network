@@ -118,11 +118,11 @@ uint MiningVotePopup::getNumberOfActualMiners()
    }
    catch (const std::exception& ex)
    {
-      std::cout << "Error:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
    catch (const fc::exception& ex)
    {
-      std::cout << "Error:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
 
    return active_miners.size();
@@ -143,11 +143,11 @@ void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
    }
    catch (const std::exception& ex)
    {
-      std::cout << "Error:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
    catch (const fc::exception& ex)
    {
-      std::cout << "Error:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
 }
 

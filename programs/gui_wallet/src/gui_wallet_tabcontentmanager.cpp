@@ -60,10 +60,10 @@ void TabContentManager::tryToUpdate() {
 
    }
    catch (const std::exception& ex) {
-      std::cout << "Exception:" << ex.what() << std::endl;
+      GUI_ELOG("TabContentManager::tryToUpdate: ${e}", ("e", ex.what()));
    }
    catch (const fc::exception& ex) {
-      std::cout << "Exception:" << ex.what() << std::endl;
+      GUI_ELOG("TabContentManager::tryToUpdate: ${e}", ("e", ex.what()));
    }
 }
 

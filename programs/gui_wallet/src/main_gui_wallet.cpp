@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
       msgBox->setWindowTitle("Error");
       msgBox->setText(QString::fromStdString(ex.what()));
       msgBox->exec();
-      std::cout << ex.what();
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
       exit(1);
    }
    
@@ -220,13 +220,13 @@ int main(int argc, char* argv[])
       app.exec();
    }
    catch(const std::exception& ex) {
-      std::cout << "exception:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "exception:" << ex.what() << std::endl;
+      GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
    catch(...) {
-      std::cout << "yay! exception..." << std::endl;
+      GUI_ELOG("Unknown exception");
    }
 
    gui_wallet::Globals::instance().stopDaemons();

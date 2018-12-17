@@ -927,11 +927,11 @@ void MainWindow::checkDownloads()
                                                   "\"-1\" ");
    }
    catch(const std::exception& ex) {
-      std::cout << "runTaskParse() " << ex.what() << std::endl;
+      GUI_ELOG("MainWindow::checkDownloads: ${e}", ("e", ex.what()));
       return;
    }
    catch(const fc::exception& ex) {
-      std::cout << "runTaskParse() " << ex.what() << std::endl;
+      GUI_ELOG("MainWindow::checkDownloads: ${e}", ("e", ex.what()));
       return;
    }
 
@@ -951,11 +951,11 @@ void MainWindow::checkDownloads()
          }
          catch(const std::exception& ex)
          {
-            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
+            GUI_ELOG("MainWindow::download_package: ${e}", ("e", ex.what()));
          }
          catch(const fc::exception& ex)
          {
-            std::cout << "runTask('download_package') URI:" << URI << "Ex:" << ex.what() << std::endl;
+            GUI_ELOG("MainWindow::download_package: ${e}", ("e", ex.what()));
          }
       }
    }

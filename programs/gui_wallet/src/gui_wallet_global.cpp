@@ -822,6 +822,7 @@ Asset Globals::asset(uint64_t amount, const std::string& assetId)
 
 std::string Globals::runTask(std::string const& str_command)
 {
+   GUI_DLOG("Running task ${c}", ("c", str_command));
    return getWallet().RunTask(str_command);
 }
 
@@ -1439,7 +1440,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
    }
    catch (const bpo::error& e)
    {
-      std::cerr << "Error parsing command line: " << e.what() << "\n";
+      GUI_ELOG("Error parsing command line: ${e}", ("e", e.what()));
       return EXIT_FAILURE;
    }
 
@@ -1466,7 +1467,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       bpo::notify(options);
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
-      
+
       gui_wallet::s_node = node;
       node->startup();
       node->startup_plugins();

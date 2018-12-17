@@ -730,10 +730,10 @@ void CommentWidget::submit()
                                              "true");
    }
    catch(const std::exception& ex) {
-      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+      GUI_ELOG("CommentWidget::submit: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "CommentWidget::submit " << ex.what() << std::endl;
+      GUI_ELOG("CommentWidget::submit: ${e}", ("e", ex.what()));
    }
 
    slot_Previous();
@@ -776,10 +776,10 @@ void CommentWidget::update()
       }
    }
    catch(const std::exception& ex) {
-      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+      GUI_ELOG("CommentWidget::update: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "CommentWidget::update " << ex.what() << std::endl;
+      GUI_ELOG("CommentWidget::update: ${e}", ("e", ex.what()));
    }
 
    int test_count = 0;

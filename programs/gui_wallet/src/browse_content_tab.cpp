@@ -102,11 +102,11 @@ void BrowseContentTab::timeToUpdate(const std::string& result)
    }
    catch(const std::exception& ex) {
       //TODO: exception...
-      std::cout << "exception:" << ex.what() << std::endl;
+      GUI_ELOG("BrowseContentTab::timeToUpdate: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
       //TODO: exception...
-      std::cout << "exception:" << ex.what() << std::endl;
+      GUI_ELOG("BrowseContentTab::timeToUpdate: ${e}", ("e", ex.what()));
    }
 
    ShowDigitalContentsGUI();

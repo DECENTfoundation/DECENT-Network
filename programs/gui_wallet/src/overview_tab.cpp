@@ -171,10 +171,10 @@ void Overview_tab::slot_Details()
       Globals::instance().signal_stackWidgetPush(userInfoWidget);
    }
    catch(const std::exception& ex) {
-      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
+      GUI_ELOG("Overview_tab::slot_Details: ${e}", ("e", ex.what()));
    }
    catch(const fc::exception& ex) {
-      std::cout << "slot_Details('Overview_tab') " << ex.what() << std::endl;
+      GUI_ELOG("Overview_tab::slot_Details: ${e}", ("e", ex.what()));
    }
 }
 
