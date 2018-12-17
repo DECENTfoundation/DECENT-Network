@@ -124,8 +124,14 @@ int main( int argc, char** argv )
          string boost_version_text = to_string(boost_major_version) + "." + to_string(boost_minor_version) + "." + to_string(BOOST_VERSION % 100);
          string openssl_version_text = string(OPENSSL_VERSION_TEXT);
          openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
+         std::string cryptopp_version_text = std::to_string(CRYPTOPP_VERSION / 100) + "." + std::to_string(CRYPTOPP_VERSION % 100);
 
-         std::cout << "CLI Wallet " << graphene::utilities::git_version() << "\nBoost " << boost_version_text << "\n" << openssl_version_text << std::endl;
+         std::cout << "CLI Wallet " << graphene::utilities::git_version();
+#ifndef NDEBUG
+         std::cout << " (debug)";
+#endif /* NDEBUG */
+         std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << std::endl;
+
          return EXIT_SUCCESS;
       }
       else if( options.count("generate-keys") )
