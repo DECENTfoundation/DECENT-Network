@@ -11,7 +11,7 @@
 #include <fc/thread/thread.hpp>
 
 
-#define DECENT_CUSTODY_THREADS 4
+#define DECENT_CUSTODY_THREADS 4u
 //#define _CUSTODY_STATS
 namespace decent {
 namespace encrypt {
@@ -201,31 +201,32 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
    element_t *ret = new element_t[n];
    //start threads
    fc::thread t[DECENT_CUSTODY_THREADS];
-   fc::future<int> fut[DECENT_CUSTODY_THREADS];
    fc::future<void> fut_pp[DECENT_CUSTODY_THREADS];
 
    element_pp_t *u_pp = new element_pp_t[sectors];
    for( uint32_t k = 0; k < sectors; k++ ) {
       int idx = k % DECENT_CUSTODY_THREADS;
-      fut_pp[idx] = t[idx].async([=](){ element_pp_init(u_pp[k], u[k]); return; });
+      if( k >= DECENT_CUSTODY_THREADS )
+         fut_pp[idx].wait();
+      fut_pp[idx] = t[idx].async([=](){ element_pp_init(u_pp[k], u[k]); });
    }
    //wait for the threads...
-   for( int k = 0; k < DECENT_CUSTODY_THREADS; ++k )
+   for( unsigned int k = 0; k < DECENT_CUSTODY_THREADS; ++k )
       fut_pp[k].wait();
 
 //   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
-   int total_thread_to_wait_for = std::min( n, (const unsigned int) DECENT_CUSTODY_THREADS );
-
-   for( uint64_t i = 0; i < n; i += DECENT_CUSTODY_THREADS ) {
-      int iterations = std::min ((uint64_t) DECENT_CUSTODY_THREADS, n - i ); 
-      for( int k = 0; k < iterations ; ++k ) {
-         uint64_t idx = i + k;
+   for( unsigned int i = 0; i < n; i += DECENT_CUSTODY_THREADS ) {
+      unsigned int iterations = std::min( DECENT_CUSTODY_THREADS, n - i );
+      for( unsigned int k = 0; k < iterations ; ++k ) {
+         uint32_t idx = i + k;
+         if( i >= DECENT_CUSTODY_THREADS )
+            fut_pp[k].wait();
 
          //we read the file in the main thread...
          char *buffer = new char[(DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors)];
          get_data(file, idx, buffer, sectors);
          //and distribute the tasks
-         fut[k] = t[k].async([=]() {
+         fut_pp[k] = t[k].async([=]() {
               mpz_t *m = new mpz_t[sectors];
               for( uint32_t i = 0; i < sectors; ++i ) {
                  mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
@@ -236,16 +237,15 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
                  //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
               }
               delete[] buffer;
-              auto res = get_sigma(idx, m, u_pp, pk, ret, sectors);
+              get_sigma(idx, m, u_pp, pk, ret, sectors);
               delete[](m);
-              return res;
-
          });
       }
    }
    //wait for the threads...
-   for( int k = 0; k < total_thread_to_wait_for; ++k )
-      fut[k].wait();
+   unsigned int remaining_threads_to_wait_for = std::min( n % DECENT_CUSTODY_THREADS, DECENT_CUSTODY_THREADS );
+   for( unsigned int k = 0; k < (remaining_threads_to_wait_for ? remaining_threads_to_wait_for : DECENT_CUSTODY_THREADS); ++k )
+      fut_pp[k].wait();
 
    *sigmas = ret;
    for( uint32_t k = 0; k < sectors; k++ )
