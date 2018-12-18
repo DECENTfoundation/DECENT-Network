@@ -244,6 +244,14 @@ namespace graphene { namespace app {
           */
          optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
 
+         /**
+          * @brief This method is used to convert a JSON transaction to its transaction ID.
+          * @param trx Signed transaction
+          * @return The transaction ID
+          * @ingroup DatabaseAPI_BlockTx
+          */
+         transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
+
          /////////////
          // Globals //
          /////////////
@@ -938,6 +946,7 @@ FC_API(graphene::app::database_api,
           (get_asset_per_block_by_block_num)
           (get_time_to_maint_by_block_time)
           (get_transaction_by_id)
+          (get_transaction_id)
 
           // Globals
           (info)

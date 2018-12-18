@@ -449,6 +449,11 @@ namespace graphene { namespace app {
       return optional<signed_transaction>();
    }
 
+   transaction_id_type database_api::get_transaction_id( const signed_transaction& trx )const
+   {
+      return trx.id();
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Globals                                                          //
