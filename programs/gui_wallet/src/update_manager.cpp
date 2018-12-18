@@ -3,6 +3,7 @@
 #ifndef STDAFX_H
 #include <QMainWindow>
 #include <QTimer>
+#include <QApplication>
 #endif
 
 #include "update_manager.hpp"
