@@ -18,6 +18,12 @@ namespace encrypt {
 
 namespace {
 
+template<typename pos_type>
+uint32_t get_n(pos_type length, uint32_t sectors)
+{
+   uint32_t n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
+   return length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors) ? n + 1 : n;
+}
 
 std::string bytes_to_string(unsigned char *data, int len) {
    std::stringstream ss;
@@ -63,7 +69,7 @@ CustodyUtils::~CustodyUtils() {
 }
 
 
-int CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t sectors) {
+void CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t sectors) {
    mpz_t seed;
    mpz_t seed_tmp;
    mpz_init(seed_tmp);
@@ -85,45 +91,24 @@ int CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t 
    }
    mpz_clear(seed);
    mpz_clear(seed_tmp);
-   return 0;
 }
 
-int CustodyUtils::get_n(std::fstream &file, uint32_t sectors) {
-
-   if( !file.is_open())
-      return -1;
-   file.seekg(0, file.end);
-   long long length = (long long) file.tellg();
-   int n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
-   if( length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors))
-      n += 1;
-
-   return n;
-}
-
-inline int CustodyUtils::get_data(std::fstream &file, uint32_t i, char buffer[], uint32_t sectors) {
-   uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors * i;
-
-   file.seekg(0, file.end);
-   uint64_t realLen = file.tellg();
-   file.seekg(std::min(position, realLen), file.beg);
-
-   if( realLen > ((uint64_t) (file.tellg()) + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors))
-      file.read(buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
+void CustodyUtils::get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t size) {
+   uint64_t position = file.tellg();
+   if( realLen > position + size )
+      file.read(buffer, size);
    else {
-      if( file.eof())
-         memset(buffer, 0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
+      if( file.eof() )
+         memset(buffer, 0, size);
       else {
-         int left = realLen - (long long) (file.tellg());
+         uint32_t left = realLen - position;
          file.read(buffer, left);
-         memset(buffer + left, 0, (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors) - left);
+         memset(buffer + left, 0, size - left);
       }
    }
-   return 0;
 }
 
-
-inline int CustodyUtils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t &out, uint32_t sectors) {
+void CustodyUtils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t &out, uint32_t sectors) {
    mpz_init2(out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
    uint64_t position = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * (j + sectors * i);
    char buffer[DECENT_SIZE_OF_NUMBER_IN_THE_FIELD];
@@ -146,10 +131,9 @@ inline int CustodyUtils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t
    memcpy((char *) out->_mp_d, buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
    out->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
    //mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
-   return 1;
 }
 
-int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors) {
+void CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors) {
    element_t temp;
    element_init_G1(temp, pairing);
    element_init_G1(out[idx], pairing);
@@ -193,11 +177,14 @@ int CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], eleme
    mul++;
 #endif
    element_clear(hash);
-   return 1;
 }
 
-int
-CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors) {
+void CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors) {
+   file.seekg(0, file.end);
+   auto length = file.tellg();
+   n = get_n(length, sectors);
+   file.seekg(0);
+
    element_t *ret = new element_t[n];
    //start threads
    fc::thread t[DECENT_CUSTODY_THREADS];
@@ -215,31 +202,33 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
       fut_pp[k].wait();
 
 //   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
-   for( unsigned int i = 0; i < n; i += DECENT_CUSTODY_THREADS ) {
-      unsigned int iterations = std::min( DECENT_CUSTODY_THREADS, n - i );
-      for( unsigned int k = 0; k < iterations ; ++k ) {
-         uint32_t idx = i + k;
-         if( i >= DECENT_CUSTODY_THREADS )
-            fut_pp[k].wait();
+   auto size = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors * 10000u;
+   std::unique_ptr<char> buffer(new char[size]);
+   for( unsigned int i = 0; i < n; i += 10000u ) {
+      get_data(file, length, buffer.get(), size);
+      unsigned int iterations = std::min( n - i, 10000u );
+      for( unsigned int j = 0; j < iterations; j += DECENT_CUSTODY_THREADS ) {
+         unsigned int workers = std::min( DECENT_CUSTODY_THREADS, iterations - j );
+         for( unsigned int k = 0; k < workers ; ++k ) {
+            if( j >= DECENT_CUSTODY_THREADS )
+               fut_pp[k].wait();
 
-         //we read the file in the main thread...
-         char *buffer = new char[(DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors)];
-         get_data(file, idx, buffer, sectors);
-         //and distribute the tasks
-         fut_pp[k] = t[k].async([=]() {
-              mpz_t *m = new mpz_t[sectors];
-              for( uint32_t i = 0; i < sectors; ++i ) {
-                 mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
-                 //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
-                 memcpy((char *) m[i]->_mp_d, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD,
-                        DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-                 m[i]->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
-                 //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-              }
-              delete[] buffer;
-              get_sigma(idx, m, u_pp, pk, ret, sectors);
-              delete[](m);
-         });
+            //and distribute the tasks
+            uint32_t idx = i + j + k;
+            char *offset = buffer.get() + (j + k) * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors;
+            fut_pp[k] = t[k].async([=]() {
+                 mpz_t *m = new mpz_t[sectors];
+                 for( uint32_t i = 0; i < sectors; ++i ) {
+                    mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
+                    //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
+                    memcpy((char *) m[i]->_mp_d, offset, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+                    m[i]->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
+                    //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+                 }
+                 get_sigma(idx, m, u_pp, pk, ret, sectors);
+                 delete[](m);
+            });
+         }
       }
    }
    //wait for the threads...
@@ -251,11 +240,10 @@ CustodyUtils::get_sigmas(std::fstream &file, const unsigned int n, element_t *u,
    for( uint32_t k = 0; k < sectors; k++ )
       element_pp_clear(u_pp[k]);
    delete[] u_pp;
-   return 0;
 }
 
 
-int CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors) {
+void CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors) {
 
    for( uint32_t j = 0; j < sectors; j++ ) {
       element_init_Zr(mu[j], pairing);
@@ -279,11 +267,9 @@ int CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indice
          mpz_clear(m);
       }
    }
-
-   return 0;
 }
 
-int CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[],
+void CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[],
                                             element_t *v[]) {
    element_t *ret = new element_t[q];
    for( unsigned int i = 0; i < q; i++ ) {
@@ -312,7 +298,6 @@ int CustodyUtils::generate_query_from_seed(mpz_t seed, unsigned int q, unsigned 
       delete[](seed_str);
    }
    *v = ret;
-   return 0;
 }
 
 
@@ -391,18 +376,13 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
    return res;
 }
 
-
-int CustodyUtils::clear_elements(element_t *array, int size) {
+void CustodyUtils::clear_elements(element_t *array, int size) {
    for( int i = 0; i < size; i++ ) {
       element_clear(array[i]);
    }
-   return 0;
 }
 
-
-
-int
-CustodyUtils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices[], element_t v[], element_t &sigma) {
+void CustodyUtils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices[], element_t v[], element_t &sigma) {
    element_init_G1(sigma, pairing);
    element_set1(sigma);
 
@@ -418,7 +398,6 @@ CustodyUtils::compute_sigma(element_t sigmas[], unsigned int q, uint64_t indices
 #endif
    }
    element_clear(temp);
-   return 0;
 }
 
 
@@ -489,9 +468,12 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    return res;
 }
 
-int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], unsigned char pubKey[], uint32_t sectors) {
+void CustodyUtils::create_custody_data(boost::filesystem::path content, uint32_t &n, char u_seed[], unsigned char pubKey[], uint32_t sectors) {
    //prepare the files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
+   if(!infile.is_open())
+      FC_THROW("Failed to open file ${f}", ("f", content.string()));
+
    std::ofstream outfile((content.parent_path() / "content.cus").c_str(), std::fstream::binary | std::ios_base::trunc);
    infile.seekg(0, infile.beg);
    outfile.seekp(0);
@@ -533,8 +515,6 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
    //create the actual signatures in sigmas
 
    //split_file(infile, n, &m);
-   n = get_n(infile, sectors);
-
    get_sigmas(infile, n, u, private_key, &sigmas, sectors);
 
    //save the values to u_seed and pubKey
@@ -556,10 +536,9 @@ int CustodyUtils::create_custody_data(path content, uint32_t &n, char u_seed[], 
    mpz_clear(seedForU);
    outfile.close();
    infile.close();
-   return 0;
 }
 
-int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
+int CustodyUtils::create_proof_of_custody(boost::filesystem::path content, const uint32_t n, const char u_seed[], unsigned char pubKey[],
                                            unsigned char sigma[], std::vector<std::string> &mus, mpz_t seed) {
    //open files
    std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
@@ -572,9 +551,12 @@ int CustodyUtils::create_proof_of_custody(path content, const uint32_t n, const 
    //read the file and get m's
    uint32_t sectors;
 
-   unsigned int nReal1, nReal2;
-   nReal1 = get_n(infile, DECENT_SECTORS);
-   nReal2 = get_n(infile, DECENT_SECTORS_BIG);
+   infile.seekg(0, infile.end);
+   auto length = infile.tellg();
+
+   unsigned int nReal1 = get_n(length, DECENT_SECTORS);
+   unsigned int nReal2 = get_n(length, DECENT_SECTORS_BIG);
+
    //split_file(infile, nReal, &m);
    if( nReal1 == n){
       sectors = DECENT_SECTORS;

@@ -58,21 +58,14 @@ sign0 -1"
 namespace decent{
 namespace encrypt{
 
-using namespace boost::filesystem;
-
-
-
-
 class CustodyUtils
 {
-private:
-
 public:
    CustodyUtils();
    static CustodyUtils& instance(){
       static CustodyUtils cu;
       return cu;
-   };
+   }
 
    ~CustodyUtils();
 
@@ -94,10 +87,9 @@ public:
     * Create custody data for a given content. Creates custody data and custody signatures in file content.cus
     * @param content Path to conent.aes.zip file
     * @param cd Generated custody data
-    * @return
     */
-   int create_custody_data(boost::filesystem::path content, CustodyData & cd, uint32_t sectors){
-      return create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, sectors);
+   void create_custody_data(boost::filesystem::path content, CustodyData & cd, uint32_t sectors){
+      create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, sectors);
    }
 
    /**
@@ -129,13 +121,12 @@ public:
                        std::vector<std::string> mus, mpz_t seed);
    /**
     * Creates custody signatures in file content.cus;
-    * @param content
+    * @param content Path to conent.aes.zip file
     * @param n the number of signatures
     * @param u_seed is the generator for u. There must be at least 16 bytes allocated in the u array
     * @param pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey
-    * @return 0 if success
     */
-   int create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[], uint32_t sectors);
+   void create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[], uint32_t sectors);
    /**
     * Create proof of custody out of content.zip stored in path. content.cus must exist in the same directory
     * @param content path to content.zip
@@ -158,21 +149,20 @@ private:
     * Calculate sigmas based on formula
     * TODO_DECENT rework to stram version
     */
-   int get_sigmas(std::fstream &file, const unsigned int n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors);
+   void get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors);
    /*
     * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
     */
-   int get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t sectors);
-   int generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[], element_t* v[]);
-   int compute_mu(std::fstream& file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors);
-   int compute_sigma(element_t *sigmas, unsigned int q, uint64_t *indices, element_t *v, element_t &sigma);
-   int get_sigma( uint64_t pidx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors);
+   void get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t sectors);
+   void generate_query_from_seed(mpz_t seed, unsigned int q, unsigned int n, uint64_t indices[], element_t* v[]);
+   void compute_mu(std::fstream& file, unsigned int q, uint64_t indices[], element_t v[], element_t mu[], uint32_t sectors);
+   void compute_sigma(element_t *sigmas, unsigned int q, uint64_t *indices, element_t *v, element_t &sigma);
+   void get_sigma( uint64_t pidx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors);
    int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk, uint32_t sectors);
-   int clear_elements(element_t *array, int size);
+   void clear_elements(element_t *array, int size);
    int get_number_of_query(int blocks);
-   int get_n(std::fstream &file, uint32_t sectors);
-   inline int get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out, uint32_t sectors);
-   inline int get_data(std::fstream &file, uint32_t i, char buffer[], uint32_t sectors);
+   void get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out, uint32_t sectors);
+   void get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t sectors);
 };
 
 
