@@ -197,44 +197,52 @@ void CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, ele
          fut_pp[idx].wait();
       fut_pp[idx] = t[idx].async([=](){ element_pp_init(u_pp[k], u[k]); });
    }
+
    //wait for the threads...
-   for( unsigned int k = 0; k < DECENT_CUSTODY_THREADS; ++k )
-      fut_pp[k].wait();
+   for( unsigned int w = 0; w < DECENT_CUSTODY_THREADS; ++w )
+      fut_pp[w].wait();
 
-//   std::cout<<"get_sigmas: n = "<<n<<" , cycles = " << cycles <<"\n";
-   auto size = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors * 10000u;
-   std::unique_ptr<char> buffer(new char[size]);
-   for( unsigned int i = 0; i < n; i += 10000u ) {
-      get_data(file, length, buffer.get(), size);
-      unsigned int iterations = std::min( n - i, 10000u );
-      for( unsigned int j = 0; j < iterations; j += DECENT_CUSTODY_THREADS ) {
-         unsigned int workers = std::min( DECENT_CUSTODY_THREADS, iterations - j );
-         for( unsigned int k = 0; k < workers ; ++k ) {
-            if( j >= DECENT_CUSTODY_THREADS )
-               fut_pp[k].wait();
+   uint32_t signatures_per_chunk = DECENT_CUSTODY_THREADS * 10000u;
+   uint32_t buffer_size = DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors * signatures_per_chunk;
+   std::unique_ptr<char> buffer(new char[buffer_size]);
+   for( unsigned int i = 0; i < n; i += signatures_per_chunk ) {
+      if( i >= signatures_per_chunk ) {
+         for( unsigned int w = 0; w < DECENT_CUSTODY_THREADS; ++w )
+            fut_pp[w].wait();
+      }
 
-            //and distribute the tasks
-            uint32_t idx = i + j + k;
-            char *offset = buffer.get() + (j + k) * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors;
-            fut_pp[k] = t[k].async([=]() {
-                 mpz_t *m = new mpz_t[sectors];
-                 for( uint32_t i = 0; i < sectors; ++i ) {
-                    mpz_init2(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
+      get_data(file, length, buffer.get(), buffer_size);
+
+      uint32_t signatures_in_chunk = std::min( n - i, signatures_per_chunk );
+      uint32_t signatures_per_worker = signatures_in_chunk / DECENT_CUSTODY_THREADS;
+
+      char *offset = buffer.get();
+      for( unsigned int w = 0; w < DECENT_CUSTODY_THREADS; ++w, offset += signatures_per_worker * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors ) {
+         uint32_t idx = w * signatures_per_worker;
+         uint32_t signatures = w == DECENT_CUSTODY_THREADS - 1 ? (signatures_in_chunk - idx) : signatures_per_worker;
+         if( signatures == 0 )
+            continue;
+
+         fut_pp[w] = t[w].async([=]() {
+            char *worker_offset = offset;
+            std::unique_ptr<mpz_t> m(new mpz_t[sectors]);
+            for( uint32_t k = 0; k < signatures; ++k ) {
+                 for( uint32_t i = 0; i < sectors; ++i, worker_offset += DECENT_SIZE_OF_NUMBER_IN_THE_FIELD ) {
+                    mpz_ptr mi = m.get()[i];
+                    mpz_init2(mi, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
                     //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
-                    memcpy((char *) m[i]->_mp_d, offset, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-                    m[i]->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
+                    memcpy((char *) mi->_mp_d, worker_offset, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+                    mi->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
                     //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
                  }
-                 get_sigma(idx, m, u_pp, pk, ret, sectors);
-                 delete[](m);
-            });
-         }
+                 get_sigma(i + idx + k, m.get(), u_pp, pk, ret, sectors);
+            }});
       }
    }
+
    //wait for the threads...
-   unsigned int remaining_threads_to_wait_for = std::min( n % DECENT_CUSTODY_THREADS, DECENT_CUSTODY_THREADS );
-   for( unsigned int k = 0; k < (remaining_threads_to_wait_for ? remaining_threads_to_wait_for : DECENT_CUSTODY_THREADS); ++k )
-      fut_pp[k].wait();
+   for( unsigned int w = 0; w < DECENT_CUSTODY_THREADS; ++w )
+      fut_pp[w].wait();
 
    *sigmas = ret;
    for( uint32_t k = 0; k < sectors; k++ )
