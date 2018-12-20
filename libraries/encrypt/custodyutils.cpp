@@ -127,10 +127,7 @@ void CustodyUtils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t &out,
       }
    }
 
-   //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
-   memcpy((char *) out->_mp_d, buffer, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-   out->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
-   //mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
+   mpz_import( out, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer );
 }
 
 void CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors) {
@@ -230,10 +227,7 @@ void CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, ele
                  for( uint32_t i = 0; i < sectors; ++i, worker_offset += DECENT_SIZE_OF_NUMBER_IN_THE_FIELD ) {
                     mpz_ptr mi = m.get()[i];
                     mpz_init2(mi, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * 8);
-                    //mpz_import is too slow for our purposes - since we don't care about the exact parameters as much as about the uniqueness of the import, let's replace it with memcpy
-                    memcpy((char *) mi->_mp_d, worker_offset, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
-                    mi->_mp_size = DECENT_MP_SIZE_OF_NUMBER_IN_THE_FIELD;
-                    //mpz_import(m[i], DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, buffer + i * DECENT_SIZE_OF_NUMBER_IN_THE_FIELD);
+                    mpz_import(mi, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD, 1, 1, 1, 0, worker_offset);
                  }
                  get_sigma(i + idx + k, m.get(), u_pp, pk, ret, sectors);
             }});
