@@ -148,7 +148,7 @@ void test_custody(){
 
    proof.seed.data[0]=21; proof.seed.data[1] =155; proof.seed.data[2] = 231; proof.seed.data[3] = 98; proof.seed.data[4] = 1;
 
-   c.create_custody_data(boost::filesystem::path("/tmp/content.zip"),cd, DECENT_SECTORS );
+   c.create_custody_data(boost::filesystem::path("/tmp/content.zip"), boost::filesystem::path("/tmp/content.cus"), cd, DECENT_SECTORS );
    std::cout <<"done creating custody data, "<<cd.n<<" signatures generated\n";
    idump((cd));
 

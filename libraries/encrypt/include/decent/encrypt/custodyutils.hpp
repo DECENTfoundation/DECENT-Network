@@ -85,12 +85,11 @@ public:
    }
    /**
     * Create custody data for a given content. Creates custody data and custody signatures in file content.cus
-    * @param content Path to conent.aes.zip file
+    * @param aes Path to content.zip.aes file
+    * @param cus Path to content.cus file
     * @param cd Generated custody data
     */
-   void create_custody_data(boost::filesystem::path content, CustodyData & cd, uint32_t sectors){
-      create_custody_data(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, sectors);
-   }
+   void create_custody_data(const boost::filesystem::path &aes, const boost::filesystem::path &cus, CustodyData &cd, uint32_t sectors);
 
    /**
     * Creates proof of custody for a given package. Assumes content.cus exists within the package
@@ -120,14 +119,6 @@ public:
    int verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
                        std::vector<std::string> mus, mpz_t seed);
    /**
-    * Creates custody signatures in file content.cus;
-    * @param content Path to conent.aes.zip file
-    * @param n the number of signatures
-    * @param u_seed is the generator for u. There must be at least 16 bytes allocated in the u array
-    * @param pubKey is generated public key. There must be at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED bytes allocated in the pubKey
-    */
-   void create_custody_data(boost::filesystem::path content, uint32_t& n, char u_seed[], unsigned char pubKey[], uint32_t sectors);
-   /**
     * Create proof of custody out of content.zip stored in path. content.cus must exist in the same directory
     * @param content path to content.zip
     * @param n number of signatures
@@ -149,7 +140,7 @@ private:
     * Calculate sigmas based on formula
     * TODO_DECENT rework to stram version
     */
-   void get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors);
+   element_t* get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, uint32_t sectors);
    /*
     * Generates u from seed seedU. The array must be initalized to at least DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED elements
     */
@@ -159,10 +150,10 @@ private:
    void compute_sigma(element_t *sigmas, unsigned int q, uint64_t *indices, element_t *v, element_t &sigma);
    void get_sigma( uint64_t pidx, mpz_t mi[], element_pp_t u_pp[], element_t pk, element_t out[], uint32_t sectors);
    int verify(element_t sigma, unsigned int q, uint64_t *indices, element_t *v, element_t *u, element_t *mu, element_t pubk, uint32_t sectors);
-   void clear_elements(element_t *array, int size);
+   void clear_elements(element_t *array, uint32_t size) const;
    int get_number_of_query(int blocks);
    void get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t& out, uint32_t sectors);
-   void get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t sectors);
+   void get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t sectors) const;
 };
 
 

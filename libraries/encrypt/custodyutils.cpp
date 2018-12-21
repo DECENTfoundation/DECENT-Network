@@ -93,7 +93,7 @@ void CustodyUtils::get_u_from_seed(const mpz_t &seedU, element_t out[], uint32_t
    mpz_clear(seed_tmp);
 }
 
-void CustodyUtils::get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t size) {
+void CustodyUtils::get_data(std::fstream &file, uint64_t realLen, char buffer[], uint32_t size) const {
    uint64_t position = file.tellg();
    if( realLen > position + size )
       file.read(buffer, size);
@@ -176,7 +176,7 @@ void CustodyUtils::get_sigma(uint64_t idx, mpz_t mi[], element_pp_t u_pp[], elem
    element_clear(hash);
 }
 
-void CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, element_t **sigmas, uint32_t sectors) {
+element_t* CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, element_t pk, uint32_t sectors) {
    file.seekg(0, file.end);
    auto length = file.tellg();
    n = get_n(length, sectors);
@@ -238,10 +238,10 @@ void CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *u, ele
    for( unsigned int w = 0; w < DECENT_CUSTODY_THREADS; ++w )
       fut_pp[w].wait();
 
-   *sigmas = ret;
    for( uint32_t k = 0; k < sectors; k++ )
       element_pp_clear(u_pp[k]);
    delete[] u_pp;
+   return ret;
 }
 
 
@@ -378,8 +378,8 @@ int CustodyUtils::verify(element_t sigma, unsigned int q, uint64_t *indices, ele
    return res;
 }
 
-void CustodyUtils::clear_elements(element_t *array, int size) {
-   for( int i = 0; i < size; i++ ) {
+void CustodyUtils::clear_elements(element_t *array, uint32_t size) const {
+   for( uint32_t i = 0; i < size; i++ ) {
       element_clear(array[i]);
    }
 }
@@ -470,13 +470,16 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
    return res;
 }
 
-void CustodyUtils::create_custody_data(boost::filesystem::path content, uint32_t &n, char u_seed[], unsigned char pubKey[], uint32_t sectors) {
+void CustodyUtils::create_custody_data(const boost::filesystem::path &aes, const boost::filesystem::path &cus, CustodyData &cd, uint32_t sectors) {
    //prepare the files
-   std::fstream infile(content.c_str(), std::fstream::binary | std::fstream::in);
+   std::fstream infile(aes.c_str(), std::fstream::binary | std::fstream::in);
    if(!infile.is_open())
-      FC_THROW("Failed to open file ${f}", ("f", content.string()));
+      FC_THROW("Failed to open file ${f}", ("f", aes.string()));
 
-   std::ofstream outfile((content.parent_path() / "content.cus").c_str(), std::fstream::binary | std::ios_base::trunc);
+   std::ofstream outfile(cus.c_str(), std::fstream::binary | std::ios_base::trunc);
+   if(!outfile.is_open())
+      FC_THROW("Failed to open file ${f}", ("f", cus.string()));
+
    infile.seekg(0, infile.beg);
    outfile.seekp(0);
 
@@ -484,21 +487,20 @@ void CustodyUtils::create_custody_data(boost::filesystem::path content, uint32_t
 
    element_t *u = new element_t[sectors];
    element_t private_key, public_key;
-   element_t *sigmas;  //TODO_DECENT
    mpz_t seedForU;
 
    element_init_Zr(private_key, pairing);
    element_init_G1(public_key, pairing);
 
    //Set the elements
-   if( RAND_bytes((unsigned char *) u_seed, 16) != 1 ) {
+   if( RAND_bytes((unsigned char *) cd.u_seed.data, 16) != 1 ) {
       FC_THROW("Error creating random data");
    }
    char *buf_str = (char *) malloc(32 + 1);
    char *buf_ptr = buf_str;
 
    for( int i = 0; i < 16; i++ ) {
-      buf_ptr += sprintf(buf_ptr, "%X", (unsigned char) u_seed[i]);
+      buf_ptr += sprintf(buf_ptr, "%X", (unsigned char) cd.u_seed.data[i]);
    }
    buf_str[32] = 0;
 
@@ -517,14 +519,14 @@ void CustodyUtils::create_custody_data(boost::filesystem::path content, uint32_t
    //create the actual signatures in sigmas
 
    //split_file(infile, n, &m);
-   get_sigmas(infile, n, u, private_key, &sigmas, sectors);
+   element_t *sigmas = get_sigmas(infile, cd.n, u, private_key, sectors);
 
    //save the values to u_seed and pubKey
-   element_to_bytes_compressed(pubKey, public_key);
+   element_to_bytes_compressed(cd.pubKey.data, public_key);
 
    //Save the signatures file
    char buffer[DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED];
-   for( uint32_t i = 0; i < n; i++ ) {
+   for( uint32_t i = 0; i < cd.n; i++ ) {
       element_to_bytes_compressed((unsigned char *) buffer, sigmas[i]);
       outfile.write(buffer, DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED);
    }
@@ -533,7 +535,7 @@ void CustodyUtils::create_custody_data(boost::filesystem::path content, uint32_t
    delete[](u);
    element_clear(private_key);
    element_clear(public_key);
-   clear_elements(sigmas, n);
+   clear_elements(sigmas, cd.n);
    delete[](sigmas);
    mpz_clear(seedForU);
    outfile.close();

@@ -280,9 +280,9 @@ namespace decent { namespace package {
                         _package._hash = detail::calculate_hash(aes_file_path);
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         //calculate custody...
-                        decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, _package._custody_data, _sectors);
-                        size += file_size( aes_file_path );
                         const auto cus_file_path = temp_dir_path / "content.cus";
+                        decent::encrypt::CustodyUtils::instance().create_custody_data(aes_file_path, cus_file_path, _package._custody_data, _sectors);
+                        size += file_size( aes_file_path );
                         size += file_size( cus_file_path );
                     }
 
