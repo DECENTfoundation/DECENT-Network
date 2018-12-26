@@ -1,4 +1,3 @@
-
 file(GLOB HEADERS "include/graphene/net/*.hpp")
 
 set(SOURCES node.cpp
@@ -11,8 +10,7 @@ set(SOURCES node.cpp
 add_library( graphene_net ${SOURCES} ${HEADERS} )
 
 target_link_libraries( graphene_net 
-  PUBLIC fc cryptopp graphene_db
-  PRIVATE graphene_chain decent_encrypt )
+  PRIVATE graphene_db graphene_chain decent_encrypt )
 target_include_directories( graphene_net 
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )

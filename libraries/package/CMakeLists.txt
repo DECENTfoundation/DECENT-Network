@@ -1,4 +1,3 @@
-
 file( GLOB HEADERS "*.hpp" "include/decent/package/*.hpp" )
 
 add_library( package_manager
@@ -8,14 +7,14 @@ add_library( package_manager
              local.cpp
              ${HEADERS} )
 
-target_link_libraries( package_manager fc decent_encrypt nlohmann_json ipfs-api graphene_utilities ${GMP_LIBRARIES} )
+target_link_libraries( package_manager PRIVATE decent_encrypt graphene_utilities )
 target_include_directories( package_manager
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 # A test/sanbox dev-only executable.
 add_executable( package_manager_sandbox sandbox.cpp )
 
-target_link_libraries( package_manager_sandbox package_manager fc decent_encrypt nlohmann_json ipfs-api graphene_utilities)
+target_link_libraries( package_manager_sandbox PRIVATE graphene_utilities package_manager decent_encrypt )
 
 #install( TARGETS
 #   package_manager

@@ -1,47 +1,24 @@
-if( TARGET pbc )
-    return()
-endif()
+message( STATUS "Looking for GMP" )
+find_path( GMP_INCLUDE_DIR "gmp.h" )
+find_library( GMP_LIBRARIES NAMES "gmp" "mpir.lib" )
 
-unset( GMP_LIBRARIES CACHE )
-unset( GMP_LIBRARIES )
-unset( GMP_INCLUDE_DIR CACHE )
-unset( GMP_INCLUDE_DIR )
-unset( GMP_LIB_DIR CACHE )
-unset( GMP_LIB_DIR )
-unset( PBC_LIBRARIES CACHE )
-unset( PBC_LIBRARIES )
-unset( PBC_INCLUDE_DIR CACHE )
-unset( PBC_INCLUDE_DIR )
-
-# Locate GMP.
-#message( STATUS "Looking for GMP" )
-if( WIN32 )
-  set( GMP_INCLUDE_DIR "${GENERATEDGMP}")
-  set( GMP_LIBRARIES "${GENERATEDGMP}/mpir.lib")
-  find_library( GMP_LIBRARIES NAMES "mpir.lib" )
-else()
-   find_library( GMP_LIBRARIES NAMES "gmp" )
-   find_path( GMP_INCLUDE_DIR "gmp.h" )
-endif()
-
-if( NOT GMP_LIBRARIES )
-   message( FATAL_ERROR "GMP library not found" )
-endif()
 if( NOT GMP_INCLUDE_DIR )
    message( FATAL_ERROR "GMP includes not found" )
 endif()
+if( NOT GMP_LIBRARIES )
+   message( FATAL_ERROR "GMP library not found" )
+endif()
 
+mark_as_advanced( GMP_LIBRARIES GMP_INCLUDE_DIR )
+message( STATUS "GMP found at ${GMP_INCLUDE_DIR}, ${GMP_LIBRARIES}" )
 
-get_filename_component( GMP_LIB_DIR "${GMP_LIBRARIES}" DIRECTORY )
+add_library( gmp STATIC IMPORTED )
+set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
+set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
 
 message( STATUS "Looking for PBC" )
-if( WIN32 )
-   find_library( PBC_LIBRARIES NAMES "pbclib.lib" )
-   find_path( PBC_INCLUDE_DIR "pbc/include/pbc.h")
-else()
-   find_library( PBC_LIBRARIES NAMES "libpbc.a" )
-   find_path( PBC_INCLUDE_DIR "pbc/pbc.h")
-endif()
+find_path( PBC_INCLUDE_DIR "pbc.h" PATH_SUFFIXES "pbc" )
+find_library( PBC_LIBRARIES NAMES "libpbc.a" "pbclib.lib" )
 
 if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
     if( WIN32 )
@@ -53,10 +30,6 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
 
         # We need flex and bison to build PBC - check them.
 
-        unset( FLEX_PROGRAM CACHE )
-        unset( FLEX_PROGRAM )
-        unset( BISON_PROGRAM CACHE )
-        unset( BISON_PROGRAM )
 
 #        message( STATUS "Looking for flex")
         find_program( FLEX_PROGRAM NAMES "flex" )
@@ -72,6 +45,7 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
 
         include( ExternalProject )
 
+        get_filename_component( GMP_LIB_DIR "${GMP_LIBRARIES}" DIRECTORY )
         message( STATUS "Building PBC library" )
         # Download, configure and build PBC.
 #        set( PBC_PREFIX "${PROJECT_BINARY_DIR}/libraries/contrib/pbc" )
@@ -109,7 +83,8 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
         set( PBC_INCLUDE_DIR "${PBC_DIR}/include" )
         file( MAKE_DIRECTORY "${PBC_DIR}/include" )
 
-        message( STATUS "PBC will be taken from ${PBC_LIBRARIES}" )
+        mark_as_advanced( FLEX_PROGRAM BISON_PROGRAM )
+        message( STATUS "PBC will be taken from ${PBC_DIR}" )
     endif()
 
     if( NOT PBC_INCLUDE_DIR )
@@ -118,23 +93,15 @@ if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
     if( NOT PBC_LIBRARIES OR NOT PBC_INCLUDE_DIR )
         message( FATAL_ERROR "PBC not found" )
     endif()
-else()
-    message( STATUS "PBC found at ${PBC_LIBRARIES}" )
 endif()
 
 add_library( pbc UNKNOWN IMPORTED )
 set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
-set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" "${GMP_INCLUDE_DIR}" )
+set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
 
 if( TARGET build_pbc )
     add_dependencies( pbc build_pbc )
 endif()
 
-mark_as_advanced(
-    FLEX_PROGRAM
-    BISON_PROGRAM
-    GMP_LIBRARIES
-    GMP_INCLUDE_DIR
-    GMP_LIB_DIR
-    PBC_LIBRARIES
-    PBC_INCLUDE_DIR )
+mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
+message( STATUS "PBC found at ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )

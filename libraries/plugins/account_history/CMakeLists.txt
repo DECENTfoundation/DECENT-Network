@@ -5,7 +5,7 @@ add_library( graphene_account_history
              ${HEADERS}
            )
 
-target_link_libraries( graphene_account_history graphene_chain graphene_app )
+target_link_libraries( graphene_account_history PRIVATE graphene_db graphene_chain graphene_net graphene_app decent_encrypt )
 target_include_directories( graphene_account_history
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

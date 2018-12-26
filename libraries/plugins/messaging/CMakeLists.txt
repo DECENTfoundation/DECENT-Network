@@ -5,7 +5,7 @@ add_library( decent_messaging
              ${HEADERS}
            )
 
-target_link_libraries( decent_messaging graphene_chain graphene_app graphene_time decent_encrypt package_manager fc )
+target_link_libraries( decent_messaging PRIVATE graphene_db graphene_chain graphene_net graphene_app decent_encrypt package_manager )
 target_include_directories( decent_messaging
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

@@ -39,7 +39,7 @@ For Ubuntu 16.04 LTS, execute in console:
 For Fedora 28 or later, execute in console:
 
      sudo dnf clean metadata
-     sudo dnf install automake autoconf libtool make cmake gcc flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static python-devel libicu-devel bzip2-devel
+     sudo dnf install automake autoconf libtool make cmake gcc flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static
 
 ### Installing prerequisites in macOS
 

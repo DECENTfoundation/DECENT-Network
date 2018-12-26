@@ -65,29 +65,32 @@ add_executable(DECENT MACOSX_BUNDLE
 
 if( UPDATE_MANAGER )
 add_definitions(-DUPDATE_MANAGER=1)
+list(APPEND PLATFORM_SPECIFIC_LIBS update)
 endif()
 
 if( WIN32 )
-  if( UPDATE_MANAGER )
-    target_link_libraries(  DECENT PUBLIC
-                        Qt5::Widgets graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt pbc ${GMP_LIBRARIES} graphene_account_history graphene_transaction_history decent_seeding graphene_miner graphene_egenesis_decent fc msi update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )
-  else()
-    target_link_libraries(  DECENT PUBLIC
-                        Qt5::Widgets graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt pbc ${GMP_LIBRARIES} graphene_account_history graphene_transaction_history decent_seeding graphene_miner graphene_egenesis_decent fc msi ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )
-  endif()
-else()
-  if( UPDATE_MANAGER )
-    target_link_libraries(  DECENT PUBLIC
-                        Qt5::Widgets graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt pbc gmp graphene_account_history graphene_transaction_history decent_seeding graphene_miner graphene_egenesis_decent fc update ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )
-  else()
-    target_link_libraries(  DECENT PUBLIC
-                        Qt5::Widgets graphene_app graphene_net graphene_chain graphene_utilities graphene_wallet wallet_utility decent_messaging decent_monitoring package_manager decent_encrypt pbc gmp graphene_account_history graphene_transaction_history decent_seeding graphene_miner graphene_egenesis_decent fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS}
-                     )
-  endif()
+list(APPEND PLATFORM_SPECIFIC_LIBS msi)
 endif()
+
+target_link_libraries(DECENT PRIVATE
+                      graphene_db
+                      graphene_chain
+                      graphene_net
+                      graphene_app
+                      graphene_utilities
+                      graphene_wallet
+                      wallet_utility
+                      decent_monitoring
+                      package_manager
+                      decent_encrypt
+                      graphene_account_history
+                      graphene_transaction_history
+                      decent_messaging
+                      decent_seeding
+                      graphene_miner
+                      graphene_egenesis_decent
+                      Qt5::Widgets
+                      ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS})
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")

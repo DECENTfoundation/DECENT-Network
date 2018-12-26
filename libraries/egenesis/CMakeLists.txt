@@ -4,7 +4,7 @@ add_library( graphene_egenesis_none
    include/graphene/egenesis/egenesis.hpp
    )
 
-target_link_libraries( graphene_egenesis_none graphene_chain fc )
+target_link_libraries( graphene_egenesis_none PRIVATE graphene_chain graphene_db decent_encrypt )
 target_include_directories( graphene_egenesis_none
    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
@@ -12,7 +12,7 @@ add_executable( embed_genesis
    embed_genesis.cpp
    )
 
-target_link_libraries( embed_genesis decent_monitoring graphene_chain graphene_app graphene_egenesis_none fc )
+target_link_libraries( embed_genesis PRIVATE decent_monitoring graphene_chain graphene_db graphene_app graphene_egenesis_none decent_encrypt )
 
 set( embed_genesis_args
    -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"
@@ -44,9 +44,9 @@ add_library( graphene_egenesis_brief "${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief
 add_library( graphene_egenesis_full  "${CMAKE_CURRENT_BINARY_DIR}/egenesis_full.cpp" include/graphene/egenesis/egenesis.hpp )
 add_library( graphene_egenesis_decent "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_decent.cpp" include/graphene/egenesis/egenesis.hpp )
 
-target_link_libraries( graphene_egenesis_brief graphene_chain fc )
-target_link_libraries( graphene_egenesis_full graphene_chain fc )
-target_link_libraries( graphene_egenesis_decent graphene_chain fc )
+target_link_libraries( graphene_egenesis_brief PRIVATE graphene_chain graphene_db decent_encrypt )
+target_link_libraries( graphene_egenesis_full PRIVATE graphene_chain graphene_db decent_encrypt )
+target_link_libraries( graphene_egenesis_decent PRIVATE graphene_chain graphene_db decent_encrypt )
 
 target_include_directories( graphene_egenesis_brief
    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

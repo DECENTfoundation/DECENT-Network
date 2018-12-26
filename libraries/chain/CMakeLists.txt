@@ -1,4 +1,3 @@
-
 file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
 if( GRAPHENE_DISABLE_UNITY_BUILD )
@@ -79,13 +78,7 @@ add_library( graphene_chain
              ${HEADERS}
            )
 
-target_link_libraries( graphene_chain decent_monitoring fc graphene_db decent_encrypt pbc )
-
-if( WIN32 )
-  target_link_libraries( graphene_chain ${GMP_LIBRARIES})
-else()
-  target_link_libraries( graphene_chain gmp )
-endif()
+target_link_libraries( graphene_chain PRIVATE decent_monitoring graphene_db decent_encrypt )
 
 target_include_directories( graphene_chain PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
