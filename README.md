@@ -1,10 +1,10 @@
 Intro for new developers
 ------------------------
- 
+
 This is a quick introduction to get new developers up to speed on Decent.
 
 
-Building Decent [![Build Status](https://travis-ci.com/DECENTfoundation/DECENT-Network.svg?token=xwFm8bxNLqiJV3NaNYgy&branch=develop)](https://travis-ci.com/DECENTfoundation/DECENT-Network)
+Building Decent
 ---------------
 
 ### Installing prerequisites in Linux
@@ -130,7 +130,6 @@ To set your initial password to `mypassword`, execute:
 To import your account keys, execute:
 
     >>> import_key [name] [private_wif_key]
-
 
 Decent daemon
 --------------
