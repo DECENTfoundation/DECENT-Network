@@ -472,16 +472,16 @@ void seeding_plugin_impl::resend_keys(){
 
 }
 
-void seeding_plugin_impl::restore_state(){
-
-   elog("restoring state, main thread");
+void seeding_plugin_impl::restore_state()
+{
+   dlog("restoring state, main thread");
    service_thread->async([this](){
         if( std::abs( (fc::time_point::now() - database().head_block_time()).count() ) > int64_t( 10000000 ) )
         {
            ilog("seeding plugin:  restoring state() waiting for sync");
            fc::usleep( fc::microseconds(1000000) );
         }
-        elog("restarting downloads, service thread");
+        dlog("restarting downloads, service thread");
         //start with rebuilding my_seeding_object database
         const auto& sidx = database().get_index_type<my_seeder_index>().indices().get<by_seeder>();
         const auto& cidx = database().get_index_type<my_seeding_index>().indices().get<by_URI>();
@@ -541,7 +541,7 @@ void seeding_plugin_impl::restore_state(){
 
         auto citr = cidx.begin();
         while(citr!=cidx.end()) {
-           elog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
+           dlog("restarting downloads, dealing with package ${u}", ("u", citr->URI));
            bool already_have = false;
            decent::package::package_handle_t package_handle(0);
            for( auto package : packages )
@@ -553,8 +553,9 @@ void seeding_plugin_impl::restore_state(){
            if(already_have){
               database().modify<my_seeding_object>(*citr, [](my_seeding_object& so){so.downloaded = true;});
 
-           }else{
-              elog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
+           }
+           else if(citr->expiration < database().head_block_time()) {
+              dlog("restarting downloads, re-downloading package ${u}", ("u", citr->URI));
               package_handle = pm.get_package(citr->URI, citr->_hash);
               decent::package::event_listener_handle_t sl = std::make_shared<SeedingListener>(*this, *citr , package_handle);
               package_handle->remove_all_event_listeners();
@@ -563,7 +564,7 @@ void seeding_plugin_impl::restore_state(){
            }
            ++citr;
         }
-        elog("restarting downloads, service thread end");
+        dlog("restarting downloads, service thread end");
         generate_pors();
    });
 }
@@ -583,7 +584,7 @@ void seeding_plugin::plugin_startup()
 
    my->restore_state();
    fc::time_point next_call = fc::time_point::now()  + fc::microseconds(30000000);
-   elog("RtP planned at ${t}", ("t",next_call) );
+   dlog("RtP planned at ${t}", ("t",next_call) );
    my->service_thread->schedule([this](){elog("generating first ready to publish");my->send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");
    ilog("seeding plugin:  plugin_startup() end");
 }
