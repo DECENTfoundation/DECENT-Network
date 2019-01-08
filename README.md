@@ -19,20 +19,33 @@ For Ubuntu 16.04 LTS, execute in console:
      sudo apt-get update
      sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
 
-> Note, that the default version of Boost installed in Ubuntu 16.04 LTS is too old and not supported. In order to install a supported one, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note, that the default versions of Boost and CMake installed in Ubuntu 16.04 LTS are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Download and build Boost 1.65.1
      mkdir -p ~/dev/DECENTfoundation/DECENT-Network-third-party
      cd ~/dev/DECENTfoundation/DECENT-Network-third-party
      wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
      tar xvf boost_1_65_1.tar.gz
-     mkdir boost-1.65.1
+     mkdir boost
      cd boost_1_65_1
-     export BOOST_ROOT=$(realpath ../boost-1.65.1)
+     export BOOST_ROOT=$(realpath ../boost)
      ./bootstrap.sh --prefix=$BOOST_ROOT
      ./b2 install
      cd ..
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
+
+    # Download and build Cmake 3.10.2
+     cd ~/dev/DECENTfoundation/DECENT-Network-third-party
+     wget https://cmake.org/files/v3.10/cmake-3.10.2.tar.gz
+     tar xvf cmake-3.10.2.tar.gz
+     mkdir cmake
+     cd cmake-3.10.2
+     export CMAKE_ROOT=$(realpath ../cmake)
+     ./configure --prefix=$CMAKE_ROOT
+     make install
+     export PATH=$CMAKE_ROOT/bin:$PATH
+     cd ..
+     rm -rf cmake-3.10.2 cmake-3.10.2.tar.gz
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 

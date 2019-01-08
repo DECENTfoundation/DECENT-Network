@@ -8,7 +8,7 @@ if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif()
 
-cmake_minimum_required( VERSION 3.1.0 FATAL_ERROR )
+cmake_minimum_required( VERSION 3.10.2 FATAL_ERROR )
 project( Decent LANGUAGES CXX )
 
 set( BLOCKCHAIN_NAME "Decent" )
