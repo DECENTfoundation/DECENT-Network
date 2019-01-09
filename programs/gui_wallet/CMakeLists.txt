@@ -1,7 +1,13 @@
+find_package( Qt5Widgets QUIET )
+if( Qt5Widgets_FOUND )
+    message(STATUS "Found Qt version: ${Qt5Widgets_VERSION}")
+else()
+    message(STATUS "Qt5 was not found - GUI wallet won't be compiled")
+    return()
+endif()
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
-find_package( Qt5Widgets REQUIRED )
 
 set(MACOSX_BUNDLE_ICON_FILE desktop)
 set(MACOSX_BUNDLE_BUNDLE_NAME DECENT)
