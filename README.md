@@ -3,7 +3,6 @@ Intro for new developers
 
 This is a quick introduction to get new developers up to speed on Decent.
 
-
 Building Decent
 ---------------
 
@@ -51,8 +50,8 @@ For Ubuntu 16.04 LTS, execute in console:
 
 For Fedora 28 or later, execute in console:
 
-     sudo dnf clean metadata
-     sudo dnf install automake autoconf libtool make cmake gcc flex bison doxygen gettext-devel git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel ncurses-devel boost-devel boost-static
+    sudo dnf clean metadata
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
 
 ### Installing prerequisites in macOS
 
