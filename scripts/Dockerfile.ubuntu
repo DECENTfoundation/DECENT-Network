@@ -1,0 +1,45 @@
+FROM ubuntu:latest
+LABEL maintainer="DECENT"
+
+# prerequisites
+# ca-certificates
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget \
+    build-essential \
+    autotools-dev \
+    automake \
+    autoconf \
+    libtool \
+    make \
+    cmake \
+    gcc \
+    g++ \
+    clang \ 
+    flex \
+    bison \
+    doxygen \
+    gettext \
+    git \
+    libreadline-dev \
+    libcrypto++-dev \
+    libgmp-dev \
+    libssl-dev \
+    libboost-all-dev \
+    libcurl4-openssl-dev \
+    libbz2-dev \
+    unzip \
+    ca-certificates \
+    && \
+    apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# PBC
+RUN cd /root && wget https://github.com/blynn/pbc/archive/master.zip && unzip master.zip && cd pbc-master && ./setup #&& ./configure --prefix=/usr && make install && cd .. && rm -rf pbc-master master.zip
+
+
+# IPFS
+ARG IPFS_VERSION=v0.4.18
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+RUN wget "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && cp go-ipfs/ipfs /usr/bin && rm -rf go-ipfs*
+
+CMD ["/bin/bash"]
