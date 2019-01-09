@@ -1,0 +1,27 @@
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+LABEL maintainer="DECENT"
+
+ARG GIT_REV=master
+ENV DCORE_USER=root
+ENV DCORE_HOME=/root
+ENV DATA_DIR=/vat/lib/decentd
+
+# build decent
+WORKDIR $DCORE_HOME
+RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git && \
+       cd DECENT-Network && git submodule update --init --recursive && \
+       mkdir build && cd build && \
+       cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. && \
+       make -j$(nproc) decentd cli_wallet && \
+       cp programs/decentd/decentd programs/cli_wallet/cli_wallet /usr/bin && \
+       cd ../.. && rm -rf DECENT-Network
+
+ADD decententrypoint.sh $DCORE_HOME/decententrypoint.sh
+RUN chmod +x $DCORE_HOME/decententrypoint.sh
+
+VOLUME $DATA_DIR
+EXPOSE 40000
+EXPOSE 8090
+USER $DCORE_USER
+CMD $DCORE_HOME/decententrypoint.sh
