@@ -1,5 +1,7 @@
 #!/bin/bash
 
+WALLET_IP_AND_PORT="127.0.0.1:8093"
+
 ARGS="--daemon"
 # DCORE_P2P_ENDPOINT
 # DCORE_SEED_NODES
@@ -94,10 +96,10 @@ if [[ ! -z "$DCORE_TRANSACTION_ID_HISTORY" ]]; then
     ARGS+=" --transaction-id-history=$DCORE_TRANSACTION_ID_HISTORY"
 fi
 
-if [[ ! -z "$RUN_DCORE" ]]; then
-    exec decentd $ARGS $DCORE_EXTRA_ARGS
-fi
+decentd $ARGS $DCORE_EXTRA_ARGS
 
-if [[ ! -z "$RUN_CLI_WALLET" ]]; then
-    exec cli_wallet "--daemon" $CLI_WALLET_EXTRA_ARGS
-fi
+echo "Waiting for daemon startup"
+while ! curl --output /dev/null --silent --head --fail http://127.0.0.1:8090; do sleep 1 && echo -n .; done;
+echo
+
+cli_wallet $CLI_WALLET_EXTRA_ARGS
