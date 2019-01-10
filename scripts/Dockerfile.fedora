@@ -1,9 +1,29 @@
-ARG FEDORA_VERSION=latest
-FROM fedora:$FEDORA_VERSION
+ARG VERSION=latest
+FROM fedora:$VERSION
 LABEL maintainer="DECENT"
 
 # prerequisites
-RUN dnf install -y automake autoconf libtool make cmake gcc-c++ flex bison doxygen wget which unzip git readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+RUN dnf install -y \
+    automake \
+    autoconf \
+    libtool \
+    make \
+    cmake \
+    gcc-c++ \
+    flex \
+    bison \
+    doxygen \
+    wget \
+    which \
+    unzip \
+    git \
+    readline-devel \
+    cryptopp-devel \
+    gmp-devel \
+    openssl-devel \
+    libcurl-devel \
+    boost-devel \
+    boost-static
 
 # PBC
 RUN cd /root && wget https://github.com/blynn/pbc/archive/master.zip && unzip master.zip && cd pbc-master && ./setup && ./configure --prefix=/usr && make install && cd .. && rm -rf pbc-master master.zip

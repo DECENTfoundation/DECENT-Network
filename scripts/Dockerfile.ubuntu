@@ -1,10 +1,10 @@
-FROM ubuntu:latest
+ARG VERSION=latest
+FROM ubuntu:$VERSION
 LABEL maintainer="DECENT"
 
 # prerequisites
-# ca-certificates
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget \
+    apt-get install -y --no-install-recommends \
     build-essential \
     autotools-dev \
     automake \
@@ -28,13 +28,13 @@ RUN apt-get update && \
     libcurl4-openssl-dev \
     libbz2-dev \
     unzip \
+    wget \
     ca-certificates \
     && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # PBC
 RUN cd /root && wget https://github.com/blynn/pbc/archive/master.zip && unzip master.zip && cd pbc-master && ./setup #&& ./configure --prefix=/usr && make install && cd .. && rm -rf pbc-master master.zip
-
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
