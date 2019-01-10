@@ -394,6 +394,7 @@ namespace graphene { namespace app {
 
       /**
        * @brief Receives message objects by sender and/or receiver.
+       * @note You need to specify at least one account.
        * @param sender name of message sender. If you dont want to filter by sender then pass null
        * @param receiver name of message receiver. If you dont want to filter by receiver then pass null
        * @param max_count maximal number of last messages to be displayed

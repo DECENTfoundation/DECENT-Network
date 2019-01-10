@@ -54,6 +54,7 @@ signed_transaction send_unencrypted_message(const std::string& from,
 
 /**
  * @brief Receives message objects by sender and/or receiver.
+ * @note You need to specify at least one account.
  * @param sender name of message sender. If you dont want to filter by sender then let it empty
  * @param receiver name of message receiver. If you dont want to filter by receiver then let it empty
  * @param max_count maximal number of last messages to be displayed
