@@ -2,10 +2,19 @@ ARG BASE_IMAGE
 FROM $BASE_IMAGE
 LABEL maintainer="DECENT"
 
+# prepare directories
+ENV DCORE_HOME=/root
+ENV DCORE_USER=root
+USER $DCORE_USER
+WORKDIR $DCORE_HOME
+RUN mkdir $DCORE_HOME/.decent
+
+EXPOSE 40000
+EXPOSE 8090
+EXPOSE 8091
+
 # build DCore
 ARG GIT_REV=master
-ENV DCORE_HOME=/root
-WORKDIR $DCORE_HOME
 RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git && \
        cd DECENT-Network && git submodule update --init --recursive && \
        mkdir build && cd build && \
@@ -17,17 +26,6 @@ RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundat
 ADD decententrypoint.sh $DCORE_HOME/decententrypoint.sh
 RUN chmod +x $DCORE_HOME/decententrypoint.sh
 
-ENV DATA_DIR=/var/lib/decentd
-VOLUME $DATA_DIR
-
-RUN mkdir $DCORE_HOME/.decent
-VOLUME $DCORE_HOME/.decent
-
-ENV DCORE_USER=root
-USER $DCORE_USER
-
-EXPOSE 40000
-EXPOSE 8090
-EXPOSE 8091
-
-CMD $DCORE_HOME/decententrypoint.sh
+#CMD $DCORE_HOME/decententrypoint.sh
+ENV DCORE_EXTRA_ARGS=""
+CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS

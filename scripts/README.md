@@ -39,17 +39,28 @@ Examples:
 
 ## DCore run
 
-DCore image exposes 3 ports: 8090 (websocket RPC to listen on), 8091 (wallet websocket RPC to listen on) and 40000 (P2P) and 2 volumes for external database and wallets.
+DCore image exposes 3 ports: 8090 (websocket RPC to listen on), 8091 (wallet websocket RPC to listen on) and 40000 (P2P).
+You need to mount an external data directory and genesis file (when using custom configuration) to running the container.
+
+| Host | Container path |
+| ---- | -------------- |
+| /path/to/data | $DCORE_HOME/.decent/data |
+| /path/to/genesis.json | $DCORE_HOME/.decent/genesis.json |
 
 | Environment variable | Default value |
 | -------------------- | ------------- |
-| DATA_DIR | /var/lib/decentd |
 | DCORE_HOME | /root |
 | DCORE_USER | root |
 
 Examples:
 
-    # create volume (needed only when run for the first time)
-    docker volume create decent
-    # start node
-    docker run --name DCore --rm --env-file env.list --mount 'type=volume,src=decent,dst=/var/lib/decentd' decent/ubuntu/dcore:latest
+    # run node on mainnet
+    docker run -d --name DCore --mount 'type=bind,src=/path/to/data,dst=$DCORE_HOME/.decent/data' decent/ubuntu/dcore:latest
+
+    # run node on custom configuration
+    docker run -d --name DCore --mount 'type=bind,src=/path/to/data,dst=$DCORE_HOME/.decent/data' --mount 'type=bind,src=/path/to/genesis.json,dst=$DCORE_HOME/.decent/genesis.json' -e "DCORE_EXTRA_ARGS=--genesis-json $DCORE_HOME/.decent/genesis.json" decent/ubuntu/dcore:latest
+
+    # run wallet
+    docker cp /path/to/wallet.json DCore:$DCORE_HOME/.decent/wallet.json
+    docker exec -it DCore cli_wallet
+    docker cp DCore:$DCORE_HOME/.decent/wallet.json /path/to/wallet.json
