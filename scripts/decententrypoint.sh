@@ -3,7 +3,6 @@
 ARGS="--daemon"
 # DCORE_P2P_ENDPOINT
 # DCORE_SEED_NODES
-# DCORE_RPC_ENDPOINT
 # DCORE_IPFS_API
 # DCORE_REPLAY_BLOCKCHAIN
 # DCORE_RESYNC_BLOCKCHAIN
@@ -35,10 +34,6 @@ if [[ ! -z "$DCORE_SEED_NODES" ]]; then
     for SEED_NODE in $DCORE_SEED_NODES; do
         ARGS+=" --seed-node=$SEED_NODE"
     done
-fi
-
-if [[ ! -z "$DCORE_RPC_ENDPOINT" ]]; then
-    ARGS+=" --rpc-endpoint=$DCORE_RPC_ENDPOINT"
 fi
 
 if [[ ! -z "$DCORE_IPFS_API" ]]; then
@@ -99,9 +94,10 @@ if [[ ! -z "$DCORE_TRANSACTION_ID_HISTORY" ]]; then
     ARGS+=" --transaction-id-history=$DCORE_TRANSACTION_ID_HISTORY"
 fi
 
+if [[ ! -z "$RUN_DCORE" ]]; then
+    exec decentd $ARGS $DCORE_EXTRA_ARGS
+fi
+
 if [[ ! -z "$RUN_CLI_WALLET" ]]; then
-    CLI_WALLET_ARGS="--server-rpc-endpoint=ws://$DCORE_RPC_ENDPOINT"
-    exec $CLI_WALLET $CLI_WALLET_ARGS
-else
-    exec decentd $ARGS $DECENTD_EXTRA_ARGS
+    exec cli_wallet "--daemon" $CLI_WALLET_EXTRA_ARGS
 fi
