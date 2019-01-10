@@ -28,19 +28,19 @@ namespace decent {
               "stream=std_error\n\n"
               "# declare an appender named \"default\" that writes messages to decentd.log\n"
               "[log.file_appender.default]\n"
-              "filename=logs/decentd.log\n"
+              "filename=decentd.log\n"
               "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"p2p\" that writes messages to p2p.log\n"
               "[log.file_appender.p2p]\n"
-              "filename=logs/p2p/p2p.log\n"
+              "filename=p2p/p2p.log\n"
               "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"transfer\" that writes messages to transfer.log\n"
               "[log.file_appender.transfer]\n"
-              "filename=logs/transfer.log\n"
+              "filename=transfer.log\n"
               "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days

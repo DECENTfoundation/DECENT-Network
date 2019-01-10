@@ -42,7 +42,7 @@ decent_path_finder::decent_path_finder() {
    if (decent_logs == NULL) {
       _decent_logs = _decent_home / "logs";
    } else {
-      _decent_logs = _decent_logs;
+      _decent_logs = decent_logs;
    }
    
    const char* decent_temp = getenv("DECENT_TEMP");

@@ -224,10 +224,10 @@ int main(int argc, char** argv) {
    try {
       decent_plugins::types plugins = decent_plugins::create(*node);
 
-      bool run_as_daemon = false;
-      fc::path logs_dir, data_dir, temp_dir, config_filename;
+      bool run_as_daemon = options.count("daemon");
+      fc::path logs_dir, data_dir, config_filename;
       auto& path_finder = utilities::decent_path_finder::instance();
-      if (options.count("daemon")) {
+      if( run_as_daemon ) {
          int ret = start_as_daemon();
          if (ret < 0) {
             std::cerr << "Error running as daemon.\n";
@@ -237,35 +237,28 @@ int main(int argc, char** argv) {
             return 0;
          }
 
-         //continue as daemon...
-         run_as_daemon = true;
-
          //default path settings for daemon
          config_filename = "/etc/decentd";
          logs_dir = "/var/log/decentd/";
          data_dir = "/var/lib/decentd/";
-         temp_dir = "/var/tmp/decentd/";
 
-         path_finder.set_decent_logs_path(logs_dir);
          path_finder.set_decent_data_path(data_dir);
-         path_finder.set_decent_temp_path(temp_dir);
+         path_finder.set_decent_temp_path("/var/tmp/decentd/");
       }
       else {
-         data_dir   = path_finder.get_decent_data();
-         logs_dir   = path_finder.get_decent_logs();
-         temp_dir   = path_finder.get_decent_temp();
-
          if( options.count("data-dir") )
          {
             data_dir = options["data-dir"].as<boost::filesystem::path>();
             if( data_dir.is_relative() )
                data_dir = fc::current_path() / data_dir;
          }
+         else
+         {
+            data_dir = path_finder.get_decent_data();
+         }
 
          config_filename = data_dir / "config.ini";
-
-         //NOTE: make it work as till now...
-         logs_dir = fc::absolute(config_filename).parent_path();
+         logs_dir = data_dir;
       }
 
       if( fc::exists(config_filename) )
@@ -278,6 +271,9 @@ int main(int argc, char** argv) {
          ilog("Writing new config file at ${path}", ("path", config_filename));
          if( !fc::exists(data_dir) )
             fc::create_directories(data_dir);
+
+         if( !run_as_daemon )
+            logs_dir /= "logs";
 
          decent::write_default_config_file(config_filename, cfg_options, run_as_daemon);
       }
