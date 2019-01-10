@@ -1,7 +1,5 @@
 #!/bin/bash
 
-WALLET_IP_AND_PORT="127.0.0.1:8093"
-
 ARGS="--daemon"
 # DCORE_P2P_ENDPOINT
 # DCORE_SEED_NODES
@@ -98,8 +96,4 @@ fi
 
 decentd $ARGS $DCORE_EXTRA_ARGS
 
-echo "Waiting for daemon startup"
-while ! curl --output /dev/null --silent --head --fail http://127.0.0.1:8090; do sleep 1 && echo -n .; done;
-echo
-
-cli_wallet $CLI_WALLET_EXTRA_ARGS
+sleep infinity
