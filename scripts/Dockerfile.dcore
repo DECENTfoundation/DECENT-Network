@@ -23,9 +23,5 @@ RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundat
        cp programs/decentd/decentd programs/cli_wallet/cli_wallet /usr/bin && \
        cd ../.. && rm -rf DECENT-Network
 
-ADD decententrypoint.sh $DCORE_HOME/decententrypoint.sh
-RUN chmod +x $DCORE_HOME/decententrypoint.sh
-
-#CMD $DCORE_HOME/decententrypoint.sh
 ENV DCORE_EXTRA_ARGS=""
 CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS
