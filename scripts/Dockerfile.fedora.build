@@ -1,0 +1,45 @@
+ARG IMAGE_VERSION=latest
+FROM fedora:$IMAGE_VERSION
+LABEL maintainer="DECENT"
+
+# prerequisites
+RUN dnf install -y \
+    automake \
+    autoconf \
+    libtool \
+    make \
+    cmake \
+    gcc-c++ \
+    flex \
+    bison \
+    doxygen \
+    unzip \
+    which \
+    wget \
+    git \
+    qt5-qtbase-devel \
+    rpm-build \
+    rpm-devel \
+    rpmlint \
+    rpmdevtools \
+    readline-devel \
+    cryptopp-devel \
+    gmp-devel \
+    openssl-devel \
+    libcurl-devel \
+    boost-devel \
+    boost-static && \
+    dnf clean all
+
+# PBC
+RUN cd /root && \
+    wget https://github.com/blynn/pbc/archive/master.zip && \
+    unzip master.zip && cd pbc-master && \
+    ./setup && ./configure --prefix=/usr && make install && \
+    cd .. && rm -rf pbc-master master.zip
+
+# prepare directories
+USER root
+RUN rpmdev-setuptree
+
+CMD ["/bin/bash"]
