@@ -172,9 +172,10 @@ vector<operation_info> list_operations();
  * @brief This method encapsulates the functionality of running a sequence of calls
  * loaded from a text file.
  * @param command_file_name The name of the command file to load
+ * @return a string with an aggregated result for all operations
  * @ingroup WalletAPI_General
  */
-void from_command_file( const std::string& command_file_name ) const;
+string from_command_file( const std::string& command_file_name ) const;
 
 /**
  * @brief Exits the CLI Wallet

@@ -190,7 +190,7 @@ vector<operation_info> wallet_api::list_operations()
    return my->list_operations();
 }
 
-void wallet_api::from_command_file( const std::string& command_file_name ) const
+string wallet_api::from_command_file( const std::string& command_file_name ) const
 {
    return my->from_command_file( command_file_name );
 }

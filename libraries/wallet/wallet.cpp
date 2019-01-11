@@ -2167,7 +2167,7 @@ public:
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
       std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
-      m["help"] = m["get_help"] = [](variant result, const fc::variants& a)
+      m["help"] = m["get_help"] = m["from_command_file"] = [](variant result, const fc::variants& a)
       {
          return result.get_string();
       };
@@ -2596,8 +2596,9 @@ signed_transaction content_cancellation(const string& author,
 
 
 
-   void from_command_file( const std::string& command_file_name ) const
+   string from_command_file( const std::string& command_file_name ) const
    {
+       string result = "";
        std::atomic_bool cancel_token(false);
        decent::wallet_utility::WalletAPI my_api(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
 
@@ -2628,12 +2629,14 @@ signed_transaction content_cancellation(const string& author,
                        FC_THROW("Method from_command_file cannot be called from within a command file");
                    }
 
-                   std::cout << my_api.RunTask(current_line) << "\n";
+                   result += my_api.RunTask(current_line) + "\n";
                }
            }
        } FC_CAPTURE_AND_RETHROW( (command_file_name) )
 
        cancel_token = true;
+
+       return result;
    }
 
    void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
