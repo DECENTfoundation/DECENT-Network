@@ -3029,6 +3029,12 @@ signed_transaction content_cancellation(const string& author,
    {
       try {
          FC_ASSERT(!is_locked());
+         std::set<string> unique_to( to.begin(), to.end() );
+         if( to.size() != unique_to.size() )
+         {
+            ilog( "duplicate entries has been removed" );
+            std::cout<<"duplicate entries has been removed"<<std::endl;
+         }
 
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
@@ -3037,7 +3043,7 @@ signed_transaction content_cancellation(const string& author,
          pl.from = from_id;
          pl.pub_from = from_account.options.memo_key;
 
-         for (const auto& receiver : to) {
+         for (const auto& receiver : unique_to) {
             account_object to_account = get_account(receiver);
             pl.receivers_data.emplace_back(text, get_private_key(from_account.options.memo_key), to_account.options.memo_key, to_account.get_id());
          }
@@ -3065,6 +3071,12 @@ signed_transaction content_cancellation(const string& author,
    {
       try {
          FC_ASSERT(!is_locked());
+         std::set<string> unique_to( to.begin(), to.end() );
+         if( to.size() != unique_to.size() )
+         {
+            ilog( "duplicate entries has been removed" );
+            std::cout<<"duplicate entries has been removed"<<std::endl;
+         }
 
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
@@ -3072,7 +3084,7 @@ signed_transaction content_cancellation(const string& author,
          pl.from = from_id;
          pl.pub_from = public_key_type();
 
-         for (const auto &receiver : to) {
+         for (const auto &receiver : unique_to) {
             account_object to_account = get_account(receiver);
             pl.receivers_data.emplace_back(text, private_key_type(), public_key_type(), to_account.get_id());
          }
