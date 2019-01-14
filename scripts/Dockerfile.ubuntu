@@ -1,41 +1,28 @@
-ARG VERSION=latest
-FROM ubuntu:$VERSION
+ARG IMAGE_VERSION=latest
+FROM ubuntu:$IMAGE_VERSION
 LABEL maintainer="DECENT"
 
-# prerequisites
+# prerequisites for Ubuntu 18.04
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    autotools-dev \
-    automake \
-    autoconf \
-    libtool \
-    make \
-    cmake \
-    gcc \
-    g++ \
-    clang \ 
-    flex \
-    bison \
-    doxygen \
-    gettext \
-    git \
-    libreadline-dev \
-    libcrypto++-dev \
-    libgmp-dev \
-    libssl-dev \
-    libboost-all-dev \
-    libcurl4-openssl-dev \
-    libbz2-dev \
-    unzip \
+    libreadline7 \
+    libcrypto++6 \
+    libssl1.1 \
+    libcurl4 \
     wget \
     ca-certificates \
-    curl \
     && \
-    apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apt-get clean && apt-get autoremove
 
-# PBC
-RUN cd /root && wget https://github.com/blynn/pbc/archive/master.zip && unzip master.zip && cd pbc-master && ./setup #&& ./configure --prefix=/usr && make install && cd .. && rm -rf pbc-master master.zip
+# prerequisites for Ubuntu 16.04 (legacy)
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends \
+#    libreadline6 \
+#    libcrypto++9v5 \
+#    libssl1.0.0 \
+#    libcurl3 \
+#    && \
+#    apt-get clean && apt-get autoremove
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
@@ -43,4 +30,21 @@ ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 RUN wget "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && cp go-ipfs/ipfs /usr/bin && rm -rf go-ipfs*
 
-CMD ["/bin/bash"]
+# prepare directories
+ENV DCORE_HOME=/root
+ENV DCORE_USER=root
+USER $DCORE_USER
+WORKDIR $DCORE_HOME
+RUN mkdir $DCORE_HOME/.decent
+
+# DCore
+ARG DCORE_FILE
+ADD $DCORE_FILE DCore.deb
+RUN dpkg -i DCore.deb && rm DCore.deb
+
+EXPOSE 40000
+EXPOSE 8090
+EXPOSE 8091
+
+ENV DCORE_EXTRA_ARGS=""
+CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS
