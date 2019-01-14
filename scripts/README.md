@@ -17,17 +17,6 @@ Examples:
     # Fedora 29 image
     docker build -t decent/fedora/build:29 -f Dockerfile.fedora.build --build-arg IMAGE_VERSION=29 .
 
-## DCore build
-
-DCore build is specific for each platform.
-
-Fedora example:
-
-    ./fedora.sh 29 1.4.0
-    ls packages
-    # DCore-1.4.0-1.fc29.x86_64.rpm
-    # DCore-GUI-1.4.0-1.fc29.x86_64.rpm
-
 ## DCore runtime image
 
 Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package file in `DCORE_FILE` build argument. Optionally you might have to specify the OS layer image version using the `IMAGE_VERSION` build argument.
@@ -40,16 +29,46 @@ Naming convention for images: `decent/` prefix, then append original image name 
 | TARGETOS | linux |
 | TARGETARCH | amd64 |
 
+Because DCore build is specific for each platform, there are helper scripts for each of them.
+
+Ubuntu example (creates deb packages and docker image):
+
+    ./ubuntu.sh 18.04 1.4.0
+    ls packages
+
+Fedora example (creates rpm packages and docker image):
+
+    ./fedora.sh 29 1.4.0
+    ls packages
+    # DCore-1.4.0-1.fc29.x86_64.rpm
+    # DCore-GUI-1.4.0-1.fc29.x86_64.rpm
+
+If you already have DCore installation packages:
+
+    # the latest image
+    docker build -t decent/ubuntu/dcore -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/DCore-latest.deb .
+
+    # specific release
+    docker build -t decent/ubuntu/dcore:1.4.0 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/DCore-1.4.0.deb --build-arg IMAGE_VERSION=18.04 .
+
+    # specific release
+    docker build -t decent/fedora/dcore:1.4.0 -f Dockerfile.fedora --build-arg DCORE_FILE=/path/to/DCore-1.4.0-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
+
+## DCore custom build
+
+It is also possible to build DCore on custom OS image which satisfy all required dependencies.
+
+| Build argument | Default value |
+| --------------- | ------------- |
+| BASE_IMAGE | - |
+
 Examples:
 
     # the latest image
-    docker build -t decent/ubuntu/dcore -f Dockerfile.ubuntu --build-arg DCORE_FILE=DCore-latest.deb .
+    docker build -t decent/custom/dcore -f Dockerfile.dcore --build-arg BASE_IMAGE=custom .
 
     # specific release
-    docker build -t decent/ubuntu/dcore:1.4.0 -f Dockerfile.ubuntu --build-arg DCORE_FILE=DCore-1.4.0.deb --build-arg IMAGE_VERSION=18.04 .
-
-    # specific release
-    docker build -t decent/fedora/dcore:1.4.0 -f Dockerfile.fedora --build-arg DCORE_FILE=DCore-1.4.0-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
+    docker build -t decent/custom/dcore -f Dockerfile.dcore --build-arg BASE_IMAGE=custom --build-arg GIT_REV=1.4.0 .
 
 ## DCore run
 

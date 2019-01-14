@@ -23,8 +23,8 @@ RUN mkdir $DCORE_HOME/.decent
 
 # DCore
 ARG DCORE_FILE
-ADD $DCORE_FILE DCore.rpm
-RUN rpm -i DCore.rpm && rm DCore.rpm
+COPY $DCORE_FILE /tmp/DCore.rpm
+RUN rpm -i /tmp/DCore.rpm && rm /tmp/DCore.rpm
 
 EXPOSE 40000
 EXPOSE 8090
