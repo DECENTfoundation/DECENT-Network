@@ -29,12 +29,18 @@ Naming convention for images: `decent/` prefix, then append original image name 
 | TARGETOS | linux |
 | TARGETARCH | amd64 |
 
-Because DCore build is specific for each platform, there are helper scripts for each of them.
+Because DCore build is specific for each platform, there are helper scripts to make life easier. Each one requires
+two mandatory arguments (OS image and DCore versions) and one optional argument (git revision tag - it defaults to DCore version if not specified).
 
 Ubuntu example (creates deb packages and docker image):
 
+    # the latest OS image
+    ./ubuntu.sh latest 1.4.0
+    # or specific OS version
     ./ubuntu.sh 18.04 1.4.0
     ls packages
+    # dcore_1.4.0_amd64.deb
+    # dcore-gui_1.4.0_amd64.deb
 
 Fedora example (creates rpm packages and docker image):
 
@@ -45,13 +51,13 @@ Fedora example (creates rpm packages and docker image):
 
 If you already have DCore installation packages:
 
-    # the latest image
-    docker build -t decent/ubuntu/dcore -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/DCore-latest.deb .
+    # the latest OS image
+    docker build -t decent/ubuntu/dcore -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.4.0_amd64.deb .
 
-    # specific release
-    docker build -t decent/ubuntu/dcore:1.4.0 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/DCore-1.4.0.deb --build-arg IMAGE_VERSION=18.04 .
+    # specific OS version
+    docker build -t decent/ubuntu/dcore:1.4.0 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.4.0_amd64.deb --build-arg IMAGE_VERSION=18.04 .
 
-    # specific release
+    # specific OS version
     docker build -t decent/fedora/dcore:1.4.0 -f Dockerfile.fedora --build-arg DCORE_FILE=/path/to/DCore-1.4.0-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
 
 ## DCore custom build
