@@ -23,9 +23,7 @@ DCore build is specific for each platform.
 
 Fedora example:
 
-    mkdir packages
-    docker run -it -w /root --name DCore --mount type=bind,src=$PWD/DCore.spec,dst=/root/DCore.spec,readonly $1 --mount type=bind,src=$PWD/packages,dst=/root/rpmbuild/RPMS/x86_64 'rpmbuild -bb –define "dcore_version 1.4.0" -define "git_revision 1.4.0" DCore.spec'
-    docker rm DCore
+    ./fedora.sh 29 1.4.0
     ls packages
     # DCore-1.4.0-1.fc29.x86_64.rpm
     # DCore-GUI-1.4.0-1.fc29.x86_64.rpm
