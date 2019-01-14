@@ -1,12 +1,41 @@
 #!/bin/bash
 
-[ $# -lt 2 ] && { echo "Usage: $0 dcore_version git_revision"; exit 1; }
+[ $# -lt 3 ] && { echo "Usage: $0 image_version dcore_version git_revision"; exit 1; }
 
-echo "Building DCore version $1..."
-echo "The git revision is $2..."
+echo "Building DCore for Ubuntu $1..."
+echo "DCore version is $2..."
+echo "The git revision is $3..."
+
+# build CMake and Boost if on Ubuntu 16.04
+if [[ $1 == "16.04" ]]; then
+   export BOOST_ROOT=/boost/boost-1.65.1_prefix
+   mkdir boost
+   cd boost
+   wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
+   tar xvf boost_1_65_1.tar.gz
+   mkdir boost-1.65.1_prefix
+   cd boost_1_65_1
+   ./bootstrap.sh --prefix=$BOOST_ROOT
+   ./b2 install
+   cd ..
+   rm -rf boost_1_65_1 boost_1_65_1.tar.gz
+   cd ..
+   export CMAKE_ROOT=/cmake/cmake-3.13.1_prefix
+   export PATH=$CMAKE_ROOT/bin:$PATH
+   mkdir cmake
+   cd cmake
+   wget https://cmake.org/files/v3.13/cmake-3.13.1.tar.gz
+   tar xvf cmake-3.13.1.tar.gz
+   mkdir cmake-3.13.1_prefix
+   cd cmake-3.13.1
+   ./configure --prefix=$CMAKE_ROOT
+   make
+   make install
+   cd ..
+fi
 
 # build DCore
-GIT_REV=$2
+GIT_REV=$3
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
 cd DECENT-Network
 git submodule update --init --recursive
