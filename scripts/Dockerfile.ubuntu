@@ -3,32 +3,30 @@ FROM ubuntu:$IMAGE_VERSION
 LABEL maintainer="DECENT"
 
 # prerequisites for Ubuntu 18.04
+ARG IMAGE_VERSION
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libreadline7 \
-    libcrypto++6 \
-    libssl1.1 \
-    libcurl4 \
-    wget \
-    ca-certificates \
-    && \
-    apt-get clean && apt-get autoremove
-
-# prerequisites for Ubuntu 16.04 (legacy)
-#RUN apt-get update && \
-#    apt-get install -y --no-install-recommends \
-#    libreadline6 \
-#    libcrypto++9v5 \
-#    libssl1.0.0 \
-#    libcurl3 \
-#    && \
-#    apt-get clean && apt-get autoremove
+    if [ "$IMAGE_VERSION" != "16.04" ]; then apt-get install -y --no-install-recommends \
+        libreadline7 \
+        libcrypto++6 \
+        libssl1.1 \
+        libcurl4 \
+        wget \
+        ca-certificates; \
+    else apt-get install -y --no-install-recommends \
+        libreadline6 \
+        libcrypto++9v5 \
+        libssl1.0.0 \
+        libcurl3; \
+    fi && apt-get clean && apt-get autoremove
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-RUN wget "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && cp go-ipfs/ipfs /usr/bin && rm -rf go-ipfs*
+RUN wget "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
+    tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
+    cp go-ipfs/ipfs /usr/bin && \
+    rm -rf go-ipfs*
 
 # prepare directories
 ENV DCORE_HOME=/root
@@ -39,8 +37,8 @@ RUN mkdir $DCORE_HOME/.decent
 
 # DCore
 ARG DCORE_FILE
-ADD $DCORE_FILE DCore.deb
-RUN dpkg -i DCore.deb && rm DCore.deb
+COPY $DCORE_FILE /tmp/DCore.deb
+RUN dpkg -i /tmp/DCore.deb && rm /tmp/DCore.deb
 
 EXPOSE 40000
 EXPOSE 8090
