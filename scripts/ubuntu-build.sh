@@ -34,7 +34,7 @@ if [[ $1 == "16.04" ]]; then
    ./configure --prefix=$CMAKE_ROOT
    make
    make install
-   cd ..
+   cd ../..
 fi
 
 # build DCore

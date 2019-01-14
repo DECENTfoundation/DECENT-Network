@@ -16,7 +16,9 @@ RUN apt-get update && \
         libreadline6 \
         libcrypto++9v5 \
         libssl1.0.0 \
-        libcurl3; \
+        libcurl3 \
+        wget \
+        ca-certificates; \
     fi && apt-get clean && apt-get autoremove
 
 # IPFS
