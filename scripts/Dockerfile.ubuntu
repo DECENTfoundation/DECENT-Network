@@ -46,4 +46,4 @@ EXPOSE 40000
 EXPOSE 8090
 
 ENV DCORE_EXTRA_ARGS=""
-CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS
+CMD decentd -d $DCORE_HOME/.decent/data --rpc-endpoint 0.0.0.0:8090 $DCORE_EXTRA_ARGS
