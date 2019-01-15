@@ -41,6 +41,7 @@ fi
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
 cd DECENT-Network
 git submodule update --init --recursive
+cp DCore.service /etc/systemd/user
 mkdir build
 cd build
 cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
@@ -83,6 +84,18 @@ echo " DCore is the blockchain you can easily build on. As the world’s first b
 echo " media and entertainment, DCore provides user-friendly software development kits (SDKs) that empower developers" >> dcore-gui/DEBIAN/control
 echo " and businesses to build decentralized applications for real-world use cases. DCore is fast, powerful," >> dcore-gui/DEBIAN/control
 echo " cost-efficient and packed-full of customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
+
+echo "#!/bin/sh" > dcore-node/DEBIAN/postinst
+echo "if [ $(pidof systemd) ]; then" > dcore-node/DEBIAN/postinst
+echo "  systemctl --global --no-reload preset DCore.service &>/dev/null" >> dcore-node/DEBIAN/postinst
+echo "fi" >> dcore-node/DEBIAN/postinst
+chmod 0755 dcore-node/DEBIAN/postinst
+
+echo "#!/bin/sh" > dcore-node/DEBIAN/prerm
+echo "if [ $(pidof systemd) ]; then" > dcore-node/DEBIAN/prerm
+echo "  systemctl --global disable DCore.service &>/dev/null" >> dcore-node/DEBIAN/prerm
+echo "fi" >> dcore-node/DEBIAN/prerm
+chmod 0755 dcore-node/DEBIAN/prerm
 
 # build the deb packages
 dpkg-deb --build dcore-node dcore-deb
