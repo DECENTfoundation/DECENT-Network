@@ -85,6 +85,7 @@ You need to mount an external data directory and genesis file (when using custom
 | ---- | -------------- |
 | /path/to/data | $DCORE_HOME/.decent/data |
 | /path/to/genesis.json | $DCORE_HOME/.decent/genesis.json |
+| /path/to/wallet.json | $DCORE_HOME/.decent/wallet.json |
 
 | Environment variable | Default value |
 | -------------------- | ------------- |
@@ -94,12 +95,10 @@ You need to mount an external data directory and genesis file (when using custom
 Examples:
 
     # run node on mainnet
-    docker run -d --name DCore --mount 'type=bind,src=/path/to/data,dst=/root/.decent/data' decent/ubuntu/dcore:latest
+    ./dcore.sh decent/ubuntu/dcore:latest /path/to/data
 
     # run node on custom configuration
-    docker run -d --name DCore --mount 'type=bind,src=/path/to/data,dst=/root/.decent/data' --mount 'type=bind,src=/path/to/genesis.json,dst=/root/.decent/genesis.json' -e "DCORE_EXTRA_ARGS=--genesis-json /root/.decent/genesis.json" decent/ubuntu/dcore:latest
+    ./dcore.sh decent/ubuntu/dcore:latest /path/to/data /path/to/genesis.json
 
     # run wallet
-    docker cp /path/to/wallet.json DCore:/root/.decent/wallet.json
-    docker exec -it DCore cli_wallet
-    docker cp DCore:/root/.decent/wallet.json /path/to/wallet.json
+    ./cli_wallet.sh /path/to/wallet.json
