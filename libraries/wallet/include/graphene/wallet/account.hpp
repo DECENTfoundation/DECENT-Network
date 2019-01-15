@@ -99,13 +99,15 @@ vector<operation_detail>  get_account_history(const string& name, int limit) con
  * @brief Get operations relevant to the specified account referenced
  * by an event numbering specific to the account. The current number of operations
  * for the account can be found in the account statistics (or use 0 for start).
+ * @note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
+ * from the oldest operation to the most recent.
  * @param name The account whose history should be queried
  * @param stop Sequence number of earliest operation. 0 is default and will
- * query 'limit' number of operations.
+ * query 'limit' number of operations
  * @param limit Maximum number of operations to retrieve (must not exceed 100)
- * @param start Sequence number of the most recent operation to retrieve.
- * 0 is default, which will start querying from the most recent operation.
- * @return A list of operations performed by account, ordered from most recent to oldest.
+ * @param start Sequence number of the most recent operation to retrieve
+ * 0 is default, which will start querying from the most recent operation
+ * @return A list of operations performed by account, ordered from most recent to oldest
  * @ingroup WalletAPI_Account
  */
 vector<operation_detail>  get_relative_account_history(const string& name,
