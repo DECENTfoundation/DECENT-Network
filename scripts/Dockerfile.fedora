@@ -28,7 +28,6 @@ RUN rpm -i /tmp/DCore.rpm && rm /tmp/DCore.rpm
 
 EXPOSE 40000
 EXPOSE 8090
-EXPOSE 8091
 
 ENV DCORE_EXTRA_ARGS=""
 CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS
