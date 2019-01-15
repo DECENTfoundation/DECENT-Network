@@ -1,0 +1,9 @@
+[Unit]
+Description=DCore node daemon
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/decentd --daemon
+
+[Install]
+WantedBy=multi-user.target
