@@ -11,8 +11,8 @@ Examples:
     # the latest Ubuntu image
     docker build -t decent/ubuntu/build -f Dockerfile.ubuntu.build .
 
-    # Ubuntu 18.04 image
-    docker build -t decent/ubuntu/build:18.04 -f Dockerfile.ubuntu.build --build-arg IMAGE_VERSION=18.04 .
+    # Ubuntu 16.04 image
+    docker build -t decent/ubuntu/build:16.04 -f Dockerfile.ubuntu.build --build-arg IMAGE_VERSION=16.04 .
 
     # Fedora 29 image
     docker build -t decent/fedora/build:29 -f Dockerfile.fedora.build --build-arg IMAGE_VERSION=29 .
@@ -35,30 +35,37 @@ two mandatory arguments (OS image and DCore versions) and one optional argument 
 Ubuntu example (creates deb packages and docker image):
 
     # the latest OS image
-    ./ubuntu.sh latest 1.4.0
+    ./ubuntu.sh latest 1.3.3
     # or specific OS version
-    ./ubuntu.sh 18.04 1.4.0
+    ./ubuntu.sh 16.04 1.3.3
     ls packages
-    # dcore_1.4.0_amd64.deb
-    # dcore-gui_1.4.0_amd64.deb
+    # dcore_1.3.3_amd64.deb
+    # dcore-gui_1.3.3_amd64.deb
+    docker images
+    # decent/ubuntu/dcore   1.3.3
 
 Fedora example (creates rpm packages and docker image):
 
-    ./fedora.sh 29 1.4.0
+    # the latest OS image
+    ./fedora.sh latest 1.3.3
+    # or specific OS version
+    ./fedora.sh 29 1.3.3
     ls packages
-    # DCore-1.4.0-1.fc29.x86_64.rpm
-    # DCore-GUI-1.4.0-1.fc29.x86_64.rpm
+    # DCore-1.3.3-1.fc29.x86_64.rpm
+    # DCore-GUI-1.3.3-1.fc29.x86_64.rpm
+    docker images
+    # decent/fedora/dcore   1.3.3
 
 If you already have DCore installation packages:
 
     # the latest OS image
-    docker build -t decent/ubuntu/dcore -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.4.0_amd64.deb .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.3.3_amd64.deb .
 
     # specific OS version
-    docker build -t decent/ubuntu/dcore:1.4.0 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.4.0_amd64.deb --build-arg IMAGE_VERSION=18.04 .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.3.3_amd64.deb --build-arg IMAGE_VERSION=16.04 .
 
     # specific OS version
-    docker build -t decent/fedora/dcore:1.4.0 -f Dockerfile.fedora --build-arg DCORE_FILE=/path/to/DCore-1.4.0-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
+    docker build -t decent/fedora/dcore:1.3.3 -f Dockerfile.fedora --build-arg DCORE_FILE=/path/to/DCore-1.3.3-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
 
 ## DCore custom build
 
@@ -67,18 +74,19 @@ It is also possible to build DCore on custom OS image which satisfy all required
 | Build argument | Default value |
 | --------------- | ------------- |
 | BASE_IMAGE | - |
+| GIT_REV | master |
 
 Examples:
 
-    # the latest image
+    # the latest DCore version
     docker build -t decent/custom/dcore -f Dockerfile.dcore --build-arg BASE_IMAGE=custom .
 
-    # specific release
-    docker build -t decent/custom/dcore -f Dockerfile.dcore --build-arg BASE_IMAGE=custom --build-arg GIT_REV=1.4.0 .
+    # specific DCore release
+    docker build -t decent/custom/dcore:1.3.3 -f Dockerfile.dcore --build-arg BASE_IMAGE=custom --build-arg GIT_REV=1.3.3 .
 
 ## DCore run
 
-DCore image exposes 3 ports: 8090 (websocket RPC to listen on), 8091 (wallet websocket RPC to listen on) and 40000 (P2P).
+DCore image exposes 2 ports: 8090 (websocket RPC to listen on) and 40000 (P2P).
 You need to mount an external data directory and genesis file (when using custom configuration) to the running container.
 
 | Host | Container path |
@@ -95,10 +103,10 @@ You need to mount an external data directory and genesis file (when using custom
 Examples:
 
     # run node on mainnet
-    ./dcore.sh decent/ubuntu/dcore:latest /path/to/data
+    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data
 
     # run node on custom configuration
-    ./dcore.sh decent/ubuntu/dcore:latest /path/to/data /path/to/genesis.json
+    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data /path/to/genesis.json
 
     # run wallet
     ./cli_wallet.sh /path/to/wallet.json

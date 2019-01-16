@@ -11,7 +11,6 @@ RUN mkdir $DCORE_HOME/.decent
 
 EXPOSE 40000
 EXPOSE 8090
-EXPOSE 8091
 
 # build DCore
 ARG GIT_REV=master
@@ -24,4 +23,4 @@ RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundat
        cd ../.. && rm -rf DECENT-Network
 
 ENV DCORE_EXTRA_ARGS=""
-CMD decentd -d $DCORE_HOME/.decent/data $DCORE_EXTRA_ARGS
+CMD decentd -d $DCORE_HOME/.decent/data --rpc-endpoint 0.0.0.0:8090 $DCORE_EXTRA_ARGS

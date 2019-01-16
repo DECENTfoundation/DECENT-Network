@@ -5,9 +5,7 @@
 DCORE_VERSION=$2
 if [ $# -lt 3 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$3; fi
 
-echo "Building DCore for Ubuntu $1"
-echo "DCore version is $DCORE_VERSION"
-echo "The git revision is $GIT_REV"
+echo "Building DCore $DCORE_VERSION (git revision $GIT_REV) for Ubuntu $1"
 
 # build CMake and Boost if on Ubuntu 16.04
 if [[ $1 == "16.04" ]]; then
@@ -65,11 +63,12 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-node/DEBIAN/control
 echo "Priority: optional" >> dcore-node/DEBIAN/control
 echo "Architecture: amd64" >> dcore-node/DEBIAN/control
-echo "Description: Fast, powerful, cost-efficient blockchain designed for digital content, media and entertainment distribution." >> dcore-node/DEBIAN/control
-echo " DCore is the blockchain you can easily build on. As the world’s first blockchain designed for digital content," >> dcore-node/DEBIAN/control
-echo " media and entertainment, DCore provides user-friendly software development kits (SDKs) that empower developers" >> dcore-node/DEBIAN/control
-echo " and businesses to build decentralized applications for real-world use cases. DCore is fast, powerful," >> dcore-node/DEBIAN/control
-echo " cost-efficient and packed-full of customizable features making it the ideal blockchain for any size project." >> dcore-node/DEBIAN/control
+echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-node/DEBIAN/control
+echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-node/DEBIAN/control
+echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-node/DEBIAN/control
+echo " software development kits (SDKs) that empower developers and businesses to build" >> dcore-node/DEBIAN/control
+echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-node/DEBIAN/control
+echo " customizable features making it the ideal blockchain for any size project." >> dcore-node/DEBIAN/control
 
 echo "Package: DCore-GUI" > dcore-gui/DEBIAN/control
 echo "Version: $DCORE_VERSION" >> dcore-gui/DEBIAN/control
@@ -79,11 +78,12 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-gui/DEBIAN/control
 echo "Priority: optional" >> dcore-gui/DEBIAN/control
 echo "Architecture: amd64" >> dcore-gui/DEBIAN/control
-echo "Description: Fast, powerful, cost-efficient blockchain designed for digital content, media and entertainment distribution (GUI client and node)." >> dcore-gui/DEBIAN/control
-echo " DCore is the blockchain you can easily build on. As the world’s first blockchain designed for digital content," >> dcore-gui/DEBIAN/control
-echo " media and entertainment, DCore provides user-friendly software development kits (SDKs) that empower developers" >> dcore-gui/DEBIAN/control
-echo " and businesses to build decentralized applications for real-world use cases. DCore is fast, powerful," >> dcore-gui/DEBIAN/control
-echo " cost-efficient and packed-full of customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
+echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-gui/DEBIAN/control
+echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-gui/DEBIAN/control
+echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-gui/DEBIAN/control
+echo " software development kits (SDKs) that empower developers and businesses to build" >> dcore-gui/DEBIAN/control
+echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-gui/DEBIAN/control
+echo " customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
 
 echo "#!/bin/sh" > dcore-node/DEBIAN/postinst
 echo "if [ $(pidof systemd) ]; then" > dcore-node/DEBIAN/postinst
