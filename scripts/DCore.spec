@@ -41,8 +41,8 @@ make -j$(nproc) install
 
 %install
 mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_userunitdir}
-cp %{_builddir}/DECENT-Network/DCore.service %{buildroot}%{_userunitdir}
+mkdir -p %{buildroot}%{_unitdir}
+cp %{_builddir}/DECENT-Network/%{name}.service %{buildroot}%{_unitdir}
 for f in %{_builddir}/DECENT-Network/build/artifacts/prefix/bin/*; do
     strip $f -o %{buildroot}%{_bindir}/$(basename $f) && chrpath -d %{buildroot}%{_bindir}/$(basename $f)
 done
@@ -53,15 +53,15 @@ rm -rf %{buildroot}
 %files
 %{_bindir}/cli_wallet
 %{_bindir}/decentd
-%{_userunitdir}/DCore.service
+%{_unitdir}/DCore.service
 
 %files GUI
 %{_bindir}/DECENT
 
 %post
-%systemd_user_post %{name}.service
+%systemd_post %{name}.service
 
 %preun
-%systemd_user_preun %{name}.service
+%systemd_preun %{name}.service
 
 %changelog
