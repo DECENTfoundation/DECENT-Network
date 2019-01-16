@@ -5,6 +5,12 @@ LABEL maintainer="DECENT"
 # prerequisites
 RUN dnf install -y cryptopp wget procps && dnf clean all
 
+# PBC
+RUN wget https://github.com/blynn/pbc/archive/master.zip && \
+    unzip master.zip && cd pbc-master && \
+    ./setup && ./configure --prefix=/usr && make install && \
+    cd .. && rm -rf pbc-master master.zip
+
 # IPFS
 ARG IPFS_VERSION=v0.4.18
 ARG TARGETOS=linux
@@ -19,12 +25,11 @@ ENV DCORE_HOME=/root
 ENV DCORE_USER=root
 USER $DCORE_USER
 WORKDIR $DCORE_HOME
-RUN mkdir $DCORE_HOME/.decent
 
 # DCore
 ARG DCORE_FILE
 COPY $DCORE_FILE /tmp/DCore.rpm
-RUN rpm -i /tmp/DCore.rpm && rm /tmp/DCore.rpm
+RUN mkdir $DCORE_HOME/.decent && rpm -i /tmp/DCore.rpm && rm /tmp/DCore.rpm
 
 EXPOSE 40000
 EXPOSE 8090

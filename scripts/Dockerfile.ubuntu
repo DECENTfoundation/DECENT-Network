@@ -2,7 +2,7 @@ ARG IMAGE_VERSION=latest
 FROM ubuntu:$IMAGE_VERSION
 LABEL maintainer="DECENT"
 
-# prerequisites for Ubuntu 18.04
+# prerequisites
 ARG IMAGE_VERSION
 RUN apt-get update && \
     if [ "$IMAGE_VERSION" != "16.04" ]; then apt-get install -y --no-install-recommends \
@@ -21,6 +21,12 @@ RUN apt-get update && \
         ca-certificates; \
     fi && apt-get clean && apt-get autoremove
 
+# PBC
+RUN wget https://github.com/blynn/pbc/archive/master.zip && \
+    unzip master.zip && cd pbc-master && \
+    ./setup && ./configure --prefix=/usr && make install && \
+    cd .. && rm -rf pbc-master master.zip
+
 # IPFS
 ARG IPFS_VERSION=v0.4.18
 ARG TARGETOS=linux
@@ -35,12 +41,11 @@ ENV DCORE_HOME=/root
 ENV DCORE_USER=root
 USER $DCORE_USER
 WORKDIR $DCORE_HOME
-RUN mkdir $DCORE_HOME/.decent
 
 # DCore
 ARG DCORE_FILE
 COPY $DCORE_FILE /tmp/DCore.deb
-RUN dpkg -i /tmp/DCore.deb && rm /tmp/DCore.deb
+RUN mkdir $DCORE_HOME/.decent && dpkg -i /tmp/DCore.deb && rm /tmp/DCore.deb
 
 EXPOSE 40000
 EXPOSE 8090
