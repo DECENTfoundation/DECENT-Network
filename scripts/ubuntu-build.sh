@@ -47,7 +47,7 @@ make install
 # copy the binaries
 mkdir -p ../../dcore-node/usr/bin
 mkdir -p ../../dcore-node/DEBIAN
-mkdir -p ../../dcore-node/etc/systemd/user
+mkdir -p ../../dcore-node/etc/systemd/system
 cp ../DCore.service ../../dcore-node/etc/systemd/system
 cp programs/decentd/decentd programs/cli_wallet/cli_wallet ../../dcore-node/usr/bin
 mkdir -p ../../dcore-gui/usr/bin
