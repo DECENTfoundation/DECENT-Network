@@ -1,22 +1,3 @@
-## OS build image
-
-Naming convention for images: use `decent/` prefix, then append original image name and `/build` suffix, e.g. `decent/ubuntu/build`.
-
-| Build argument | Default value |
-| --------------- | ------------- |
-| IMAGE_VERSION | latest |
-
-Examples:
-
-    # the latest Ubuntu image
-    docker build -t decent/ubuntu/build -f Dockerfile.ubuntu.build .
-
-    # Ubuntu 16.04 image
-    docker build -t decent/ubuntu/build:16.04 -f Dockerfile.ubuntu.build --build-arg IMAGE_VERSION=16.04 .
-
-    # Fedora 29 image
-    docker build -t decent/fedora/build:29 -f Dockerfile.fedora.build --build-arg IMAGE_VERSION=29 .
-
 ## DCore runtime image
 
 Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package version in `DCORE_VERSION` build argument. Optionally you might have to specify the OS layer image version using the `IMAGE_VERSION` build argument.
@@ -60,13 +41,32 @@ Fedora example (creates rpm packages and docker image):
 If you already have DCore installation packages:
 
     # the latest OS image
-    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_VERSION=1.3.3 .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 .
 
     # specific OS version
-    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=16.04 .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=16.04 .
 
     # specific OS version
-    docker build -t decent/fedora/dcore:1.3.3 -f Dockerfile.fedora --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 .
+    docker build -t decent/fedora/dcore:1.3.3 -f fedora/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 .
+
+## OS build image
+
+Naming convention for images: use `decent/` prefix, then append original image name and `/build` suffix, e.g. `decent/ubuntu/build`.
+
+| Build argument | Default value |
+| --------------- | ------------- |
+| IMAGE_VERSION | latest |
+
+Examples:
+
+    # the latest Ubuntu image
+    docker build -t decent/ubuntu/build -f ubuntu/Dockerfile.build ubuntu
+
+    # Ubuntu 16.04 image
+    docker build -t decent/ubuntu/build:16.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=16.04 ubuntu
+
+    # Fedora 29 image
+    docker build -t decent/fedora/build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
 
 ## DCore custom build
 
