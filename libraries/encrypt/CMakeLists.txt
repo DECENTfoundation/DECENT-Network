@@ -15,7 +15,7 @@ add_executable( test_encrypt test_encryption_utils.cpp ${HEADERS} )
 target_link_libraries( test_encrypt decent_encrypt )
 
 #add_executable( test_pbc_benchmark test_pbc_benchmark.cpp ${HEADERS} )
-#target_link_libraries( test_pbc_benchmark pbc decent_encrypt gmp )
+#target_link_libraries( test_pbc_benchmark decent_encrypt )
 
 #install( TARGETS
 #   decent_encrypt

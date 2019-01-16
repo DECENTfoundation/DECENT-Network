@@ -11,12 +11,12 @@ Building Decent
 For Ubuntu 18.04 LTS, execute in console:
 
      sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
      sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath gcc g++ clang flex bison doxygen gettext git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libncurses5-dev libboost-all-dev libcurl4-openssl-dev python-dev libicu-dev libbz2-dev
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
 
 > Note, that the default versions of Boost and CMake installed in Ubuntu 16.04 LTS are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
@@ -51,7 +51,18 @@ For Ubuntu 16.04 LTS, execute in console:
 For Fedora 28 or later, execute in console:
 
     sudo dnf clean metadata
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+
+And the last step is the same regardless on distribution, execute in console:
+    wget https://github.com/blynn/pbc/archive/master.zip
+    unzip master.zip
+    cd pbc-master
+    ./setup
+    ./configure --prefix=/usr
+    make
+    sudo make install
+    cd ..
+    rm -rf pbc-master master.zip
 
 ### Installing prerequisites in macOS
 

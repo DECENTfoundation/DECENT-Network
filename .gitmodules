@@ -11,6 +11,3 @@
 [submodule "libraries/contrib/cpp-ipfs-api"]
 	path = libraries/contrib/cpp-ipfs-api
 	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git
-[submodule "libraries/contrib/pbc"]
-	path = libraries/contrib/pbc
-	url = https://github.com/DECENTfoundation/pbc

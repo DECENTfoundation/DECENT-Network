@@ -70,7 +70,35 @@ include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
 find_package( CryptoPP REQUIRED )
-find_package( PBC REQUIRED )
+
+message( STATUS "Looking for GMP" )
+find_path( GMP_INCLUDE_DIR "gmp.h" )
+find_library( GMP_LIBRARIES NAMES "gmp" "mpir.lib" )
+
+if( NOT GMP_INCLUDE_DIR )
+   message( FATAL_ERROR "GMP includes not found" )
+endif()
+if( NOT GMP_LIBRARIES )
+   message( FATAL_ERROR "GMP library not found" )
+endif()
+
+mark_as_advanced( GMP_LIBRARIES GMP_INCLUDE_DIR )
+message( STATUS "GMP found at ${GMP_INCLUDE_DIR}, ${GMP_LIBRARIES}" )
+
+add_library( gmp UNKNOWN IMPORTED )
+set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
+set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
+
+message( STATUS "Looking for PBC" )
+find_path( PBC_INCLUDE_DIR "pbc.h" PATH_SUFFIXES "pbc" )
+find_library( PBC_LIBRARIES NAMES "pbc" "pbclib.lib" )
+
+add_library( pbc UNKNOWN IMPORTED )
+set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
+set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
+
+mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
+message( STATUS "PBC found at ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
 
 if( WIN32 )
 
