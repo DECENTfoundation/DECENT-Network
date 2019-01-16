@@ -39,7 +39,6 @@ fi
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
 cd DECENT-Network
 git submodule update --init --recursive
-cp DCore.service /etc/systemd/user
 mkdir build
 cd build
 cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
@@ -48,6 +47,8 @@ make install
 # copy the binaries
 mkdir -p ../../dcore-node/usr/bin
 mkdir -p ../../dcore-node/DEBIAN
+mkdir -p ../../dcore-node/etc/systemd/user
+cp ../DCore.service ../../dcore-node/etc/systemd/system
 cp programs/decentd/decentd programs/cli_wallet/cli_wallet ../../dcore-node/usr/bin
 mkdir -p ../../dcore-gui/usr/bin
 mkdir -p ../../dcore-gui/DEBIAN
