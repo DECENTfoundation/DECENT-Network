@@ -129,16 +129,10 @@ echo " software development kits (SDKs) that empower developers and businesses t
 echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-gui/DEBIAN/control
 echo " customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
 
-echo "#!/bin/sh" > dcore-node/DEBIAN/postinst
-echo "if [ $(pidof systemd) ]; then" > dcore-node/DEBIAN/postinst
-echo "  systemctl --global --no-reload preset DCore.service &>/dev/null" >> dcore-node/DEBIAN/postinst
-echo "fi" >> dcore-node/DEBIAN/postinst
+cp ../ubuntu/postinst dcore-node/DEBIAN/postinst
 chmod 0755 dcore-node/DEBIAN/postinst
 
-echo "#!/bin/sh" > dcore-node/DEBIAN/prerm
-echo "if [ $(pidof systemd) ]; then" > dcore-node/DEBIAN/prerm
-echo "  systemctl --global disable DCore.service &>/dev/null" >> dcore-node/DEBIAN/prerm
-echo "fi" >> dcore-node/DEBIAN/prerm
+cp ../ubuntu/postinst dcore-node/DEBIAN/prerm
 chmod 0755 dcore-node/DEBIAN/prerm
 
 # build the deb packages
