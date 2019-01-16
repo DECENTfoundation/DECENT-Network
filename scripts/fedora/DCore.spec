@@ -5,7 +5,7 @@ Release: 1%{?dist}
 License: Public Domain
 Summary: Fast, powerful and cost-efficient blockchain
 Source0: https://github.com/DECENTfoundation/DECENT-Network/archive/%{version}.tar.gz
-Requires: libpbc = 0.5.14
+Requires: libpbc = %{pbc_version}
 
 %{?systemd_requires}
 BuildRequires: systemd, boost-devel >= 1.65.1, qt5-qtbase-devel >= 5.11
@@ -18,7 +18,7 @@ decentralized applications for real-world use cases. DCore packed-full of
 customizable features making it the ideal blockchain for any size project.
 
 %package GUI
-Requires: libpbc = 0.5.14, qt5-qtbase >= 5.11
+Requires: libpbc = %{pbc_version}, qt5-qtbase >= 5.11
 Summary: Fast, powerful and cost-efficient blockchain - GUI client
 
 %description GUI

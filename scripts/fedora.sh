@@ -7,8 +7,6 @@ if [ $# -lt 3 ]; then GIT_REV=$2; else GIT_REV=$3; fi
 mkdir -p packages
 docker run -it -w /root --rm --name fedora.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/rpmbuild/RPMS/x86_64 \
-    --mount type=bind,src=$PWD/libpbc.spec,dst=/root/libpbc.spec,readonly \
-    --mount type=bind,src=$PWD/DCore.spec,dst=/root/DCore.spec,readonly \
-    --mount type=bind,src=$PWD/fedora-build.sh,dst=/root/fedora-build.sh,readonly \
-    decent/fedora/build:$1 ./fedora-build.sh $1 $2 $GIT_REV
+    --mount type=bind,src=$PWD/fedora,dst=/root/fedora,readonly \
+    decent/fedora/build:$1 fedora/build.sh $1 $2 $GIT_REV
 docker build -t decent/fedora/dcore:$2 -f Dockerfile.fedora --build-arg DCORE_VERSION=$2 --build-arg IMAGE_VERSION=$1 packages

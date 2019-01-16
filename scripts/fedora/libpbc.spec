@@ -1,6 +1,6 @@
 Name: libpbc
 URL: https://crypto.stanford.edu/pbc
-Version: 0.5.14
+Version: %{pbc_version}
 Release: 1%{?dist}
 License: Public Domain
 Summary: Pairing-Based Crypto library
