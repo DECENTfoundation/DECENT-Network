@@ -29,11 +29,4 @@ RUN apt-get update && \
     ca-certificates && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# PBC
-RUN cd /root && \
-    wget https://github.com/blynn/pbc/archive/master.zip && \
-    unzip master.zip && cd pbc-master && \
-    ./setup && ./configure --prefix=/usr && make install && \
-    cd .. && rm -rf pbc-master master.zip
-
 CMD ["/bin/bash"]

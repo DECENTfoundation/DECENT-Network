@@ -19,12 +19,13 @@ Examples:
 
 ## DCore runtime image
 
-Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package file in `DCORE_FILE` build argument. Optionally you might have to specify the OS layer image version using the `IMAGE_VERSION` build argument.
+Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package version in `DCORE_VERSION` build argument. Optionally you might have to specify the OS layer image version using the `IMAGE_VERSION` build argument.
 
 | Build argument | Default value |
 | --------------- | ------------- |
-| DCORE_FILE | - |
+| DCORE_VERSION | - |
 | IMAGE_VERSION | latest |
+| PBC_VERSION | 0.5.14 |
 | IPFS_VERSION | v0.4.18 |
 | TARGETOS | linux |
 | TARGETARCH | amd64 |
@@ -59,13 +60,13 @@ Fedora example (creates rpm packages and docker image):
 If you already have DCore installation packages:
 
     # the latest OS image
-    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.3.3_amd64.deb .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_VERSION=1.3.3 .
 
     # specific OS version
-    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_FILE=/path/to/dcore_1.3.3_amd64.deb --build-arg IMAGE_VERSION=16.04 .
+    docker build -t decent/ubuntu/dcore:1.3.3 -f Dockerfile.ubuntu --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=16.04 .
 
     # specific OS version
-    docker build -t decent/fedora/dcore:1.3.3 -f Dockerfile.fedora --build-arg DCORE_FILE=/path/to/DCore-1.3.3-1.fc29.x86_64.rpm --build-arg IMAGE_VERSION=29 .
+    docker build -t decent/fedora/dcore:1.3.3 -f Dockerfile.fedora --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 .
 
 ## DCore custom build
 

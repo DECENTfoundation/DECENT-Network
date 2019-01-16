@@ -32,13 +32,6 @@ RUN dnf install -y \
     boost-static && \
     dnf clean all
 
-# PBC
-RUN cd /root && \
-    wget https://github.com/blynn/pbc/archive/master.zip && \
-    unzip master.zip && cd pbc-master && \
-    ./setup && ./configure --prefix=/usr && make install && \
-    cd .. && rm -rf pbc-master master.zip
-
 # prepare directories
 USER root
 RUN rpmdev-setuptree

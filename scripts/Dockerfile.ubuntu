@@ -22,10 +22,9 @@ RUN apt-get update && \
     fi && apt-get clean && apt-get autoremove
 
 # PBC
-RUN wget https://github.com/blynn/pbc/archive/master.zip && \
-    unzip master.zip && cd pbc-master && \
-    ./setup && ./configure --prefix=/usr && make install && \
-    cd .. && rm -rf pbc-master master.zip
+ARG PBC_VERSION=0.5.14
+COPY libpbc_$PBC_VERSION_*.deb /tmp
+RUN dpkg -i /tmp/libpbc_$PBC_VERSION_* && rm /tmp/libpbc_$PBC_VERSION_*
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
@@ -43,9 +42,9 @@ USER $DCORE_USER
 WORKDIR $DCORE_HOME
 
 # DCore
-ARG DCORE_FILE
-COPY $DCORE_FILE /tmp/DCore.deb
-RUN mkdir $DCORE_HOME/.decent && dpkg -i /tmp/DCore.deb && rm /tmp/DCore.deb
+ARG DCORE_VERSION
+COPY dcore_$DCORE_VERSION_*.deb /tmp
+RUN mkdir $DCORE_HOME/.decent && dpkg -i /tmp/dcore_$DCORE_VERSION_* && rm /tmp/dcore_$DCORE_VERSION_*
 
 EXPOSE 40000
 EXPOSE 8090

@@ -35,6 +35,36 @@ if [[ $1 == "16.04" ]]; then
    cd ../..
 fi
 
+# build PBC
+wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
+tar xvf pbc-0.5.14.tar.gz
+cd pbc-0.5.14
+./setup
+./configure --prefix=/usr
+make install
+rm -rf pbc-0.5.14 pbc-0.5.14.tar.gz
+
+cd ..
+mkdir -p libpbc/usr/lib
+cp /usr/lib/libpbc.* libpbc/usr/lib
+
+mkdir -p libpbc/DEBIAN
+echo "Package: libpbc" > libpbc/DEBIAN/control
+echo "Version: 0.5.14" >> libpbc/DEBIAN/control
+echo "Maintainer: DECENT <support@decent.ch>" >> libpbc/DEBIAN/control
+echo "Homepage: https://crypto.stanford.edu/pbc" >> libpbc/DEBIAN/control
+echo "Source: https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz" >> libpbc/DEBIAN/control
+echo "Section: net" >> libpbc/DEBIAN/control
+echo "Priority: optional" >> libpbc/DEBIAN/control
+echo "Architecture: amd64" >> libpbc/DEBIAN/control
+echo "Description: Pairing-Based Crypto library." >> libpbc/DEBIAN/control
+echo " Pairing-based cryptography is a relatively young area of cryptography that" >> libpbc/DEBIAN/control
+echo " revolves around a certain function with special properties. The PBC library is" >> libpbc/DEBIAN/control
+echo " designed to be the backbone of implementations of pairing-based cryptosystems," >> libpbc/DEBIAN/control
+echo " thus speed and portability are important goals. It provides routines such as" >> libpbc/DEBIAN/control
+echo " elliptic curve generation, elliptic curve arithmetic and pairing computation." >> libpbc/DEBIAN/control
+dpkg-deb --build libpbc dcore-deb
+
 # build DCore
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
 cd DECENT-Network
@@ -65,9 +95,9 @@ echo "Section: net" >> dcore-node/DEBIAN/control
 echo "Priority: optional" >> dcore-node/DEBIAN/control
 echo "Architecture: amd64" >> dcore-node/DEBIAN/control
 if [[ $1 == "16.04" ]]; then
-   echo "Depends: libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3" >> dcore-node/DEBIAN/control
+   echo "Depends: libpbc, libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3" >> dcore-node/DEBIAN/control
 else
-   echo "Depends: libreadline7, libcrypto++6, libssl1.1, libcurl4" >> dcore-node/DEBIAN/control
+   echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl4" >> dcore-node/DEBIAN/control
 fi
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-node/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-node/DEBIAN/control
@@ -85,9 +115,9 @@ echo "Section: net" >> dcore-gui/DEBIAN/control
 echo "Priority: optional" >> dcore-gui/DEBIAN/control
 echo "Architecture: amd64" >> dcore-gui/DEBIAN/control
 if [[ $1 == "16.04" ]]; then
-   echo "Depends: libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
+   echo "Depends: libpbc, libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
 else
-   echo "Depends: libreadline7, libcrypto++6, libssl1.1, libcurl4, qt5-default" >> dcore-gui/DEBIAN/control
+   echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl4, qt5-default" >> dcore-gui/DEBIAN/control
 fi
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-gui/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-gui/DEBIAN/control
