@@ -12,7 +12,6 @@ else
     echo "Using existing decent/fedora/build:$1 image $IMAGE"
 fi
 
-mkdir -p packages
 docker run -it -w /root --rm --name fedora.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/rpmbuild/RPMS/x86_64 \
     --mount type=bind,src=$PWD/fedora,dst=/root/fedora,readonly \

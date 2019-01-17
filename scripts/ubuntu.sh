@@ -12,7 +12,6 @@ else
     echo "Using existing decent/ubuntu/build:$1 image $IMAGE"
 fi
 
-mkdir -p packages
 docker run -it -w /root --rm --name ubuntu.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/dcore-deb \
     --mount type=bind,src=$PWD/ubuntu,dst=/root/ubuntu,readonly \
