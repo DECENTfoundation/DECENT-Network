@@ -2,9 +2,9 @@ Name: libpbc
 URL: https://crypto.stanford.edu/pbc
 Version: %{pbc_version}
 Release: 1%{?dist}
-License: Public Domain
+License: LGPLv3
 Summary: Pairing-Based Crypto library
-Source0: https://crypto.stanford.edu/pbc/files/pbc-%{version}.tar.gz
+Source0: https://github.com/DECENTfoundation/pbc/archive/%{version}.tar.gz
 
 %description
 Pairing-based cryptography is a relatively young area of cryptography that
@@ -26,20 +26,18 @@ Summary: Static %{name} library
 Requires: %{name}-devel = %{version}-%{release}
 
 %description static
-This package contains statically linkable version %{name} library.
+This package contains statically linkable %{name} library.
 
 %prep
-wget https://crypto.stanford.edu/pbc/files/pbc-%{version}.tar.gz
-rm -rf pbc-%{version}
-tar xvf pbc-%{version}.tar.gz
-rm pbc-%{version}.tar.gz
+rm -rf pbc
+git clone --single-branch --branch %{git_revision} https://github.com/DECENTfoundation/pbc.git
 
 %build
-cd pbc-%{version}
+cd pbc
 ./setup && ./configure --prefix=%{buildroot}/usr --libdir=%{buildroot}%{_libdir} && make
 
 %install
-cd pbc-%{version}
+cd pbc
 make install
 rm %{buildroot}%{_libdir}/*.la
 
