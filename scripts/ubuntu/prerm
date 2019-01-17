@@ -1,4 +1,4 @@
 #!/bin/sh
-if [ $(pidof systemd) ]; then
-   systemctl --global --no-reload preset DCore.service &>/dev/null
+if [ "$(pidof systemd)" ]; then
+   systemctl --global disable DCore &>/dev/null
 fi
