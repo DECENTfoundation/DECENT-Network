@@ -1,16 +1,18 @@
 #!/bin/bash
 
-[ $# -lt 2 ] && { echo "Usage: $0 image_version dcore_version [git_revision]"; exit 1; }
+[ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision]"; exit 1; }
 
-DCORE_VERSION=$2
+DCORE_VERSION=$1
 PBC_VERSION=0.5.14
-if [ $# -lt 3 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$3; fi
+if [ $# -lt 2 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$2; fi
+
+. /etc/os-release
 
 BASEDIR=$(dirname "$0")
-echo "Building DCore $DCORE_VERSION (git revision $GIT_REV) for Ubuntu $1"
+echo "Building DCore $DCORE_VERSION (git revision $GIT_REV) for $PRETTY_NAME"
 
 # build CMake and Boost if on Ubuntu 16.04
-if [[ $1 == "16.04" ]]; then
+if [[ $VERSION_ID == "16.04" ]]; then
    export BOOST_ROOT=/boost/boost-1.65.1_prefix
    mkdir boost
    cd boost
@@ -38,11 +40,11 @@ if [[ $1 == "16.04" ]]; then
 fi
 
 # install PBC
-wget https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-ubuntu18.04_amd64.deb
-wget https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-ubuntu18.04_amd64.deb
+wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb
+wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb
 
-dpkg -i libpbc_0.5.14-ubuntu18.04_amd64.deb
-dpkg -i libpbc-dev_0.5.14-ubuntu18.04_amd64.deb
+dpkg -i libpbc_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb
+dpkg -i libpbc-dev_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb
 
 # build DCore
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
@@ -73,7 +75,7 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-node/DEBIAN/control
 echo "Priority: optional" >> dcore-node/DEBIAN/control
 echo "Architecture: amd64" >> dcore-node/DEBIAN/control
-if [[ $1 == "16.04" ]]; then
+if [[ $VERSION_ID == "16.04" ]]; then
    echo "Depends: libpbc, libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3" >> dcore-node/DEBIAN/control
 else
    echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl4" >> dcore-node/DEBIAN/control
@@ -93,7 +95,7 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-gui/DEBIAN/control
 echo "Priority: optional" >> dcore-gui/DEBIAN/control
 echo "Architecture: amd64" >> dcore-gui/DEBIAN/control
-if [[ $1 == "16.04" ]]; then
+if [[ $VERSION_ID == "16.04" ]]; then
    echo "Depends: libpbc, libreadline6, libcrypto++9v5, libssl1.0.0, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
 else
    echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl4, qt5-default" >> dcore-gui/DEBIAN/control
@@ -110,10 +112,10 @@ cp $BASEDIR/prerm dcore-node/DEBIAN
 
 # build the deb packages
 dpkg-deb --build dcore-node dcore-deb
-mv dcore-deb/dcore_${DCORE_VERSION}_amd64.deb dcore-deb/dcore_${DCORE_VERSION}-ubuntu$1_amd64.deb
+mv dcore-deb/dcore_${DCORE_VERSION}_amd64.deb dcore-deb/dcore_${DCORE_VERSION}-ubuntu${VERSION_ID}_amd64.deb
 
 dpkg-deb --build dcore-gui dcore-deb
-mv dcore-deb/dcore-gui_${DCORE_VERSION}_amd64.deb dcore-deb/dcore-gui_${DCORE_VERSION}-ubuntu$1_amd64.deb
+mv dcore-deb/dcore-gui_${DCORE_VERSION}_amd64.deb dcore-deb/dcore-gui_${DCORE_VERSION}-ubuntu${VERSION_ID}_amd64.deb
 
 # clean up
 rm -rf DECENT-Network dcore-node dcore-gui

@@ -15,5 +15,5 @@ fi
 docker run -it -w /root --rm --name fedora.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/rpmbuild/RPMS/x86_64 \
     --mount type=bind,src=$PWD/fedora,dst=/root/fedora,readonly \
-    decent/fedora/build:$1 fedora/build.sh $1 $2 $GIT_REV
+    decent/fedora/build:$1 fedora/build.sh $2 $GIT_REV
 docker build -t decent/fedora/dcore:$2 -f fedora/Dockerfile --build-arg DCORE_VERSION=$2 --build-arg IMAGE_VERSION=$1 packages

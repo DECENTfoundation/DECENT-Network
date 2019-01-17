@@ -15,5 +15,5 @@ fi
 docker run -it -w /root --rm --name ubuntu.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/dcore-deb \
     --mount type=bind,src=$PWD/ubuntu,dst=/root/ubuntu,readonly \
-    decent/ubuntu/build:$1 ubuntu/build.sh $1 $2 $GIT_REV
+    decent/ubuntu/build:$1 ubuntu/build.sh $2 $GIT_REV
 docker build -t decent/ubuntu/dcore:$2 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=$2 --build-arg IMAGE_VERSION=$1 packages
