@@ -110,7 +110,10 @@ cp $BASEDIR/prerm dcore-node/DEBIAN
 
 # build the deb packages
 dpkg-deb --build dcore-node dcore-deb
+mv dcore-deb/dcore_${DCORE_VERSION}_amd64.deb dcore-deb/dcore_${DCORE_VERSION}-ubuntu$1_amd64.deb
+
 dpkg-deb --build dcore-gui dcore-deb
+mv dcore-deb/dcore-gui_${DCORE_VERSION}_amd64.deb dcore-deb/dcore-gui_${DCORE_VERSION}-ubuntu$1_amd64.deb
 
 # clean up
 rm -rf DECENT-Network dcore-node dcore-gui
