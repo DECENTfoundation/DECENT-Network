@@ -5,8 +5,8 @@
 if [ $# -lt 3 ]; then GIT_REV=$2; else GIT_REV=$3; fi
 
 IMAGE=`docker images -q decent/ubuntu/build:$1`
-if [ $! ]; then
-    echo "Build decent/ubuntu/build:$1"
+if [ -z $IMAGE ]; then
+    echo "Building decent/ubuntu/build:$1"
     docker build -t decent/ubuntu/build:$1 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=$1 ubuntu
 else
     echo "Using existing decent/ubuntu/build:$1 image $IMAGE"

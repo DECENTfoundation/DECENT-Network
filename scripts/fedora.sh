@@ -5,8 +5,8 @@
 if [ $# -lt 3 ]; then GIT_REV=$2; else GIT_REV=$3; fi
 
 IMAGE=`docker images -q decent/fedora/build:$1`
-if [ $! ]; then
-    echo "Build decent/fedora/build:$1"
+if [ -z $IMAGE ]; then
+    echo "Building decent/fedora/build:$1"
     docker build -t decent/fedora/build:$1 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=$1 fedora
 else
     echo "Using existing decent/fedora/build:$1 image $IMAGE"
