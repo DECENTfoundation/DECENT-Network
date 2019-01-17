@@ -23,8 +23,8 @@ RUN apt-get update && \
 
 # PBC
 ARG PBC_VERSION=0.5.14
-COPY libpbc_$PBC_VERSION_*.deb /tmp
-RUN dpkg -i /tmp/libpbc_$PBC_VERSION_* && rm /tmp/libpbc_$PBC_VERSION_*
+RUN wget https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-ubuntu${IMAGE_VERSION}_amd64.deb && \
+    dpkg -i libpbc_0.5.14-ubuntu${IMAGE_VERSION}_amd64.deb && rm libpbc_0.5.14-ubuntu${IMAGE_VERSION}_amd64.deb
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
