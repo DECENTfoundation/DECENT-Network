@@ -7,15 +7,16 @@ RUN dnf install -y cryptopp wget procps && dnf clean all
 
 # PBC
 ARG PBC_VERSION=0.5.14
-COPY libpbc-$PBC_VERSION-*.rpm /tmp
-RUN rpm -i /tmp/libpbc-$PBC_VERSION-* && rm /tmp/libpbc-$PBC_VERSION-*
+RUN export FEDORA=`rpm -E "%{fedora}"` && \
+    wget -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm && \
+    rpm -i /tmp/libpbc-$PBC_VERSION-* && rm /tmp/libpbc-$PBC_VERSION-*
 
 # IPFS
 ARG IPFS_VERSION=v0.4.18
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
-RUN wget "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
-    tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
+RUN wget -P /tmp "https://dist.ipfs.io/go-ipfs/${IPFS_VERSION}/go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
+    cd /tmp && tar xvf "go-ipfs_${IPFS_VERSION}_${TARGETOS}-${TARGETARCH}.tar.gz" && \
     cp go-ipfs/ipfs /usr/bin && \
     rm -rf go-ipfs*
 

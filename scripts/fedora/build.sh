@@ -9,6 +9,16 @@ if [ $# -lt 3 ]; then GIT_REV=$2; else GIT_REV=$3; fi
 BASEDIR=$(dirname "$0")
 echo "Building DCore $DCORE_VERSION (git revision $GIT_REV) for Fedora $1"
 
-rpmbuild -bb -D "pbc_version $PBC_VERSION" -D "git_revision $PBC_VERSION" $BASEDIR/libpbc.spec
-rpm -i /root/rpmbuild/RPMS/x86_64/libpbc*
+if rpm -q --quiet libpbc-devel; then
+    PBC=`rpm -q --queryformat "%{VERSION}" libpbc-devel`
+    echo "Using installed PBC $PBC"
+else
+    echo "Downloading PBC $PBC_VERSION"
+    FEDORA=`rpm -E "%{fedora}"`
+    wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
+    wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-devel-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
+    rpm -i libpbc*
+    rm libpbc*
+fi
+
 rpmbuild -bb -D "dcore_version $DCORE_VERSION" -D "pbc_version $PBC_VERSION" -D "git_revision $GIT_REV" $BASEDIR/DCore.spec

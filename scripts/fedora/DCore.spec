@@ -2,7 +2,7 @@ Name: DCore
 URL: https://decent.ch
 Version: %{dcore_version}
 Release: 1%{?dist}
-License: Public Domain
+License: GPLv3
 Summary: Fast, powerful and cost-efficient blockchain
 Source0: https://github.com/DECENTfoundation/DECENT-Network/archive/%{version}.tar.gz
 Requires: libpbc = %{pbc_version}
