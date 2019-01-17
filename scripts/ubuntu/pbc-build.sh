@@ -1,9 +1,10 @@
 #!/bin/bash
 
-[ $# -lt 1 ] && { echo "Usage: $0 pbc_version [git_revision]"; exit 1; }
+[ $# -lt 2 ] && { echo "Usage: $0 image_version pbc_version [git_revision]"; exit 1; }
 
-PBC_VERSION=$1
-if [ $# -lt 2 ]; then GIT_REV=$PBC_VERSION; else GIT_REV=$2; fi
+IMAGE_VERSION=$1
+PBC_VERSION=$2
+if [ $# -lt 3 ]; then GIT_REV=$PBC_VERSION; else GIT_REV=$3; fi
 
 # build PBC
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/pbc.git
@@ -65,4 +66,8 @@ echo " elliptic curve generation, elliptic curve arithmetic and pairing computat
 
 dpkg-deb --build libpbc dcore-deb
 dpkg-deb --build libpbc-dev dcore-deb
+
+mv dcore-deb/libpbc_${PBC_VERSION}_amd64.deb dcore-deb/libpbc_${PBC_VERSION}-ubuntu${IMAGE_VERSION}_amd64.deb
+mv dcore-deb/libpbc-dev_${PBC_VERSION}_amd64.deb dcore-deb/libpbc-dev_${PBC_VERSION}-ubuntu${IMAGE_VERSION}_amd64.deb
+
 rm -rf libpbc*
