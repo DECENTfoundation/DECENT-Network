@@ -6,6 +6,7 @@ DCORE_VERSION=$2
 PBC_VERSION=0.5.14
 if [ $# -lt 3 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$3; fi
 
+BASEDIR=$(dirname "$0")
 echo "Building DCore $DCORE_VERSION (git revision $GIT_REV) for Ubuntu $1"
 
 # build CMake and Boost if on Ubuntu 16.04
@@ -129,11 +130,8 @@ echo " software development kits (SDKs) that empower developers and businesses t
 echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-gui/DEBIAN/control
 echo " customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
 
-cp ../ubuntu/postinst dcore-node/DEBIAN/postinst
-chmod 0755 dcore-node/DEBIAN/postinst
-
-cp ../ubuntu/postinst dcore-node/DEBIAN/prerm
-chmod 0755 dcore-node/DEBIAN/prerm
+cp $BASEDIR/postinst dcore-node/DEBIAN
+cp $BASEDIR/prerm dcore-node/DEBIAN
 
 # build the deb packages
 dpkg-deb --build dcore-node dcore-deb
