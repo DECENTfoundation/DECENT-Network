@@ -1,0 +1,34 @@
+ARG IMAGE_VERSION=latest
+FROM debian:$IMAGE_VERSION
+LABEL maintainer="DECENT"
+
+# prerequisites
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    autotools-dev \
+    automake \
+    autoconf \
+    libtool \
+    make \
+    cmake \
+    g++ \
+    flex \
+    bison \
+    doxygen \
+    unzip \
+    wget \
+    git \
+    qt5-default \
+    libreadline-dev \
+    libcrypto++-dev \
+    libgmp-dev \
+    libssl-dev \
+    libboost-all-dev \
+    libcurl4-openssl-dev \
+    ca-certificates \
+    zlib1g \
+    zlib1g-dev && \
+    apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+CMD ["/bin/bash"]
