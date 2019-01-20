@@ -90,15 +90,22 @@ set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
 set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
 
 message( STATUS "Looking for PBC" )
-find_path( PBC_INCLUDE_DIR "pbc.h" PATH_SUFFIXES "pbc" )
+find_path( PBC_INCLUDE_DIR NAMES "pbc.h" "pbc/pbc.h" )
 find_library( PBC_LIBRARIES NAMES "pbc" "pbclib.lib" )
+
+if( NOT PBC_INCLUDE_DIR )
+   message( FATAL_ERROR "PBC includes not found" )
+endif()
+if( NOT PBC_LIBRARIES )
+   message( FATAL_ERROR "PBC library not found" )
+endif()
+
+mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
+message( STATUS "PBC found at ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
 
 add_library( pbc UNKNOWN IMPORTED )
 set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
 set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
-
-mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
-message( STATUS "PBC found at ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
 
 if( WIN32 )
 

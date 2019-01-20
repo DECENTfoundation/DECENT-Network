@@ -54,15 +54,16 @@ For Fedora 28 or later, execute in console:
     sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
 
 And the last step is the same regardless on distribution, execute in console:
-    wget https://github.com/blynn/pbc/archive/master.zip
-    unzip master.zip
-    cd pbc-master
+
+    wget https://github.com/DECENTfoundation/pbc/archive/0.5.14.tar.gz
+    unzip 0.5.14.zip
+    cd pbc-0.5.14
     ./setup
     ./configure --prefix=/usr
     make
     sudo make install
     cd ..
-    rm -rf pbc-master master.zip
+    rm -rf pbc-0.5.14 0.5.14.zip
 
 ### Installing prerequisites in macOS
 
