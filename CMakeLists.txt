@@ -9,7 +9,7 @@ if (POLICY CMP0048)
 endif()
 
 cmake_minimum_required( VERSION 3.10.2 FATAL_ERROR )
-project( Decent LANGUAGES CXX )
+project( Decent VERSION 1.3.3 LANGUAGES CXX )
 
 set( BLOCKCHAIN_NAME "Decent" )
 
@@ -26,6 +26,7 @@ endif()
 # Compile in C++11 mode
 set( CMAKE_CXX_STANDARD 11 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
+set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
@@ -58,9 +59,6 @@ if( APPLE )
             )
     endif()
 endif()
-
-set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
-set( ENABLE_INSTALLER YES )
 
 include( cotire )
 
@@ -202,56 +200,4 @@ find_package(Boost 1.65.1 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
-
-set(DECENT_NETWORK_TESTS true)
-
-if(DECENT_NETWORK_TESTS)
-    add_subdirectory( tests )
-endif()
-
-
-if( ENABLE_INSTALLER )
-
-    set( VERSION_MAJOR 0 )
-    set( VERSION_MINOR 1 )
-    set( VERSION_PATCH 0 )
-
-    include( InstallRequiredSystemLibraries )
-
-    if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
-        set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" CACHE PATH "..." FORCE )
-    else()
-    	set( CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/prefix" )
-    endif()
-    set( CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/artifacts/packages" )
-    set( CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/artifacts/package" )
-    set( CPACK_PACKAGE_NAME "Decent" )
-    set( CPACK_PACKAGE_VENDOR "Decent Services" )
-    set( CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}" )
-    set( CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}" )
-    set( CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}" )
-    set( CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}" )
-    set( CPACK_PACKAGE_DESCRIPTION "A client for the Decent network" )
-    set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "A client for the Decent network" )
-    set( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md" )
-    set( CPACK_PACKAGE_INSTALL_DIRECTORY "Decent ${CPACK_PACKAGE_VERSION}" )
-
-    if( WIN32 )
-        set( CPACK_GENERATOR "ZIP;NSIS" )
-        set( CPACK_PACKAGE_NAME "Decent" ) # override above
-        set( CPACK_NSIS_EXECUTABLES_DIRECTORY "." )
-        set( CPACK_NSIS_PACKAGE_NAME "Decent v${CPACK_PACKAGE_VERSION}" )
-        set( CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}" )
-        set( CPACK_NSIS_DEFINES "  !define MUI_STARTMENUPAGE_DEFAULTFOLDER \\\"Decent\\\"" )
-        # It seems like windows zip files usually don't have a single directory inside them, unix tgz frequently do.
-        set( CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0 )
-    elseif( APPLE )
-        set( CPACK_GENERATOR "DragNDrop;TGZ" )
-    elseif( LINUX )
-        # Linux gets a .tgz
-        set( CPACK_GENERATOR "TGZ" )
-        set( CPACK_INCLUDE_TOPLEVEL_DIRECTORY 1 )
-    endif()
-
-    include( CPack )
-endif()
+add_subdirectory( tests )
