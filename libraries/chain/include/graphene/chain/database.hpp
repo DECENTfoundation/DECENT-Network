@@ -40,8 +40,7 @@
 
 #include <graphene/chain/protocol/protocol.hpp>
 
-#include <decent/monitoring/monitoring.hpp>
-
+#include <fc/monitoring.hpp>
 #include <fc/log/logger.hpp>
 
 #include <map>

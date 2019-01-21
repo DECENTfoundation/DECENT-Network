@@ -86,7 +86,6 @@ target_link_libraries(DECENT PRIVATE
                       graphene_utilities
                       graphene_wallet
                       wallet_utility
-                      decent_monitoring
                       package_manager
                       decent_encrypt
                       graphene_account_history

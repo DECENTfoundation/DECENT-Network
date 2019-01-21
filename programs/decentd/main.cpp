@@ -39,13 +39,13 @@
 #include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
+#include <fc/monitoring.hpp>
 
 #include <boost/version.hpp>
 #include <openssl/opensslv.h>
 #include <cryptopp/config.h>
 
 #include <decent/decent_config.hpp>
-#include <decent/monitoring/monitoring_fc.hpp>
 
 #include <iostream>
 #include <fstream>

@@ -78,7 +78,7 @@ add_library( graphene_chain
              ${HEADERS}
            )
 
-target_link_libraries( graphene_chain PRIVATE decent_monitoring graphene_db decent_encrypt )
+target_link_libraries( graphene_chain PRIVATE graphene_db decent_encrypt )
 
 target_include_directories( graphene_chain PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

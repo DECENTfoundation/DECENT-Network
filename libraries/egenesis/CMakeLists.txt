@@ -12,7 +12,7 @@ add_executable( embed_genesis
    embed_genesis.cpp
    )
 
-target_link_libraries( embed_genesis PRIVATE decent_monitoring graphene_chain graphene_db graphene_app graphene_egenesis_none decent_encrypt )
+target_link_libraries( embed_genesis PRIVATE graphene_chain graphene_db graphene_app graphene_egenesis_none decent_encrypt )
 
 set( embed_genesis_args
    -t "${CMAKE_CURRENT_SOURCE_DIR}/egenesis_brief.cpp.tmpl---${CMAKE_CURRENT_BINARY_DIR}/egenesis_brief.cpp"

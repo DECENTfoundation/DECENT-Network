@@ -82,8 +82,7 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
-#include <decent/monitoring/monitoring.hpp>
-
+#include <fc/monitoring.hpp>
 #include <fc/git_revision.hpp>
 
 //#define ENABLE_DEBUG_ULOGS

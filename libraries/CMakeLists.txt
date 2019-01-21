@@ -13,8 +13,6 @@ add_subdirectory( package )
 add_subdirectory( plugins )
 add_subdirectory( wallet )
 add_subdirectory( wallet_utility )
-add_subdirectory( monitoring )
 if(UPDATE_MANAGER)
   add_subdirectory( update )
 endif()
-

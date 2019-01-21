@@ -81,9 +81,9 @@
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
-#include <decent/monitoring/monitoring.hpp>
 #include <decent/wallet_utility/wallet_utility.hpp>
 
+#include <fc/monitoring.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include "json.hpp"
 #include "ipfs/client.h"
