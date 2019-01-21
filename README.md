@@ -91,7 +91,7 @@ After all the prerequisites are installed, execute the following commands in con
     # Build and install Decent.
      mkdir -p ~/dev/DECENTfoundation/DECENT-Network-build
      cd ~/dev/DECENTfoundation/DECENT-Network-build
-     cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ~/dev/DECENTfoundation/DECENT-Network
+     cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ~/dev/DECENTfoundation/DECENT-Network
      cmake --build . --target all -- -j -l 3.0
      cmake --build . --target install
 
@@ -100,7 +100,7 @@ After all the prerequisites are installed, execute the following commands in con
 >     $ make -j -l 3.0
 >     $ make install
 
-By this time you should have Decent files installed at `~/dev/DECENTfoundation/DECENT-Network-build/artifacts/prefix` directory. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-D CMAKE_INSTALL_PREFIX=~/dev/DECENTfoundation/DECENT-Network-prefix` to the command line.
+Decent artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENTfoundation/DECENT-Network-prefix` to the command line.
 
 You can use any path instead of `~/dev/DECENTfoundation` in the steps above.
 
