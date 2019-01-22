@@ -17,7 +17,7 @@ if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2 )
         message( FATAL_ERROR "GCC version must be at least 4.9.2!" )
     endif()
-elseif( CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" )
+elseif( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5 )
         message( FATAL_ERROR "Clang version must be at least 3.5!" )
     endif()
@@ -62,7 +62,6 @@ endif()
 
 include( cotire )
 
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/CMakeModules" )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
@@ -126,12 +125,6 @@ if( WIN32 )
 
 else() # Apple and Linux
 
-    find_library( READLINE_LIBRARIES NAMES readline )
-    find_path( READLINE_INCLUDE_DIR "readline/readline.h" )
-    if( NOT READLINE_INCLUDE_DIR OR NOT READLINE_LIBRARIES )
-        message(FATAL_ERROR "Readline not found")
-    endif()
-
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring Decent on OS X" )
@@ -140,16 +133,6 @@ else() # Apple and Linux
         # Linux Specific Options Here
         message( STATUS "Configuring Decent on Linux" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
-        set( rt_library rt )
-        set( pthread_library pthread )
-        if( NOT DEFINED crypto_library )
-            # I'm not sure why this is here, I guess someone has openssl and can't detect it with find_package()?
-            # if you have a normal install, you can define crypto_library to the empty string to avoid a build error
-            set( crypto_library crypto )
-        endif()
-        if( FULL_STATIC_BUILD )
-            set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc" )
-        endif()
     endif()
 
     if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
