@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ $# -lt 3 ] && { echo "Usage: $0 install_dir dcore_version identity"; exit 1; }
+[ $# -lt 4 ] && { echo "Usage: $0 install_dir dcore_version app_identity install_identity"; exit 1; }
 
 BASEDIR=$(dirname "$0")
 
@@ -55,5 +55,5 @@ cd ../../..
 codesign -s "$3" -v DECENT.app -f --deep -vv
 
 cd ../..
-pkgbuild --root dist --component-plist decent_pkg.plist DECENT.pkg --sign "$3"
-productbuild --distribution decent_distribution.plist --resources dist/Applications/DECENT.app/Contents/Resources --package-path DECENT.pkg DECENT-distribution.$2.pkg --sign "$3"
+pkgbuild --root dist --component-plist decent_pkg.plist DECENT.pkg --sign "$4"
+productbuild --distribution decent_distribution.plist --resources dist/Applications/DECENT.app/Contents/Resources --package-path DECENT.pkg DECENT-distribution.$2.pkg --sign "$4"
