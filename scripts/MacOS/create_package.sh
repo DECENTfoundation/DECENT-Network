@@ -1,18 +1,18 @@
 #!/bin/bash
 
-[ $# -lt 2 ] && { echo "Usage: $0 install_dir dcore_version identity"; exit 1; }
+[ $# -lt 3 ] && { echo "Usage: $0 install_dir dcore_version identity"; exit 1; }
 
 BASEDIR=$(dirname "$0")
 
-rm -rf $BASEDIR/Applications
-mkdir $BASEDIR/Applications
-cp -R $1/bin/DECENT.app $BASEDIR/Applications
-cp $1/bin/decentd $BASEDIR/Applications/DECENT.app/Contents/MacOS
-cp $1/bin/cli_wallet $BASEDIR/Applications/DECENT.app/Contents/MacOS
+rm -rf $BASEDIR/dist
+mkdir -p $BASEDIR/dist/Applications
+cp -R $1/bin/DECENT.app $BASEDIR/dist/Applications
+cp $1/bin/decentd $BASEDIR/dist/Applications/DECENT.app/Contents/MacOS
+cp $1/bin/cli_wallet $BASEDIR/dist/Applications/DECENT.app/Contents/MacOS
 
-cp $BASEDIR/Resources/* $BASEDIR/Applications/DECENT.app/Contents/Resources
-sed s/VERSION/$2/ $BASEDIR/Info.plist > $BASEDIR/Applications/DECENT.app/Contents/Info.plist
-cd $BASEDIR/Applications/DECENT.app/Contents
+cp $BASEDIR/Resources/* $BASEDIR/dist/Applications/DECENT.app/Contents/Resources
+sed s/VERSION/$2/ $BASEDIR/Info.plist > $BASEDIR/dist/Applications/DECENT.app/Contents/Info.plist
+cd $BASEDIR/dist/Applications/DECENT.app/Contents
 
 mkdir Plugins
 cp -R /usr/local/opt/qt/plugins/iconengines Plugins
@@ -53,5 +53,7 @@ install_name_tool -add_rpath @executable_path/../Frameworks/ DECENT
 
 cd ../../..
 codesign -s "$3" -v DECENT.app -f --deep -vv
-pkgbuild --root dist --component-plist ../decent_pkg.plist DECENT.pkg --sign "$3"
-productbuild --distribution ../decent_distribution.plist --resources DECENT.app/Contents/Resources --package-path DECENT.pkg DECENT-distribution.$2.pkg --sign "$3"
+
+cd ../..
+pkgbuild --root dist --component-plist decent_pkg.plist DECENT.pkg --sign "$3"
+productbuild --distribution decent_distribution.plist --resources dist/Applications/DECENT.app/Contents/Resources --package-path DECENT.pkg DECENT-distribution.$2.pkg --sign "$3"
