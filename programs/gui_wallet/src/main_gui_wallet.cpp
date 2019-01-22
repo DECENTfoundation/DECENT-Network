@@ -20,10 +20,6 @@
 #include "gui_wallet_global.hpp"
 #include "mainwindow.hpp"
 
-#if NDEBUG
-//#define SET_LIBRARY_PATHS
-#endif
-
 int main(int argc, char* argv[])
 {
    QApplication app(argc, argv);
@@ -195,20 +191,6 @@ int main(int argc, char* argv[])
       GUI_ELOG("Exception: ${e}", ("e", ex.what()));
       exit(1);
    }
-   
-   
-#define SET_LIBRARY_PATHS 1
-#ifdef SET_LIBRARY_PATHS
-   auto pluginsDir = QDir(QCoreApplication::applicationDirPath());
-   if (pluginsDir.dirName() == "MacOS") {
-      pluginsDir.cdUp();
-   }
-   pluginsDir.cd("plugins");
-   
-
-   QCoreApplication::setLibraryPaths(QStringList(pluginsDir.absolutePath()));
-   QStringList paths = QCoreApplication::libraryPaths();
-#endif
 
    try {
       qRegisterMetaType<std::string>( "std::string" );
