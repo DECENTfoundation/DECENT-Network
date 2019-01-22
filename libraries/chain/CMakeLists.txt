@@ -1,29 +1,17 @@
 file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
-if( GRAPHENE_DISABLE_UNITY_BUILD )
-   set( GRAPHENE_DB_FILES
-        db_balance.cpp
-        db_block.cpp
-        db_getter.cpp
-        db_init.cpp
-        db_maint.cpp
-        db_management.cpp
-        db_decent.cpp
-        db_update.cpp
-        db_miner_schedule.cpp
-      )
-   message( STATUS "Graphene database unity build disabled" )
-else( GRAPHENE_DISABLE_UNITY_BUILD )
-   set( GRAPHENE_DB_FILES
-        database.cpp )
-   message( STATUS "Graphene database unity build enabled" )
-endif( GRAPHENE_DISABLE_UNITY_BUILD )
-
 ## SORT .cpp by most likely to change / break compile
 add_library( graphene_chain
 
-             # As database takes the longest to compile, start it first
-             ${GRAPHENE_DB_FILES}
+             db_balance.cpp
+             db_block.cpp
+             db_getter.cpp
+             db_init.cpp
+             db_maint.cpp
+             db_management.cpp
+             db_decent.cpp
+             db_update.cpp
+             db_miner_schedule.cpp
              fork_database.cpp
 
              protocol/types.cpp

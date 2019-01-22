@@ -11,10 +11,10 @@ target_link_libraries( decent_encrypt
 target_include_directories( decent_encrypt
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-add_executable( test_encrypt test_encryption_utils.cpp ${HEADERS} )
+add_executable( test_encrypt test_encryption_utils.cpp )
 target_link_libraries( test_encrypt decent_encrypt )
 
-#add_executable( test_pbc_benchmark test_pbc_benchmark.cpp ${HEADERS} )
+#add_executable( test_pbc_benchmark test_pbc_benchmark.cpp )
 #target_link_libraries( test_pbc_benchmark decent_encrypt )
 
 #install( TARGETS
