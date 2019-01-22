@@ -5,7 +5,7 @@ Release: 1%{?dist}
 License: GPLv3
 Summary: Fast, powerful and cost-efficient blockchain
 Source0: https://github.com/DECENTfoundation/DECENT-Network/archive/%{version}.tar.gz
-Requires: libpbc = %{pbc_version}
+Requires: libpbc = %{pbc_version}, openssl-libs >= 1.1, cryptopp >= 6.1, readline >= 7.0, ncurses-libs >= 6.1, libcurl, gmp, zlib
 
 %{?systemd_requires}
 BuildRequires: systemd, boost-devel >= 1.65.1, qt5-qtbase-devel >= 5.11
@@ -18,7 +18,7 @@ decentralized applications for real-world use cases. DCore packed-full of
 customizable features making it the ideal blockchain for any size project.
 
 %package GUI
-Requires: libpbc = %{pbc_version}, qt5-qtbase >= 5.11
+Requires: libpbc = %{pbc_version}, qt5-qtbase >= 5.11, openssl-libs >= 1.1, cryptopp >= 6.1, readline >= 7.0, ncurses-libs >= 6.1, libcurl, gmp, zlib
 Summary: Fast, powerful and cost-efficient blockchain - GUI client
 
 %description GUI
@@ -37,14 +37,14 @@ git submodule update --init --recursive
 %build
 mkdir DECENT-Network/build
 cd DECENT-Network/build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_builddir}/DCore ..
 make -j$(nproc) install
 
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_unitdir}
 cp %{_builddir}/DECENT-Network/%{name}.service %{buildroot}%{_unitdir}
-for f in %{_builddir}/DECENT-Network/build/artifacts/prefix/bin/*; do
+for f in %{_builddir}/DCore/bin/*; do
     strip $f -o %{buildroot}%{_bindir}/$(basename $f) && chrpath -d %{buildroot}%{_bindir}/$(basename $f)
 done
 

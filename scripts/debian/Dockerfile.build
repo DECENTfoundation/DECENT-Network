@@ -26,9 +26,14 @@ RUN apt-get update && \
     libssl-dev \
     libboost-all-dev \
     libcurl4-openssl-dev \
-    ca-certificates \
-    zlib1g \
-    zlib1g-dev && \
+    ca-certificates && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# PBC
+ARG PBC_VERSION=0.5.14
+RUN . /etc/os-release && \
+    wget -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-debian${VERSION_ID}_amd64.deb && \
+    wget -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-debian${VERSION_ID}_amd64.deb && \
+    dpkg -i /tmp/libpbc* && rm /tmp/libpbc*
 
 CMD ["/bin/bash"]

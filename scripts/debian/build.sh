@@ -3,7 +3,6 @@
 [ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision]"; exit 1; }
 
 DCORE_VERSION=$1
-PBC_VERSION=0.5.14
 if [ $# -lt 2 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$2; fi
 
 . /etc/os-release
@@ -37,12 +36,18 @@ make
 make install
 cd ../..
 
-# install PBC
-wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
-wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
-
-dpkg -i libpbc_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
-dpkg -i libpbc-dev_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
+# PBC
+if dpkg-query -W --showformat '${db:Status-Status}' libpbc-dev > /dev/null; then
+   PBC_VERSION=`dpkg-query -W --showformat='${Version}' libpbc-dev`
+   echo "Using installed PBC $PBC_VERSION"
+else
+   PBC_VERSION=0.5.14
+   echo "Downloading PBC $PBC_VERSION"
+   wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
+   wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-debian${VERSION_ID}_amd64.deb
+   dpkg -i libpbc*
+   rm libpbc*
+fi
 
 # build DCore
 git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git
@@ -50,19 +55,19 @@ cd DECENT-Network
 git submodule update --init --recursive
 mkdir build
 cd build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
-make install
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../DCore ..
+make -j2 install
+cd ../..
 
 # copy the binaries
-mkdir -p ../../dcore-node/usr/bin
-mkdir -p ../../dcore-node/DEBIAN
-mkdir -p ../../dcore-node/etc/systemd/system
-cp ../DCore.service ../../dcore-node/etc/systemd/system
-cp programs/decentd/decentd programs/cli_wallet/cli_wallet ../../dcore-node/usr/bin
-mkdir -p ../../dcore-gui/usr/bin
-mkdir -p ../../dcore-gui/DEBIAN
-cp programs/gui_wallet/DECENT ../../dcore-gui/usr/bin
-cd ../..
+mkdir -p dcore-node/usr/bin
+mkdir -p dcore-node/DEBIAN
+mkdir -p dcore-node/etc/systemd/system
+cp DECENT-Network/DCore.service dcore-node/etc/systemd/system
+cp DCore/bin/decentd DCore/bin/cli_wallet dcore-node/usr/bin
+mkdir -p dcore-gui/usr/bin
+mkdir -p dcore-gui/DEBIAN
+cp DCore/bin/DECENT dcore-gui/usr/bin
 
 # generate the control files
 echo "Package: DCore" > dcore-node/DEBIAN/control
@@ -73,7 +78,7 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-node/DEBIAN/control
 echo "Priority: optional" >> dcore-node/DEBIAN/control
 echo "Architecture: amd64" >> dcore-node/DEBIAN/control
-echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl3" >> dcore-node/DEBIAN/control
+echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.1, libcurl3" >> dcore-node/DEBIAN/control
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-node/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-node/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-node/DEBIAN/control
@@ -89,7 +94,7 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-gui/DEBIAN/control
 echo "Priority: optional" >> dcore-gui/DEBIAN/control
 echo "Architecture: amd64" >> dcore-gui/DEBIAN/control
-echo "Depends: libpbc, libreadline7, libcrypto++6, libssl1.1, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
+echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.1, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-gui/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-gui/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-gui/DEBIAN/control

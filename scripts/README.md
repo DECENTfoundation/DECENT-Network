@@ -19,12 +19,24 @@ Ubuntu example (creates deb packages and docker image):
     # the latest OS image
     ./ubuntu.sh latest 1.3.3
     # or specific OS version
-    ./ubuntu.sh 16.04 1.3.3
+    ./ubuntu.sh 18.04 1.3.3
     ls packages
-    # dcore_1.3.3_amd64.deb
-    # dcore-gui_1.3.3_amd64.deb
+    # dcore_1.3.3-ubuntu18.04_amd64.deb
+    # dcore-gui_1.3.3-ubuntu18.04_amd64.deb
     docker images
     # decent/ubuntu/dcore   1.3.3
+
+Debian example (creates deb packages and docker image):
+
+    # the latest OS image
+    ./debian.sh latest 1.3.3
+    # or specific OS version
+    ./debian.sh 9.6 1.3.3
+    ls packages
+    # dcore_1.3.3-debian9.6_amd64.deb
+    # dcore-gui_1.3.3-debian9.6_amd64.deb
+    docker images
+    # decent/debian/dcore   1.3.3
 
 Fedora example (creates rpm packages and docker image):
 
@@ -38,16 +50,19 @@ Fedora example (creates rpm packages and docker image):
     docker images
     # decent/fedora/dcore   1.3.3
 
-If you already have DCore installation packages:
+If you already have DCore deb or rpm packages:
 
-    # the latest OS image
-    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 .
+    # the latest Ubuntu OS image
+    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 packages
 
-    # specific OS version
-    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=16.04 .
+    # specific Ubuntu OS version
+    docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=18.04 packages
 
-    # specific OS version
-    docker build -t decent/fedora/dcore:1.3.3 -f fedora/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 .
+    # specific Debian OS version
+    docker build -t decent/debian/dcore:1.3.3 -f debian/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=9.6 packages
+
+    # specific Fedora OS version
+    docker build -t decent/fedora/dcore:1.3.3 -f fedora/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 packages
 
 ## OS build image
 
@@ -56,14 +71,18 @@ Naming convention for images: use `decent/` prefix, then append original image n
 | Build argument | Default value |
 | --------------- | ------------- |
 | IMAGE_VERSION | latest |
+| PBC_VERSION | 0.5.14 |
 
 Examples:
 
     # the latest Ubuntu image
     docker build -t decent/ubuntu/build -f ubuntu/Dockerfile.build ubuntu
 
-    # Ubuntu 16.04 image
-    docker build -t decent/ubuntu/build:16.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=16.04 ubuntu
+    # Ubuntu 18.04 image
+    docker build -t decent/ubuntu/build:18.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=18.04 ubuntu
+
+    # Debian 9.6 image
+    docker build -t decent/debian/build:9.6 -f debian/Dockerfile.build --build-arg IMAGE_VERSION=9.6 debian
 
     # Fedora 29 image
     docker build -t decent/fedora/build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
@@ -111,3 +130,6 @@ Examples:
 
     # run wallet
     ./cli_wallet.sh /path/to/wallet.json
+
+    # stop node
+    docker stop DCore
