@@ -24,6 +24,8 @@ cd Frameworks
 
 cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib .
 cp /usr/local/opt/gmp/lib/libgmp.10.dylib .
+cp /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib .
+cp /usr/local/opt/openssl/lib/libssl.1.0.0.dylib .
 cp /usr/local/opt/pbc/lib/libpbc.1.dylib .
 cp /usr/local/opt/readline/lib/libreadline.8.dylib .
 cp /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCore .
@@ -40,6 +42,12 @@ install_name_tool -change /usr/local/opt/cryptopp/lib/libcryptopp.dylib @executa
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib cli_wallet
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib decentd
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib DECENT
+install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib @executable_path/../Frameworks/libcrypto.1.0.0.dylib cli_wallet
+install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib @executable_path/../Frameworks/libcrypto.1.0.0.dylib decentd
+install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib @executable_path/../Frameworks/libcrypto.1.0.0.dylib DECENT
+install_name_tool -change /usr/local/opt/openssl/lib/libssl.1.0.0.dylib @executable_path/../Frameworks/libssl.1.0.0.dylib cli_wallet
+install_name_tool -change /usr/local/opt/openssl/lib/libssl.1.0.0.dylib @executable_path/../Frameworks/libssl.1.0.0.dylib decentd
+install_name_tool -change /usr/local/opt/openssl/lib/libssl.1.0.0.dylib @executable_path/../Frameworks/libssl.1.0.0.dylib DECENT
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib cli_wallet
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib decentd
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib DECENT
