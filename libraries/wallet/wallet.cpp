@@ -3663,12 +3663,35 @@ signed_transaction content_cancellation(const string& author,
    void graphene::wallet::detail::submit_transfer_listener::package_creation_complete()
    {
       uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+      int max_trials = 50;
 
       asset total_price_per_day;
       for( int i =0; i < (int)_op.seeders.size(); i++ )
       {
-         const auto& s = _wallet._remote_db->get_seeder( _op.seeders[i] );
-         total_price_per_day += s->price.amount * size;
+         optional<seeder_object> s;
+         bool should_retry;
+         int trial = 0;
+         do
+         {
+            should_retry = false;
+            try
+            {
+               //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+               s = _wallet._remote_db->get_seeder( _op.seeders[i] );
+               wlog("get_seeder trial " + std::to_string(trial) + ": validity of seeder_object: " + (s.valid() ? "valid" : "invalid"));
+               total_price_per_day += s->price.amount * size;
+               trial++;
+            }
+            catch (fc::exception &e)
+            {
+               should_retry = true;
+               if (trial >= max_trials)
+               {
+                   FC_THROW(e.what());
+               }
+            }
+         }
+         while (should_retry);
       }
 
       fc::microseconds duration = (_op.expiration - fc::time_point::now());
