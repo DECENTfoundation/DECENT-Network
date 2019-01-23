@@ -32,8 +32,8 @@ RUN apt-get update && \
 # PBC
 ARG PBC_VERSION=0.5.14
 RUN . /etc/os-release && \
-    wget -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
-    wget -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
     dpkg -i /tmp/libpbc* && rm /tmp/libpbc*
 
 CMD ["/bin/bash"]

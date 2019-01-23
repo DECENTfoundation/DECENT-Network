@@ -7,9 +7,6 @@ Naming convention for images: `decent/` prefix, then append original image name 
 | DCORE_VERSION | - |
 | IMAGE_VERSION | latest |
 | PBC_VERSION | 0.5.14 |
-| IPFS_VERSION | v0.4.18 |
-| TARGETOS | linux |
-| TARGETARCH | amd64 |
 
 Because DCore build is specific for each platform, there are helper scripts to make life easier. Each one requires
 two mandatory arguments (OS image and DCore versions) and one optional argument (git revision tag - it defaults to DCore version if not specified).
