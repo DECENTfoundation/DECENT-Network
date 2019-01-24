@@ -9,13 +9,29 @@
       ],
       "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
       "installRoot": "C:\\Projects\\DCore",
-      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "BOOST_ROOT",
+          "value": "C:\\Projects\\boost_1_68_0"
+        },
+        {
+          "name": "BOOST_LIBRARYDIR",
+          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
+        },
+        {
+          "name": "Qt5Widgets_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+        },
+        {
+          "name": "Qt5LinguistTools_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -32,13 +48,29 @@
       ],
       "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
       "installRoot": "C:\\Projects\\DCore\\RelWithDebInfo",
-      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "BOOST_ROOT",
+          "value": "C:\\Projects\\boost_1_68_0"
+        },
+        {
+          "name": "BOOST_LIBRARYDIR",
+          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
+        },
+        {
+          "name": "Qt5Widgets_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+        },
+        {
+          "name": "Qt5LinguistTools_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -55,13 +87,29 @@
       ],
       "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
       "installRoot": "C:\\Projects\\DCore\\MinSizeRel",
-      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "BOOST_ROOT",
+          "value": "C:\\Projects\\boost_1_68_0"
+        },
+        {
+          "name": "BOOST_LIBRARYDIR",
+          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
+        },
+        {
+          "name": "Qt5Widgets_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+        },
+        {
+          "name": "Qt5LinguistTools_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -78,13 +126,29 @@
       ],
       "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
       "installRoot": "C:\\Projects\\DCore\\Debug",
-      "cmakeCommandArgs": "-DBOOST_ROOT=C:\\Projects\\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets",
+      "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "BOOST_ROOT",
+          "value": "C:\\Projects\\boost_1_68_0"
+        },
+        {
+          "name": "BOOST_LIBRARYDIR",
+          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
+        },
+        {
+          "name": "Qt5Widgets_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+        },
+        {
+          "name": "Qt5LinguistTools_DIR",
+          "value": "C:\\Projects\\Qt\\5.12.0\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",

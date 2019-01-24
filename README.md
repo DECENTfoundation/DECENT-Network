@@ -133,7 +133,7 @@ In order to build and install Decent follow the steps:
 You can use CMake generator to create a Visual Studio 2017 project files and perform _Build > Build solution_ action from there, just start the _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
     cd \Projects\DECENT-Network
-    cmake -DBOOST_ROOT=C:\Projects\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\Projects\boost_1_68_0\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\Projects\Qt\5.12.0\msvc2017_64\lib\cmake\Qt5Widgets -DCMAKE_TOOLCHAIN_FILE=C:\Projects\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -G "Visual Studio 15 2017 Win64" .
+    cmake -DCMAKE_TOOLCHAIN_FILE=C:\Projects\vcpkg\scripts\buildsystems\vcpkg.cmake -DBOOST_ROOT=C:\Projects\boost_1_68_0 -DBOOST_LIBRARYDIR=C:\Projects\boost_1_68_0\lib64-msvc-14.1 -DQt5Widgets_DIR=C:\Projects\Qt\5.12.0\msvc2017_64\lib\cmake\Qt5Widgets -DQt5LinguistTools_DIR=C:\Projects\Qt\5.12.0\msvc2017_64\lib\cmake\Qt5LinguistTools -DVCPKG_TARGET_TRIPLET=x64-windows-static -G "Visual Studio 15 2017 Win64" .
 
 You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=C:\Projects\DECENT-Network-prefix` to the command line.
 

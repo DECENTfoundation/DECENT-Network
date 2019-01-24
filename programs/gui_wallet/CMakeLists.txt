@@ -6,6 +6,8 @@ else()
     return()
 endif()
 
+find_package(Qt5LinguistTools REQUIRED)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -14,6 +16,12 @@ set(MACOSX_BUNDLE_BUNDLE_NAME DECENT)
 
 set(GUI_WALLET_ICON ${CMAKE_CURRENT_SOURCE_DIR}/desktop.icns)
 set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+set(GUI_WALLET_TS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/languages/decent_en.ts)
+set_source_files_properties(${GUI_WALLET_TS_FILES} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/languages)
+
+qt5_create_translation(GUI_WALLET_QM_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src ${GUI_WALLET_TS_FILES} OPTIONS -no-obsolete)
+add_custom_target(translations ALL DEPENDS ${GUI_WALLET_QM_FILES})
 
 set(GUI_WALLET_RESOURCES resources.qrc)
 set(GUI_WALLET_PRECOMPILED_SOURCE_FILE "")
@@ -28,6 +36,7 @@ add_executable(DECENT MACOSX_BUNDLE
                ${GUI_WALLET_PRECOMPILED_HEADER_FILE}
                ${GUI_WALLET_RESOURCES}
                ${GUI_WALLET_ICON}
+               ${GUI_WALLET_QM_FILES}
                src/browse_content_tab.cpp
                src/browse_content_tab.hpp
                src/decent_button.cpp
@@ -68,6 +77,8 @@ add_executable(DECENT MACOSX_BUNDLE
                src/upload_tab.cpp
                src/upload_tab.hpp
              )
+
+add_dependencies(DECENT translations)
 
 if( UPDATE_MANAGER )
 add_definitions(-DUPDATE_MANAGER=1)
