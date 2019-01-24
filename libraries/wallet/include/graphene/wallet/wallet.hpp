@@ -28,6 +28,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
+#include <fc/api.hpp>
 
 
 using namespace graphene::app;
@@ -296,7 +297,7 @@ namespace graphene { namespace wallet {
  * @}
  */
 
-      class wallet_api
+   class wallet_api : public fc::api_base<wallet_api>
       {
       public:
          wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws );

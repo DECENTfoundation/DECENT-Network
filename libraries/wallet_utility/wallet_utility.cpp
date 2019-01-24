@@ -5,6 +5,7 @@
 #include <fc/network/http/websocket.hpp>
 #include <fc/filesystem.hpp>
 #include <fc/rpc/api_connection.hpp>
+#include <fc/api.hpp>
 #include <decent/package/package.hpp>
 #include <iostream>
 

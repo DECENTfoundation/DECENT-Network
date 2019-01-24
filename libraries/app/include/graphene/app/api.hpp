@@ -71,7 +71,7 @@ namespace graphene { namespace app {
     *
     * This API contains methods to access account histories
     */
-   class history_api
+   class history_api : public fc::api_base<history_api>
    {
       public:
          history_api(application& app):_app(app){}
@@ -81,7 +81,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup HistoryAPI
           */
-         string info() { return "history_api";}
+         string info() { return get_api_name();}
 
          /**
           * @brief Get operations relevant to the specificed account.
@@ -153,7 +153,7 @@ namespace graphene { namespace app {
    /**
     * @brief The network_broadcast_api class allows broadcasting of transactions.
     */
-   class network_broadcast_api : public std::enable_shared_from_this<network_broadcast_api>
+   class network_broadcast_api : public std::enable_shared_from_this<network_broadcast_api>, public fc::api_base<network_broadcast_api>
    {
       public:
          network_broadcast_api(application& a);
@@ -173,7 +173,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup Network_broadcastAPI
           */
-         string info() { return "network_broadcast_api";}
+         string info() { return get_api_name();}
 
          /**
           * @brief Broadcast a transaction to the network.
@@ -228,7 +228,7 @@ namespace graphene { namespace app {
    /**
     * @brief The network_node_api class allows maintenance of p2p connections.
     */
-   class network_node_api
+   class network_node_api : public fc::api_base<network_node_api>
    {
       public:
          network_node_api(application& a);
@@ -238,7 +238,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup Network_NodeAPI
           */
-         string info() { return "network_node_api";}
+         string info() { return get_api_name();}
 
          /**
           * @brief Returns general network information, such as p2p port.
@@ -310,7 +310,7 @@ namespace graphene { namespace app {
    /**
     * @brief The crypto_api class implements cryptograhic operations
     */
-   class crypto_api
+   class crypto_api : public fc::api_base<crypto_api>
    {
       public:
          crypto_api(application& a);
@@ -320,7 +320,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup CryptoAPI
           */
-         string info() { return "crypto_api";}
+         string info() { return get_api_name();}
 
          /**
           * @brief Get public key from private key.
@@ -382,7 +382,7 @@ namespace graphene { namespace app {
    /**
    * @brief The messaging_api class implements instant messaging
    */
-   class messaging_api
+   class messaging_api : public fc::api_base<messaging_api>
    {
    public:
       messaging_api(application& a);
@@ -392,7 +392,7 @@ namespace graphene { namespace app {
        * @return the name of the API
        * @ingroup MessagingAPI
        */
-      string info() { return "messaging_api";}
+      string info() { return get_api_name();}
 
       /**
        * @brief Receives message objects by sender and/or receiver.
@@ -411,7 +411,7 @@ namespace graphene { namespace app {
    /**
    * @brief The monitoring_api class provides access to monitoring counters
    */
-   class monitoring_api
+   class monitoring_api : public fc::api_base<monitoring_api>
    {
    public:
       monitoring_api();
@@ -446,7 +446,7 @@ namespace graphene { namespace app {
     *
     * All other APIs must be requested from this API.
     */
-   class login_api
+   class login_api : public fc::api_base<login_api>
    {
       public:
          login_api(application& a);
@@ -457,7 +457,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup LoginAPI
           */
-         string info() { return "login_api";}
+         string info() { return get_api_name();}
 
          /**
           * @brief Authenticate to the RPC server.
