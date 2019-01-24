@@ -20,12 +20,15 @@ RUN apt-get update && \
     wget \
     git \
     qt5-default \
+    qttools5-dev \
+    qttools5-dev-tools \
     libreadline-dev \
     libcrypto++-dev \
     libgmp-dev \
     libssl-dev \
     libboost-all-dev \
     libcurl4-openssl-dev \
+    zlib1g-dev \
     ca-certificates && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

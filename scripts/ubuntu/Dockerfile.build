@@ -20,6 +20,8 @@ RUN apt-get update && \
     wget \
     git \
     qt5-default \
+    qttools5-dev \
+    qttools5-dev-tools \
     libreadline-dev \
     libcrypto++-dev \
     libgmp-dev \

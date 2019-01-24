@@ -19,6 +19,7 @@ RUN dnf install -y \
     wget \
     git \
     qt5-qtbase-devel \
+    qt5-linguist \
     rpm-build \
     rpm-devel \
     rpmlint \
