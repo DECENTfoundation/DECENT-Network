@@ -3,6 +3,7 @@
 [ $# -lt 4 ] && { echo "Usage: $0 install_dir dcore_version app_identity install_identity"; exit 1; }
 
 BASEDIR=$(dirname "$0")
+set -e
 
 rm -rf $BASEDIR/dist
 mkdir -p $BASEDIR/dist/Applications
@@ -22,7 +23,7 @@ cp -R /usr/local/opt/qt/plugins/platforms Plugins
 mkdir Frameworks
 cd Frameworks
 
-if [ -f /usr/local/opt/openssl/libssl.1.1.dylib ]; then OPENSSL=1.1; else OPENSSL=1.0.0; fi
+if [ -f /usr/local/opt/openssl/lib/libssl.1.1.dylib ]; then OPENSSL=1.1; else OPENSSL=1.0.0; fi
 
 cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib .
 cp /usr/local/opt/gmp/lib/libgmp.10.dylib .
@@ -61,6 +62,10 @@ install_name_tool -change /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCo
 install_name_tool -change /usr/local/opt/qt/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui DECENT
 install_name_tool -change /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets DECENT
 install_name_tool -add_rpath @executable_path/../Frameworks/ DECENT
+
+(otool -L cli_wallet | grep -q /usr/local) && echo "cli_wallet: found /usr/local in RPATH" && exit 1
+(otool -L decentd | grep -q /usr/local) && echo "decentd: found /usr/local in RPATH" && exit 1
+(otool -L DECENT | grep -q /usr/local) && echo "DECENT: found /usr/local in RPATH" && exit 1
 
 cd ../../..
 codesign -s "$3" -v DECENT.app -f --deep -vv
