@@ -121,6 +121,7 @@ namespace graphene { namespace app {
           operation_info(int32_t id, string name, fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) { }
       };
 
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -128,7 +129,7 @@ namespace graphene { namespace app {
  * read-only; all modifications to the database must be performed via transactions. Transactions are broadcast via
  * the \c network_broadcast_api.
  */
-      class database_api
+   class database_api : public fc::api_base<database_api>
       {
       public:
          database_api(graphene::chain::database& db);

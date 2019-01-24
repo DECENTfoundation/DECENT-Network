@@ -462,7 +462,7 @@ namespace graphene { namespace app {
 
    std::string database_api::info()const
    {
-      return "database_api";
+      return get_api_name();
    }
 
    chain_property_object database_api::get_chain_properties()const

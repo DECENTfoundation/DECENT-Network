@@ -24,6 +24,7 @@
 #pragma once
 
 #include <fc/reflect/reflect.hpp>
+#include <graphene/app/api.hpp>
 
 namespace graphene { namespace app {
 
@@ -36,11 +37,11 @@ public:
 
    std::string password_hash_b64 = "*";
    std::string password_salt_b64 = "*";
-   std::vector< std::string > allowed_apis = { "database_api",
-                                               "network_broadcast_api",
-                                               "history_api",
-                                               "crypto_api",
-                                               "messaging_api" };
+   std::vector< std::string > allowed_apis = { database_api::get_api_name(),
+                                               network_broadcast_api::get_api_name(),
+                                               history_api::get_api_name(),
+                                               crypto_api::get_api_name(),
+                                               messaging_api::get_api_name() };
 };
 
 class api_access

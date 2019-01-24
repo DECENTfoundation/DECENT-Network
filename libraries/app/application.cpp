@@ -213,38 +213,38 @@ namespace detail {
             const api_access_info& apis = itr->second;
             for( const std::string& api_name : apis.allowed_apis )
             {
-               if( api_name == "database_api" )
+               if( api_name == graphene::app::database_api::get_api_name() )
                {
                   continue; // this API is already enabled, TODO
                   auto database_api = std::make_shared<graphene::app::database_api>( std::ref(*_self->chain_database() ) );
                   wsc->register_api(fc::api<graphene::app::database_api>(database_api));
                }
-               else if( api_name == "network_broadcast_api" )
+               else if( api_name == graphene::app::network_broadcast_api::get_api_name() )
                {
                   auto broadcast_api = std::make_shared<graphene::app::network_broadcast_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::network_broadcast_api>(broadcast_api));
                }
-               else if( api_name == "history_api" )
+               else if( api_name == graphene::app::history_api::get_api_name() )
                {
                   auto history_api = std::make_shared<graphene::app::history_api>(*_self);
                   wsc->register_api(fc::api<graphene::app::history_api>(history_api));
                }
-               else if( api_name == "network_node_api" )
+               else if( api_name == graphene::app::network_node_api::get_api_name() )
                {
                   auto network_node_api = std::make_shared<graphene::app::network_node_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::network_node_api>(network_node_api));
                }
-               else if( api_name == "crypto_api" )
+               else if( api_name == graphene::app::crypto_api::get_api_name() )
                {
                   auto crypto_api = std::make_shared<graphene::app::crypto_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::crypto_api>(crypto_api));
                }
-               else if( api_name == "messaging_api" )
+               else if( api_name == graphene::app::messaging_api::get_api_name() )
                {
                   auto messaging_api = std::make_shared<graphene::app::messaging_api>( std::ref(*_self) );
                   wsc->register_api(fc::api<graphene::app::messaging_api>(messaging_api));
                }
-               else if( api_name == "monitoring_api" ) {
+               else if( api_name == graphene::app::monitoring_api::get_api_name() ) {
                   auto monitoring_api = std::make_shared<graphene::app::monitoring_api>();
                   wsc->register_api(fc::api<graphene::app::monitoring_api>(monitoring_api));
                }

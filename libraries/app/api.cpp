@@ -69,35 +69,78 @@ namespace graphene { namespace app {
 
    void login_api::enable_api( const std::string& api_name )
    {
-      if( api_name == "database_api" )
+      if( api_name == database_api::get_api_name() )
       {
          _database_api = std::make_shared< database_api >( std::ref( *_app.chain_database() ) );
       }
-      else if( api_name == "network_broadcast_api" )
+      else if( api_name == network_broadcast_api::get_api_name() )
       {
          _network_broadcast_api = std::make_shared< network_broadcast_api >( std::ref( _app ) );
       }
-      else if( api_name == "history_api" )
+      else if( api_name == history_api::get_api_name() )
       {
          _history_api = std::make_shared< history_api >( _app );
       }
-      else if( api_name == "network_node_api" )
+      else if( api_name == network_node_api::get_api_name() )
       {
          _network_node_api = std::make_shared< network_node_api >( std::ref(_app) );
       }
-      else if( api_name == "crypto_api" )
+      else if( api_name == crypto_api::get_api_name() )
       {
          _crypto_api = std::make_shared< crypto_api >( std::ref(_app) );
       }
-      else if (api_name == "messaging_api")
+      else if (api_name == messaging_api::get_api_name() )
       {
          _messaging_api = std::make_shared< messaging_api >( std::ref(_app) );
       }
-      else if (api_name == "monitoring_api")
+      else if (api_name == monitoring_api::get_api_name() )
       {
          _monitoring_api = std::make_shared< monitoring_api >();
       }
    }
+
+   fc::api<network_broadcast_api> login_api::network_broadcast()const
+      {
+      FC_ASSERT(_network_broadcast_api);
+      return *_network_broadcast_api;
+      }
+
+   fc::api<network_node_api> login_api::network_node()const
+      {
+      FC_ASSERT(_network_node_api);
+      return *_network_node_api;
+      }
+
+   fc::api<database_api> login_api::database()const
+      {
+      FC_ASSERT(_database_api);
+      return *_database_api;
+      }
+
+   fc::api<history_api> login_api::history() const
+      {
+      FC_ASSERT(_history_api);
+      return *_history_api;
+      }
+
+   fc::api<crypto_api> login_api::crypto() const
+      {
+      FC_ASSERT(_crypto_api);
+      return *_crypto_api;
+      }
+
+   fc::api<graphene::app::messaging_api> login_api::messaging() const
+      {
+      FC_ASSERT(_messaging_api);
+      return *_messaging_api;
+      }
+
+   fc::api<monitoring_api> login_api::monitoring() const
+      {
+      FC_ASSERT(_monitoring_api);
+      return *_monitoring_api;
+      }
+
 
    network_broadcast_api::network_broadcast_api(application& a):_app(a)
    {
@@ -218,47 +261,6 @@ namespace graphene { namespace app {
       decent::seeding::seeding_promise->set_value( seeding_options );
    }
 
-   fc::api<network_broadcast_api> login_api::network_broadcast()const
-   {
-      FC_ASSERT(_network_broadcast_api);
-      return *_network_broadcast_api;
-   }
-
-   fc::api<network_node_api> login_api::network_node()const
-   {
-      FC_ASSERT(_network_node_api);
-      return *_network_node_api;
-   }
-
-   fc::api<database_api> login_api::database()const
-   {
-      FC_ASSERT(_database_api);
-      return *_database_api;
-   }
-
-   fc::api<history_api> login_api::history() const
-   {
-      FC_ASSERT(_history_api);
-      return *_history_api;
-   }
-
-   fc::api<crypto_api> login_api::crypto() const
-   {
-      FC_ASSERT(_crypto_api);
-      return *_crypto_api;
-   }
-
-   fc::api<graphene::app::messaging_api> login_api::messaging() const
-   {
-      FC_ASSERT(_messaging_api);
-      return *_messaging_api;
-   }
-
-   fc::api<monitoring_api> login_api::monitoring() const
-   {
-      FC_ASSERT(_monitoring_api);
-      return *_monitoring_api;
-   }
 
    vector<operation_history_object> history_api::get_account_history( account_id_type account,
                                                                       operation_history_id_type stop,
@@ -529,7 +531,7 @@ namespace graphene { namespace app {
 
    std::string monitoring_api::info() const
    {
-      return "monitoring_api";
+      return get_api_name();
    }
 
    void monitoring_api::reset_counters(const std::vector<std::string>& names)
