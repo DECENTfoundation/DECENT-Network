@@ -28,18 +28,52 @@ cp -R /usr/local/opt/qt/plugins/platforms Plugins
 mkdir Frameworks
 cd Frameworks
 
-cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib .
-cp /usr/local/opt/gmp/lib/libgmp.10.dylib .
+# openssl
 cp /usr/local/opt/$OPENSSL_DIR/lib/libcrypto.$OPENSSL_VER.dylib .
 cp /usr/local/opt/$OPENSSL_DIR/lib/libssl.$OPENSSL_VER.dylib .
+chmod 644 libssl.$OPENSSL_VER.dylib libcrypto.$OPENSSL_VER.dylib
+
+OPENSSL_PATH=`realpath /usr/local/opt/$OPENSSL_DIR`
+install_name_tool -change $OPENSSL_PATH/lib/libcrypto.$OPENSSL_VER.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL_VER.dylib libssl.$OPENSSL_VER.dylib
+
+# cryptopp
+cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib .
+chmod 644 libcryptopp.dylib
+
+# gmp
+cp /usr/local/opt/gmp/lib/libgmp.10.dylib .
+chmod 644 libgmp.10.dylib
+
+# pbc
 cp /usr/local/opt/pbc/lib/libpbc.1.dylib .
+chmod 644 libpbc.1.dylib
+
+install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib libpbc.1.dylib
+
+# readline
 cp /usr/local/opt/readline/lib/libreadline.8.dylib .
+chmod 644 libreadline.8.dylib
+
+# Qt
 cp /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCore .
 cp /usr/local/opt/qt/lib/QtDBus.framework/Versions/5/QtDBus .
 cp /usr/local/opt/qt/lib/QtGui.framework/Versions/5/QtGui .
 cp /usr/local/opt/qt/lib/QtPrintSupport.framework/Versions/5/QtPrintSupport .
 cp /usr/local/opt/qt/lib/QtSvg.framework/Versions/5/QtSvg .
 cp /usr/local/opt/qt/lib/QtWidgets.framework/Versions/5/QtWidgets .
+chmod 644 QtCore QtDBus QtGui QtPrintSupport QtSvg QtWidgets
+
+QT_PATH=`realpath /usr/local/opt/qt`
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore QtDBus
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore QtGui
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore QtPrintSupport
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore QtSvg
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore QtWidgets
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui QtPrintSupport
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui QtSvg
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui QtWidgets
+install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets QtPrintSupport
+install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets QtSvg
 
 cd ../MacOS
 cp /usr/local/bin/ipfs .
