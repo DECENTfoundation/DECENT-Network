@@ -2,8 +2,13 @@
 
 [ $# -lt 4 ] && { echo "Usage: $0 install_dir dcore_version app_identity install_identity"; exit 1; }
 
-BASEDIR=$(dirname "$0")
+(otool -L $1/bin/decentd | grep -q "/usr/local/opt/openssl@1\.1")
+OPENSSL11=$?
+if [ $OPENSSL11 = 0 ]; then OPENSSL_VER=1.1 && OPENSSL_DIR=openssl@1.1; else OPENSSL_VER=1.0.0 && OPENSSL_DIR=openssl; fi
+echo "Using OpenSSL $OPENSSL_VER"
+
 set -e
+BASEDIR=$(dirname "$0")
 
 rm -rf $BASEDIR/dist
 mkdir -p $BASEDIR/dist/Applications
@@ -23,12 +28,10 @@ cp -R /usr/local/opt/qt/plugins/platforms Plugins
 mkdir Frameworks
 cd Frameworks
 
-if [ -f /usr/local/opt/openssl/lib/libssl.1.1.dylib ]; then OPENSSL=1.1; else OPENSSL=1.0.0; fi
-
 cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib .
 cp /usr/local/opt/gmp/lib/libgmp.10.dylib .
-cp /usr/local/opt/openssl/lib/libcrypto.$OPENSSL.dylib .
-cp /usr/local/opt/openssl/lib/libssl.$OPENSSL.dylib .
+cp /usr/local/opt/$OPENSSL_DIR/lib/libcrypto.$OPENSSL_VER.dylib .
+cp /usr/local/opt/$OPENSSL_DIR/lib/libssl.$OPENSSL_VER.dylib .
 cp /usr/local/opt/pbc/lib/libpbc.1.dylib .
 cp /usr/local/opt/readline/lib/libreadline.8.dylib .
 cp /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCore .
@@ -46,12 +49,12 @@ install_name_tool -change /usr/local/opt/cryptopp/lib/libcryptopp.dylib @executa
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib cli_wallet
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib decentd
 install_name_tool -change /usr/local/opt/gmp/lib/libgmp.10.dylib @executable_path/../Frameworks/libgmp.10.dylib DECENT
-install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.$OPENSSL.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL.dylib cli_wallet
-install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.$OPENSSL.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL.dylib decentd
-install_name_tool -change /usr/local/opt/openssl/lib/libcrypto.$OPENSSL.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL.dylib DECENT
-install_name_tool -change /usr/local/opt/openssl/lib/libssl.$OPENSSL.dylib @executable_path/../Frameworks/libssl.$OPENSSL.dylib cli_wallet
-install_name_tool -change /usr/local/opt/openssl/lib/libssl.$OPENSSL.dylib @executable_path/../Frameworks/libssl.$OPENSSL.dylib decentd
-install_name_tool -change /usr/local/opt/openssl/lib/libssl.$OPENSSL.dylib @executable_path/../Frameworks/libssl.$OPENSSL.dylib DECENT
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libcrypto.$OPENSSL_VER.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL_VER.dylib cli_wallet
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libcrypto.$OPENSSL_VER.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL_VER.dylib decentd
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libcrypto.$OPENSSL_VER.dylib @executable_path/../Frameworks/libcrypto.$OPENSSL_VER.dylib DECENT
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libssl.$OPENSSL_VER.dylib @executable_path/../Frameworks/libssl.$OPENSSL_VER.dylib cli_wallet
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libssl.$OPENSSL_VER.dylib @executable_path/../Frameworks/libssl.$OPENSSL_VER.dylib decentd
+install_name_tool -change /usr/local/opt/$OPENSSL_DIR/lib/libssl.$OPENSSL_VER.dylib @executable_path/../Frameworks/libssl.$OPENSSL_VER.dylib DECENT
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib cli_wallet
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib decentd
 install_name_tool -change /usr/local/opt/pbc/lib/libpbc.1.dylib @executable_path/../Frameworks/libpbc.1.dylib DECENT

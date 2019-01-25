@@ -71,11 +71,11 @@ And the last step is the same regardless on distribution, execute in console:
 
 Then, execute in console:
 
-    $ brew doctor
-    $ brew tap homebrew/versions
     $ brew update
     $ brew install automake autoconf libtool cmake boost qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
     $ mkdir ~/dev
+
+> Note that, if you want to use OpenSSL 1.1 change the `openssl` argument to `openssl@1.1` in the install command line (see also note in building step).
 
 ### Installing prerequisites in Windows
 
@@ -112,10 +112,11 @@ In order to build and install Decent, execute in console:
     cmake --build . --target all -- -j -l 3.0
     cmake --build . --target install
 
+> Note for MacOS, if you want to use OpenSSL 1.1 you have to add `-DCMAKE_PREFIX_PATH=/usr/local/opt/openssl@1.1` to the `cmake` command line during the initial configuration.
+
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
-> 
->     $ make -j -l 3.0
->     $ make install
+>
+>     $ make -j -l 3.0 install
 
 Decent artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENT-Network-prefix` to the command line.
 
