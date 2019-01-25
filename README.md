@@ -11,17 +11,22 @@ Building Decent
 For Ubuntu 18.04 LTS, execute in console:
 
      sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
      sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
+
+For Debian 9.6, execute in console:
+
+     sudo apt-get update
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev
 
 For Fedora 28 or later, execute in console:
 
     sudo dnf clean metadata
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
 
 And the last step is the same regardless on distribution, execute in console:
 
@@ -37,7 +42,7 @@ And the last step is the same regardless on distribution, execute in console:
     cd ..
     rm -rf pbc-0.5.14 0.5.14.zip
 
-> Note for Ubuntu 16.04 LTS, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note for Ubuntu 16.04 LTS and Debian 9.6, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Download and build Boost 1.65.1
      wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
@@ -50,17 +55,17 @@ And the last step is the same regardless on distribution, execute in console:
      cd ..
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
-    # Download and build Cmake 3.10.2
-     wget https://cmake.org/files/v3.10/cmake-3.10.2.tar.gz
-     tar xvf cmake-3.10.2.tar.gz
+    # Download and build CMake 3.13.3
+     wget https://cmake.org/files/v3.13/cmake-3.13.3.tar.gz
+     tar xvf cmake-3.13.3.tar.gz
      mkdir cmake
-     cd cmake-3.10.2
+     cd cmake-3.13.3
      export CMAKE_ROOT=$(realpath ../cmake)
      ./configure --prefix=$CMAKE_ROOT
      make install
      export PATH=$CMAKE_ROOT/bin:$PATH
      cd ..
-     rm -rf cmake-3.10.2 cmake-3.10.2.tar.gz
+     rm -rf cmake-3.13.3 cmake-3.13.3.tar.gz
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
