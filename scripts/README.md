@@ -1,17 +1,13 @@
 ## DCore runtime image
 
-Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package version in `DCORE_VERSION` build argument. Optionally you might have to specify the OS layer image version using the `IMAGE_VERSION` build argument.
+Because DCore build is specific for each platform, there are helper scripts to make life easier. Each of them requires
+two mandatory arguments (OS image and DCore versions) and two optional arguments (git revision tag - defaults to DCore version if not specified, packages directory - defaults to packages subdirectory).
 
-| Build argument | Default value |
-| --------------- | ------------- |
-| DCORE_VERSION | - |
-| IMAGE_VERSION | latest |
-| PBC_VERSION | 0.5.14 |
+> Usage: ./ubuntu.sh image_version dcore_version [git_revision] [package_dir]
 
-Because DCore build is specific for each platform, there are helper scripts to make life easier. Each one requires
-two mandatory arguments (OS image and DCore versions) and one optional argument (git revision tag - it defaults to DCore version if not specified).
+### Ubuntu (latest, 18.04, 16.04)
 
-Ubuntu example (creates deb packages and docker image):
+To create deb packages and docker image:
 
     # the latest OS image
     ./ubuntu.sh latest 1.3.3
@@ -23,7 +19,9 @@ Ubuntu example (creates deb packages and docker image):
     docker images
     # decent/ubuntu/dcore   1.3.3
 
-Debian example (creates deb packages and docker image):
+### Debian (latest, 9.6)
+
+To create deb packages and docker image:
 
     # the latest OS image
     ./debian.sh latest 1.3.3
@@ -35,7 +33,9 @@ Debian example (creates deb packages and docker image):
     docker images
     # decent/debian/dcore   1.3.3
 
-Fedora example (creates rpm packages and docker image):
+### Fedora (latest, 29, 28)
+
+To create rpm packages and docker image:
 
     # the latest OS image
     ./fedora.sh latest 1.3.3
@@ -47,7 +47,15 @@ Fedora example (creates rpm packages and docker image):
     docker images
     # decent/fedora/dcore   1.3.3
 
-If you already have DCore deb or rpm packages:
+If you already have DCore deb or rpm packages you can just build the runtime image.
+
+Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package version in `DCORE_VERSION` build argument. Optionally you can specify the OS layer image version using the `IMAGE_VERSION` and PBC library version using the `PBC_VERSION` build arguments.
+
+| Build argument | Default value |
+| --------------- | ------------- |
+| DCORE_VERSION | - |
+| IMAGE_VERSION | latest |
+| PBC_VERSION | 0.5.14 |
 
     # the latest Ubuntu OS image
     docker build -t decent/ubuntu/dcore:1.3.3 -f ubuntu/Dockerfile --build-arg DCORE_VERSION=1.3.3 packages
@@ -60,6 +68,36 @@ If you already have DCore deb or rpm packages:
 
     # specific Fedora OS version
     docker build -t decent/fedora/dcore:1.3.3 -f fedora/Dockerfile --build-arg DCORE_VERSION=1.3.3 --build-arg IMAGE_VERSION=29 packages
+
+## DCore run
+
+DCore image exposes 3 ports: 8090 (websocket RPC to listen on), 5001 (IPFS API) and 40000 (P2P).
+You need to mount an external data directory and genesis file (when using custom configuration) to the running container.
+
+| Host | Container path |
+| ---- | -------------- |
+| /path/to/data | $DCORE_HOME/.decent/data |
+| /path/to/genesis.json | $DCORE_HOME/.decent/genesis.json |
+| /path/to/wallet.json | $DCORE_HOME/.decent/wallet.json |
+
+| Environment variable | Default value |
+| -------------------- | ------------- |
+| DCORE_HOME | /root |
+| DCORE_USER | root |
+
+Examples:
+
+    # run node on mainnet
+    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data
+
+    # run node on custom configuration
+    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data /path/to/genesis.json
+
+    # run wallet
+    ./cli_wallet.sh /path/to/wallet.json
+
+    # stop node
+    docker stop DCore
 
 ## OS build image
 
@@ -100,33 +138,3 @@ Examples:
 
     # specific DCore release
     docker build -t decent/custom/dcore:1.3.3 -f Dockerfile.dcore --build-arg BASE_IMAGE=custom --build-arg GIT_REV=1.3.3 .
-
-## DCore run
-
-DCore image exposes 2 ports: 8090 (websocket RPC to listen on) and 40000 (P2P).
-You need to mount an external data directory and genesis file (when using custom configuration) to the running container.
-
-| Host | Container path |
-| ---- | -------------- |
-| /path/to/data | $DCORE_HOME/.decent/data |
-| /path/to/genesis.json | $DCORE_HOME/.decent/genesis.json |
-| /path/to/wallet.json | $DCORE_HOME/.decent/wallet.json |
-
-| Environment variable | Default value |
-| -------------------- | ------------- |
-| DCORE_HOME | /root |
-| DCORE_USER | root |
-
-Examples:
-
-    # run node on mainnet
-    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data
-
-    # run node on custom configuration
-    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data /path/to/genesis.json
-
-    # run wallet
-    ./cli_wallet.sh /path/to/wallet.json
-
-    # stop node
-    docker stop DCore
