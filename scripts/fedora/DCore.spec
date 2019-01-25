@@ -30,7 +30,6 @@ decentralized applications for real-world use cases. DCore packed-full of
 customizable features making it the ideal blockchain for any size project.
 
 %prep
-rm -rf DECENT-Network
 git clone --single-branch --branch %{git_revision} https://github.com/DECENTfoundation/DECENT-Network.git
 cd DECENT-Network
 git submodule update --init --recursive
@@ -50,6 +49,7 @@ for f in %{_builddir}/DCore/bin/*; do
 done
 
 %clean
+rm -rf DECENT-Network
 rm -rf %{buildroot}
 
 %files

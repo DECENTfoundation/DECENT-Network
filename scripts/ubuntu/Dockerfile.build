@@ -31,11 +31,15 @@ RUN apt-get update && \
     ca-certificates && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+USER root
+
 # PBC
 ARG PBC_VERSION=0.5.14
-RUN . /etc/os-release && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-dev_$PBC_VERSION-ubuntu${VERSION_ID}_amd64.deb && \
-    dpkg -i /tmp/libpbc* && rm /tmp/libpbc*
+ARG PBC_GIT_REV=0.5.14
+COPY pbc-build.sh /root
+RUN cd /root && mkdir dcore-deb && \
+    ./pbc-build.sh $PBC_VERSION $PBC_GIT_REV && \
+    dpkg -i dcore-deb/libpbc* && \
+    rm -rf dcore-deb pbc-build.sh
 
 CMD ["/bin/bash"]

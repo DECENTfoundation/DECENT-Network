@@ -29,12 +29,13 @@ Requires: %{name}-devel = %{version}-%{release}
 This package contains statically linkable %{name} library.
 
 %prep
-rm -rf pbc
 git clone --single-branch --branch %{git_revision} https://github.com/DECENTfoundation/pbc.git
 
 %build
 cd pbc
-./setup && ./configure --prefix=%{buildroot}/usr --libdir=%{buildroot}%{_libdir} && make
+./setup
+./configure --prefix=%{buildroot}/usr --libdir=%{buildroot}%{_libdir}
+make
 
 %install
 cd pbc
@@ -42,6 +43,7 @@ make install
 rm %{buildroot}%{_libdir}/*.la
 
 %clean
+rm -rf pbc
 rm -rf %{buildroot}
 
 %files

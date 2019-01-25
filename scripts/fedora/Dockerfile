@@ -7,8 +7,8 @@ RUN dnf install -y cryptopp wget procps && dnf clean all
 
 # PBC
 ARG PBC_VERSION=0.5.14
-RUN export FEDORA=`rpm -E "%{fedora}"` && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm && \
+RUN export FEDORA=`rpm -E "%{fedora}"` && export ARCH=`rpm -E "%{_arch}"` && \
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm && \
     rpm -i /tmp/libpbc-$PBC_VERSION-* && rm /tmp/libpbc-$PBC_VERSION-*
 
 # prepare directories
@@ -19,8 +19,13 @@ WORKDIR $DCORE_HOME
 
 # DCore
 ARG DCORE_VERSION
-COPY DCore-$DCORE_VERSION-*.rpm /tmp
-RUN mkdir $DCORE_HOME/.decent && rpm -i /tmp/DCore-$DCORE_VERSION-* && rm /tmp/DCore-$DCORE_VERSION-*
+COPY DCore-$DCORE_VERSION-1.fc*.rpm /tmp
+RUN export FEDORA=`rpm -E "%{fedora}"` && \
+    export ARCH=`rpm -E "%{_arch}"` && \
+    rpm -i /tmp/DCore-$DCORE_VERSION-1.fc$FEDORA.$ARCH.rpm && \
+    rm /tmp/DCore-$DCORE_VERSION-1.fc*.rpm && \
+    mkdir $DCORE_HOME/.decent
+
 EXPOSE 40000 8090 5001
 
 ENV DCORE_EXTRA_ARGS=""

@@ -33,15 +33,16 @@ RUN dnf install -y \
     boost-static && \
     dnf clean all
 
-# PBC
-ARG PBC_VERSION=0.5.14
-RUN export FEDORA=`rpm -E "%{fedora}"` && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-devel-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm && \
-    rpm -i /tmp/libpbc* && rm /tmp/libpbc*
-
 # prepare directories
 USER root
 RUN rpmdev-setuptree
+
+# PBC
+ARG PBC_VERSION=0.5.14
+ARG PBC_GIT_REV=0.5.14
+COPY libpbc.spec /root/rpmbuild/SPECS
+RUN export ARCH=`rpm -E "%{_arch}"` && \
+    rpmbuild -bb -D "pbc_version $PBC_VERSION" -D "git_revision $PBC_GIT_REV" --rmspec /root/rpmbuild/SPECS/libpbc.spec && \
+    rpm -i /root/rpmbuild/RPMS/$ARCH/libpbc* && rm -rf /root/rpmbuild/RPMS/$ARCH
 
 CMD ["/bin/bash"]

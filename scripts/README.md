@@ -107,6 +107,7 @@ Naming convention for images: use `decent/` prefix, then append original image n
 | --------------- | ------------- |
 | IMAGE_VERSION | latest |
 | PBC_VERSION | 0.5.14 |
+| PBC_GIT_REV | 0.5.14 |
 
 Examples:
 
