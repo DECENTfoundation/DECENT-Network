@@ -27,11 +27,28 @@ vector<account_object> wallet_api::search_accounts(const string& term, const str
    return my->_remote_db->search_accounts(term, order, object_id_type(id), limit);
 }
 
-vector<asset> wallet_api::list_account_balances(const string& id)
+vector<extended_asset> wallet_api::list_account_balances(const string& id)
 {
+   vector<asset> assets;
    if( auto real_id = detail::maybe_id<account_id_type>(id) )
-      return my->_remote_db->get_account_balances(*real_id, flat_set<asset_id_type>());
-   return my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
+      assets = my->_remote_db->get_account_balances(*real_id, flat_set<asset_id_type>());
+   assets = my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
+
+   vector<extended_asset> result;
+   vector<asset_id_type> asset_ids;
+   result.reserve( assets.size() );
+   asset_ids.reserve( assets.size() );
+
+   for( const asset& element : assets )
+      asset_ids.push_back( element.asset_id );
+
+   vector<optional<asset_object>> asset_objs = my->_remote_db->get_assets( asset_ids ) ;
+
+   for( int i = 0; i < assets.size(); i++ )
+      result.emplace_back( assets[i], asset_objs[i]->amount_to_pretty_string( assets[i].amount ) );
+   FC_ASSERT( assets.size() == result.size() );
+
+   return result;
 }
 
 vector<operation_detail> wallet_api::get_account_history(const string& name, int limit)const

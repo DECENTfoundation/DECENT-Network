@@ -66,7 +66,7 @@ vector<account_object>       search_accounts(const string& term, const string& o
  * @return a list of the given account's balances
  * @ingroup WalletAPI_Account
  */
-vector<asset>                     list_account_balances(const string& id);
+vector<extended_asset> list_account_balances(const string& id);
 
 /**
  * @brief Returns the operations on the named account.

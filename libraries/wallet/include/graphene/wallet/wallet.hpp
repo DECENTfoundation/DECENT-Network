@@ -271,6 +271,13 @@ namespace graphene { namespace wallet {
           asset fee;
       };
 
+      struct extended_asset : public asset
+      {
+         extended_asset( const asset& a, const string& pretty_amount )
+            : asset( a ), pretty_amount( pretty_amount ) {}
+         std::string pretty_amount;
+      };
+
       namespace detail {
          class wallet_api_impl;
       }
@@ -396,6 +403,8 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
                     (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(voted) )
+
+FC_REFLECT_DERIVED( graphene::wallet::extended_asset, (graphene::chain::asset),(pretty_amount))
 
 FC_API( graphene::wallet::wallet_api,
         //General
