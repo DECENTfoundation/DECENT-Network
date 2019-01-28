@@ -18,4 +18,3 @@ docker run -it -w /root --rm --name debian.build.$1 \
     --mount type=bind,src=$PACKAGE_DIR,dst=/root/dcore-deb \
     --mount type=bind,src=$PWD/debian,dst=/root/debian,readonly \
     decent/debian/build:$1 debian/build.sh $2 $GIT_REV
-docker build -t decent/debian/dcore:$2 -f debian/Dockerfile --build-arg DCORE_VERSION=$2 --build-arg IMAGE_VERSION=$1 $PACKAGE_DIR

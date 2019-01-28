@@ -44,4 +44,5 @@ RUN . /etc/os-release && \
 EXPOSE 40000 8090 5001
 
 ENV DCORE_EXTRA_ARGS=""
-CMD decentd -d $DCORE_HOME/.decent/data --rpc-endpoint 0.0.0.0:8090 $DCORE_EXTRA_ARGS
+ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"
+CMD decentd -d $DCORE_DATA_DIR --rpc-endpoint 0.0.0.0:8090 $DCORE_EXTRA_ARGS
