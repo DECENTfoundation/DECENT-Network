@@ -24,6 +24,7 @@ mkdir Plugins
 cp -R /usr/local/opt/qt/plugins/iconengines Plugins
 cp -R /usr/local/opt/qt/plugins/imageformats Plugins
 cp -R /usr/local/opt/qt/plugins/platforms Plugins
+rm Plugins/platforms/libqwebgl.dylib
 
 mkdir Frameworks
 cd Frameworks
@@ -74,6 +75,46 @@ install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executa
 install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui QtWidgets
 install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets QtPrintSupport
 install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets QtSvg
+
+cd ../Plugins
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore iconengines/libqsvgicon.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui iconengines/libqsvgicon.dylib
+install_name_tool -change $QT_PATH/lib/QtSvg.framework/Versions/5/QtSvg @executable_path/../Frameworks/QtSvg iconengines/libqsvgicon.dylib
+install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets iconengines/libqsvgicon.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtDBus.framework/Versions/5/QtDBus @executable_path/../Frameworks/QtDBus platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtPrintSupport.framework/Versions/5/QtPrintSupport @executable_path/../Frameworks/QtPrintSupport platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtSvg.framework/Versions/5/QtSvg @executable_path/../Frameworks/QtSvg platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets platforms/libqcocoa.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore platforms/libqminimal.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui platforms/libqminimal.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore platforms/libqoffscreen.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui platforms/libqoffscreen.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqgif.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqgif.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqicns.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqicns.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqico.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqico.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqjpeg.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqjpeg.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqmacheif.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqmacheif.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqmacjp2.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqmacjp2.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqsvg.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqsvg.dylib
+install_name_tool -change $QT_PATH/lib/QtSvg.framework/Versions/5/QtSvg @executable_path/../Frameworks/QtSvg imageformats/libqsvg.dylib
+install_name_tool -change $QT_PATH/lib/QtWidgets.framework/Versions/5/QtWidgets @executable_path/../Frameworks/QtWidgets imageformats/libqsvg.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqtga.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqtga.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqtiff.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqtiff.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqwbmp.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqwbmp.dylib
+install_name_tool -change $QT_PATH/lib/QtCore.framework/Versions/5/QtCore @executable_path/../Frameworks/QtCore imageformats/libqwebp.dylib
+install_name_tool -change $QT_PATH/lib/QtGui.framework/Versions/5/QtGui @executable_path/../Frameworks/QtGui imageformats/libqwebp.dylib
 
 cd ../MacOS
 cp /usr/local/bin/ipfs .
