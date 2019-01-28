@@ -1,13 +1,13 @@
-## DCore runtime image
+## DCore build
 
-Because DCore build is specific for each platform, there are helper scripts to make life easier. Each of them requires
+Because build is specific for each platform, there are helper scripts to make life easier. Each of them requires
 two mandatory arguments (OS image and DCore versions) and two optional arguments (git revision tag - defaults to DCore version if not specified, packages directory - defaults to packages subdirectory).
 
 > Usage: ./ubuntu.sh image_version dcore_version [git_revision] [package_dir]
 
 ### Ubuntu (latest, 18.04, 16.04)
 
-To create deb packages and docker image:
+To create deb packages and OS build image:
 
     # the latest OS image
     ./ubuntu.sh latest 1.3.3
@@ -21,7 +21,7 @@ To create deb packages and docker image:
 
 ### Debian (latest, 9.6)
 
-To create deb packages and docker image:
+To create deb packages and OS build image:
 
     # the latest OS image
     ./debian.sh latest 1.3.3
@@ -35,7 +35,7 @@ To create deb packages and docker image:
 
 ### Fedora (latest, 29, 28)
 
-To create rpm packages and docker image:
+To create rpm packages and OS build image:
 
     # the latest OS image
     ./fedora.sh latest 1.3.3
@@ -47,7 +47,33 @@ To create rpm packages and docker image:
     docker images
     # decent/fedora/dcore   1.3.3
 
-If you already have DCore deb or rpm packages you can just build the runtime image.
+Naming convention for images: use `decent/` prefix, then append original image name and `/build` suffix, e.g. `decent/ubuntu/build`.
+
+| Build argument | Default value |
+| --------------- | ------------- |
+| IMAGE_VERSION | latest |
+| PBC_VERSION | 0.5.14 |
+| PBC_GIT_REV | 0.5.14 |
+
+Examples:
+
+    # the latest Ubuntu image
+    docker build -t decent/ubuntu/build -f ubuntu/Dockerfile.build ubuntu
+
+    # Ubuntu 18.04 image
+    docker build -t decent/ubuntu/build:18.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=18.04 ubuntu
+
+    # Debian 9.6 image
+    docker build -t decent/debian/build:9.6 -f debian/Dockerfile.build --build-arg IMAGE_VERSION=9.6 debian
+
+    # Fedora 29 image
+    docker build -t decent/fedora/build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
+
+## DCore runtime image
+
+If you already have DCore deb or rpm packages you can build the runtime image. There is a helper script which requires three mandatory arguments (OS image name, OS and DCore versions) and one optional argument (packages directory - defaults to packages subdirectory).
+
+> Usage: ./build_runtime.sh os_name os_image_version dcore_version [package_dir]
 
 Naming convention for images: `decent/` prefix, then append original image name and `/dcore` suffix, e.g. `decent/ubuntu/dcore`. You must specify DCore installation package version in `DCORE_VERSION` build argument. Optionally you can specify the OS layer image version using the `IMAGE_VERSION` and PBC library version using the `PBC_VERSION` build arguments.
 
@@ -91,37 +117,13 @@ Examples:
     ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data
 
     # run node on custom configuration
-    ./dcore.sh decent/ubuntu/dcore:1.3.3 /path/to/data /path/to/genesis.json
+    ./dcore_custom_net.sh decent/ubuntu/dcore:1.3.3 /path/to/data /path/to/genesis.json
 
     # run wallet
     ./cli_wallet.sh /path/to/wallet.json
 
     # stop node
     docker stop DCore
-
-## OS build image
-
-Naming convention for images: use `decent/` prefix, then append original image name and `/build` suffix, e.g. `decent/ubuntu/build`.
-
-| Build argument | Default value |
-| --------------- | ------------- |
-| IMAGE_VERSION | latest |
-| PBC_VERSION | 0.5.14 |
-| PBC_GIT_REV | 0.5.14 |
-
-Examples:
-
-    # the latest Ubuntu image
-    docker build -t decent/ubuntu/build -f ubuntu/Dockerfile.build ubuntu
-
-    # Ubuntu 18.04 image
-    docker build -t decent/ubuntu/build:18.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=18.04 ubuntu
-
-    # Debian 9.6 image
-    docker build -t decent/debian/build:9.6 -f debian/Dockerfile.build --build-arg IMAGE_VERSION=9.6 debian
-
-    # Fedora 29 image
-    docker build -t decent/fedora/build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
 
 ## DCore custom build
 

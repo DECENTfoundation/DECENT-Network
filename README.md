@@ -69,7 +69,7 @@ And the last step is the same regardless on distribution, execute in console:
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
-### Installing prerequisites in macOS
+### Installing prerequisites in MacOS
 
 * Install Xcode and Command Line Tools as described in http://railsapps.github.io/xcode-command-line-tools.html
 * Install Homebrew, see http://brew.sh
@@ -148,6 +148,9 @@ You can use CMake generator to create a Visual Studio 2017 project files and per
 You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=C:\Projects\DECENT-Network-prefix` to the command line.
 
 You can use any path instead of `C:\Projects` in the steps above.
+
+[Building Decent in Docker](scripts/README.md)
+---------------------------
 
 Starting Decent
 ---------------
