@@ -9,6 +9,7 @@ RUN . /etc/os-release && apt-get update && \
         libcrypto++6 \
         libssl1.1 \
         libcurl4 \
+        less \
         wget \
         ca-certificates; \
     else apt-get install -y --no-install-recommends \
@@ -16,6 +17,7 @@ RUN . /etc/os-release && apt-get update && \
         libcrypto++9v5 \
         libssl1.0.0 \
         libcurl3 \
+        less \
         wget \
         ca-certificates; \
     fi && apt-get clean && apt-get autoremove
@@ -41,7 +43,7 @@ RUN . /etc/os-release && \
     rm /tmp/dcore_$DCORE_VERSION-*_amd64.deb && \
     mkdir $DCORE_HOME/.decent
 
-EXPOSE 40000 8090 5001
+EXPOSE 40000 8090
 
 ENV DCORE_EXTRA_ARGS=""
 ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"

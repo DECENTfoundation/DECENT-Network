@@ -3,7 +3,7 @@ FROM fedora:$IMAGE_VERSION
 LABEL maintainer="DECENT"
 
 # prerequisites
-RUN dnf install -y cryptopp wget procps && dnf clean all
+RUN dnf install -y cryptopp less procps wget && dnf clean all
 
 # PBC
 ARG PBC_VERSION=0.5.14
@@ -26,7 +26,7 @@ RUN export FEDORA=`rpm -E "%{fedora}"` && \
     rm /tmp/DCore-$DCORE_VERSION-1.fc*.rpm && \
     mkdir $DCORE_HOME/.decent
 
-EXPOSE 40000 8090 5001
+EXPOSE 40000 8090
 
 ENV DCORE_EXTRA_ARGS=""
 ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"

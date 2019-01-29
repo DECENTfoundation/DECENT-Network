@@ -97,7 +97,7 @@ Naming convention for images: `decent/` prefix, then append original image name 
 
 ## DCore run
 
-DCore image exposes 3 ports: 8090 (websocket RPC to listen on), 5001 (IPFS API) and 40000 (P2P).
+DCore image exposes 2 ports: 8090 (websocket RPC to listen on) and 40000 (P2P).
 You need to mount an external data directory and genesis file (when using custom configuration) to the running container.
 
 | Host | Container path |
