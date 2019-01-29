@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
     <title>DECENT</title>
-    <license file="LICENSE.md"/>
-    <readme file="TERMS.rtf"/>
+    <license file="LICENSE.html"/>
+    <readme file="TERMS.html"/>
     <pkg-ref id="ch.decent.guiwallet"/>
     <options customize="never" require-scripts="false"/>
     <volume-check>
