@@ -264,7 +264,18 @@ int main(int argc, char** argv) {
       if( fc::exists(config_filename) )
       {
          // get the basic options
-         bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+         try {
+            bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+         }
+         
+         catch (std::exception& e) {
+            elog(e.what());
+            return EXIT_FAILURE;
+         }
+         catch (...) {
+            elog("unknown exception");
+            return EXIT_FAILURE;
+         }
       }
       else //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
       {
@@ -289,9 +300,10 @@ int main(int argc, char** argv) {
             }
          }
       }
-      catch (const fc::exception&)
+      catch (const fc::exception& e)
       {
-         wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
+         elog("Error parsing logging options from config file ${cfg}. str: ${str}", ("cfg", config_filename.preferred_string())("str", e.to_string()));
+         return EXIT_FAILURE;
       }
 
       monitoring::set_data_dir(data_dir);

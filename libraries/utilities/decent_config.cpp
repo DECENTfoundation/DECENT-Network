@@ -186,19 +186,20 @@ namespace decent {
                 // stdout/stderr will be taken from ini file, everything else hard-coded here
                 fc::console_appender::config console_appender_config;
                 console_appender_config.level_colors.emplace_back(
-                      fc::console_appender::level_color(fc::log_level::debug,
-                                                        fc::console_appender::color::green));
+                   fc::console_appender::level_color(fc::log_level::debug,
+                      fc::console_appender::color::green));
                 console_appender_config.level_colors.emplace_back(
-                      fc::console_appender::level_color(fc::log_level::warn,
-                                                        fc::console_appender::color::brown));
+                   fc::console_appender::level_color(fc::log_level::warn,
+                      fc::console_appender::color::brown));
                 console_appender_config.level_colors.emplace_back(
-                      fc::console_appender::level_color(fc::log_level::error,
-                                                        fc::console_appender::color::cyan));
+                   fc::console_appender::level_color(fc::log_level::error,
+                      fc::console_appender::color::cyan));
 
                 console_appender_config.stream = fc::variant(stream_name).as<fc::console_appender::stream::type>();
                 logging_config.appenders.push_back(fc::appender_config(console_appender_name, "console", fc::variant(console_appender_config)));
                 found_logging_config = true;
-             } else if (boost::starts_with(section_name, file_appender_section_prefix)) {
+             }
+             else if (boost::starts_with(section_name, file_appender_section_prefix)) {
                 std::string file_appender_name = section_name.substr(file_appender_section_prefix.length());
                 fc::path file_name = section_tree.get<std::string>("filename");
                 if (file_name.is_relative())
@@ -209,12 +210,12 @@ namespace decent {
                    rotate = section_tree.get<std::string>("rotate");
                 }
 
-                std::string rotation_interval = std::to_string( fc::hours(1).to_seconds() );  //default value
+                std::string rotation_interval = std::to_string(fc::hours(1).to_seconds());  //default value
                 if (section_tree.find("rotation_interval") != section_tree.not_found()) {
                    rotation_interval = section_tree.get<std::string>("rotation_interval");
                 }
 
-                std::string rotation_limit = std::to_string( fc::days(1).to_seconds() );  //default value
+                std::string rotation_limit = std::to_string(fc::days(1).to_seconds());  //default value
                 if (section_tree.find("rotation_limit") != section_tree.not_found()) {
                    rotation_limit = section_tree.get<std::string>("rotation_limit");
                 }
@@ -225,8 +226,8 @@ namespace decent {
                 file_appender_config.filename = file_name;
                 file_appender_config.flush = true;
                 file_appender_config.rotate = fc::variant(rotate).as<bool>();
-                file_appender_config.rotation_interval = fc::seconds( fc::variant(rotation_interval).as<int64_t>() );
-                file_appender_config.rotation_limit = fc::seconds( fc::variant(rotation_limit).as<int64_t>() );
+                file_appender_config.rotation_interval = fc::seconds(fc::variant(rotation_interval).as<int64_t>());
+                file_appender_config.rotation_limit = fc::seconds(fc::variant(rotation_limit).as<int64_t>());
                 logging_config.appenders.push_back(fc::appender_config(file_appender_name, "file", fc::variant(file_appender_config)));
                 found_logging_config = true;
              }
@@ -235,10 +236,15 @@ namespace decent {
                 std::string level_string = section_tree.get<std::string>("level");
                 std::string appenders_string = section_tree.get<std::string>("appenders");
                 fc::logger_config logger_config(logger_name);
-                logger_config.level = fc::variant(level_string).as<fc::log_level>();
+               
+                try {
+                   logger_config.level = fc::variant(level_string).as<fc::log_level>();
+                }
+                FC_RETHROW_EXCEPTIONS(error, "${s}", ("s", std::string("in settings for logger: ") + logger_name))
+
                 boost::split(logger_config.appenders, appenders_string,
-                             boost::is_any_of(" ,"),
-                             boost::token_compress_on);
+                   boost::is_any_of(" ,"),
+                   boost::token_compress_on);
                 logging_config.loggers.push_back(logger_config);
                 found_logging_config = true;
              }
@@ -248,9 +254,8 @@ namespace decent {
           else
              return fc::optional<fc::logging_config>();
        }
-       FC_RETHROW_EXCEPTIONS(warn, "")
-
-    }
+       FC_RETHROW_EXCEPTIONS(error, "")
+   }
 
     void write_default_config_file(const fc::path& config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
     {

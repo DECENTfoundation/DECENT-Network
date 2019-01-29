@@ -430,7 +430,7 @@ namespace graphene { namespace app {
       /**
       * @brief Retrieves monitoring counters by names.
       * @param names Counter names. Pass epmty vector to retrieve all counters.
-      * @return vector of monitoring counters
+      * @return Vector of monitoring counters. Persistent counters which was not reset yet or non-persisten counters shows datetime of reset equal to begin of epoch. 
       * @ingroup MonitoringAPI
       */
       std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;

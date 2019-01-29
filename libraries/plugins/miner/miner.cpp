@@ -34,6 +34,7 @@
 #include <fc/thread/thread.hpp>
 
 #include <iostream>
+#include <regex>
 
 using namespace graphene::miner_plugin;
 using std::string;
@@ -62,6 +63,49 @@ void new_chain_banner( const graphene::chain::database& db )
    return;
 }
 
+class param_validator_miner
+{
+public:
+   param_validator_miner(const std::string param_name)
+      : _name(param_name)
+   {
+   }
+
+   void check_reg_expr(const std::regex& rx, const std::string& val)
+   {
+      bool matches_reg_expr = std::regex_match(val, rx);
+      FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+   }
+
+   void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
+   {
+      for (size_t i = 0; i < val.size(); i++) {
+         bool matches_reg_expr = std::regex_match(val[i], rx);
+         FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+      }
+   }
+
+   void operator()(const std::string& val)
+   {
+     
+   }
+   void operator()(const std::vector<std::string>& val)
+   {
+      if (_name == "miner-id")
+      {
+         const std::regex rx("^\"1\.4\.[0-9]{1,15}\"$");// miner id, for example "1.4.18"
+         check_reg_expr(rx, val);
+      } else
+      if (_name == "private-key") {
+         const std::regex rx("^\\x5B\"(DCT)([0-9]|[a-z]|[A-Z]){50}\",\"([0-9]|[a-z]|[A-Z]){51}\"\\x5D$");// pair of public and private key, i.e.:["DCT6M...","5KQwr..."]
+         check_reg_expr(rx, val);
+      }
+   }
+  
+   std::string _name;
+};
+
+
 miner_plugin::miner_plugin(graphene::app::application* app) : graphene::app::plugin(app) {}
 
 miner_plugin::~miner_plugin()
@@ -85,10 +129,10 @@ void miner_plugin::plugin_set_program_options(
    command_line_options.add_options()
          ("enable-stale-production", bpo::bool_switch(), "Enable block production, even if the chain is stale.")
          ("required-miners-participation", bpo::value<uint32_t>()->default_value(33), "Percent of miners (0-99) that must be participating in order to produce blocks")
-         ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken(),
+         ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken()->notifier(param_validator_miner("miner-id")),
           ("ID of miner controlled by this node (e.g. " + miner_id_example + ", quotes are required, may specify multiple times)").c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
-          DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key))),
+          DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key)))->notifier(param_validator_miner("private-key")),
           "Tuple of [PublicKey, WIF private key] (may specify multiple times)")
          ;
    config_file_options.add(command_line_options);
@@ -102,7 +146,12 @@ std::string miner_plugin::plugin_name()
 void miner_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 { try {
    ilog("miner plugin:  plugin_initialize() begin");
-   LOAD_VALUE_SET(options, "miner-id", _miners, chain::miner_id_type)
+
+   if (options.count("miner-id")) {
+
+      const std::vector<std::string>& ops = options["miner-id"].as<std::vector<std::string>>();
+      std::transform(ops.begin(), ops.end(), std::inserter(_miners, _miners.end()), &graphene::app::dejsonify<graphene::chain::miner_id_type>);
+   }
 
    if( options.count("enable-stale-production") )
    {

@@ -24,6 +24,7 @@
  */
 
 #include <iostream>
+#include <regex>
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/reverse.hpp>
@@ -39,6 +40,8 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
+
+#include <boost/filesystem.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -998,6 +1001,83 @@ namespace detail {
 
 } // namespace detail
 
+class param_validator_app
+{
+public:
+   param_validator_app(const std::string param_name)
+      : _name(param_name)
+   {
+   }
+   // ipv4:port or dnsname:port
+   const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS = 
+      "^"
+      "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\x2E){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))|" // ipv4::port or
+      "([a-z0-9]+(-[a-z0-9]+)*(\\x2E)?)+[a-z]{2,}:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])" // dnsname:port
+      "$"; 
+
+   void check_reg_expr(const std::regex& rx, const std::string& val)
+   {
+      bool matches_reg_expr = std::regex_match(val, rx);
+      FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+   }
+
+   void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
+   {
+      for (size_t i = 0; i < val.size(); i++) {
+         bool matches_reg_expr = std::regex_match(val[i], rx);
+         FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+      }
+   }
+
+   void operator()(const std::string& val)
+   {
+      if (_name == "p2p-endpoint" || _name == "ipfs-api" || _name == "rpc-endpoint" || _name == "rpc-tls-endpoint")
+      {
+         const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
+         check_reg_expr(rx, val);
+         // additional checks
+         try {
+            fc::ip::endpoint ep = fc::ip::endpoint::from_string(val);
+         }
+         FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
+      } else
+      if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file")
+      { 
+         boost::filesystem::path p(val);
+         bool file_exists = boost::filesystem::exists(p);
+         FC_ASSERT(file_exists, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+         bool is_regular = boost::filesystem::is_regular(p);
+         FC_ASSERT(is_regular, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+      }
+   }
+   void operator()(const std::vector<std::string>& val)
+   {
+      if (_name == "seed-node")
+      {
+         const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
+         check_reg_expr(rx, val);
+
+         // additional checks
+         for (size_t i = 0; i < val.size(); i++) {
+            try
+            {
+               fc::ip::endpoint ep = fc::ip::endpoint::from_string(val[i]);
+            }
+            FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
+         }
+      }
+   }
+   void operator()(const boost::filesystem::path& p)
+   {
+      bool file_exists = boost::filesystem::exists(p);
+      FC_ASSERT(file_exists, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+      bool is_regular = boost::filesystem::is_regular(p);
+      FC_ASSERT(is_regular, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+   }
+
+   std::string _name;
+};
+
 application::application()
    : my(new detail::application_impl(this))
 {}
@@ -1013,26 +1093,24 @@ void application::set_program_options(boost::program_options::options_descriptio
       ("help,h", "Print this help message and exit.")
       ("version,v", "Print version information and exit.")
       ;
-
+   //param_validator pv("p2p-endpoint");
    configuration_file_options.add_options()
-         ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
-
-         ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
-
+         ("p2p-endpoint", bpo::value<string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
+         ("seed-node,s", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
-         ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
-         ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")
+         ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090")->notifier(param_validator_app("rpc-endpoint")), "Endpoint for websocket RPC to listen on")
+         ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
          ("server-allowed-domains", "List of allowed domains to comunicate with or asterix for all domains")
-         ("server-cert-file", bpo::value<string>(), "The TLS certificate file (public) for this server")
-         ("server-cert-key-file", bpo::value<string>(), "The TLS certificate file (private key) for this server")
-         ("server-cert-chain-file", bpo::value<string>(), "The TLS certificate chain file for this server")
+         ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this server")
+         ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this server")
+         ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this server")
          ("server-cert-password,P", bpo::value<string>(), "Password for this certificate")
-         ("genesis-json", bpo::value<boost::filesystem::path>(), "File to read Genesis State from")
+         ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
-         ("api-access", bpo::value<boost::filesystem::path>(), "JSON file specifying API permissions")
-         ("ipfs-api", bpo::value<string>(), "IPFS control API")
+         ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")
+         ("ipfs-api", bpo::value<string>()->notifier(param_validator_app("ipfs-api")), "IPFS control API")
          ;
 
    bpo::options_description common_options("Common options");

@@ -38,6 +38,8 @@
 #include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
 
+#include <regex>
+
 namespace graphene { namespace account_history {
 
 namespace detail
@@ -170,8 +172,47 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 }
 } // end namespace detail
 
+class param_validator_account_history
+{
+public:
+   param_validator_account_history(const std::string param_name)
+      : _name(param_name)
+   {
+   }
 
+   void check_reg_expr(const std::regex& rx, const std::string& val)
+   {
+      bool matches_reg_expr = std::regex_match(val, rx);
+      FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+   }
 
+   void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
+   {
+      for (size_t i = 0; i < val.size(); i++) {
+         bool matches_reg_expr = std::regex_match(val[i], rx);
+         FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+      }
+   }
+
+   void operator()(const std::string& val)
+   {
+   }
+   void operator()(const std::vector<std::string>& val)
+   {
+      if (_name == "track-account")
+      {
+         const std::regex rx("^\"1\.2\.[0-9]{1,15}\"$");// account id, for example "1.2.18"
+         check_reg_expr(rx, val);
+      } else
+      if (_name == "miner-id")
+      {
+         const std::regex rx("^\"1\.4\.[0-9]{1,15}\"$");// miner id, for example "1.4.18"
+         check_reg_expr(rx, val);
+      }
+   }
+
+   std::string _name;
+};
 
 
 
@@ -195,7 +236,7 @@ void account_history_plugin::plugin_set_program_options(
    )
 {
    cli.add_options()
-         ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
+         ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken()->notifier(param_validator_account_history("track-account")), "Account ID to track history for (may specify multiple times)")
          ;
    cfg.add(cli);
 }
@@ -206,7 +247,10 @@ void account_history_plugin::plugin_initialize(const boost::program_options::var
    database().add_index< primary_index< simple_index< operation_history_object > > >();
    database().add_index< primary_index< account_transaction_history_index > >();
 
-   LOAD_VALUE_SET(options, "track-account", my->_tracked_accounts, graphene::chain::account_id_type);
+   if (options.count("track-account")) {     
+      const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>(); 
+      std::transform(ops.begin(), ops.end(), std::inserter(my->_tracked_accounts, my->_tracked_accounts.end()), &graphene::app::dejsonify<graphene::chain::account_id_type>);
+   }
 }
 
 void account_history_plugin::plugin_startup()
