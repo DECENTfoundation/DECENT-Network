@@ -35,7 +35,7 @@ RUN dnf install -y \
 
 # prepare directories
 USER root
-RUN rpmdev-setuptree
+RUN rpmdev-setuptree && export ARCH=`rpm -E "%{_arch}"` && mkdir /root/rpmbuild/RPMS/$ARCH && ln -s /root/rpmbuild/RPMS/$ARCH /root/packages
 
 # PBC
 ARG PBC_VERSION=0.5.14
@@ -43,6 +43,6 @@ ARG PBC_GIT_REV=0.5.14
 COPY libpbc.spec /root/rpmbuild/SPECS
 RUN export ARCH=`rpm -E "%{_arch}"` && \
     rpmbuild -bb -D "pbc_version $PBC_VERSION" -D "git_revision $PBC_GIT_REV" --rmspec /root/rpmbuild/SPECS/libpbc.spec && \
-    rpm -i /root/rpmbuild/RPMS/$ARCH/libpbc* && rm -rf /root/rpmbuild/RPMS/$ARCH
+    rpm -i /root/rpmbuild/RPMS/$ARCH/libpbc* && rm -rf /root/rpmbuild/RPMS/$ARCH/libpbc*
 
 CMD ["/bin/bash"]
