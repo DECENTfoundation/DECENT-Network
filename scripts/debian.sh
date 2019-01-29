@@ -15,6 +15,6 @@ else
 fi
 
 docker run -it -w /root --rm --name debian.build.$1 \
-    --mount type=bind,src=$PACKAGE_DIR,dst=/root/dcore-deb \
+    --mount type=bind,src=$PACKAGE_DIR,dst=/root/packages \
     --mount type=bind,src=$PWD/debian,dst=/root/debian,readonly \
     decent/debian/build:$1 debian/build.sh $2 $GIT_REV

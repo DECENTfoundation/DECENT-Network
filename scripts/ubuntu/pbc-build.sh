@@ -67,10 +67,10 @@ echo " designed to be the backbone of implementations of pairing-based cryptosys
 echo " thus speed and portability are important goals. It provides routines such as" >> libpbc-dev/DEBIAN/control
 echo " elliptic curve generation, elliptic curve arithmetic and pairing computation." >> libpbc-dev/DEBIAN/control
 
-dpkg-deb --build libpbc dcore-deb
-dpkg-deb --build libpbc-dev dcore-deb
+dpkg-deb --build libpbc packages
+dpkg-deb --build libpbc-dev packages
 
-mv dcore-deb/libpbc_${PBC_VERSION}_amd64.deb dcore-deb/libpbc_${PBC_VERSION}-ubuntu${VERSION_ID}_amd64.deb
-mv dcore-deb/libpbc-dev_${PBC_VERSION}_amd64.deb dcore-deb/libpbc-dev_${PBC_VERSION}-ubuntu${VERSION_ID}_amd64.deb
+mv packages/libpbc_${PBC_VERSION}_amd64.deb packages/libpbc_${PBC_VERSION}-ubuntu${VERSION_ID}_amd64.deb
+mv packages/libpbc-dev_${PBC_VERSION}_amd64.deb packages/libpbc-dev_${PBC_VERSION}-ubuntu${VERSION_ID}_amd64.deb
 
 rm -rf libpbc*

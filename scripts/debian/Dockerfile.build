@@ -38,9 +38,9 @@ USER root
 ARG PBC_VERSION=0.5.14
 ARG PBC_GIT_REV=0.5.14
 COPY pbc-build.sh /root
-RUN cd /root && mkdir dcore-deb && \
+RUN cd /root && mkdir packages && \
     ./pbc-build.sh $PBC_VERSION $PBC_GIT_REV && \
-    dpkg -i dcore-deb/libpbc* && \
-    rm -rf dcore-deb pbc-build.sh
+    dpkg -i packages/libpbc* && \
+    rm -rf packages pbc-build.sh
 
 CMD ["/bin/bash"]

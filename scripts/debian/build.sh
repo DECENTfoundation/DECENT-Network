@@ -106,11 +106,11 @@ cp $BASEDIR/postinst dcore-node/DEBIAN
 cp $BASEDIR/prerm dcore-node/DEBIAN
 
 # build the deb packages
-dpkg-deb --build dcore-node dcore-deb
-mv dcore-deb/dcore_${DCORE_VERSION}_amd64.deb dcore-deb/dcore_${DCORE_VERSION}-debian${VERSION_ID}_amd64.deb
+dpkg-deb --build dcore-node packages
+mv packages/dcore_${DCORE_VERSION}_amd64.deb packages/dcore_${DCORE_VERSION}-debian${VERSION_ID}_amd64.deb
 
-dpkg-deb --build dcore-gui dcore-deb
-mv dcore-deb/dcore-gui_${DCORE_VERSION}_amd64.deb dcore-deb/dcore-gui_${DCORE_VERSION}-debian${VERSION_ID}_amd64.deb
+dpkg-deb --build dcore-gui packages
+mv packages/dcore-gui_${DCORE_VERSION}_amd64.deb packages/dcore-gui_${DCORE_VERSION}-debian${VERSION_ID}_amd64.deb
 
 # clean up
 rm -rf DECENT-Network dcore-node dcore-gui

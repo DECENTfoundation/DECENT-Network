@@ -15,6 +15,6 @@ else
 fi
 
 docker run -it -w /root --rm --name ubuntu.build.$1 \
-    --mount type=bind,src=$PACKAGE_DIR,dst=/root/dcore-deb \
+    --mount type=bind,src=$PACKAGE_DIR,dst=/root/packages \
     --mount type=bind,src=$PWD/ubuntu,dst=/root/ubuntu,readonly \
     decent/ubuntu/build:$1 ubuntu/build.sh $2 $GIT_REV
