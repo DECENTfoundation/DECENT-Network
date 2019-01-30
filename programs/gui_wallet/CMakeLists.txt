@@ -22,15 +22,15 @@ set_source_files_properties(${GUI_WALLET_ICON} PROPERTIES MACOSX_PACKAGE_LOCATIO
 set(GUI_WALLET_TS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/languages/decent_en.ts)
 set_source_files_properties(${GUI_WALLET_TS_FILES} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/languages)
 
-qt5_create_translation(GUI_WALLET_QM_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src ${GUI_WALLET_TS_FILES} OPTIONS -no-obsolete)
-add_custom_target(translations ALL DEPENDS ${GUI_WALLET_QM_FILES})
-
 set(GUI_WALLET_RESOURCES resources.qrc)
 set(GUI_WALLET_PRECOMPILED_SOURCE_FILE "")
 set(GUI_WALLET_PRECOMPILED_HEADER_FILE stdafx.h)
 if( WIN32 )
     list(APPEND GUI_WALLET_RESOURCES DECENT.rc)
     list(APPEND GUI_WALLET_PRECOMPILED_SOURCE_FILE stdafx.cpp)
+    qt5_add_translation(GUI_WALLET_QM_FILES ${GUI_WALLET_TS_FILES})
+else()
+    qt5_create_translation(GUI_WALLET_QM_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src ${GUI_WALLET_TS_FILES} OPTIONS -no-obsolete)
 endif()
 
 add_executable(DECENT MACOSX_BUNDLE
@@ -78,8 +78,6 @@ add_executable(DECENT MACOSX_BUNDLE
                src/upload_tab.hpp
              )
 
-add_dependencies(DECENT translations)
-
 if( UPDATE_MANAGER )
     target_sources(DECENT PRIVATE
                    src/update_manager.cpp
@@ -91,7 +89,8 @@ if( UPDATE_MANAGER )
 endif()
 
 if( WIN32 )
-list(APPEND PLATFORM_SPECIFIC_LIBS msi)
+    add_custom_target(translations ALL DEPENDS ${GUI_WALLET_QM_FILES})
+    add_dependencies(DECENT translations)
 endif()
 
 target_link_libraries(DECENT PRIVATE
