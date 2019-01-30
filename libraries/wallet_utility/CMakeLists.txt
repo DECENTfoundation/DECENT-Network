@@ -11,6 +11,10 @@ target_link_libraries( wallet_utility
 target_include_directories( wallet_utility
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+if(MSVC)
+   set_source_files_properties( wallet_utility.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+endif(MSVC)
+
 #install( TARGETS
 #   package_manager
 #
