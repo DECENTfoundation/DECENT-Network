@@ -209,7 +209,9 @@ int main(int argc, char** argv) {
       std::string boost_version_text = std::to_string(boost_major_version) + "." + std::to_string(boost_minor_version) + "." + std::to_string(BOOST_VERSION % 100);
       std::string openssl_version_text = std::string(OPENSSL_VERSION_TEXT);
       openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
-      std::string cryptopp_version_text = std::to_string(CRYPTOPP_VERSION / 100) + "." + std::to_string(CRYPTOPP_VERSION % 100);
+      unsigned int cryptopp_major_version = CRYPTOPP_VERSION / 100;
+      unsigned int cryptopp_minor_version = CRYPTOPP_VERSION / 10 - cryptopp_major_version * 10;
+      std::string cryptopp_version_text = std::to_string(cryptopp_major_version) + "." + std::to_string(cryptopp_minor_version) + "." + std::to_string(CRYPTOPP_VERSION % 100);
 
       std::cout << "DECENT Daemon " << graphene::utilities::git_version();
 #ifndef NDEBUG

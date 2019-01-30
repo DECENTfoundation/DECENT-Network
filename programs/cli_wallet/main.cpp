@@ -125,7 +125,9 @@ int main( int argc, char** argv )
          string boost_version_text = to_string(boost_major_version) + "." + to_string(boost_minor_version) + "." + to_string(BOOST_VERSION % 100);
          string openssl_version_text = string(OPENSSL_VERSION_TEXT);
          openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
-         std::string cryptopp_version_text = std::to_string(CRYPTOPP_VERSION / 100) + "." + std::to_string(CRYPTOPP_VERSION % 100);
+         unsigned int cryptopp_major_version = CRYPTOPP_VERSION / 100;
+         unsigned int cryptopp_minor_version = CRYPTOPP_VERSION / 10 - cryptopp_major_version * 10;
+         std::string cryptopp_version_text = std::to_string(cryptopp_major_version) + "." + std::to_string(cryptopp_minor_version) + "." + std::to_string(CRYPTOPP_VERSION % 100);
 
          std::cout << "CLI Wallet " << graphene::utilities::git_version();
 #ifndef NDEBUG
