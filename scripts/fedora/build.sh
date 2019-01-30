@@ -16,8 +16,8 @@ if rpm -q --quiet libpbc-devel; then
 else
     PBC_VERSION=0.5.14
     echo "Downloading PBC $PBC_VERSION"
-    wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
-    wget https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-devel-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
+    wget -nv https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
+    wget -nv https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-devel-$PBC_VERSION-1.fc$FEDORA.x86_64.rpm
     rpm -i libpbc*
     rm libpbc*
 fi

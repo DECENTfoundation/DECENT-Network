@@ -149,8 +149,10 @@ You can specify any other custom install prefix for `cmake` during the initial c
 
 You can use any path instead of `C:\Projects` in the steps above.
 
-[Building Decent in Docker](scripts/README.md)
+Building Decent in Docker
 ---------------------------
+
+You can also build Docker image which will run as Decent network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [scripts](scripts/README.md) directory.
 
 Starting Decent
 ---------------
