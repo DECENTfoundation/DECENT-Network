@@ -1,5 +1,7 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
+#ifdef UPDATE_MANAGER
+
 #ifndef STDAFX_H
 #include <QMainWindow>
 #include <QTimer>
@@ -7,13 +9,12 @@
 #endif
 
 #include "update_manager.hpp"
-#ifdef UPDATE_MANAGER
-
-#include "../../update/include/update.h"
-#include "../../update/include/updatethread.h"
 #include "rev_history_dlg.hpp"
 #include "update_prog_bar.hpp"
-using namespace gui_wallet;
+
+#include <update.h>
+#include <updatethread.h>
+
 #ifndef _MSC_VER
 #include <pthread.h>
 typedef void* DCTHANDLE;
@@ -61,14 +62,14 @@ MPHANDLE MpThreadCreate(void* params, MP_THREAD_FUNCTION threadProc, uint32_t* t
 
 
 UpdateManager::UpdateManager()
-: m_pTimerUpdateProxy(new QTimer(this))
-, m_updateProgBarCreate(false)
+: m_updateProgBarCreate(false)
+, m_updateProgBarDestroy(false)
 , m_proxyUpdateProgBarUpperBorder(0)
 , m_proxyUpdateProgBarAbort(nullptr)
-, m_updateProgBarDestroy(false)
 , m_progBar(nullptr)
 , m_updateThreadParams(nullptr)
 , m_updateThread(nullptr)
+, m_pTimerUpdateProxy(new QTimer(this))
 {
    s_updateManager = this;
    m_pTimerUpdateProxy->setInterval(200);
@@ -188,7 +189,7 @@ void UpdateManager::progBarDestroy(void)
 void UpdateManager::slot_startRevHistoryDlg(const QString& revHistory, long* returnValue)
 {
    QMainWindow* w = getMainWindow();
-   Rev_history_dlg revHistDlg(revHistory, w);
+   gui_wallet::Rev_history_dlg revHistDlg(revHistory, w);
    *returnValue = revHistDlg.exec();
 }
 
@@ -232,6 +233,5 @@ void __cdecl UpdateManager::SetProgBarTitle(const char* title)
    QString t(title);
    s_updateManager->ProxySetProgBarTitle(t);
 }
-
 
 #endif

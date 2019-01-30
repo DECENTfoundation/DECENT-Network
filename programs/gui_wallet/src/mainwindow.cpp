@@ -26,7 +26,9 @@
 #include "mining_vote_tab.hpp"
 #include "mining_vote_popup.hpp"
 
+#ifdef UPDATE_MANAGER
 #include "update_manager.hpp"
+#endif
 
 namespace gui_wallet
 {

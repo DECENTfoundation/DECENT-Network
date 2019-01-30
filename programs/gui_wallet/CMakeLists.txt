@@ -8,6 +8,8 @@ endif()
 
 find_package(Qt5LinguistTools REQUIRED)
 
+set(UPDATE_MANAGER "" CACHE PATH "Path to update manager")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -68,8 +70,6 @@ add_executable(DECENT MACOSX_BUNDLE
                src/richdialog.hpp
                src/transactions_tab.cpp
                src/transactions_tab.hpp
-               src/update_manager.cpp
-               src/update_manager.hpp
                src/update_prog_bar.cpp
                src/update_prog_bar.hpp
                src/upload_popup.cpp
@@ -81,8 +81,13 @@ add_executable(DECENT MACOSX_BUNDLE
 add_dependencies(DECENT translations)
 
 if( UPDATE_MANAGER )
-add_definitions(-DUPDATE_MANAGER=1)
-list(APPEND PLATFORM_SPECIFIC_LIBS update)
+    target_sources(DECENT PRIVATE
+                   src/update_manager.cpp
+                   src/update_manager.hpp
+                   )
+    add_subdirectory(${UPDATE_MANAGER} update)
+    target_link_libraries(DECENT PRIVATE update)
+    target_compile_definitions(DECENT PRIVATE UPDATE_MANAGER)
 endif()
 
 if( WIN32 )

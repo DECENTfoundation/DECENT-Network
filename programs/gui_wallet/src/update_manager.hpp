@@ -1,6 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
-//#define UPDATE_MANAGER
 #ifdef UPDATE_MANAGER
 
 #ifndef STDAFX_H
@@ -78,4 +77,5 @@ signals:
    void slot_updateProxy();
    void slot_progBarSetPos(int pos);
 };
+
 #endif
