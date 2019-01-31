@@ -1008,6 +1008,10 @@ public:
       : _name(param_name)
    {
    }
+   const std::string REG_EXPR_IPV4_AND_PORT =
+      "^"
+      "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\x2E){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))" // ipv4::port or
+      "$";
    // ipv4:port or dnsname:port
    const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS = 
       "^"
@@ -1019,6 +1023,12 @@ public:
    {
       bool matches_reg_expr = std::regex_match(val, rx);
       FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+   }
+
+   bool check_reg_expr_no_exc(const std::regex& rx, const std::string& val)
+   {
+      bool matches_reg_expr = std::regex_match(val, rx);
+      return matches_reg_expr;
    }
 
    void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
@@ -1034,12 +1044,16 @@ public:
       if (_name == "p2p-endpoint" || _name == "ipfs-api" || _name == "rpc-endpoint" || _name == "rpc-tls-endpoint")
       {
          const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
+         const std::regex rx_ip_and_port(REG_EXPR_IPV4_AND_PORT);
          check_reg_expr(rx, val);
+         bool is_ip = check_reg_expr_no_exc(rx_ip_and_port, val);
          // additional checks
-         try {
-            fc::ip::endpoint ep = fc::ip::endpoint::from_string(val);
+         if (is_ip) {
+            try {
+               fc::ip::endpoint ep = fc::ip::endpoint::from_string(val);
+            }
+            FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
          }
-         FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
       } else
       if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file")
       { 
