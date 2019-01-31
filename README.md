@@ -326,7 +326,7 @@ Questions
     do not).
 
     All asset ID's are of the form `1.3.x`.  If you were the 29th asset to be registered,
-    your asset's ID will be `1.3.29`.  Asset `0` is special (it's BTS, which is considered the "core asset").
+    your asset's ID will be `1.3.29`.  Asset `0` is special (it's DCT, which is considered the "core asset").
 
     The first and second number together identify the kind of thing you're talking about (`1.2` for accounts,
     `1.3` for assets).  The third number identifies the particular thing.
