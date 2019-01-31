@@ -420,9 +420,13 @@ namespace detail {
 
          _chain_db->add_checkpoints( loaded_checkpoints );
 
-         if( _options->count("replay-blockchain") )
+         bool objdb = fc::exists(_data_dir / "blockchain/object_database");
+         if( !objdb || _options->count("replay-blockchain") )
          {
-            ilog("Replaying blockchain on user request.");
+            if( objdb )
+               ilog("Replaying blockchain on user request.");
+            else
+               ilog("Replaying blockchain due missing object database.");
             _chain_db->reindex(_data_dir/"blockchain", initial_state());
          } else if( clean ) {
 

@@ -113,7 +113,7 @@ void database::reindex(fc::path data_dir, const genesis_state_type& initial_allo
 
 void database::wipe(const fc::path& data_dir, bool include_blocks)
 {
-   ilog("Wiping database", ("include_blocks", include_blocks));
+   ilog("Wiping database (including blocks: ${blocks})", ("blocks", include_blocks));
    close();
    object_database::wipe(data_dir);
    if( include_blocks )
