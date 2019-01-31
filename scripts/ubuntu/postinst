@@ -1,4 +1,4 @@
 #!/bin/sh
 if [ "$(pidof systemd)" ]; then
-   systemctl --global --no-reload preset /etc/systemd/system/DCore.service &>/dev/null
+   systemctl --no-reload preset DCore &>/dev/null
 fi

@@ -1,4 +1,4 @@
 #!/bin/sh
 if [ "$(pidof systemd)" ]; then
-   systemctl --global disable DCore &>/dev/null
+   systemctl --no-reload disable --now DCore &>/dev/null
 fi
