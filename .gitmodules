@@ -1,7 +1,3 @@
-[submodule "docs"]
-	path = docs
-	url = https://github.com/DECENTfoundation/DECENT-Network.wiki.git
-	ignore = dirty
 [submodule "libraries/contrib/fc"]
 	path = libraries/contrib/fc
 	url = https://github.com/DECENTfoundation/fc.git
