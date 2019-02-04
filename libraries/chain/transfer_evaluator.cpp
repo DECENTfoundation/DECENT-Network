@@ -83,18 +83,25 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
       const account_object& from_account        = op.from(d);
       const asset_object&   asset_type          = op.amount.asset_id(d);
 
+      std::string to_account_name;
       if( op.to.is<content_id_type>() )
       {
          auto& content_idx = d.get_index_type<content_index>().indices().get<by_id>();
          const auto& content_itr = content_idx.find( op.to );
          FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
+         to_account_name = content_itr->author(d).name;
+      }
+      else
+      {
+         const account_object& to_account = op.to.as<account_id_type>()(d);
+         to_account_name = to_account.name;
       }
 
       try {
          bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
          FC_ASSERT( insufficient_balance,
                     "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-                    ("a",from_account.name)("t",op.to)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
+                    ("a",from_account.name)("t",to_account_name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
 
          return void_result();
       } FC_RETHROW_EXCEPTIONS( error, "Unable to transfer ${a} from ${f} to ${t}", ("a",d.to_pretty_string(op.amount))("f",op.from(d).name)("t",op.to) );
