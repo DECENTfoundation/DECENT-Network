@@ -28,6 +28,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/reverse.hpp>
+#include <boost/asio/ip/address_v4.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/network/resolve.hpp>
 #include <fc/rpc/websocket_api.hpp>
@@ -1020,13 +1021,14 @@ public:
    const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS = 
       "^"
       "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\x2E){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))|" // ipv4::port or
-      "([a-z0-9]+(-[a-z0-9]+)*(\\x2E)?)+[a-z]{2,}:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])" // dnsname:port
+      "(([^:]+):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))" // dnsname:port. it is problem to test dnsname. in this case dnsname can be anything without character :
       "$"; 
 
    void check_reg_expr(const std::regex& rx, const std::string& val)
    {
       bool matches_reg_expr = std::regex_match(val, rx);
-      FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+      if(!matches_reg_expr)
+         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
    }
 
    bool check_reg_expr_no_exc(const std::regex& rx, const std::string& val)
@@ -1039,7 +1041,8 @@ public:
    {
       for (size_t i = 0; i < val.size(); i++) {
          bool matches_reg_expr = std::regex_match(val[i], rx);
-         FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+         if(!matches_reg_expr)
+            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
       }
    }
 
@@ -1056,16 +1059,31 @@ public:
             try {
                fc::ip::endpoint ep = fc::ip::endpoint::from_string(val);
             }
-            FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
+            catch (...) {
+               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val));
+            }
+         }
+         else {
+            try
+            {
+               fc::ip::address ip;
+               auto pos = val.find(':');
+               ip = boost::asio::ip::address_v4::from_string(val.substr(0, pos)).to_ulong();              
+            }
+            catch (...) {
+               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val));
+            }
          }
       } else
       if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file")
       { 
          boost::filesystem::path p(val);
          bool file_exists = boost::filesystem::exists(p);
-         FC_ASSERT(file_exists, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+         if(!file_exists)
+            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
          bool is_regular = boost::filesystem::is_regular(p);
-         FC_ASSERT(is_regular, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+         if(!is_regular)
+            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
       }
    }
    void operator()(const std::vector<std::string>& val)
@@ -1081,16 +1099,20 @@ public:
             {
                fc::ip::endpoint ep = fc::ip::endpoint::from_string(val[i]);
             }
-            FC_RETHROW_EXCEPTIONS(warn, "Invalid argument: ${name} = ${value} Cannot convert string to IP endpoint", ("name", _name)("value", val));
+            catch (...) {
+               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
+            }
          }
       }
    }
    void operator()(const boost::filesystem::path& p)
    {
       bool file_exists = boost::filesystem::exists(p);
-      FC_ASSERT(file_exists, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+      if(!file_exists)
+         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
       bool is_regular = boost::filesystem::is_regular(p);
-      FC_ASSERT(is_regular, "Invalid argument: ${name} = ${value}", ("name", _name)("value", p.string()));
+      if(!is_regular)
+         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
    }
 
    std::string _name;

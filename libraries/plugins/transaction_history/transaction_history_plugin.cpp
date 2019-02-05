@@ -147,10 +147,11 @@ void transaction_history_plugin::plugin_initialize(const boost::program_options:
       if (options.count("track-account")) {
 
          const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
-         const std::regex rx("^\"1\.2\.[0-9]{1,15}\"$");// account id, for example "1.2.18"
+         const std::regex rx("^\"1\\x2E2\\x2E[0-9]{1,15}\"$");// account id, for example "1.2.18"
          for (size_t i = 0; i < ops.size(); i++) {
             bool matches_reg_expr = std::regex_match(ops[i], rx);
-            FC_ASSERT(matches_reg_expr, "Invalid argument: track-account = ${value}", ("value", ops[i]));
+            if(!matches_reg_expr)
+               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: track-account = ${value}", ("value", ops[i]));
          }
          std::transform(ops.begin(), ops.end(), std::inserter(my->_tracked_accounts, my->_tracked_accounts.end()), &graphene::app::dejsonify<graphene::chain::account_id_type>);
       }

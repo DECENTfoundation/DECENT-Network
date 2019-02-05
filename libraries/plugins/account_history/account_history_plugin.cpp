@@ -183,14 +183,16 @@ public:
    void check_reg_expr(const std::regex& rx, const std::string& val)
    {
       bool matches_reg_expr = std::regex_match(val, rx);
-      FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+      if(!matches_reg_expr)
+         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
    }
 
    void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
    {
       for (size_t i = 0; i < val.size(); i++) {
          bool matches_reg_expr = std::regex_match(val[i], rx);
-         FC_ASSERT(matches_reg_expr, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+         if(!matches_reg_expr)
+            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
       }
    }
 
@@ -201,12 +203,12 @@ public:
    {
       if (_name == "track-account")
       {
-         const std::regex rx("^\"1\.2\.[0-9]{1,15}\"$");// account id, for example "1.2.18"
+         const std::regex rx("^\"1\\x2E2\\x2E[0-9]{1,15}\"$");// account id, for example "1.2.18"
          check_reg_expr(rx, val);
       } else
       if (_name == "miner-id")
       {
-         const std::regex rx("^\"1\.4\.[0-9]{1,15}\"$");// miner id, for example "1.4.18"
+         const std::regex rx("^\"1\\x2E4\\x2E[0-9]{1,15}\"$");// miner id, for example "1.4.18"
          check_reg_expr(rx, val);
       }
    }
