@@ -3669,29 +3669,16 @@ signed_transaction content_cancellation(const string& author,
       for( int i =0; i < (int)_op.seeders.size(); i++ )
       {
          optional<seeder_object> s;
-         bool should_retry;
-         int trial = 0;
-         do
+         try
          {
-            should_retry = false;
-            try
-            {
-               //std::this_thread::sleep_for(std::chrono::milliseconds(100));
-               s = _wallet._remote_db->get_seeder( _op.seeders[i] );
-               wlog("get_seeder trial " + std::to_string(trial) + ": validity of seeder_object: " + (s.valid() ? "valid" : "invalid"));
-               total_price_per_day += s->price.amount * size;
-               trial++;
-            }
-            catch (fc::exception &e)
-            {
-               should_retry = true;
-               if (trial >= max_trials)
-               {
-                   FC_THROW(e.what());
-               }
-            }
+            s = _wallet._remote_db->get_seeder( _op.seeders[i] );
+            wlog(std::string("get_seeder trial: validity of seeder_object: ") + (s.valid() ? "valid" : "invalid"));
+            total_price_per_day += s->price.amount * size;
          }
-         while (should_retry);
+         catch (fc::exception &e)
+         {
+            FC_THROW(e.what());
+         }
       }
 
       fc::microseconds duration = (_op.expiration - fc::time_point::now());
