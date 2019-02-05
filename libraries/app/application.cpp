@@ -29,6 +29,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/asio/ip/address_v4.hpp>
+#include <boost/asio.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/network/resolve.hpp>
 #include <fc/rpc/websocket_api.hpp>
@@ -1064,15 +1065,20 @@ public:
             }
          }
          else {
-            try
-            {
-               fc::ip::address ip;
-               auto pos = val.find(':');
-               ip = boost::asio::ip::address_v4::from_string(val.substr(0, pos)).to_ulong();              
-            }
-            catch (...) {
+            
+            auto pos = val.find(':');
+               
+            boost::asio::io_service ios;
+            boost::asio::ip::tcp::resolver::query resolver_query(val.substr(0, pos),
+               "", boost::asio::ip::tcp::resolver::query::numeric_service);
+            boost::asio::ip::tcp::resolver resolver(ios);
+            boost::system::error_code ec;
+
+            boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(resolver_query, ec);
+
+            if (ec != 0) {                  
                FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val));
-            }
+            }           
          }
       } else
       if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file")
