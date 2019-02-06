@@ -455,12 +455,16 @@ namespace graphene { namespace app {
 
    vector<message_object> messaging_api::get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
    {
-      FC_ASSERT(sender.valid() ^ receiver.valid(), "one of the accounts needs to be specified");
+      FC_ASSERT(sender.valid() || receiver.valid(), "at least one of the accounts needs to be specified");
       FC_ASSERT(_app.chain_database());
       const auto& db = *_app.chain_database();
       vector<message_object> result;
 
       if (receiver) {
+         try {
+            (*receiver)(db);
+         }
+         FC_CAPTURE_AND_RETHROW( (receiver) );
 
          const auto& idx = db.get_index_type<message_index>();
          const auto& aidx = dynamic_cast<const primary_index<message_index>&>(idx);
@@ -473,6 +477,11 @@ namespace graphene { namespace app {
             uint32_t count = itr->second.size();
             uint32_t counter = 0;
             if (sender) {
+               try {
+                  (*sender)(db);
+               }
+               FC_CAPTURE_AND_RETHROW( (sender) );
+
                for (const object_id_type& item : itr->second) {
                   if (result.size() >= max_count)
                      break;
@@ -503,6 +512,11 @@ namespace graphene { namespace app {
       }
       else
       if(sender) {
+         try {
+            (*sender)(db);
+         }
+         FC_CAPTURE_AND_RETHROW( (sender) );
+
          const auto& range = db.get_index_type<message_index>().indices().get<by_sender>().equal_range(*sender);
          const auto& index_by_sender = db.get_index_type<message_index>().indices().get<by_sender>();
          auto itr = index_by_sender.lower_bound(*sender);
