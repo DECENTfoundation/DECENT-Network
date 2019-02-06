@@ -1058,31 +1058,29 @@ public:
          // additional checks
          if (is_ip) {
             try {
-               fc::ip::endpoint ep = fc::ip::endpoint::from_string(val);
+               fc::ip::endpoint::from_string(val);
             }
             catch (...) {
                FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val));
             }
          }
          else {
-            
             auto pos = val.find(':');
-               
-            boost::asio::io_service ios;
             boost::asio::ip::tcp::resolver::query resolver_query(val.substr(0, pos),
                "", boost::asio::ip::tcp::resolver::query::numeric_service);
+
+            boost::asio::io_service ios;
             boost::asio::ip::tcp::resolver resolver(ios);
+
             boost::system::error_code ec;
+            resolver.resolve(resolver_query, ec);
 
-            boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(resolver_query, ec);
-
-            if (ec != 0) {                  
+            if (ec) {
                FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val));
-            }           
+            }
          }
-      } else
-      if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file")
-      { 
+      }
+      else if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file") {
          boost::filesystem::path p(val);
          bool file_exists = boost::filesystem::exists(p);
          if(!file_exists)
@@ -1103,7 +1101,7 @@ public:
          for (size_t i = 0; i < val.size(); i++) {
             try
             {
-               fc::ip::endpoint ep = fc::ip::endpoint::from_string(val[i]);
+               fc::ip::endpoint::from_string(val[i]);
             }
             catch (...) {
                FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
