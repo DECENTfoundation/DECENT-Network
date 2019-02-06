@@ -1095,16 +1095,35 @@ public:
       if (_name == "seed-node")
       {
          const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
-         check_reg_expr(rx, val);
+         const std::regex rx_ip_and_port(REG_EXPR_IPV4_AND_PORT);
 
          // additional checks
          for (size_t i = 0; i < val.size(); i++) {
-            try
-            {
-               fc::ip::endpoint::from_string(val[i]);
+            check_reg_expr(rx, val);
+            bool is_ip = check_reg_expr_no_exc(rx_ip_and_port, val[i]);
+            if (is_ip) {
+               try
+               {
+                  fc::ip::endpoint ep = fc::ip::endpoint::from_string(val[i]);
+               }
+               catch (...) {
+                  FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
+               }
             }
-            catch (...) {
-               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
+            else {
+               auto pos = val[i].find(':');
+
+               boost::asio::io_service ios;
+               boost::asio::ip::tcp::resolver::query resolver_query(val[i].substr(0, pos),
+                  "", boost::asio::ip::tcp::resolver::query::numeric_service);
+               boost::asio::ip::tcp::resolver resolver(ios);
+               boost::system::error_code ec;
+
+               boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(resolver_query, ec);
+
+               if (ec != 0) {
+                  FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val[i]));
+               }
             }
          }
       }
