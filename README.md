@@ -18,7 +18,7 @@ For Ubuntu 16.04 LTS, execute in console:
      sudo apt-get update
      sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
 
-For Debian 9.6, execute in console:
+For Debian 9, execute in console:
 
      sudo apt-get update
      sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev
@@ -42,7 +42,7 @@ And the last step is the same regardless on distribution, execute in console:
     cd ..
     rm -rf pbc-0.5.14 0.5.14.zip
 
-> Note for Ubuntu 16.04 LTS and Debian 9.6, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Download and build Boost 1.65.1
      wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
@@ -150,7 +150,7 @@ You can specify any other custom install prefix for `cmake` during the initial c
 You can use any path instead of `C:\Projects` in the steps above.
 
 Building Decent in Docker
----------------------------
+-------------------------
 
 You can also build Docker image which will run as Decent network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [scripts](scripts/README.md) directory.
 

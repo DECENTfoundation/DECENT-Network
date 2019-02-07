@@ -1,9 +1,15 @@
 #!/bin/bash
 
-[ $# -lt 3 ] && { echo "Usage: $0 os_name os_image_version dcore_version [package_dir]"; exit 1; }
+[ $# -lt 3 ] && { echo "Usage: $0 base_image image_version dcore_version [packages_dir]"; exit 1; }
 
-if [ $# -lt 4 ]; then PACKAGE_DIR="$PWD/packages"; else PACKAGE_DIR=$4; fi
+BASE_IMAGE=$1
+IMAGE_VERSION=$2
+DCORE_VERSION=$3
 
-BASEIMAGE_NAME="decent/$1/dcore"
-DOCKERFILE_NAME="$1/Dockerfile"
-docker build -t $BASEIMAGE_NAME:$3 -f $DOCKERFILE_NAME --build-arg DCORE_VERSION=$3 --build-arg IMAGE_VERSION=$2 $PACKAGE_DIR
+if [ $# -lt 4 ]; then PACKAGES_DIR="$PWD/packages/$BASE_IMAGE/$IMAGE_VERSION"; else PACKAGES_DIR=$4; fi
+
+IMAGE_NAME="dcore.$BASE_IMAGE:$DCORE_VERSION"
+docker build -t $IMAGE_NAME -f $BASE_IMAGE/Dockerfile \
+    --build-arg IMAGE_VERSION=$IMAGE_VERSION \
+    --build-arg DCORE_VERSION=$DCORE_VERSION \
+    $PACKAGES_DIR

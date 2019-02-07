@@ -19,7 +19,7 @@ WORKDIR $DCORE_HOME
 
 # DCore
 ARG DCORE_VERSION
-COPY DCore-$DCORE_VERSION-1.fc*.rpm /tmp
+COPY DCore-$DCORE_VERSION-1.fc*.rpm /tmp/
 RUN export FEDORA=`rpm -E "%{fedora}"` && \
     export ARCH=`rpm -E "%{_arch}"` && \
     rpm -i /tmp/DCore-$DCORE_VERSION-1.fc$FEDORA.$ARCH.rpm && \

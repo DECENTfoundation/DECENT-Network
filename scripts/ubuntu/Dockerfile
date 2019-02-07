@@ -37,10 +37,10 @@ WORKDIR $DCORE_HOME
 
 # DCore
 ARG DCORE_VERSION
-COPY dcore_$DCORE_VERSION-*_amd64.deb /tmp
+COPY dcore_${DCORE_VERSION}-ubuntu*_amd64.deb /tmp/
 RUN . /etc/os-release && \
     dpkg -i /tmp/dcore_$DCORE_VERSION-${ID}${VERSION_ID}_amd64.deb && \
-    rm /tmp/dcore_$DCORE_VERSION-*_amd64.deb && \
+    rm /tmp/dcore_${DCORE_VERSION}-ubuntu*_amd64.deb && \
     mkdir $DCORE_HOME/.decent
 
 EXPOSE 40000 8090
