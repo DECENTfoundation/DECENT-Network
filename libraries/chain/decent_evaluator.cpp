@@ -91,6 +91,8 @@ void_result set_publishing_manager_evaluator::do_apply( const set_publishing_man
 void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_right_operation& o )
 {try{
     const auto& from_acc = db().get<account_object>(o.from);
+    for( const auto id : o.to )
+       FC_ASSERT (db().find_object(id), "Account does not exist");
     FC_ASSERT( from_acc.rights_to_publish.is_publishing_manager, "Account does not have permission to give publishing rights" );
 
     return void_result();
