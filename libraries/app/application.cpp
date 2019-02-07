@@ -1104,7 +1104,7 @@ public:
             if (is_ip) {
                try
                {
-                  fc::ip::endpoint ep = fc::ip::endpoint::from_string(val[i]);
+                  fc::ip::endpoint::from_string(val[i]);
                }
                catch (...) {
                   FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
@@ -1112,16 +1112,16 @@ public:
             }
             else {
                auto pos = val[i].find(':');
-
-               boost::asio::io_service ios;
                boost::asio::ip::tcp::resolver::query resolver_query(val[i].substr(0, pos),
                   "", boost::asio::ip::tcp::resolver::query::numeric_service);
+
+               boost::asio::io_service ios;
                boost::asio::ip::tcp::resolver resolver(ios);
+
                boost::system::error_code ec;
+               resolver.resolve(resolver_query, ec);
 
-               boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(resolver_query, ec);
-
-               if (ec != 0) {
+               if (ec) {
                   FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val[i]));
                }
             }
