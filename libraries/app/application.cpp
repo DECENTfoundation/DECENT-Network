@@ -527,8 +527,21 @@ namespace detail {
          {
             ilog("Closing p2p node");
             _p2p_network->close();
-             _p2p_network.reset();
+            _p2p_network.reset();
          }
+
+         if( _websocket_tls_server )
+         {
+            ilog("Closing websocket TLS rpc");
+            _websocket_tls_server.reset();
+         }
+
+         if( _websocket_server )
+         {
+            ilog("Closing websocket rpc");
+            _websocket_server.reset();
+         }
+
          if( _chain_db )
          {
             ilog("Closing database");
