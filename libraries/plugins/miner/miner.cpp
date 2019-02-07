@@ -217,10 +217,11 @@ void miner_plugin::plugin_startup()
 } FC_CAPTURE_AND_RETHROW() }
 
 void miner_plugin::plugin_shutdown()
-{
+{ try {
+   ilog("miner plugin:  plugin_shutdown() begin");
    graphene::time::shutdown_ntp_time();
-   return;
-}
+   ilog("miner plugin:  plugin_shutdown() end");
+} FC_CAPTURE_AND_RETHROW() }
 
 void miner_plugin::schedule_production_loop()
 {
@@ -372,4 +373,3 @@ block_production_condition::block_production_condition_enum miner_plugin::maybe_
 
    return block_production_condition::produced;
 }
-

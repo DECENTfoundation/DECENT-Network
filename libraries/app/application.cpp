@@ -522,20 +522,27 @@ namespace detail {
 
       void shutdown()
       { try {
+         ilog("Shutdown begin");
          if( _p2p_network )
          {
+            ilog("Closing p2p node");
             _p2p_network->close();
              _p2p_network.reset();
          }
          if( _chain_db )
+         {
+            ilog("Closing database");
             _chain_db->close();
+         }
 
          if( _db_lock )
          {
+            ilog("Release database lock");
             _db_lock->unlock();
             _db_lock.reset();
             fc::remove_all(_data_dir / "blockchain/dblock");
          }
+         ilog("Shutdown end");
       } FC_LOG_AND_RETHROW() }
 
       optional< api_access_info > get_api_access_info(const string& username)const

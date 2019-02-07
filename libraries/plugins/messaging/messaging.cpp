@@ -51,7 +51,13 @@ void messaging_plugin::plugin_startup()
 
 void messaging_plugin::plugin_shutdown()
 {
-   graphene::chain::custom_evaluator_register::instance().unregister_callback(graphene::chain::custom_operation_subtype_messaging);
+   try {
+      ilog("messaging plugin:  plugin_shutdown() begin");
+
+      graphene::chain::custom_evaluator_register::instance().unregister_callback(graphene::chain::custom_operation_subtype_messaging);
+
+      ilog("messaging plugin:  plugin_shutdown() end");
+   } FC_CAPTURE_AND_RETHROW()
 }
 
 void_result messaging_plugin::do_evaluate(const custom_operation& o) 
@@ -100,5 +106,3 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
    });
    return void_result(); 
 };
-
-
