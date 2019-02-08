@@ -904,23 +904,24 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
    void_result return_escrow_submission_evaluator::do_evaluate(const return_escrow_submission_operation& o )
    {
-	   void_result result;
-	   return result;
+      return void_result();
    }
 
    void_result return_escrow_submission_evaluator::do_apply(const return_escrow_submission_operation& o)
    {
-      void_result result;
-      return result;
-   }
+      return void_result();
+   }  
 
    void_result report_stats_evaluator::do_evaluate(const report_stats_operation& o)
    {
 	   try {   
+         for (const auto& item : o.stats)
+         {
+            FC_ASSERT( db().find_object(item.first), "Invalid seeder account specified." );
+         }
 	   }FC_CAPTURE_AND_RETHROW((o))
 
-      void_result result;
-      return result;
+      return void_result();
    }
 
    void_result report_stats_evaluator::do_apply(const report_stats_operation& o)
@@ -936,26 +937,36 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          }
       }FC_CAPTURE_AND_RETHROW((o))
 
-	   void_result result;
-	   return result;
+      return void_result();
    }
 
    void_result return_escrow_buying_evaluator::do_evaluate(const return_escrow_buying_operation& o )
    {
-	   void_result result;
-	   return result;
+      return void_result();
    }
 
    void_result return_escrow_buying_evaluator::do_apply(const return_escrow_buying_operation& o )
    {
-	   void_result result;
-	   return result;
+      return void_result();
    }
 
-   void_result pay_seeder_evaluator::do_evaluate(const pay_seeder_operation& o) { void_result result; return result; }
-   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o ){ void_result result; return result; }
+   void_result pay_seeder_evaluator::do_evaluate(const pay_seeder_operation& o )
+   {
+      return void_result();
+   }
 
-   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o ){ void_result result; return result; }
-   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o ){ void_result result; return result; }
+   void_result pay_seeder_evaluator::do_apply( const pay_seeder_operation& o )
+   {
+      return void_result();
+   }
 
+   void_result finish_buying_evaluator::do_evaluate( const finish_buying_operation& o )
+   {
+      return void_result();
+   }
+
+   void_result finish_buying_evaluator::do_apply( const finish_buying_operation& o )
+   {
+      return void_result();
+   }
 }} // graphene::chain
