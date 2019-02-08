@@ -49,6 +49,8 @@ struct predicate_validator
 void assert_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( required_auths.empty() );
+
    for( const auto& item : predicates )
       item.visit( predicate_validator() );
 }

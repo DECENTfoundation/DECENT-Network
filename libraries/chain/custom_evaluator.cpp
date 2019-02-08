@@ -46,6 +46,10 @@ void_result custom_evaluator::do_evaluate(const custom_operation& o)
 {
    try
    {
+      const database& _db = db();
+      for( const auto acc : o.required_auths )
+         FC_ASSERT( _db.find_object( acc ), "Account does not exist." );
+
       custom_evaluator_register& instance = custom_evaluator_register::instance();
 
       custom_operation_interpreter* evaluator = instance.find(static_cast<custom_operation_subtype>(o.id));
