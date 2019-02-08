@@ -13,8 +13,10 @@ There are separate DCore images for each of the supported platforms.
 | Debian | dcore.debian |
 | Fedora | dcore.fedora |
 
-DCore image exposes 2 ports: 8090 (websocket RPC to listen on) and 40000 (P2P).
-You can an external data directory and genesis file (when using custom configuration) to the running container.
+DCore image exposes 2 ports: 8090 (websocket RPC to listen on) and 40000 (P2P node).
+You can mount an external data directory (to persist the blockchain) and genesis file (when using custom configuration) to the running container.
+
+The default mapping of local paths to container paths:
 
 | Host | Container path |
 | ---- | -------------- |
@@ -22,12 +24,14 @@ You can an external data directory and genesis file (when using custom configura
 | /path/to/genesis.json | $DCORE_HOME/.decent/genesis.json |
 | /path/to/wallet.json | $DCORE_HOME/.decent/wallet.json |
 
+To run the node as non root user set the container environment variables:
+
 | Environment variable | Default value |
 | -------------------- | ------------- |
 | DCORE_HOME | /root |
 | DCORE_USER | root |
 
-You can you helper scripts to run a node or wallet:
+You can use helper scripts to run the node or wallet:
 * `dcore.sh` - run the mainnet node
 > Usage: ./dcore.sh image_name data_dir [container_path]
 * `dcore_custom_net.sh` - run node on custom net
@@ -91,7 +95,7 @@ To create rpm packages and OS build image:
     # DCore-1.3.3-1.fc29.x86_64.rpm
     # DCore-GUI-1.3.3-1.fc29.x86_64.rpm
 
-Naming convention for images: use `dcore.` prefix, then append base image name and `/build` suffix, e.g. `dcore.ubuntu/build`.
+Naming convention for images: use `dcore.` prefix, then append base image name and `.build` suffix, e.g. `dcore.ubuntu.build`.
 
 | Build argument | Default value |
 | --------------- | ------------- |
@@ -102,16 +106,16 @@ Naming convention for images: use `dcore.` prefix, then append base image name a
 Examples:
 
     # the latest Ubuntu image
-    docker build -t dcore.ubuntu/build -f ubuntu/Dockerfile.build ubuntu
+    docker build -t dcore.ubuntu.build -f ubuntu/Dockerfile.build ubuntu
 
     # Ubuntu 18.04 image
-    docker build -t dcore.ubuntu/build:18.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=18.04 ubuntu
+    docker build -t dcore.ubuntu.build:18.04 -f ubuntu/Dockerfile.build --build-arg IMAGE_VERSION=18.04 ubuntu
 
     # Debian 9 image
-    docker build -t dcore.debian/build:9 -f debian/Dockerfile.build --build-arg IMAGE_VERSION=9 debian
+    docker build -t dcore.debian.build:9 -f debian/Dockerfile.build --build-arg IMAGE_VERSION=9 debian
 
     # Fedora 29 image
-    docker build -t dcore.fedora/build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
+    docker build -t dcore.fedora.build:29 -f fedora/Dockerfile.build --build-arg IMAGE_VERSION=29 fedora
 
 ## DCore runtime image
 

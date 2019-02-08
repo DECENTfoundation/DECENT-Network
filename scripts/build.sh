@@ -10,7 +10,7 @@ if [ $# -lt 4 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$4; fi
 
 if [ $# -lt 5 ]; then PACKAGES_DIR="$PWD/packages/$BASE_IMAGE/$IMAGE_VERSION"; else PACKAGES_DIR=$5; fi
 
-IMAGE_NAME=dcore.$BASE_IMAGE/build:$IMAGE_VERSION
+IMAGE_NAME=dcore.$BASE_IMAGE.build:$IMAGE_VERSION
 IMAGE_HASH=`docker images -q $IMAGE_NAME`
 if [ -z $IMAGE_HASH ]; then
     echo "Building $IMAGE_NAME"
