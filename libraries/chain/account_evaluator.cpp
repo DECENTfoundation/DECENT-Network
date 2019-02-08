@@ -149,6 +149,7 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
    acnt = &o.account(d);
 
    if( o.new_options.valid() ) {
+      FC_ASSERT( d.find_object(o.new_options->voting_account), "Invalid proxy account specified." );
       verify_account_votes(d, *o.new_options);
       auto ao = d.get( o.new_options->price_per_subscribe.asset_id );
       FC_ASSERT( o.new_options->price_per_subscribe.asset_id == asset_id_type(0) || ao.is_monitored_asset() );

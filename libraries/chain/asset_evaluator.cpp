@@ -116,6 +116,8 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
       asset_dyn_data = &a.dynamic_asset_data_id(d);
       FC_ASSERT( (asset_dyn_data->current_supply + o.asset_to_issue.amount) <= a.options.max_supply );
 
+      FC_ASSERT(d.find_object(o.issue_to_account), "Attempt to issue an asset to a non-existing account");
+
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
