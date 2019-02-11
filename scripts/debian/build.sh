@@ -61,7 +61,7 @@ echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-node/
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-node/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-node/DEBIAN/control
 echo " software development kits (SDKs) that empower developers and businesses to build" >> dcore-node/DEBIAN/control
-echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-node/DEBIAN/control
+echo " decentralized applications for real-world use cases. DCore is packed-full of" >> dcore-node/DEBIAN/control
 echo " customizable features making it the ideal blockchain for any size project." >> dcore-node/DEBIAN/control
 
 echo "Package: DCore-GUI" > dcore-gui/DEBIAN/control
@@ -77,7 +77,7 @@ echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-gui/D
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-gui/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-gui/DEBIAN/control
 echo " software development kits (SDKs) that empower developers and businesses to build" >> dcore-gui/DEBIAN/control
-echo " decentralized applications for real-world use cases. DCore packed-full of" >> dcore-gui/DEBIAN/control
+echo " decentralized applications for real-world use cases. DCore is packed-full of" >> dcore-gui/DEBIAN/control
 echo " customizable features making it the ideal blockchain for any size project." >> dcore-gui/DEBIAN/control
 
 cp $BASEDIR/postinst dcore-node/DEBIAN

@@ -14,7 +14,7 @@ BuildRequires: systemd, boost-devel >= 1.65.1
 DCore is the blockchain you can easily build on. As the world’s first blockchain
 designed for digital content, media and entertainment, it provides user-friendly
 software development kits (SDKs) that empower developers and businesses to build
-decentralized applications for real-world use cases. DCore packed-full of
+decentralized applications for real-world use cases. DCore is packed-full of
 customizable features making it the ideal blockchain for any size project.
 
 %package GUI
@@ -26,7 +26,7 @@ BuildRequires: qt5-qtbase-devel >= 5.11, qt5-linguist >= 5.11
 DCore is the blockchain you can easily build on. As the world’s first blockchain
 designed for digital content, media and entertainment, it provides user-friendly
 software development kits (SDKs) that empower developers and businesses to build
-decentralized applications for real-world use cases. DCore packed-full of
+decentralized applications for real-world use cases. DCore is packed-full of
 customizable features making it the ideal blockchain for any size project.
 
 %prep
