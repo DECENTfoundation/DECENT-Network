@@ -725,17 +725,19 @@ void seeding_plugin::plugin_set_program_options(
         boost::program_options::options_description& cli,
         boost::program_options::options_description& cfg)
 {
+   string seeder_id_example = fc::json::to_string(graphene::chain::account_id_type(15));
    cli.add_options()
-         ("seeder", bpo::value<string>(), "ID of account controlling this seeder, quotes are required, may specify multiple times)")
-         ("content-private-key", bpo::value<string>(), "El Gamal content private key")
+         ("seeder", bpo::value<string>(), ("ID of account controlling this seeder, (e.g. " + seeder_id_example + ", quotes are required)").c_str())
          ("seeder-private-key", bpo::value<string>(), "Private key of the account controlling this seeder")
+         ("content-private-key", bpo::value<string>(), "El Gamal content private key")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
-         ("packages-path", bpo::value<string>()->default_value(""), "Packages storage path")
-
+         ("packages-path", bpo::value<string>(), "Packages storage path")
          ("seeding-price", bpo::value<string>(), "Price amount per MegaBytes")
-         ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset, e.g. DCT" )
-         ("region-code", bpo::value<string>()->default_value(""), "Optional ISO 3166-1 alpha-2 two-letter region code")
+         ("seeding-symbol", bpo::value<string>()->default_value("DCT"), "Seeding price asset" )
+         ("region-code", bpo::value<string>(), "Optional ISO 3166-1 alpha-2 two-letter region code")
          ;
+
+   cfg.add(cli);
 }
 
 void detail::SeedingListener::package_download_error(const std::string & error) {
