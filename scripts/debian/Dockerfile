@@ -7,7 +7,7 @@ RUN . /etc/os-release && apt-get update && \
     apt-get install -y --no-install-recommends \
         libreadline7 \
         libcrypto++6 \
-        libssl1.1 \
+        libssl1.0.2 \
         libcurl3 \
         less \
         wget \
