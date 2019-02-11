@@ -133,9 +133,10 @@ void miner_plugin::plugin_set_program_options(
          ("required-miners-participation", bpo::value<uint32_t>()->default_value(33), "Percent of miners (0-99) that must be participating in order to produce blocks")
          ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken()->notifier(param_validator_miner("miner-id")),
           ("ID of miner controlled by this node (e.g. " + miner_id_example + ", quotes are required, may specify multiple times)").c_str())
-         ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->
-          DEFAULT_VALUE_VECTOR(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key)))->notifier(param_validator_miner("private-key")),
-          "Tuple of [PublicKey, WIF private key] (may specify multiple times)")
+         ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->notifier(param_validator_miner("private-key")),
+          ("Tuple of [PublicKey, WIF private key] (e.g. " +
+          fc::json::to_string(std::make_pair(chain::public_key_type(default_priv_key.get_public_key()), graphene::utilities::key_to_wif(default_priv_key))) +
+          ", may specify multiple times)").c_str())
          ;
    config_file_options.add(command_line_options);
 }
@@ -149,8 +150,8 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
 { try {
    ilog("miner plugin:  plugin_initialize() begin");
 
-   if (options.count("miner-id")) {
-
+   if (options.count("miner-id"))
+   {
       const std::vector<std::string>& ops = options["miner-id"].as<std::vector<std::string>>();
       std::transform(ops.begin(), ops.end(), std::inserter(_miners, _miners.end()), &graphene::app::dejsonify<graphene::chain::miner_id_type>);
    }
