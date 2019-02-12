@@ -59,7 +59,7 @@ namespace graphene { namespace db {
                {
                   mv._apply_undo = false;
                }
-               ~session() {
+               ~session() noexcept(false) {
                   try {
                      if( _apply_undo ) _db.undo();
                   }

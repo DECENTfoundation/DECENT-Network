@@ -110,7 +110,7 @@ database_fixture::database_fixture()
   return;
 }
 
-database_fixture::~database_fixture()
+database_fixture::~database_fixture() noexcept(false)
 { try {
      // If we're unwinding due to an exception, don't do any more checks.
      // This way, boost test's last checkpoint tells us approximately where the error was.

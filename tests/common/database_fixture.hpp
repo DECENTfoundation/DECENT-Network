@@ -148,7 +148,7 @@ namespace graphene { namespace chain {
 struct database_fixture {
 
    database_fixture();
-   ~database_fixture();
+   ~database_fixture() noexcept(false);
 
    static fc::ecc::private_key generate_private_key(string seed);
    static void verify_asset_supplies( const database& db );
