@@ -68,10 +68,11 @@ void database::reindex(fc::path data_dir, const genesis_state_type& initial_allo
 
       ilog("Replaying blocks...");
       _undo_db.disable();
+      uint32_t one_perc_step = last_block_num / 100;
       for (uint32_t i = 1; i <= last_block_num; ++i)
       {
          _reindexing_percent = double(i * 100) / last_block_num;
-         if (i % 2000 == 0) std::cerr << "   " << _reindexing_percent << "%   " << i << " of " << last_block_num << "   \n";
+         if (i % one_perc_step == 0) ilog("${p}%: ${i}/${t}", ("p", i / one_perc_step - 1) ("i", i) ("t", last_block_num));
          fc::optional< signed_block > block = _block_id_to_block.fetch_by_number(i);
          if (!block.valid())
          {
