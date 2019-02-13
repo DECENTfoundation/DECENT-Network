@@ -345,6 +345,14 @@ namespace detail {
             genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
       }
 
+      void write_db_version()
+      {
+         std::ofstream db_version( (_data_dir / "db_version").generic_string().c_str(), std::ios::out | std::ios::binary | std::ios::trunc );
+         std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
+         db_version.write( version_string.c_str(), version_string.size() );
+         db_version.close();
+      }
+
       void startup()
       { try {
          bool clean = !fc::exists(_data_dir / "blockchain/dblock");
@@ -430,6 +438,7 @@ namespace detail {
             else
                ilog("Replaying blockchain due missing object database.");
             _chain_db->reindex(_data_dir/"blockchain", initial_state());
+            write_db_version();
          } else if( clean ) {
 
             auto is_new = [&]() -> bool
@@ -472,17 +481,12 @@ namespace detail {
                ilog("Replaying blockchain due to ${reason}", ("reason", reindex_reason) );
 
                _chain_db->reindex(_data_dir / "blockchain", initial_state());
-
-               std::ofstream db_version(
-                  (_data_dir / "db_version").generic_string().c_str(),
-                  std::ios::out | std::ios::binary | std::ios::trunc );
-               std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
-               db_version.write( version_string.c_str(), version_string.size() );
-               db_version.close();
+               write_db_version();
             }
          } else {
             wlog("Detected unclean shutdown. Replaying blockchain...");
             _chain_db->reindex(_data_dir / "blockchain", initial_state());
+            write_db_version();
          }
 
          _chain_db->set_no_need_reindexing();
