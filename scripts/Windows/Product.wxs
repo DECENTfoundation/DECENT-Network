@@ -47,7 +47,7 @@
 
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
-      <Merge Id="VCRedist2017_64" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC141_CRT_x64.msm" DiskId="1" Language="0"/>
+      <Merge Id="VCRedist2017_64" SourceFile="$(var.MergeModulesPath)\Microsoft_VC141_CRT_x64.msm" DiskId="1" Language="0"/>
     </DirectoryRef>
   </Fragment>
 
