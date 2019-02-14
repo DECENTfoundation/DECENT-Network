@@ -23,44 +23,25 @@
  * THE SOFTWARE.
  */
 
-#include <algorithm>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
+#include <openssl/opensslv.h>
+#include <boost/program_options.hpp>
 
-#include <fc/io/json.hpp>
-#include <fc/io/stdio.hpp>
+#include <fc/interprocess/signals.hpp>
+#include <fc/log/file_appender.hpp>
+#include <fc/log/logger.hpp>
+#include <fc/log/logger_config.hpp>
 #include <fc/network/http/server.hpp>
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/cli.hpp>
 #include <fc/rpc/http_api.hpp>
 #include <fc/rpc/websocket_api.hpp>
-#include <fc/smart_ref_impl.hpp>
-
 
 #include <graphene/app/api.hpp>
-
-
-
-#include <graphene/chain/protocol/protocol.hpp>
-#include <graphene/egenesis/egenesis.hpp>
+#include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
-#include <decent/package/package.hpp>
-#include <graphene/utilities/dirhelper.hpp>
-
-#include <fc/interprocess/signals.hpp>
-#include <boost/program_options.hpp>
-#include <boost/version.hpp>
-
-#include <openssl/opensslv.h>
-
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
 
 #ifdef WIN32
 # include <signal.h>
@@ -68,29 +49,23 @@
 # include <csignal>
 #endif
 
-using namespace graphene::app;
-using namespace graphene::chain;
-using namespace graphene::utilities;
-using namespace graphene::wallet;
 namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
 {
-    fc::path decent_home;
     try {
-        decent_home = decent_path_finder::instance().get_decent_home();
+        decent_path_finder::instance().get_decent_home();
     } catch (const std::exception& ex) {
-        std::cout << "Failed to initialize home directory." << std::endl;
-        std::cout << "Error: " << ex.what() << std::endl;
-        return 1;
+        std::cerr << "Failed to initialize home directory." << std::endl;
+        std::cerr << "Error: " << ex.what() << std::endl;
+        return EXIT_FAILURE;
     } catch (const fc::exception& ex) {
-        std::cout << "Failed to initialize home directory." << std::endl;
-        std::cout << "Error: " << ex.what() << std::endl;
-        return 1;
+        std::cerr << "Failed to initialize home directory." << std::endl;
+        std::cerr << "Error: " << ex.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
    try {
-
       bpo::options_description opts;
          opts.add_options()
          ("help,h", "Print this help message and exit.")
@@ -100,7 +75,7 @@ int main( int argc, char** argv )
          ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
-         ("server-rpc-endpoint,s", bpo::value<std::string>()->default_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
+         ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
          ("rpc-endpoint,r", bpo::value<std::string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
@@ -179,7 +154,7 @@ int main( int argc, char** argv )
             break;
          default:
             std::cerr << "Unknown log level: " << options["log-level"].as<char>() << std::endl;
-            break;
+            return EXIT_FAILURE;
       }
 
       const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
@@ -208,12 +183,12 @@ int main( int argc, char** argv )
       //    load_wallet_file().  Seems like this could be better
       //    designed.
       //
-      wallet_data wdata;
+      graphene::wallet::wallet_data wdata;
       fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
       bool has_wallet_file = fc::exists( wallet_file );
       if( has_wallet_file )
       {
-         wdata = fc::json::from_file( wallet_file ).as<wallet_data>();
+         wdata = fc::json::from_file( wallet_file ).as<graphene::wallet::wallet_data>();
       }
 
       // but allow CLI to override
@@ -268,8 +243,8 @@ int main( int argc, char** argv )
          return 1;
       }
 
-      server_data ws{ wdata.ws_server, wdata.ws_user, wdata.ws_password };
-      auto wapiptr = std::make_shared<wallet_api>( remote_api, wdata.chain_id, ws );
+      graphene::wallet::server_data ws{ wdata.ws_server, wdata.ws_user, wdata.ws_password };
+      auto wapiptr = std::make_shared<graphene::wallet::wallet_api>( remote_api, wdata.chain_id, ws );
       if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
       {
          std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
@@ -277,7 +252,7 @@ int main( int argc, char** argv )
       }
       wapiptr->set_wallet_filename( wallet_file.generic_string() );
 
-      fc::api<wallet_api> wapi(wapiptr);
+      fc::api<graphene::wallet::wallet_api> wapi(wapiptr);
 
       auto wallet_cli = std::make_shared<fc::rpc::cli>();
       for( auto& name_formatter : wapiptr->get_result_formatters() )
@@ -384,8 +359,9 @@ int main( int argc, char** argv )
    }
    catch ( const fc::exception& e )
    {
-      std::cout << e.to_detail_string() << "\n";
-      return -1;
+      std::cerr << e.to_detail_string() << std::endl;
+      return EXIT_FAILURE;
    }
-   return 0;
+
+   return EXIT_SUCCESS;
 }
