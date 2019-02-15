@@ -94,7 +94,7 @@ Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
     mkdir \Projects
     cd \Projects
-    git clone git@github.com:Microsoft/vcpkg.git
+    git clone https://github.com/Microsoft/vcpkg.git
     cd vcpkg
     bootstrap-vcpkg.bat
     vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc
