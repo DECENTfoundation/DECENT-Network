@@ -27,21 +27,36 @@ namespace decent {
               "[log.console_appender.stderr]\n"
               "stream=std_error\n\n"
               "# declare an appender named \"default\" that writes messages to decentd.log\n"
-              "[log.file_appender.default]\n"
-              "filename=decentd.log\n"
-              "# filename can be absolute or relative to this config file\n"
+              "[log.file_appender.default]\n";
+       if (is_daemon) {
+          out <<   "filename=decentd.log\n";
+       }
+       else {
+          out <<   "filename=logs/decentd.log\n";
+       }
+       out << "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"p2p\" that writes messages to p2p.log\n"
-              "[log.file_appender.p2p]\n"
-              "filename=p2p/p2p.log\n"
-              "# filename can be absolute or relative to this config file\n"
+              "[log.file_appender.p2p]\n";
+       if (is_daemon) {
+          out <<   "filename=p2p/p2p.log\n";
+       }
+       else {
+          out <<   "filename=logs/p2p/p2p.log\n";
+       }
+       out << "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"transfer\" that writes messages to transfer.log\n"
-              "[log.file_appender.transfer]\n"
-              "filename=transfer.log\n"
-              "# filename can be absolute or relative to this config file\n"
+              "[log.file_appender.transfer]\n";
+       if (is_daemon) {
+          out <<   "filename=transfer.log\n";
+       }
+       else {
+          out <<   "filename=logs/transfer.log\n";
+       }
+       out << "# filename can be absolute or relative to this config file\n"
               "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# route any messages logged to the default logger to the \"default\" logger we\n"
