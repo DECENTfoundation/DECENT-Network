@@ -603,7 +603,7 @@ int CustodyUtils::create_proof_of_custody(boost::filesystem::path content, const
       element_init_G1(sigmas[i], pairing);
       element_from_bytes_compressed(sigmas[i], (unsigned char *) buffer);
    } 
-   } catch (std::exception e){
+   } catch (const std::exception &e){
       wlog("Exception caught: ${s}", ("s", e.what() )); 
       return -8;
    }

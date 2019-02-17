@@ -321,7 +321,7 @@ seeding_plugin_impl::generate_pors()
 
          generate_time = std::min(last_proof_time + fc::seconds(24 * 60 * 60 - POR_WAKEUP_INTERVAL_SEC),
                                   content.expiration - fc::seconds(POR_WAKEUP_INTERVAL_SEC));
-      } catch( std::out_of_range e ) {
+      } catch( const std::out_of_range &e ) {
          //no proof has been delivered by us yet...
          generate_time = fc::time_point::now() + fc::seconds(1);
       }
