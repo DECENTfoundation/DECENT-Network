@@ -82,9 +82,9 @@ typedef generic_index< budget_record_object, budget_record_object_multi_index_ty
 
 struct miner_reward_input
 {
-   int64_t time_to_maint;
-   share_type from_accumulated_fees;
-   int8_t block_interval;
+   int64_t time_to_maint = 0;
+   share_type from_accumulated_fees = 0;
+   int8_t block_interval = 0;
 };
 
 } }

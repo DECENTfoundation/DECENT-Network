@@ -2436,7 +2436,6 @@ namespace
       const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
       FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
       graphene::chain::miner_reward_input miner_reward_input;
-      memset(&miner_reward_input, 0, sizeof(miner_reward_input));
 
       fc::time_point_sec next_time = (fc::time_point_sec)0;
       for (auto itr = idx.cbegin(), itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr )
@@ -2459,7 +2458,6 @@ namespace
       const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
       FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
       graphene::chain::miner_reward_input miner_reward_input;
-      memset(&miner_reward_input, 0, sizeof(miner_reward_input));
 
       fc::time_point_sec next_time = (fc::time_point_sec)0;
       fc::time_point_sec prev_time = (fc::time_point_sec)0;
