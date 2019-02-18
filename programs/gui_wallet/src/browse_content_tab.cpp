@@ -131,7 +131,7 @@ std::string BrowseContentTab::getUpdateCommand()
 
 void BrowseContentTab::slot_Details(int iIndex)
 {
-    if (iIndex < 0 || iIndex >= _digital_contents.size()) {
+    if (iIndex < 0 || iIndex >= static_cast<int>(_digital_contents.size())) {
         throw std::out_of_range("Content index is out of range");
     }
 
@@ -144,7 +144,7 @@ void BrowseContentTab::slot_Details(int iIndex)
 
 void BrowseContentTab::slot_cellClicked(int row, int /*col*/)
 {
-   if (row < 0 || row >= _digital_contents.size()) {
+   if (row < 0 || row >= static_cast<int>(_digital_contents.size())) {
       throw std::out_of_range("Content index is out of range");
    }
 

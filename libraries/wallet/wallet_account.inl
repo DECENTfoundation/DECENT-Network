@@ -44,7 +44,7 @@ vector<extended_asset> wallet_api::list_account_balances(const string& id)
 
    vector<optional<asset_object>> asset_objs = my->_remote_db->get_assets( asset_ids ) ;
 
-   for( int i = 0; i < assets.size(); i++ )
+   for( size_t i = 0; i < assets.size(); i++ )
       result.emplace_back( assets[i], asset_objs[i]->amount_to_pretty_string( assets[i].amount ) );
    FC_ASSERT( assets.size() == result.size() );
 

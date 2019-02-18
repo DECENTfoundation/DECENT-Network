@@ -814,7 +814,7 @@ void CommentWidget::update()
 
    if (-1 == test_count)
       set_next_comment(c_str_hack);
-   else if (feedback.size() > test_count)
+   else if (static_cast<int>(feedback.size()) > test_count)
       set_next_comment(feedback[test_count]["id"].get<std::string>());
    else
       set_next_comment(std::string());

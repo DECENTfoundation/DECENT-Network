@@ -84,7 +84,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
 
    _current_content.reserve(iSize);
    
-   for (int iIndex = 0; iIndex < iSize; ++iIndex)
+   for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto content = contents[iIndex];
 
@@ -164,7 +164,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
    QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
                     this, &PurchasedTab::slot_Details);
 
-   for (int iIndex = 0; iIndex < _current_content.size(); ++iIndex)
+   for (size_t iIndex = 0; iIndex < _current_content.size(); ++iIndex)
    {
       SDigitalContentPurchase& contentObject = _current_content[iIndex];
 
@@ -264,7 +264,7 @@ std::string PurchasedTab::getUpdateCommand()
 
 void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
 
-   if (m_iActiveItemIndex < 0 || m_iActiveItemIndex >= _current_content.size())
+   if (m_iActiveItemIndex < 0 || m_iActiveItemIndex >= static_cast<int>(_current_content.size()))
       throw std::out_of_range("Content index is out of range");
 
    std::string key, dummy;
@@ -303,7 +303,7 @@ void PurchasedTab::slot_SearchTermChanged(const QString& strSearchTerm)
 
 void PurchasedTab::slot_ExtractPackage(int iIndex) {
 
-   if (iIndex < 0 || iIndex >= _current_content.size())
+   if (iIndex < 0 || iIndex >= static_cast<int>(_current_content.size()))
       throw std::out_of_range("Content index is out of range");
 
    m_iActiveItemIndex = iIndex;
@@ -329,7 +329,7 @@ void PurchasedTab::slot_ExtractPackage(int iIndex) {
 
 void PurchasedTab::slot_Details(int iIndex)
 {
-   if (iIndex < 0 || iIndex >= _current_content.size())
+   if (iIndex < 0 || iIndex >= static_cast<int>(_current_content.size()))
       throw std::out_of_range("Content index is out of range");
 
    ContentReviewWidget* pDetailsDialog = new ContentReviewWidget(nullptr, _current_content[iIndex]);
@@ -338,7 +338,7 @@ void PurchasedTab::slot_Details(int iIndex)
 
 void PurchasedTab::slot_cellClicked(int row, int /*col*/)
 {
-   if (row < 0 || row >= _current_content.size()) {
+   if (row < 0 || row >= static_cast<int>(_current_content.size())) {
       throw std::out_of_range("Content index is out of range");
    }
 

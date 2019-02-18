@@ -498,7 +498,7 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    if (bGonnaCoverAgain)
    {
-      while (m_pStackedWidget->count() > m_iSplashWidgetIndex)
+      while (m_pStackedWidget->count() > static_cast<int>(m_iSplashWidgetIndex))
          slot_stackWidgetPop();
 
       m_iSplashWidgetIndex = 0;
@@ -1064,7 +1064,7 @@ void MainWindow::DisplayWalletContentGUI()
       m_pAccountList->clear();
 
       std::string id, name;
-      for (int i = 0; i < accs.size(); ++i)
+      for (size_t i = 0; i < accs.size(); ++i)
       {
          id = accs[i]["id"].get<std::string>();
          name = accs[i]["name"].get<std::string>();

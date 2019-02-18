@@ -838,7 +838,7 @@ std::vector<Publisher> Globals::getPublishers()
    std::vector<Publisher> result;
 
    result.reserve(publishers.size());
-   for (int iIndex = 0; iIndex < publishers.size(); ++iIndex)
+   for (size_t iIndex = 0; iIndex < publishers.size(); ++iIndex)
    {
       result.push_back(Publisher());
       Publisher& publisher = result.back();
@@ -1209,7 +1209,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
    setColumnCount(static_cast<int>(cols.size()));
 
    QStringList columns;
-   for (int i = 0; i < cols.size(); ++i) {
+   for (size_t i = 0; i < cols.size(); ++i) {
       this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
       columns << cols[i].title;
    }
@@ -1256,7 +1256,7 @@ void DecentTable::resizeEvent(QResizeEvent * a_event)
    QSize tableSize = this->size();
    int width = tableSize.width() - _sum_absoulte;
 
-   for(int i = 0; i < _cols.size(); ++i) {
+   for(size_t i = 0; i < _cols.size(); ++i) {
       if (_cols[i].size > 0) {
          setColumnWidth(i, width * _cols[i].size / _sum_weights);
       } else {

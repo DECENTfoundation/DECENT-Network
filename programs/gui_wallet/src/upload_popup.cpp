@@ -377,7 +377,7 @@ void Upload_popup::slot_ChooseSeeders()
 
 void Upload_popup::slot_SeederChanged(int iIndex)
 {
-   if (iIndex >= 0 && iIndex < m_arrPublishers.size())
+   if (iIndex >= 0 && iIndex < static_cast<int>(m_arrPublishers.size()))
    {
       bool& bState = m_arrPublishers[iIndex].second;
       bState = !bState;

@@ -243,7 +243,7 @@ void Upload_tab::slot_UploadPopupResubmit(int iIndex)
       return;
    }
 #endif
-   if (iIndex < 0 || iIndex >= _digital_contents.size())
+   if (iIndex < 0 || iIndex >= static_cast<int>(_digital_contents.size()))
       throw std::out_of_range("Content index is out of range");
 
    if (!Globals::instance().getCurrentUser().empty())
@@ -267,7 +267,7 @@ void Upload_tab::slot_UploadPopup()
    
 void Upload_tab::slot_ShowContentPopup(int iIndex)
 {
-   if (iIndex < 0 || iIndex >= _digital_contents.size())
+   if (iIndex < 0 || iIndex >= static_cast<int>(_digital_contents.size()))
       throw std::out_of_range("Content index is out of range");
 
    ContentInfoWidget* pDetailsDialog = new ContentInfoWidget(nullptr, _digital_contents[iIndex], true);
@@ -296,7 +296,7 @@ void Upload_tab::slot_SearchTermChanged(QString const& strSearchTerm)
 
 void Upload_tab::slot_cellClicked(int row, int /*col*/)
 {
-   if (row < 0 || row >= _digital_contents.size()) {
+   if (row < 0 || row >= static_cast<int>(_digital_contents.size())) {
       throw std::out_of_range("Content index is out of range");
    }
 

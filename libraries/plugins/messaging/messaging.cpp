@@ -69,7 +69,7 @@ void_result messaging_plugin::do_evaluate(const custom_operation& o)
       const auto& idx = db->get_index_type<account_index>().indices().get<by_id>();
       const auto itr = idx.find(pl.from);
       FC_ASSERT(itr != idx.end(), "Sender ${id} does not exist.", ("id", pl.from));
-      for (int i = 0; i < pl.receivers_data.size(); i++) {
+      for (size_t i = 0; i < pl.receivers_data.size(); i++) {
          const auto itr = idx.find(pl.receivers_data[i].to);
          FC_ASSERT(itr != idx.end(), "Receiver ${id} does not exist.", ("id", pl.receivers_data[i].to));
       }
