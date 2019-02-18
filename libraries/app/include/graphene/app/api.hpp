@@ -134,7 +134,7 @@ namespace graphene { namespace app {
                                                                        fc::optional<account_id_type> partner_account_id,
                                                                        uint32_t from_block, uint32_t to_block,
                                                                        uint32_t start_offset,
-                                                                       int limit) const;
+                                                                       unsigned limit) const;
 
          /**
           * @brief Returns balance operation on the named account and transaction_id.

@@ -331,11 +331,10 @@ namespace graphene { namespace app {
                                                                              fc::optional<account_id_type> partner_account_id,
                                                                              uint32_t from_block, uint32_t to_block,
                                                                              uint32_t start_offset,
-                                                                             int limit) const
+                                                                             unsigned limit) const
    {
-      FC_ASSERT(limit > 0);
        operation_history_id_type start;
-       int32_t offset_counter = -1;
+       uint32_t offset_counter = 0xffffffff;
 
        vector<balance_change_result> result;
        result.reserve(limit);
