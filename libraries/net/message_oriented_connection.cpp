@@ -55,13 +55,12 @@ namespace graphene { namespace net {
       fc::future<void> _read_loop_done;
       uint64_t _bytes_received;
       uint64_t _bytes_sent;
+      bool _send_message_in_progress;
       bool _run_loop;
 
       fc::time_point _connected_time;
       fc::time_point _last_message_received_time;
       fc::time_point _last_message_sent_time;
-
-      bool _send_message_in_progress;
 
 #ifndef NDEBUG
       fc::thread* _thread;
