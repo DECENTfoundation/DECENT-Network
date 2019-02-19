@@ -334,22 +334,19 @@ namespace graphene { namespace app {
                                                                              int limit) const
    {
       FC_ASSERT(limit > 0);
-       vector<balance_change_result> tmp_result;
        operation_history_id_type start;
        int32_t offset_counter = -1;
 
-       tmp_result.reserve(limit);
+       vector<balance_change_result> result;
+       result.reserve(limit);
 
-       do {
+       while (result.size() < limit) {
 
            vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), 100, start);
            if (current.empty())
                break;
 
            for( auto& o : current ) {
-
-              offset_counter++;
-
                if (from_block != 0 && to_block != 0) {
                    if (o.block_num < from_block || o.block_num > to_block)
                        continue;
@@ -378,11 +375,11 @@ namespace graphene { namespace app {
                                continue;
                        }
                    }
-                   if(offset_counter >= start_offset)
-                      tmp_result.push_back( info );
+                   if(++offset_counter >= start_offset)
+                      result.push_back( info );
                }
 
-               if (tmp_result.size() >= (limit))
+               if (result.size() >= limit)
                   break;
            }
 
@@ -390,11 +387,7 @@ namespace graphene { namespace app {
            start = start + (-1);
            if (start == operation_history_id_type())
               break;
-
-       } while(tmp_result.size() < (limit));
-
-       vector<balance_change_result> result;
-       std::copy(tmp_result.begin(), tmp_result.end(), std::back_inserter(result));
+       }
 
        return result;
    }
