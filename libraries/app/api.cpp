@@ -289,7 +289,7 @@ namespace graphene { namespace app {
          --itr;
       }
 
-      if( stop.instance.value == 0 && result.size() < limit && itr->account == account )
+      if( stop.instance.value == 0 && itr->account == account && itr->operation_id.instance.value <= start.instance.value && result.size() < limit )
          result.push_back(itr->operation_id(db));
 
       return result;
