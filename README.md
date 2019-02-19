@@ -88,7 +88,7 @@ Then, execute in console:
 * Install CMake tools (https://cmake.org/download)
 * Install Visual Studio 2017 Community (https://visualstudio.microsoft.com/downloads)
 * Install Boost 1.68 MSVC 14.1 (https://sourceforge.net/projects/boost/files/boost-binaries) (choose *C:\Projects\boost_1_68_0* as installation prefix)
-* Install Qt 5.12 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
+* Install Qt 5.12.1 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
 
 Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
@@ -140,7 +140,7 @@ You can use CMake generator to create a Visual Studio 2017 project files and per
 
     cd \Projects\DECENT-Network
     set BOOST=C:\Projects\boost_1_68_0
-    set QT_CMAKE=C:\Projects\Qt\5.12.0\msvc2017_64\lib\cmake
+    set QT_CMAKE=C:\Projects\Qt\5.12.1\msvc2017_64\lib\cmake
     set VCPKG=C:\Projects\vcpkg
     set VCPKG_TARGET_TRIPLET=x64-windows-static
     cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG%\scripts\buildsystems\vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" .

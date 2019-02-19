@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 #ifndef NDEBUG
       std::cout << " (debug)";
 #endif /* NDEBUG */
-      std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << std::endl;
+      std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << "\nQt " << qVersion() << std::endl;
 
       return EXIT_SUCCESS;
    }
