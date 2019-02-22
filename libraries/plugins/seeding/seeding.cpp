@@ -649,7 +649,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       else
          FC_THROW("missing free-space parameter");
 
-      if( options["packages-path"].as<string>() != "" ) {
+      if( options.count("packages-path") ) {
          try {
             seeding_options.packages_path = boost::filesystem::path(options["packages-path"].as<string>());
          } catch( ... ) {
@@ -660,7 +660,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
          seeding_options.packages_path = fc::path( "" );
       }
 
-      const auto region_code_itr = RegionCodes::s_mapNameToCode.find( options["region-code"].as<string>() );
+      const auto region_code_itr = RegionCodes::s_mapNameToCode.find( options.count("region-code") ? options["region-code"].as<string>() : "" );
 
       if( region_code_itr != RegionCodes::s_mapNameToCode.end() && region_code_itr->second != RegionCodes::OO_all )
          seeding_options.region_code = region_code_itr->first;
