@@ -8,6 +8,8 @@
 #include <QTextStream>
 #include <QTranslator>
 
+#include <iostream>
+
 #include <fc/log/file_appender.hpp>
 
 #include <graphene/utilities/git_revision.hpp>

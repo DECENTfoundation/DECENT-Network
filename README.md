@@ -11,7 +11,7 @@ Building Decent
 For Ubuntu 18.04 LTS, execute in console:
 
      sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
+     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev nlohmann-json-dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
@@ -26,7 +26,7 @@ For Debian 9, execute in console:
 For Fedora 28 or later, execute in console:
 
     sudo dnf clean metadata
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel boost-devel boost-static
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel json-devel boost-devel boost-static
 
 And the last step is the same regardless on distribution, execute in console:
 
@@ -45,7 +45,7 @@ And the last step is the same regardless on distribution, execute in console:
 > Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
     # Download and build Boost 1.65.1
-     wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
+     wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
      tar xvf boost_1_65_1.tar.gz
      mkdir boost
      cd boost_1_65_1
@@ -55,17 +55,28 @@ And the last step is the same regardless on distribution, execute in console:
      cd ..
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
-    # Download and build CMake 3.13.3
-     wget https://cmake.org/files/v3.13/cmake-3.13.3.tar.gz
-     tar xvf cmake-3.13.3.tar.gz
+    # Download and build CMake 3.13.4
+     wget -nv https://cmake.org/files/v3.13/cmake-3.13.4.tar.gz
+     tar xvf cmake-3.13.4.tar.gz
      mkdir cmake
-     cd cmake-3.13.3
+     cd cmake-3.13.4
      export CMAKE_ROOT=$(realpath ../cmake)
      ./configure --prefix=$CMAKE_ROOT
      make install
      export PATH=$CMAKE_ROOT/bin:$PATH
      cd ..
-     rm -rf cmake-3.13.3 cmake-3.13.3.tar.gz
+     rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
+
+> Note for Ubuntu 16.04/18.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+
+    # Download and build JSON 3.5.0
+     wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz
+     tar xvf v3.5.0.tar.gz
+     cd json-3.5.0
+     cmake .
+     sudo make install
+     cd ..
+     rm -rf json-3.5.0 v3.5.0.tar.gz
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
@@ -78,6 +89,8 @@ Then, execute in console:
 
     $ brew update
     $ brew install automake autoconf libtool cmake boost qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew tap nlohmann/json
+    $ brew install nlohmann_json --with-cmake
     $ mkdir ~/dev
 
 > Note that, if you want to use OpenSSL 1.1 change the `openssl` argument to `openssl@1.1` in the install command line (see also note in building step).
@@ -97,7 +110,7 @@ Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
     git clone https://github.com/Microsoft/vcpkg.git
     cd vcpkg
     bootstrap-vcpkg.bat
-    vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc
+    vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc nlohmann-json
 
 ### Obtaining the sources
 
