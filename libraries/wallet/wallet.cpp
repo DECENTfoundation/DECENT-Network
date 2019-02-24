@@ -34,6 +34,9 @@
 #include <list>
 #include <map>
 
+#include <nlohmann/json.hpp>
+#include <ipfs/client.h>
+
 #include <boost/version.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -54,6 +57,7 @@
 #include <boost/multi_index/hashed_index.hpp>
 
 #include <fc/git_revision.hpp>
+#include <fc/monitoring.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 #include <fc/io/stdio.hpp>
@@ -67,8 +71,8 @@
 #include <fc/rpc/api_connection.hpp>
 
 #include <graphene/app/api.hpp>
-
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
@@ -81,14 +85,8 @@
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
-#include <decent/wallet_utility/wallet_utility.hpp>
-
-#include <fc/monitoring.hpp>
-#include <fc/smart_ref_impl.hpp>
-#include "json.hpp"
-#include "ipfs/client.h"
 #include <decent/package/package_config.hpp>
-#include <graphene/chain/hardfork.hpp>
+#include <decent/wallet_utility/wallet_utility.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>

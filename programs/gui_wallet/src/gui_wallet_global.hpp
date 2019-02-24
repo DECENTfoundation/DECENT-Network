@@ -8,7 +8,8 @@
 #include <vector>
 #include <atomic>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
+
 #include <decent/wallet_utility/wallet_utility.hpp>
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>

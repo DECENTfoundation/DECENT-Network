@@ -8,7 +8,7 @@ Source0: https://github.com/DECENTfoundation/DECENT-Network/archive/%{version}.t
 Requires: libpbc = %{pbc_version}, openssl-libs >= 1.1, cryptopp >= 6.1, readline >= 7.0, ncurses-libs >= 6.1, libcurl, gmp, zlib
 
 %{?systemd_requires}
-BuildRequires: systemd, boost-devel >= 1.65.1
+BuildRequires: systemd, json-devel, boost-devel >= 1.65.1
 
 %description
 DCore is the blockchain you can easily build on. As the world’s first blockchain

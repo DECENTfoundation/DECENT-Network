@@ -21,7 +21,7 @@ add_library( graphene_utilities
              ipfs_check.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
              ${HEADERS} )
-target_link_libraries( graphene_utilities fc nlohmann_json ipfs-api )
+target_link_libraries( graphene_utilities fc ipfs-api )
 target_include_directories( graphene_utilities
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

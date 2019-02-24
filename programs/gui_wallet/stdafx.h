@@ -3,7 +3,9 @@
 
 #include <QtWidgets/QtWidgets>
 
-#include <json.hpp>
+#include <iostream>
+
+#include <nlohmann/json.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
