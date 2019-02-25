@@ -288,44 +288,122 @@ struct get_balance_history_visitor
        }
    }
 
-   void operator()( const account_create_operation& op ) {}
-   void operator()( const account_update_operation& op ) {}
-   void operator()( const asset_create_operation& op ) {}
-   void operator()( const update_monitored_asset_operation& op ) {}
-   void operator()( const update_user_issued_asset_operation& op ) {}
-   void operator()( const update_user_issued_asset_advanced_operation& op ) {}
-   void operator()( const asset_publish_feed_operation& op ) {}
-   void operator()( const miner_create_operation& op ) {}
-   void operator()( const miner_update_operation& op ) {}
-   void operator()( const miner_update_global_parameters_operation& op ) {}
+   void operator()( const account_create_operation& op )
+   {
+       if (op.fee_payer() == _account)
+           _fee = op.fee;
+   }
 
-   void operator()( const proposal_create_operation& op ) {}
-   void operator()( const proposal_update_operation& op ) {}
-   void operator()( const proposal_delete_operation& op ) {}
+   void operator()( const account_update_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
 
-   void operator()( const withdraw_permission_create_operation& op ) {}
-   void operator()( const withdraw_permission_update_operation& op ) {}
-   void operator()( const withdraw_permission_delete_operation& op ) {}
+   void operator()( const asset_create_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
 
-   void operator()( const custom_operation& op ) {}
-   void operator()( const assert_operation& op ) {}
-   void operator()( const set_publishing_manager_operation& op ) {}
-   void operator()( const set_publishing_right_operation& op ) {}
-   void operator()( const content_cancellation_operation& op) {}
+   void operator()( const update_monitored_asset_operation& op ) {} // 0 fee
+   void operator()( const update_user_issued_asset_operation& op ) {} // 0 fee
 
-   void operator()( const leave_rating_and_comment_operation& op) {}
-   void operator()( const ready_to_publish_operation& op) {}
-   void operator()( const ready_to_publish2_operation& op) {}
+   void operator()( const update_user_issued_asset_advanced_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
 
-   void operator()( const proof_of_custody_operation& op) {}
-   void operator()( const deliver_keys_operation& op) {}
+   void operator()( const asset_publish_feed_operation& op)
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
 
-   void operator()( const subscribe_by_author_operation& op) {}
-   void operator()( const automatic_renewal_of_subscription_operation& op) {}
-   void operator()( const disallow_automatic_renewal_of_subscription_operation& op) {}
-   void operator()( const renewal_of_subscription_operation& op) {}
+   void operator()( const miner_create_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
 
-   void operator()( const report_stats_operation& op) {}
+   void operator()( const miner_update_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const miner_update_global_parameters_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const proposal_create_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const proposal_update_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const proposal_delete_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const withdraw_permission_create_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const withdraw_permission_update_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const withdraw_permission_delete_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const custom_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const assert_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const set_publishing_manager_operation& op ) {} // 0 fee
+   void operator()( const set_publishing_right_operation& op ) {} // 0 fee
+   void operator()( const content_cancellation_operation& op) {} // 0 fee
+
+   void operator()( const leave_rating_and_comment_operation& op) {} // 0 fee
+   void operator()( const ready_to_publish_operation& op) {} // 0 fee
+   void operator()( const ready_to_publish2_operation& op) {} // 0 fee
+
+   void operator()( const proof_of_custody_operation& op) {} // 0 fee
+   void operator()( const deliver_keys_operation& op) {} // 0 fee
+
+   void operator()( const subscribe_by_author_operation& op) {} // 0 fee
+   void operator()( const automatic_renewal_of_subscription_operation& op) {} // 0 fee
+   void operator()( const disallow_automatic_renewal_of_subscription_operation& op) {} // 0 fee
+   void operator()( const renewal_of_subscription_operation& op) {} // 0 fee
+
+   void operator()( const report_stats_operation& op) {} // 0 fee
 
 /////////////////////////////////////////////////////////////////////////////////
 
