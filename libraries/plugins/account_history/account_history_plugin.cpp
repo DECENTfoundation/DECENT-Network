@@ -102,7 +102,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
       operation_get_required_authorities( op.op, impacted, impacted, other );
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
-         impacted.insert( oho.result.get<object_id_type>() );
+         impacted.insert( oho.result.get<graphene::db::object_id_type>() );
       else if (op.op.which() == operation::tag< transfer2_operation >::value ) {
 
          const transfer2_operation& tr2o = op.op.get<transfer2_operation>();
@@ -246,8 +246,8 @@ void account_history_plugin::plugin_set_program_options(
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    database().applied_block.connect( [&]( const signed_block& b){ my->update_account_histories(b); } );
-   database().add_index< primary_index< simple_index< operation_history_object > > >();
-   database().add_index< primary_index< account_transaction_history_index > >();
+   database().add_index< graphene::db::primary_index< graphene::db::simple_index< operation_history_object > > >();
+   database().add_index< graphene::db::primary_index< account_transaction_history_index > >();
 
    if (options.count("track-account")) {     
       const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>(); 

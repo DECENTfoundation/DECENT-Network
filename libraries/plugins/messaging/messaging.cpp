@@ -66,7 +66,7 @@ void_result messaging_plugin::do_evaluate(const custom_operation& o)
       graphene::chain::message_payload pl;
       o.get_messaging_payload(pl);
       const auto& db = app().chain_database();
-      const auto& idx = db->get_index_type<account_index>().indices().get<by_id>();
+      const auto& idx = db->get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto itr = idx.find(pl.from);
       FC_ASSERT(itr != idx.end(), "Sender ${id} does not exist.", ("id", pl.from));
       for (size_t i = 0; i < pl.receivers_data.size(); i++) {

@@ -155,7 +155,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
                 ilog( "pushing blocks from fork ${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
                 optional<fc::exception> except;
                 try {
-                   undo_database::session session = _undo_db.start_undo_session();
+                   graphene::db::undo_database::session session = _undo_db.start_undo_session();
                    apply_block( (*ritr)->data, skip );
                    _block_id_to_block.store( (*ritr)->id, (*ritr)->data );
                    session.commit();
@@ -574,10 +574,11 @@ void database::notify_changed_objects()
    if( _undo_db.enabled() ) 
    {
       const auto& head_undo = _undo_db.head();
-      vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
+      vector<graphene::db::object_id_type> changed_ids;
+      changed_ids.reserve(head_undo.old_values.size());
       for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
       for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
-      vector<const object*> removed;
+      vector<const graphene::db::object*> removed;
       removed.reserve( head_undo.removed.size() );
       for( const auto& item : head_undo.removed )
       {

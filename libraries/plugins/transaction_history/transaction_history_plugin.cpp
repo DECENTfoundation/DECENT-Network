@@ -139,7 +139,7 @@ void transaction_history_plugin::plugin_set_program_options(
 void transaction_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    ilog("transaction history plugin:  plugin_initialize() begin");
-   database().add_index< primary_index< transaction_history_index > >();
+   database().add_index< graphene::db::primary_index< transaction_history_index > >();
 
    if( options.at("transaction-id-history").as<bool>() )
    {

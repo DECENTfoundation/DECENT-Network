@@ -28,12 +28,14 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/mem_fun.hpp>
 
-namespace graphene { namespace chain {
+namespace graphene { namespace db {
 
-   using boost::multi_index_container;
    using namespace boost::multi_index;
 
-   struct by_id{};
+   struct by_id;
+   typedef member<object, object_id_type, &object::id> object_id_member;
+   typedef ordered_unique<tag<by_id>, object_id_member> object_id_index;
+
    /**
     *  Almost all objects can be tracked and managed via a boost::multi_index container that uses
     *  an unordered_unique key on the object ID.  This template class adapts the generic index interface

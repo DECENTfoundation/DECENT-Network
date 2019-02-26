@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
        */
       void convert_fee();
 
-      object_id_type get_relative_id( object_id_type rel_id )const;
+      graphene::db::object_id_type get_relative_id( graphene::db::object_id_type rel_id ) const;
 
       // the next two functions are helpers that allow template functions declared in this 
       // header to call db() without including database.hpp, which would

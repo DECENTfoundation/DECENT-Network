@@ -10,7 +10,7 @@ namespace graphene { namespace chain {
 void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
 {
    try {
-      auto& idx = db().get_index_type<account_index>().indices().get<by_id>();
+      auto& idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto& from_account = idx.find( op.from );
       FC_ASSERT( from_account != idx.end() , "Account does not exist" );
       const auto& to_account = idx.find( op.to );
@@ -41,7 +41,7 @@ void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
 void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
 {
    try {
-      auto &idx = db().get_index_type<account_index>().indices().get<by_id>();
+      auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto &to_account = idx.find(op.to);
 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
@@ -95,7 +95,7 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
 void_result subscribe_by_author_evaluator::do_evaluate( const subscribe_by_author_operation& op )
 {
    try {
-      auto &idx = db().get_index_type<account_index>().indices().get<by_id>();
+      auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto &from_account = idx.find(op.from);
       FC_ASSERT(from_account != idx.end(), "Account does not exist");
       const auto &to_account = idx.find(op.to);
@@ -110,7 +110,7 @@ void_result subscribe_by_author_evaluator::do_evaluate( const subscribe_by_autho
 void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_operation& op )
 {
    try {
-      auto &idx = db().get_index_type<account_index>().indices().get<by_id>();
+      auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto &to_account = idx.find(op.to);
 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
@@ -161,11 +161,11 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
 void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const automatic_renewal_of_subscription_operation& op )
 {
    try {
-      auto &idx = db().get_index_type<account_index>().indices().get<by_id>();
+      auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
       const auto &from_account = idx.find(op.consumer);
       FC_ASSERT(from_account != idx.end(), "Account does not exist");
 
-      auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_id>();
+      auto &idx2 = db().get_index_type<subscription_index>().indices().get<graphene::db::by_id>();
       const auto &subscription = idx2.find(op.subscription);
       FC_ASSERT(subscription != idx2.end(), "subscription does not exist");
 
@@ -182,7 +182,7 @@ void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const autom
 void_result automatic_renewal_of_subscription_evaluator::do_apply(const automatic_renewal_of_subscription_operation& op )
 {
    try {
-      auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_id>();
+      auto &idx2 = db().get_index_type<subscription_index>().indices().get<graphene::db::by_id>();
       const auto &subscription = idx2.find(op.subscription);
 
       db().modify<subscription_object>(*subscription, [&](subscription_object &so)

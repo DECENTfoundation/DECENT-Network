@@ -215,7 +215,7 @@ namespace graphene { namespace app {
       
       /** called every time a block is applied to report the objects that were changed */
       void on_objects_changed(const vector<object_id_type>& ids);
-      void on_objects_removed(const vector<const object*>& objs);
+      void on_objects_removed(const vector<const graphene::db::object*>& objs);
       void on_applied_block();
       
       mutable fc::bloom_filter                               _subscribe_filter;
@@ -248,7 +248,7 @@ namespace graphene { namespace app {
       _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids) {
          on_objects_changed(ids);
       });
-      _removed_connection = _db.removed_objects.connect([this](const vector<const object*>& objs) {
+      _removed_connection = _db.removed_objects.connect([this](const vector<const graphene::db::object*>& objs) {
          on_objects_removed(objs);
       });
       _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
@@ -540,7 +540,7 @@ namespace graphene { namespace app {
          subscribe_to_item( key );
          
          const auto& idx = _db.get_index_type<account_index>();
-         const auto& aidx = dynamic_cast<const primary_index<account_index>&>(idx);
+         const auto& aidx = dynamic_cast<const graphene::db::primary_index<account_index>&>(idx);
          const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
          auto itr = refs.account_to_key_memberships.find(key);
          vector<account_id_type> result;
@@ -635,7 +635,7 @@ namespace graphene { namespace app {
          }
          // Add the account's proposals
          const auto& proposal_idx = _db.get_index_type<proposal_index>();
-         const auto& pidx = dynamic_cast<const primary_index<proposal_index>&>(proposal_idx);
+         const auto& pidx = dynamic_cast<const graphene::db::primary_index<proposal_index>&>(proposal_idx);
          const auto& proposals_by_account = pidx.get_secondary_index<graphene::chain::required_approval_index>();
          auto  required_approvals_itr = proposals_by_account._account_to_proposals.find( account->id );
          if( required_approvals_itr != proposals_by_account._account_to_proposals.end() )
@@ -688,7 +688,7 @@ namespace graphene { namespace app {
    vector<account_id_type> database_api_impl::get_account_references( account_id_type account_id )const
    {
       const auto& idx = _db.get_index_type<account_index>();
-      const auto& aidx = dynamic_cast<const primary_index<account_index>&>(idx);
+      const auto& aidx = dynamic_cast<const graphene::db::primary_index<account_index>&>(idx);
       const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
       auto itr = refs.account_to_account_memberships.find(account_id);
       vector<account_id_type> result;
@@ -749,7 +749,7 @@ namespace graphene { namespace app {
                             const object_id_type& id,
                             _t_iterator& itr_begin)
       {
-         const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<by_id>();
+         const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<graphene::db::by_id>();
          auto itr_id = idx_by_id.find(id);
 
          const auto& idx_by_sort_tag = db.get_index_type<_t_object_index>().indices().template get<_t_sort_tag>();
@@ -822,9 +822,9 @@ namespace graphene { namespace app {
       vector<account_object> result;
 
       if (order == "+id")
-         search_accounts_template<true, by_id>(_db, term, limit, id, result);
+         search_accounts_template<true, graphene::db::by_id>(_db, term, limit, id, result);
       else if (order == "-id")
-         search_accounts_template<false, by_id>(_db, term, limit, id, result);
+         search_accounts_template<false, graphene::db::by_id>(_db, term, limit, id, result);
       else if (order == "-name")
          search_accounts_template<false, by_name>(_db, term, limit, id, result);
       else
@@ -1137,7 +1137,7 @@ namespace graphene { namespace app {
    map<string, miner_id_type> database_api_impl::lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       FC_ASSERT( limit <= 1000 );
-      const auto& miners_by_id = _db.get_index_type<miner_index>().indices().get<by_id>();
+      const auto& miners_by_id = _db.get_index_type<miner_index>().indices().get<graphene::db::by_id>();
       
       // we want to order miners by account name, but that name is in the account object
       // so the miner_index doesn't have a quick way to access it.
@@ -1583,7 +1583,7 @@ namespace graphene { namespace app {
       const auto& idx = _db.get_index_type<proposal_index>();
       vector<proposal_object> result;
       
-      idx.inspect_all_objects( [&](const object& obj){
+      idx.inspect_all_objects( [&](const graphene::db::object& obj){
          const proposal_object& p = static_cast<const proposal_object&>(obj);
          if( p.required_active_approvals.find( id ) != p.required_active_approvals.end() )
             result.push_back(p);
@@ -2059,7 +2059,7 @@ namespace
 
    optional<subscription_object> database_api_impl::get_subscription( const subscription_id_type& sid) const
    {
-      const auto& idx = _db.get_index_type<subscription_index>().indices().get<by_id>();
+      const auto& idx = _db.get_index_type<subscription_index>().indices().get<graphene::db::by_id>();
       auto itr = idx.find(sid);
       if (itr != idx.end())
          return *itr;
@@ -2196,7 +2196,7 @@ namespace
          correct_iterator<content_index, content_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
 
          content_summary content;
-         const auto& idx_account = db.get_index_type<account_index>().indices().get<by_id>();
+         const auto& idx_account = db.get_index_type<account_index>().indices().get<graphene::db::by_id>();
 
          ContentObjectTypeValue filter_type;
          filter_type.from_string(type);
@@ -2511,7 +2511,7 @@ namespace
       }
    }
    
-   void database_api_impl::on_objects_removed( const vector<const object*>& objs )
+   void database_api_impl::on_objects_removed( const vector<const graphene::db::object*>& objs )
    {
       /// we need to ensure the database_api is not deleted for the life of the async operation
       if( _subscribe_callback )
@@ -2533,7 +2533,7 @@ namespace
       
       for(auto id : ids)
       {
-         const object* obj = nullptr;
+         const graphene::db::object* obj = nullptr;
          if( _subscribe_callback )
          {
             obj = _db.find_object( id );

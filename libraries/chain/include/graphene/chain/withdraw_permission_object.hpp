@@ -71,37 +71,37 @@ namespace graphene { namespace chain {
         }
    };
 
+   using namespace boost::multi_index;
+
    struct by_from;
    struct by_authorized;
    struct by_expiration;
-
    typedef multi_index_container<
       withdraw_permission_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_unique< tag<by_from>,
             composite_key< withdraw_permission_object,
                member<withdraw_permission_object, account_id_type, &withdraw_permission_object::withdraw_from_account>,
-               member< object, object_id_type, &object::id >
+               graphene::db::object_id_member
             >
          >,
          ordered_unique< tag<by_authorized>,
             composite_key< withdraw_permission_object,
                member<withdraw_permission_object, account_id_type, &withdraw_permission_object::authorized_account>,
-               member< object, object_id_type, &object::id >
+               graphene::db::object_id_member
             >
          >,
          ordered_unique< tag<by_expiration>,
             composite_key< withdraw_permission_object,
                member<withdraw_permission_object, time_point_sec, &withdraw_permission_object::expiration>,
-               member< object, object_id_type, &object::id >
+               graphene::db::object_id_member
             >
          >
       >
    > withdraw_permission_object_multi_index_type;
 
-   typedef generic_index<withdraw_permission_object, withdraw_permission_object_multi_index_type> withdraw_permission_index;
-
+   typedef graphene::db::generic_index<withdraw_permission_object, withdraw_permission_object_multi_index_type> withdraw_permission_index;
 
 } } // graphene::chain
 

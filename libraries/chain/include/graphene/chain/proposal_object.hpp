@@ -36,7 +36,7 @@ namespace graphene { namespace chain {
  *  @ingroup object
  *  @ingroup protocol
  */
-class proposal_object : public abstract_object<proposal_object>
+class proposal_object : public graphene::db::abstract_object<proposal_object>
 {
    public:
       static const uint8_t space_id = protocol_ids;
@@ -65,32 +65,32 @@ class proposal_object : public abstract_object<proposal_object>
  *
  *  @note the set of required approvals is constant
  */
-class required_approval_index : public secondary_index
+class required_approval_index : public graphene::db::secondary_index
 {
    public:
-      virtual void object_inserted( const object& obj ) override;
-      virtual void object_removed( const object& obj ) override;
-      virtual void about_to_modify( const object& before ) override{};
-      virtual void object_modified( const object& after  ) override{};
+      virtual void object_inserted( const graphene::db::object& obj ) override;
+      virtual void object_removed( const graphene::db::object& obj ) override;
+      virtual void about_to_modify( const graphene::db::object& before ) override{};
+      virtual void object_modified( const graphene::db::object& after  ) override{};
 
       void remove( account_id_type a, proposal_id_type p );
 
       map<account_id_type, set<proposal_id_type> > _account_to_proposals;
 };
 
-struct by_expiration{};
-typedef boost::multi_index_container<
+struct by_expiration;
+typedef multi_index_container<
    proposal_object,
    indexed_by<
-      ordered_unique< tag< by_id >, member< object, object_id_type, &object::id > >,
+      graphene::db::object_id_index,
       ordered_non_unique< tag< by_expiration >, member< proposal_object, time_point_sec, &proposal_object::expiration_time > >
    >
 > proposal_multi_index_container;
-typedef generic_index<proposal_object, proposal_multi_index_container> proposal_index;
+typedef graphene::db::generic_index<proposal_object, proposal_multi_index_container> proposal_index;
 
 } } // graphene::chain
 
-FC_REFLECT_DERIVED( graphene::chain::proposal_object, (graphene::chain::object),
+FC_REFLECT_DERIVED( graphene::chain::proposal_object, (graphene::db::object),
                     (expiration_time)(review_period_time)(proposed_transaction)(required_active_approvals)
                     (available_active_approvals)(required_owner_approvals)(available_owner_approvals)
                     (available_key_approvals) )

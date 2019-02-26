@@ -36,7 +36,7 @@ void_result miner_create_evaluator::do_evaluate( const miner_create_operation& o
    return void_result();
 }
 
-object_id_type miner_create_evaluator::do_apply( const miner_create_operation& op )
+graphene::db::object_id_type miner_create_evaluator::do_apply( const miner_create_operation& op )
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {

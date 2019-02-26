@@ -459,7 +459,7 @@ namespace graphene { namespace app {
          FC_CAPTURE_AND_RETHROW( (receiver) );
 
          const auto& idx = db.get_index_type<message_index>();
-         const auto& aidx = dynamic_cast<const primary_index<message_index>&>(idx);
+         const auto& aidx = dynamic_cast<const graphene::db::primary_index<message_index>&>(idx);
          const auto& refs = aidx.get_secondary_index<graphene::chain::message_receiver_index>();
          auto itr = refs.message_to_receiver_memberships.find(*receiver);
 
@@ -477,8 +477,8 @@ namespace graphene { namespace app {
                for (const object_id_type& item : itr->second) {
                   if (result.size() >= max_count)
                      break;
-                  auto msg_itr = db.get_index_type<message_index>().indices().get<by_id>().find(item);
-                  if (msg_itr != db.get_index_type<message_index>().indices().get<by_id>().end()) {
+                  auto msg_itr = db.get_index_type<message_index>().indices().get<graphene::db::by_id>().find(item);
+                  if (msg_itr != db.get_index_type<message_index>().indices().get<graphene::db::by_id>().end()) {
                      message_object o = *msg_itr;
                      if (count - counter <= max_count && (*msg_itr).sender == *sender)
                        result.emplace_back(o);
@@ -491,8 +491,8 @@ namespace graphene { namespace app {
                for (const object_id_type& item : itr->second) {
                   if (result.size() >= max_count)
                      break;
-                  auto msg_itr = db.get_index_type<message_index>().indices().get<by_id>().find(item);
-                  if (msg_itr != db.get_index_type<message_index>().indices().get<by_id>().end()) {
+                  auto msg_itr = db.get_index_type<message_index>().indices().get<graphene::db::by_id>().find(item);
+                  if (msg_itr != db.get_index_type<message_index>().indices().get<graphene::db::by_id>().end()) {
                      message_object o = *msg_itr;
                      if (count - counter <= max_count)
                        result.emplace_back(o);

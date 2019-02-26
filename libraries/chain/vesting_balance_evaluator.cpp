@@ -78,7 +78,7 @@ struct init_policy_visitor
    }
 };
 
-object_id_type vesting_balance_create_evaluator::do_apply( const vesting_balance_create_operation& op )
+graphene::db::object_id_type vesting_balance_create_evaluator::do_apply( const vesting_balance_create_operation& op )
 { try {
    database& d = db();
    const time_point_sec now = d.head_block_time();

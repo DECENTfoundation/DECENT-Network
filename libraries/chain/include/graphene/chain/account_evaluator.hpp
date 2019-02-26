@@ -34,7 +34,7 @@ public:
    typedef account_create_operation operation_type;
 
    void_result do_evaluate( const account_create_operation& o );
-   object_id_type do_apply( const account_create_operation& o );
+   graphene::db::object_id_type do_apply( const account_create_operation& o );
 };
 
 class account_update_evaluator : public evaluator<account_update_evaluator>

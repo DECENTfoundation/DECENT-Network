@@ -43,9 +43,7 @@ namespace graphene { namespace chain {
    typedef multi_index_container<
       seeder_object,
          indexed_by<
-            ordered_unique< tag<by_id>,
-               member< object, object_id_type, &object::id >
-            >,
+            graphene::db::object_id_index,
             ordered_unique< tag<by_seeder>,
                member<seeder_object, account_id_type, &seeder_object::seeder>
             >,
@@ -67,7 +65,7 @@ namespace graphene { namespace chain {
          >
    >seeder_object_multi_index_type;
    
-   typedef generic_index< seeder_object, seeder_object_multi_index_type > seeder_index;
+   typedef graphene::db::generic_index< seeder_object, seeder_object_multi_index_type > seeder_index;
    
 }} // graphene::chain
 

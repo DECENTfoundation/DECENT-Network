@@ -72,13 +72,12 @@ struct by_time;
 typedef multi_index_container<
    budget_record_object,
    indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      graphene::db::object_id_index,
       ordered_unique< tag<by_time>, member< budget_record_object, time_point_sec, &budget_record_object::time > >
    >
 > budget_record_object_multi_index_type;
 
-
-typedef generic_index< budget_record_object, budget_record_object_multi_index_type > budget_record_index;
+typedef graphene::db::generic_index< budget_record_object, budget_record_object_multi_index_type > budget_record_index;
 
 struct miner_reward_input
 {

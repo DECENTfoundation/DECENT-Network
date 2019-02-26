@@ -76,10 +76,9 @@ public:
    };
 };
 
-typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
-typedef graphene::chain::object_id< SEEDING_PLUGIN_SPACE_ID, seeder_object_type,  my_seeder_object>     my_seeder_id_type;
+typedef graphene::db::object_id< SEEDING_PLUGIN_SPACE_ID, seeding_object_type,  my_seeding_object>     my_seeding_id_type;
+typedef graphene::db::object_id< SEEDING_PLUGIN_SPACE_ID, seeder_object_type,  my_seeder_object>     my_seeder_id_type;
 
-struct by_id;
 struct by_URI;
 struct by_hash;
 struct by_seeder;
@@ -87,24 +86,23 @@ struct by_seeder;
 typedef multi_index_container<
       my_seeder_object,
       indexed_by<
-            ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
+            graphene::db::object_id_index,
             ordered_unique< tag< by_seeder >, member< my_seeder_object, account_id_type, &my_seeder_object::seeder> >
       >
 >my_seeder_object_multi_index_type;
 
-typedef generic_index< my_seeder_object, my_seeder_object_multi_index_type > my_seeder_index;
+typedef graphene::db::generic_index< my_seeder_object, my_seeder_object_multi_index_type > my_seeder_index;
 
 typedef multi_index_container<
       my_seeding_object,
       indexed_by<
-            ordered_unique< tag<by_id>, member< object, object_id_type, &object::id >>,
+            graphene::db::object_id_index,
             ordered_unique< tag< by_URI >, member< my_seeding_object, string, &my_seeding_object::URI> >,
             ordered_unique< tag< by_hash >, member< my_seeding_object, fc::ripemd160, &my_seeding_object::_hash> >
       >
 >my_seeding_object_multi_index_type;
 
-typedef generic_index< my_seeding_object, my_seeding_object_multi_index_type > my_seeding_index;
-
+typedef graphene::db::generic_index< my_seeding_object, my_seeding_object_multi_index_type > my_seeding_index;
 
 namespace detail {
 
@@ -270,5 +268,3 @@ class seeding_plugin : public graphene::app::plugin
 
 FC_REFLECT_DERIVED( decent::seeding::my_seeder_object, (graphene::db::object), (seeder)(content_privKey)(privKey)(free_space)(region_code)(price)(symbol) );
 FC_REFLECT_DERIVED( decent::seeding::my_seeding_object, (graphene::db::object), (URI)(expiration)(cd)(seeder)(key)(space)(downloaded)(deleted)(_hash) );
-
-

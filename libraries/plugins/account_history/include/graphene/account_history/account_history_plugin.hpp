@@ -32,9 +32,6 @@
 
 namespace graphene { namespace account_history {
    using namespace chain;
-   //using namespace graphene::db;
-   //using boost::multi_index_container;
-   //using namespace boost::multi_index;
 
 //
 // Plugins should #define their SPACE_ID's so plugins with
@@ -84,7 +81,9 @@ class account_history_plugin : public graphene::app::plugin
 
 } } //graphene::account_history
 
-/*struct by_id;
+/*
+using namespace boost::multi_index;
+
 struct by_seq;
 struct by_op;
 typedef boost::multi_index_container<

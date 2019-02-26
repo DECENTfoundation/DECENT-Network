@@ -51,7 +51,7 @@ namespace graphene { namespace wallet {
  * of the given type, with the new operator.
  */
 
-      object* create_object( const variant& v );
+      graphene::db::object* create_object( const variant& v );
 
       struct server_data
       {
@@ -79,7 +79,7 @@ namespace graphene { namespace wallet {
          /// @return \c true if the account was newly inserted; \c false if it was only updated
          bool update_account(const account_object& acct)
          {
-            auto& idx = my_accounts.get<by_id>();
+            auto& idx = my_accounts.get<graphene::db::by_id>();
             auto itr = idx.find(acct.get_id());
             if( itr != idx.end() )
             {

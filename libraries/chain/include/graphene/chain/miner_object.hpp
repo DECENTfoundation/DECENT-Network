@@ -27,9 +27,8 @@
 #include <graphene/db/generic_index.hpp>
 
 namespace graphene { namespace chain {
-   using namespace graphene::db;
 
-   class miner_object : public abstract_object<miner_object>
+   class miner_object : public graphene::db::abstract_object<miner_object>
    {
       public:
          static const uint8_t space_id = protocol_ids;
@@ -49,15 +48,15 @@ namespace graphene { namespace chain {
          miner_object() : vote_id(vote_id_type::miner) {}
    };
 
+   using namespace boost::multi_index;
+
    struct by_account;
    struct by_vote_id;
    struct by_last_block;
-   using miner_multi_index_type = multi_index_container<
+   typedef multi_index_container<
       miner_object,
       indexed_by<
-         ordered_unique< tag<by_id>,
-            member<object, object_id_type, &object::id>
-         >,
+         graphene::db::object_id_index,
          ordered_unique< tag<by_account>,
             member<miner_object, account_id_type, &miner_object::miner_account>
          >,
@@ -65,8 +64,8 @@ namespace graphene { namespace chain {
             member<miner_object, vote_id_type, &miner_object::vote_id>
          >
       >
-   >;
-   using miner_index = generic_index<miner_object, miner_multi_index_type>;
+   > miner_multi_index_type;
+   typedef graphene::db::generic_index<miner_object, miner_multi_index_type> miner_index;
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::miner_object, (graphene::db::object),

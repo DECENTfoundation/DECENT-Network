@@ -165,13 +165,13 @@ namespace graphene { namespace chain {
     *  @brief This secondary index will allow a reverse lookup of all accounts that a particular key or account
     *  is an potential signing authority.
     */
-   class account_member_index : public secondary_index
+   class account_member_index : public graphene::db::secondary_index
    {
       public:
-         virtual void object_inserted( const object& obj ) override;
-         virtual void object_removed( const object& obj ) override;
-         virtual void about_to_modify( const object& before ) override;
-         virtual void object_modified( const object& after  ) override;
+         virtual void object_inserted( const graphene::db::object& obj ) override;
+         virtual void object_removed( const graphene::db::object& obj ) override;
+         virtual void about_to_modify( const graphene::db::object& before ) override;
+         virtual void object_modified( const graphene::db::object& after  ) override;
 
 
          /** given an account or key, map it to the set of accounts that reference it in an active or owner authority */
@@ -189,6 +189,7 @@ namespace graphene { namespace chain {
          set<public_key_type>  before_key_members;
    };
 
+   using namespace boost::multi_index;
 
    struct by_account_asset;
    struct by_asset_balance;
@@ -198,7 +199,7 @@ namespace graphene { namespace chain {
    typedef multi_index_container<
       account_balance_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_unique< tag<by_account_asset>,
             composite_key<
                account_balance_object,
@@ -225,7 +226,7 @@ namespace graphene { namespace chain {
    /**
     * @ingroup object_index
     */
-   typedef generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
+   typedef graphene::db::generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
 
 
    struct by_name;
@@ -235,9 +236,9 @@ namespace graphene { namespace chain {
    struct key_extractor;
 
    template <>
-   struct key_extractor<by_id, account_object>
+   struct key_extractor<graphene::db::by_id, account_object>
    {
-      static object_id_type get(account_object const& ob)
+      static graphene::db::object_id_type get(account_object const& ob)
       {
          return ob.id;
       }
@@ -258,7 +259,7 @@ namespace graphene { namespace chain {
    typedef multi_index_container<
       account_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >,
          ordered_unique< tag< by_publishing_manager_and_name>,
             composite_key< account_object,
@@ -272,7 +273,7 @@ namespace graphene { namespace chain {
    /**
     * @ingroup object_index
     */
-   typedef generic_index<account_object, account_multi_index_type> account_index;
+   typedef graphene::db::generic_index<account_object, account_multi_index_type> account_index;
 
 }}
 
@@ -296,4 +297,3 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (pending_fees)
                     (pending_vested_fees)
                   )
-

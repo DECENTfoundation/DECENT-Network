@@ -92,7 +92,7 @@ namespace graphene { namespace chain {
       /// Account to transfer asset from
       account_id_type  from;
       /// Account or content to transfer asset to
-      object_id_type  to;
+      graphene::db::object_id_type  to;
       /// The amount of asset to transfer from @ref from to @ref to
       asset            amount;
 

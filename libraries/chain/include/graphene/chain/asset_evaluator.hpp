@@ -35,7 +35,7 @@ namespace graphene { namespace chain {
          typedef asset_create_operation operation_type;
 
          void_result do_evaluate( const asset_create_operation& o );
-         object_id_type do_apply( const asset_create_operation& o );
+         graphene::db::object_id_type do_apply( const asset_create_operation& o );
    };
 
    class asset_issue_evaluator : public evaluator<asset_issue_evaluator>

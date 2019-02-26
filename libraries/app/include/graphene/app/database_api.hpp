@@ -55,6 +55,7 @@
  */
 namespace graphene { namespace app {
 
+      using graphene::db::object_id_type;
       using namespace graphene::chain;
       using namespace std;
 

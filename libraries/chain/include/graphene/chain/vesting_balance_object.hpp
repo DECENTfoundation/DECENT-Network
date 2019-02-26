@@ -35,9 +35,6 @@
 
 
 namespace graphene { namespace chain {
-   using namespace graphene::db;
-
-   class vesting_balance_object;
 
    struct vesting_policy_context
    {
@@ -127,7 +124,7 @@ namespace graphene { namespace chain {
    /**
     * Vesting balance object is a balance that is locked by the blockchain for a period of time.
     */
-   class vesting_balance_object : public abstract_object<vesting_balance_object>
+   class vesting_balance_object : public graphene::db::abstract_object<vesting_balance_object>
    {
       public:
          static const uint8_t space_id = protocol_ids;
@@ -167,6 +164,9 @@ namespace graphene { namespace chain {
           */
          asset get_allowed_withdraw(const time_point_sec& now)const;
    };
+
+   using namespace boost::multi_index;
+
    /**
     * @ingroup object_index
     */
@@ -174,7 +174,7 @@ namespace graphene { namespace chain {
    typedef multi_index_container<
       vesting_balance_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_non_unique< tag<by_account>,
             member<vesting_balance_object, account_id_type, &vesting_balance_object::owner>
          >
@@ -183,7 +183,7 @@ namespace graphene { namespace chain {
    /**
     * @ingroup object_index
     */
-   typedef generic_index<vesting_balance_object, vesting_balance_multi_index_type> vesting_balance_index;
+   typedef graphene::db::generic_index<vesting_balance_object, vesting_balance_multi_index_type> vesting_balance_index;
 
 } } // graphene::chain
 

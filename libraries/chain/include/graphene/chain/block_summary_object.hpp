@@ -25,7 +25,6 @@
 #include <graphene/db/object.hpp>
 
 namespace graphene { namespace chain {
-   using namespace graphene::db;
 
    /**
     *  @brief tracks minimal information about past blocks to implement TaPOS
@@ -36,7 +35,7 @@ namespace graphene { namespace chain {
     *  so we can calculate whether the current transaction is valid and at
     *  what time it should expire.
     */
-   class block_summary_object : public abstract_object<block_summary_object>
+   class block_summary_object : public graphene::db::abstract_object<block_summary_object>
    {
       public:
          static const uint8_t space_id = implementation_ids;

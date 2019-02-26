@@ -8,7 +8,7 @@
 
 namespace graphene { namespace chain {
 
-   class transaction_detail_object : public abstract_object<transaction_detail_object>
+   class transaction_detail_object : public graphene::db::abstract_object<transaction_detail_object>
    {
    public:
       static const uint8_t space_id = implementation_ids;
@@ -36,7 +36,6 @@ namespace graphene { namespace chain {
       share_type get_transaction_fee() const;
    };
 
-   struct by_id;
    struct by_from_account;
    struct by_to_account;
    struct by_operation_type;
@@ -111,11 +110,12 @@ namespace graphene { namespace chain {
       }
    };
 
+   using namespace boost::multi_index;
 
    typedef multi_index_container<
       transaction_detail_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_non_unique< tag<by_from_account>, member<transaction_detail_object, account_id_type, &transaction_detail_object::m_from_account> >,
          ordered_non_unique< tag<by_to_account>, member<transaction_detail_object, account_id_type, &transaction_detail_object::m_to_account> >,
          ordered_non_unique< tag<by_operation_type>, member<transaction_detail_object, uint8_t, &transaction_detail_object::m_operation_type> >,
@@ -126,7 +126,8 @@ namespace graphene { namespace chain {
       >
    > transaction_detail_multi_index_type;
 
-   typedef generic_index<transaction_detail_object, transaction_detail_multi_index_type> transaction_detail_index;
+   typedef graphene::db::generic_index<transaction_detail_object, transaction_detail_multi_index_type> transaction_detail_index;
+
 } }
 
 FC_REFLECT_DERIVED( graphene::chain::transaction_detail_object, (graphene::db::object), (m_from_account)(m_to_account)(m_operation_type)(m_transaction_amount)(m_transaction_fee)(m_str_description)(m_transaction_encrypted_memo)(m_timestamp) )

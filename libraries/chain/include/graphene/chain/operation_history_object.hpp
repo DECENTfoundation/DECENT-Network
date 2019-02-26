@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
     *
     *  @note  this object is READ ONLY it can never be modified
     */
-   class operation_history_object : public abstract_object<operation_history_object>
+   class operation_history_object : public graphene::db::abstract_object<operation_history_object>
    {
       public:
          static const uint8_t space_id = protocol_ids;
@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
     *  linked list can be traversed with relatively effecient disk access because
     *  of the use of a memory mapped stack.
     */
-   class account_transaction_history_object :  public abstract_object<account_transaction_history_object>
+   class account_transaction_history_object :  public graphene::db::abstract_object<account_transaction_history_object>
    {
       public:
          static const uint8_t space_id = implementation_ids;
@@ -100,13 +100,12 @@ namespace graphene { namespace chain {
          //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
    
-struct by_id;
 struct by_seq;
 struct by_op;
 typedef multi_index_container<
    account_transaction_history_object,
    indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      graphene::db::object_id_index,
       ordered_unique< tag<by_seq>,
          composite_key< account_transaction_history_object,
             member< account_transaction_history_object, account_id_type, &account_transaction_history_object::account>,
@@ -122,13 +121,12 @@ typedef multi_index_container<
    >
 > account_transaction_history_multi_index_type;
 
-typedef generic_index<account_transaction_history_object, account_transaction_history_multi_index_type> account_transaction_history_index;
+typedef graphene::db::generic_index<account_transaction_history_object, account_transaction_history_multi_index_type> account_transaction_history_index;
 
-   
 } } // graphene::chain
 
-FC_REFLECT_DERIVED( graphene::chain::operation_history_object, (graphene::chain::object),
+FC_REFLECT_DERIVED( graphene::chain::operation_history_object, (graphene::db::object),
                     (op)(result)(block_num)(trx_in_block)(op_in_trx)(virtual_op) )
 
-FC_REFLECT_DERIVED( graphene::chain::account_transaction_history_object, (graphene::chain::object),
+FC_REFLECT_DERIVED( graphene::chain::account_transaction_history_object, (graphene::db::object),
                     (account)(operation_id)(sequence)(next) )

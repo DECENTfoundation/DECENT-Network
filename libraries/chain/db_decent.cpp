@@ -140,7 +140,7 @@ void database::disallow_automatic_renewal_of_subscription(const subscription_obj
 
 void database::set_and_reset_seeding_stats()
 {
-   const auto& idx = get_index_type<seeder_index>().indices().get<by_id>();
+   const auto& idx = get_index_type<seeder_index>().indices().get<graphene::db::by_id>();
 
    // total_delivered_keys / (total_delivered_keys + missed_delivered_keys)
    uint32_t key_delivery_ratio;
@@ -262,7 +262,7 @@ void database::decent_housekeeping()
    }
 
    const auto& sidx = get_index_type<subscription_index>().indices().get<by_renewal>();
-   const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+   const auto& aidx = get_index_type<account_index>().indices().get<graphene::db::by_id>();
 
    auto sitr = sidx.begin();
    while( sitr != sidx.end() && sitr->automatic_renewal )
@@ -396,7 +396,7 @@ real_supply database::get_real_supply()const
 {
    //walk through account_balances, vesting_balances and escrows in content and buying objects
    real_supply total;
-   const auto& abidx = get_index_type<account_balance_index>().indices().get<by_id>();
+   const auto& abidx = get_index_type<account_balance_index>().indices().get<graphene::db::by_id>();
    auto abitr = abidx.begin();
    while( abitr != abidx.end() ){
       if( abitr->asset_type == asset_id_type() )
@@ -404,28 +404,28 @@ real_supply database::get_real_supply()const
       ++abitr;
    }
 
-   const auto& vbidx = get_index_type<vesting_balance_index>().indices().get<by_id>();
+   const auto& vbidx = get_index_type<vesting_balance_index>().indices().get<graphene::db::by_id>();
    auto vbitr = vbidx.begin();
    while( vbitr != vbidx.end() ){
       total.vesting_balances += vbitr->balance.amount;
       ++vbitr;
    }
 
-   const auto& cidx = get_index_type<content_index>().indices().get<by_id>();
+   const auto& cidx = get_index_type<content_index>().indices().get<graphene::db::by_id>();
    auto citr = cidx.begin();
    while( citr != cidx.end() ){
       total.escrows += citr->publishing_fee_escrow.amount;
       ++citr;
    }
 
-   const auto& bidx = get_index_type<buying_index>().indices().get<by_id>();
+   const auto& bidx = get_index_type<buying_index>().indices().get<graphene::db::by_id>();
    auto bitr = bidx.begin();
    while( bitr != bidx.end() ){
       total.escrows += bitr->price.amount;
       ++bitr;
    }
 
-   const auto& aidx = get_index_type<asset_index>().indices().get<by_id>();
+   const auto& aidx = get_index_type<asset_index>().indices().get<graphene::db::by_id>();
    for(const auto& a: aidx){
       const auto& ad = a.dynamic_asset_data_id(*this);
       total.pools += ad.core_pool;
@@ -439,7 +439,7 @@ vector<database::votes_gained> database::get_actual_votes() const
    vector<database::votes_gained> res;
    const auto& props = get_global_properties();
    vote_tally_buffer.resize(props.next_available_vote_id);
-   const auto& aidx = get_index_type<account_index>().indices().get<by_id>();
+   const auto& aidx = get_index_type<account_index>().indices().get<graphene::db::by_id>();
    for( const auto& a : aidx ){
       const account_object& opinion_account = (a.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? a : get(a.options.voting_account);
       const auto& stats = a.statistics(*this);

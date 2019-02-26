@@ -124,9 +124,7 @@ using decent::encrypt::DInteger;
    typedef multi_index_container<
       buying_object,
          indexed_by<
-            ordered_unique< tag<by_id>,
-               member< object, object_id_type, &object::id >
-            >,
+            graphene::db::object_id_index,
             ordered_unique< tag< by_URI_consumer>,
                composite_key< buying_object,
                   member<buying_object, string, &buying_object::URI>,
@@ -187,8 +185,7 @@ using decent::encrypt::DInteger;
          >
    >buying_object_multi_index_type;
    
-   typedef generic_index< buying_object, buying_object_multi_index_type > buying_index;
-
+   typedef graphene::db::generic_index< buying_object, buying_object_multi_index_type > buying_index;
 
 }}
 

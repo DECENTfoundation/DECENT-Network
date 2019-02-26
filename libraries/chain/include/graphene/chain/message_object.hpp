@@ -63,15 +63,15 @@ namespace graphene {
       std::string text;// decrypted text
    };
 
-   class message_receiver_index : public secondary_index
+   class message_receiver_index : public graphene::db::secondary_index
    {
    public:
-      virtual void object_inserted(const object& obj) override;
-      virtual void object_removed(const object& obj) override;
-      virtual void about_to_modify(const object& before) override;
-      virtual void object_modified(const object& after) override;
+      virtual void object_inserted(const graphene::db::object& obj) override;
+      virtual void object_removed(const graphene::db::object& obj) override;
+      virtual void about_to_modify(const graphene::db::object& before) override;
+      virtual void object_modified(const graphene::db::object& after) override;
 
-      std::map< account_id_type, std::set<object_id_type> > message_to_receiver_memberships;
+      std::map< account_id_type, std::set<graphene::db::object_id_type> > message_to_receiver_memberships;
 
    protected:
       std::set<account_id_type> get_key_recipients(const message_object& a)const;
@@ -89,20 +89,21 @@ namespace graphene {
 
    };
 
+   using namespace boost::multi_index;
+
    struct by_sender;
    struct by_receiver;
    struct by_created;
-   
    typedef multi_index_container<
       message_object,
       indexed_by<
-      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      graphene::db::object_id_index,
       ordered_non_unique< tag<by_created>, member< message_object, time_point_sec, &message_object::created > >,
       ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >
       >
    > message_multi_index_type;
 
-   typedef generic_index<message_object, message_multi_index_type> message_index;
+   typedef graphene::db::generic_index<message_object, message_multi_index_type> message_index;
    }
 } // namespaces
 

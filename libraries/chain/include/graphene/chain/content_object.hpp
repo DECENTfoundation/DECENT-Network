@@ -565,14 +565,12 @@ using namespace decent::encrypt;
       }
    };
 
+   using namespace boost::multi_index;
+
    typedef multi_index_container<
       content_object,
          indexed_by<
-            ordered_unique< tag<by_id>,
-               member< object, object_id_type, &object::id >
-            >,
-
-
+            graphene::db::object_id_index,
             ordered_non_unique<tag<by_author>,
                member<content_object, account_id_type, &content_object::author>
             >,
@@ -603,10 +601,9 @@ using namespace decent::encrypt;
    
          >
    > content_object_multi_index_type;
-   
-   
-   typedef generic_index< content_object, content_object_multi_index_type > content_index;
-   
+
+   typedef graphene::db::generic_index< content_object, content_object_multi_index_type > content_index;
+
 }}
 
 FC_REFLECT_DERIVED(graphene::chain::content_object,

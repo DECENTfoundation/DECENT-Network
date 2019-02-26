@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
     * @note By default these objects are not tracked, the transaction_history_plugin must
     * be loaded for these objects to be maintained.
     */
-   class transaction_history_object : public abstract_object<transaction_history_object>
+   class transaction_history_object : public graphene::db::abstract_object<transaction_history_object>
    {
    public:
       static const uint8_t space_id = implementation_ids;
@@ -50,20 +50,19 @@ namespace graphene { namespace chain {
       uint16_t          trx_in_block = 0;
    };
 
+   using namespace boost::multi_index;
 
-   struct by_id;
    struct by_tx_id;
-
    typedef multi_index_container<transaction_history_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          hashed_non_unique< tag<by_tx_id>, BOOST_MULTI_INDEX_MEMBER(transaction_history_object, transaction_id_type, tx_id), std::hash<transaction_id_type> >
       >
    > transaction_history_multi_index_type;
 
-   typedef generic_index<transaction_history_object, transaction_history_multi_index_type> transaction_history_index;
+   typedef graphene::db::generic_index<transaction_history_object, transaction_history_multi_index_type> transaction_history_index;
 
    } } // graphene::chain
 
-FC_REFLECT_DERIVED( graphene::chain::transaction_history_object, (graphene::chain::object),
+FC_REFLECT_DERIVED( graphene::chain::transaction_history_object, (graphene::db::object),
                     (tx_id)(block_num)(trx_in_block) )

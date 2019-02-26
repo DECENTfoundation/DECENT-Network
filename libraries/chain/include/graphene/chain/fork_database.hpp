@@ -32,7 +32,6 @@
 
 
 namespace graphene { namespace chain {
-   using boost::multi_index_container;
    using namespace boost::multi_index;
 
    struct fork_item

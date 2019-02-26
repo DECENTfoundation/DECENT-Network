@@ -46,8 +46,6 @@
 #include <map>
 
 namespace graphene { namespace chain {
-   using graphene::db::abstract_object;
-   using graphene::db::object;
    class op_evaluator;
    class transaction_evaluation_state;
 
@@ -213,12 +211,12 @@ namespace graphene { namespace chain {
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
           */
-         fc::signal<void(const vector<object_id_type>&)> changed_objects;
+         fc::signal<void(const vector<graphene::db::object_id_type>&)> changed_objects;
 
          /** this signal is emitted any time an object is removed and contains a
           * pointer to the last value of every object that was removed.
           */
-         fc::signal<void(const vector<const object*>&)>  removed_objects;
+         fc::signal<void(const vector<const graphene::db::object*>&)>  removed_objects;
 
          //////////////////// db_miner_schedule.cpp ////////////////////
 
@@ -432,7 +430,7 @@ namespace graphene { namespace chain {
          void notify_changed_objects();
 
       private:
-         optional<undo_database::session>       _pending_tx_session;
+         optional<db::undo_database::session>   _pending_tx_session;
          vector< unique_ptr<op_evaluator> >     _operation_evaluators;
 
          template<class Index>

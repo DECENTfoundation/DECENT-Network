@@ -146,7 +146,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          for( auto const &element : o.co_authors )
          {
             // test whether co-autors exist
-            const auto& idx = db().get_index_type<account_index>().indices().get<by_id>();
+            const auto& idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
             auto itr = idx.find(element.first);
             FC_ASSERT (itr != idx.end() , "Account ${account} doesn't exist.", ( "account", element.first ) );
             sum_of_splits += element.second;
@@ -169,7 +169,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          }
       }
 
-      const auto& idx_asset = db().get_index_type<asset_index>().indices().get<by_id>();
+      const auto& idx_asset = db().get_index_type<asset_index>().indices().get<graphene::db::by_id>();
       for( const auto& element : o.price )
       {
          const auto& itr_asset = idx_asset.find( element.price.asset_id );

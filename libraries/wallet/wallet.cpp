@@ -469,7 +469,7 @@ public:
    }
 
    template<typename T>
-   T get_object(object_id<T::space_id, T::type_id, T> id)const
+   T get_object(graphene::db::object_id<T::space_id, T::type_id, T> id)const
    {
       auto ob = _remote_db->get_objects({id}).front();
       return ob.template as<T>();
@@ -2968,8 +2968,8 @@ signed_transaction content_cancellation(const string& author,
          FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
          const auto& receiver_id = get_account(receiver).get_id();
-         auto itr = _wallet.my_accounts.get<by_id>().find(receiver_id);
-         if (itr == _wallet.my_accounts.get<by_id>().end()) 
+         auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(receiver_id);
+         if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end()) 
             return vector<text_message>();
          
          optional<account_id_type> sender_id;
@@ -2998,8 +2998,8 @@ signed_transaction content_cancellation(const string& author,
       FC_ASSERT(!is_locked());
       const auto& mapi = _remote_api->messaging();
       const auto& sender_id = get_account(sender).get_id();
-      auto itr = _wallet.my_accounts.get<by_id>().find(sender_id);
-      if (itr == _wallet.my_accounts.get<by_id>().end())
+      auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(sender_id);
+      if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end())
          return vector<text_message>();
 
       optional<account_id_type> receiver_id;

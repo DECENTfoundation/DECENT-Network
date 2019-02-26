@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
          typedef miner_create_operation operation_type;
 
          void_result do_evaluate( const miner_create_operation& o );
-         object_id_type do_apply( const miner_create_operation& o );
+         graphene::db::object_id_type do_apply( const miner_create_operation& o );
    };
 
    class miner_update_evaluator : public evaluator<miner_update_evaluator>

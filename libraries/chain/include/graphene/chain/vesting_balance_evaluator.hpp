@@ -36,7 +36,7 @@ class vesting_balance_create_evaluator : public evaluator<vesting_balance_create
         typedef vesting_balance_create_operation operation_type;
 
         void_result do_evaluate( const vesting_balance_create_operation& op );
-        object_id_type do_apply( const vesting_balance_create_operation& op );
+        graphene::db::object_id_type do_apply( const vesting_balance_create_operation& op );
 };
 
 class vesting_balance_withdraw_evaluator : public evaluator<vesting_balance_withdraw_evaluator>

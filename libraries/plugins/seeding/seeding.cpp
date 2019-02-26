@@ -281,7 +281,7 @@ seeding_plugin_impl::generate_pors()
     */
    graphene::chain::database &db = database();
    const auto &sidx = db.get_index_type<my_seeder_index>().indices().get<by_seeder>();
-   const auto &seeding_idx = db.get_index_type<my_seeding_index>().indices().get<by_id>();
+   const auto &seeding_idx = db.get_index_type<my_seeding_index>().indices().get<graphene::db::by_id>();
    ilog("seeding plugin_impl:  generate_pors() start");
    auto& pm = decent::package::PackageManager::instance();
 
@@ -593,8 +593,8 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
 {try{
    ilog("seeding plugin:  plugin_initialize() start");
 
-   database().add_index< primary_index < my_seeding_index > >();
-   database().add_index< primary_index < my_seeder_index > >();
+   database().add_index< graphene::db::primary_index < my_seeding_index > >();
+   database().add_index< graphene::db::primary_index < my_seeder_index > >();
 
    fc::optional<fc::ecc::private_key> private_key;
    seeding_plugin_startup_options seeding_options;
@@ -698,7 +698,7 @@ void seeding_plugin::plugin_pre_startup( const seeding_plugin_startup_options& s
    try {
       {//remove all existing entries and start over
          const auto &sidx = database().get_index_type<my_seeder_index>();
-         sidx.inspect_all_objects([ & ](const object &o) {
+         sidx.inspect_all_objects([ & ](const graphene::db::object &o) {
               database().remove(o);
          });
       }

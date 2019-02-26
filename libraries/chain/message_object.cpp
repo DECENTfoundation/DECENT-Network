@@ -39,7 +39,7 @@ std::string message_object_receivers_data::get_message(const private_key_type& p
    }
 }
 
-void message_receiver_index::object_inserted(const object &obj) {
+void message_receiver_index::object_inserted(const graphene::db::object &obj) {
    assert(dynamic_cast<const message_object *>(&obj)); // for debug only
    const message_object &a = static_cast<const message_object &>(obj);
 
@@ -50,7 +50,7 @@ void message_receiver_index::object_inserted(const object &obj) {
    }
 }
 
-void message_receiver_index::object_removed(const object &obj) {
+void message_receiver_index::object_removed(const graphene::db::object &obj) {
    assert(dynamic_cast<const message_object *>(&obj)); // for debug only
    const message_object &a = static_cast<const message_object &>(obj);
 
@@ -61,10 +61,10 @@ void message_receiver_index::object_removed(const object &obj) {
    }
 }
 
-void message_receiver_index::about_to_modify(const object &before) {
+void message_receiver_index::about_to_modify(const graphene::db::object &before) {
 }
 
-void message_receiver_index::object_modified(const object &after) {
+void message_receiver_index::object_modified(const graphene::db::object &after) {
 }
 
 set<account_id_type> message_receiver_index::get_key_recipients(const message_object &a) const {

@@ -160,36 +160,36 @@ void database::initialize_indexes()
    _undo_db.set_max_size( GRAPHENE_MIN_UNDO_HISTORY );
 
    //Protocol object indexes
-   add_index< primary_index<asset_index> >();
+   add_index< graphene::db::primary_index<asset_index> >();
 
-   auto acnt_index = add_index< primary_index<account_index> >();
+   auto acnt_index = add_index< graphene::db::primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
 
-   add_index< primary_index<miner_index> >();
+   add_index< graphene::db::primary_index<miner_index> >();
 
-   auto prop_index = add_index< primary_index<proposal_index > >();
+   auto prop_index = add_index< graphene::db::primary_index<proposal_index > >();
    prop_index->add_secondary_index<required_approval_index>();
 
-   add_index< primary_index<withdraw_permission_index > >();
-   add_index< primary_index<vesting_balance_index> >();
+   add_index< graphene::db::primary_index<withdraw_permission_index > >();
+   add_index< graphene::db::primary_index<vesting_balance_index> >();
 
    //Implementation object indexes
-   add_index< primary_index<transaction_index                             > >();
-   add_index< primary_index<account_balance_index                         > >();
-   add_index< primary_index<simple_index<global_property_object          >> >();
-   add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
-   add_index< primary_index<simple_index<account_statistics_object       >> >();
-   add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
-   add_index< primary_index<flat_index<  block_summary_object            >> >();
-   add_index< primary_index<simple_index<chain_property_object          > > >();
-   add_index< primary_index<simple_index<miner_schedule_object        > > >();
-   add_index< primary_index< seeder_index                                 > >();
-   add_index< primary_index< content_index                                > >();
-   add_index< primary_index< buying_index                                 > >();
-   add_index< primary_index< subscription_index                                 > >();
-   add_index< primary_index< transaction_detail_index                     > >();
-   add_index< primary_index< seeding_statistics_index                     > >();
-   add_index< primary_index< budget_record_index                          > >();
+   add_index< graphene::db::primary_index<transaction_index> >();
+   add_index< graphene::db::primary_index<account_balance_index> >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<global_property_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<dynamic_global_property_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<account_statistics_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<asset_dynamic_data_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::flat_index<block_summary_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<chain_property_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<miner_schedule_object> > >();
+   add_index< graphene::db::primary_index< seeder_index> >();
+   add_index< graphene::db::primary_index< content_index> >();
+   add_index< graphene::db::primary_index< buying_index> >();
+   add_index< graphene::db::primary_index< subscription_index> >();
+   add_index< graphene::db::primary_index< transaction_detail_index> >();
+   add_index< graphene::db::primary_index< seeding_statistics_index> >();
+   add_index< graphene::db::primary_index< budget_record_index> >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -215,7 +215,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    transaction_evaluation_state genesis_eval_state(this);
 
-   flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
+   graphene::db::flat_index<block_summary_object>& bsi = get_mutable_index_type< graphene::db::flat_index<block_summary_object> >();
    bsi.resize(0xffff+1);
 
    // Create blockchain accounts
@@ -383,7 +383,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             cop.active = authority(1, account.active_key, 1);
          cop.options.memo_key = account.active_key;
       }
-      account_id_type account_id(apply_operation(genesis_eval_state, cop).get<object_id_type>());
+      account_id_type account_id(apply_operation(genesis_eval_state, cop).get<graphene::db::object_id_type>());
    }
 
 

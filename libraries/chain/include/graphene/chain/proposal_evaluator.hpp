@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
          typedef proposal_create_operation operation_type;
 
          void_result do_evaluate( const proposal_create_operation& o );
-         object_id_type do_apply( const proposal_create_operation& o );
+         graphene::db::object_id_type do_apply( const proposal_create_operation& o );
 
          transaction _proposed_trx;
    };
@@ -68,5 +68,3 @@ namespace graphene { namespace chain {
    };
 
 } } // graphene::chain
-
-

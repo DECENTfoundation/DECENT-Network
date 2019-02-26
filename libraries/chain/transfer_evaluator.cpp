@@ -86,7 +86,7 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
       std::string to_account_name;
       if( op.to.is<content_id_type>() )
       {
-         auto& content_idx = d.get_index_type<content_index>().indices().get<by_id>();
+         auto& content_idx = d.get_index_type<content_index>().indices().get<graphene::db::by_id>();
          const auto& content_itr = content_idx.find( op.to );
          FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
          to_account_name = content_itr->author(d).name;
@@ -123,7 +123,7 @@ void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
       }
       else
       {
-         auto& content_idx = d.get_index_type<content_index>().indices().get<by_id>();
+         auto& content_idx = d.get_index_type<content_index>().indices().get<graphene::db::by_id>();
          const auto& content_itr = content_idx.find( o.to );
          asset amount = o.amount;
 

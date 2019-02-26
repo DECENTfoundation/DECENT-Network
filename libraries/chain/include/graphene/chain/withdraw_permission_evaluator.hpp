@@ -33,7 +33,7 @@ public:
    typedef withdraw_permission_create_operation operation_type;
 
    void_result do_evaluate( const operation_type& op );
-   object_id_type do_apply( const operation_type& op );
+   graphene::db::object_id_type do_apply( const operation_type& op );
 };
 
 class withdraw_permission_claim_evaluator : public evaluator<withdraw_permission_claim_evaluator>

@@ -37,9 +37,7 @@ namespace graphene { namespace chain {
    typedef multi_index_container<
       subscription_object,
          indexed_by<
-            ordered_unique< tag< by_id>,
-               member< object, object_id_type, &object::id >
-            >,
+            graphene::db::object_id_index,
             ordered_non_unique< tag< by_from>,
                member<subscription_object, account_id_type, &subscription_object::from>
             >,
@@ -87,7 +85,7 @@ namespace graphene { namespace chain {
          >
    >subscription_object_multi_index_type;
 
-typedef generic_index< subscription_object, subscription_object_multi_index_type > subscription_index;
+typedef graphene::db::generic_index< subscription_object, subscription_object_multi_index_type > subscription_index;
 
 } } // graphene::chain
 

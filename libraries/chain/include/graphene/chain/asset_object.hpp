@@ -31,7 +31,6 @@
 namespace graphene { namespace chain {
    class account_object;
    class database;
-   using namespace graphene::db;
 
    /**
     *  @brief tracks the asset information that changes frequently
@@ -45,7 +44,7 @@ namespace graphene { namespace chain {
     *  This object exists as an implementation detail and its ID should never be referenced by
     *  a blockchain operation.
     */
-   class asset_dynamic_data_object : public abstract_object<asset_dynamic_data_object>
+   class asset_dynamic_data_object : public graphene::db::abstract_object<asset_dynamic_data_object>
    {
       public:
          static const uint8_t space_id = implementation_ids;
@@ -252,22 +251,25 @@ namespace graphene { namespace chain {
          { return options.max_supply - dynamic_data(db).current_supply; }
    };
 
+   using namespace boost::multi_index;
+
    struct by_symbol;
-      struct by_type;
+   struct by_type;
    typedef multi_index_container<
       asset_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         graphene::db::object_id_index,
          ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >,
             ordered_unique< tag<by_type>,
                composite_key< asset_object,
                   const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,
-                  member< object, object_id_type, &object::id >
+                  graphene::db::object_id_member
                >
             >
         >
    > asset_object_multi_index_type;
-   typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
+
+   typedef graphene::db::generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
 } } // graphene::chain
 

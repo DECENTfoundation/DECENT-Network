@@ -44,7 +44,7 @@ void_result withdraw_permission_create_evaluator::do_evaluate(const operation_ty
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type withdraw_permission_create_evaluator::do_apply(const operation_type& op)
+graphene::db::object_id_type withdraw_permission_create_evaluator::do_apply(const operation_type& op)
 { try {
    return db().create<withdraw_permission_object>([&op](withdraw_permission_object& p) {
       p.withdraw_from_account = op.withdraw_from_account;

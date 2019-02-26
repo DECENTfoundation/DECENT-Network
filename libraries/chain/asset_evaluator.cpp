@@ -74,7 +74,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type asset_create_evaluator::do_apply( const asset_create_operation& op )
+graphene::db::object_id_type asset_create_evaluator::do_apply( const asset_create_operation& op )
 { try {
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
