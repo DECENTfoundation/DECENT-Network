@@ -1,11 +1,10 @@
-find_package( Qt5Widgets QUIET )
-if( Qt5Widgets_FOUND )
-    message(STATUS "Found Qt version: ${Qt5Widgets_VERSION}")
-else()
-    message(STATUS "Qt5 was not found - GUI wallet won't be compiled")
+option(BUILD_GUI "Build GUI wallet application" ON)
+if( NOT BUILD_GUI )
+    message(STATUS "GUI wallet won't be compiled")
     return()
 endif()
 
+find_package(Qt5Widgets REQUIRED)
 find_package(Qt5LinguistTools REQUIRED)
 
 set(UPDATE_MANAGER "" CACHE PATH "Path to update manager")

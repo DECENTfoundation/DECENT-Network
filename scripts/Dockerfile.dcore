@@ -13,10 +13,10 @@ ARG GIT_REV=master
 RUN git clone --single-branch --branch $GIT_REV https://github.com/DECENTfoundation/DECENT-Network.git && \
     cd DECENT-Network && git submodule update --init --recursive && \
     mkdir build && cd build && \
-    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. && \
-    make -j$(nproc) decentd cli_wallet && \
-    cp programs/decentd/decentd programs/cli_wallet/cli_wallet /usr/bin && \
-    cd ../.. && rm -rf DECENT-Network && mkdir $DCORE_HOME/.decent
+    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_GUI=0 .. && \
+    make -j$(nproc) install && \
+    cd ../.. && rm -rf DECENT-Network && \
+    mkdir $DCORE_HOME/.decent
 
 EXPOSE 40000
 EXPOSE 8090
