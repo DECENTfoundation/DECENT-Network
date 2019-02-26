@@ -10,37 +10,43 @@ Building Decent
 
 For Ubuntu 18.04 LTS, execute in console:
 
-     sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev nlohmann-json-dev
+    sudo apt-get update
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev libboost-all-dev
+    . /etc/os-release
+    export ARCH=`dpkg --print-architecture`
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
+    sudo dpkg -i /tmp/libpbc*
+    mkdir ~/dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
-     sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev
+    sudo apt-get update
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev
+    . /etc/os-release
+    export ARCH=`dpkg --print-architecture`
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
+    sudo dpkg -i /tmp/libpbc*
+    mkdir ~/dev
 
 For Debian 9, execute in console:
 
-     sudo apt-get update
-     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libboost-all-dev libcurl4-openssl-dev zlib1g-dev
+    sudo apt-get update
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
+    . /etc/os-release
+    export ARCH=`dpkg --print-architecture`
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
+    sudo dpkg -i /tmp/libpbc*
+    mkdir ~/dev
 
 For Fedora 28 or later, execute in console:
 
     sudo dnf clean metadata
     sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel json-devel boost-devel boost-static
-
-And the last step is the same regardless on distribution, execute in console:
-
+    export FEDORA=`rpm -E "%{fedora}"`
+    export ARCH=`rpm -E "%{_arch}"`
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-0.5.14-1.fc${FEDORA}.${ARCH}.rpm https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-devel-0.5.14-1.fc${FEDORA}.${ARCH}.rpm
+    sudo rpm -i /tmp/libpbc*
     mkdir ~/dev
-    cd ~/dev
-    wget https://github.com/DECENTfoundation/pbc/archive/0.5.14.tar.gz
-    unzip 0.5.14.zip
-    cd pbc-0.5.14
-    ./setup
-    ./configure --prefix=/usr
-    make
-    sudo make install
-    cd ..
-    rm -rf pbc-0.5.14 0.5.14.zip
 
 > Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
 
@@ -155,8 +161,7 @@ You can use CMake generator to create a Visual Studio 2017 project files and per
     set BOOST=C:\Projects\boost_1_68_0
     set QT_CMAKE=C:\Projects\Qt\5.12.1\msvc2017_64\lib\cmake
     set VCPKG=C:\Projects\vcpkg
-    set VCPKG_TARGET_TRIPLET=x64-windows-static
-    cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG%\scripts\buildsystems\vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" .
+    cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG%\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" .
 
 You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=C:\Projects\DECENT-Network-prefix` to the command line.
 
