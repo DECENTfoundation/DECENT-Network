@@ -9,7 +9,8 @@ RUN dnf install -y cryptopp less procps wget && dnf clean all
 ARG PBC_VERSION=0.5.14
 RUN export FEDORA=`rpm -E "%{fedora}"` && export ARCH=`rpm -E "%{_arch}"` && \
     wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm && \
-    rpm -i /tmp/libpbc-$PBC_VERSION-* && rm /tmp/libpbc-$PBC_VERSION-*
+    rpm -i /tmp/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm && \
+    rm /tmp/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm
 
 # prepare directories
 ENV DCORE_HOME=/root

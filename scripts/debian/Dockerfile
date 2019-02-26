@@ -16,10 +16,10 @@ RUN . /etc/os-release && apt-get update && \
 
 # PBC
 ARG PBC_VERSION=0.5.14
-RUN . /etc/os-release && \
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_amd64.deb && \
-    dpkg -i /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_amd64.deb && \
-    rm /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_amd64.deb
+RUN . /etc/os-release && export ARCH=`dpkg --print-architecture` && \
+    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/$PBC_VERSION/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_${ARCH}.deb && \
+    dpkg -i /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_${ARCH}.deb && \
+    rm /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_${ARCH}.deb
 
 # prepare directories
 ENV DCORE_HOME=/root
@@ -29,10 +29,10 @@ WORKDIR $DCORE_HOME
 
 # DCore
 ARG DCORE_VERSION
-COPY dcore_${DCORE_VERSION}-debian*_amd64.deb /tmp/
-RUN . /etc/os-release && \
-    dpkg -i /tmp/dcore_$DCORE_VERSION-${ID}${VERSION_ID}_amd64.deb && \
-    rm /tmp/dcore_${DCORE_VERSION}-debian*_amd64.deb && \
+COPY dcore_${DCORE_VERSION}-*.deb /tmp/
+RUN . /etc/os-release && export ARCH=`dpkg --print-architecture` && \
+    dpkg -i /tmp/dcore_$DCORE_VERSION-${ID}${VERSION_ID}_${ARCH}.deb && \
+    rm /tmp/dcore_${DCORE_VERSION}-*.deb && \
     mkdir $DCORE_HOME/.decent
 
 EXPOSE 40000 8090
