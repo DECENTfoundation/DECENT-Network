@@ -1,21 +1,36 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #include <decent/json.hpp>
 
-namespace fc {
+namespace decent {
 
-   void to_variant( const nlohmann::json& o, variant& v )
+   std::string json_to_string(const json_t &doc)
    {
-      to_variant( o.dump(), v );
+      return doc.dump();
    }
 
-   void from_variant( const variant& v, nlohmann::json& o )
+   json_t string_to_json(const std::string &doc)
    {
-      string s;
+      return json_t::parse(doc);
+   }
+
+}
+
+namespace fc {
+
+   void to_variant( const decent::json_t& o, variant& v )
+   {
+      to_variant( decent::json_to_string(o), v );
+   }
+
+   void from_variant( const variant& v, decent::json_t& o )
+   {
+      std::string s;
       from_variant( v, s );
+
       try {
-         o = nlohmann::json::parse( s );
+         o = decent::string_to_json( s );
       }
-      catch(const nlohmann::json::parse_error &e) {
+      catch(const decent::json_t::parse_error &e) {
          FC_THROW_EXCEPTION(parse_error_exception, e.what());
       }
    }

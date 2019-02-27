@@ -3,45 +3,48 @@
 
 #include <nlohmann/json.hpp>
 
-#include <fc/variant.hpp>
-#include <fc/exception/exception.hpp>
-#include <fc/io/datastream.hpp>
+#include <fc/io/raw.hpp>
 
-namespace fc {
+namespace decent {
 
-   void to_variant( const nlohmann::json& o, variant& v );
-   void from_variant( const variant& v, nlohmann::json& o );
+   typedef nlohmann::json json_t;
 
-   template<typename ST>
-   datastream<ST>& operator<<(datastream<ST>& ds, const nlohmann::json& d) {
-      string s = d.dump();
-      string::size_type len = s.size();
-      ds.write( (const char*)&len, sizeof(len) );
-      if( len )
-         ds.write( s.data(), len );
-
-      return ds;
-   }
-
-   template<typename ST>
-   datastream<ST>& operator>>(datastream<ST>& ds, nlohmann::json& d) {
-      string::size_type len = 0;
-      ds.read( (char*)&len, sizeof(len) );
-      if( len ) {
-         std::unique_ptr<string::value_type> s( new string::value_type[len] );
-         ds.read( s.get(), len );
-
-         try {
-            d = nlohmann::json::parse( s.get() );
-         }
-         catch(const nlohmann::json::parse_error &e) {
-            FC_THROW_EXCEPTION(parse_error_exception, e.what());
-         }
-      }
-
-      return ds;
-   }
+   std::string json_to_string(const json_t &doc);
+   json_t string_to_json(const std::string &doc);
 
 }
 
-FC_REFLECT_EMPTY( nlohmann::json )
+FC_REFLECT_TYPENAME( decent::json_t )
+
+namespace fc {
+
+   void to_variant( const decent::json_t& o, variant& v );
+   void from_variant( const variant& v, decent::json_t& o );
+
+   template<> struct reflector<decent::json_t> {
+      typedef decent::json_t type;
+      typedef fc::true_type is_defined;
+      typedef fc::false_type is_enum;
+      enum member_count_enum {
+         local_member_count = 1,
+         total_member_count = 1
+      };
+
+      template<typename S, typename C>
+      static void visit(const fc::raw::detail::pack_object_visitor<S, C>& v) {
+         std::function<std::string(const decent::json_t&)> f = &decent::json_to_string;
+         v.TEMPLATE operator()("doc", f);
+      }
+
+      template<typename S, typename C>
+      static void visit(const fc::raw::detail::unpack_object_visitor<S, C>& v) {
+         try {
+            std::function<decent::json_t(const std::string&)> f = &decent::string_to_json;
+            v.TEMPLATE operator()("doc", f);
+         }
+         catch(const decent::json_t::parse_error& e) {
+            FC_THROW_EXCEPTION(parse_error_exception, e.what());
+         }
+      }
+   };
+}
