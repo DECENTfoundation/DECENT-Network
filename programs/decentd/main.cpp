@@ -152,7 +152,7 @@ int start_as_daemon()
 }
 #else
 
-int start_as_daemon()
+int start_as_daemon(char* cmd_line_params)
 {
    //NOTE: this OS is not supported yet...
    return -1;
@@ -229,8 +229,24 @@ int main(int argc, char** argv) {
       bool run_as_daemon = options.count("daemon");
       fc::path logs_dir, data_dir, config_filename;
       auto& path_finder = utilities::decent_path_finder::instance();
+
+	  run_as_daemon = true;
+	  if (run_as_daemon) {
+		  std::string cmd_line_str;
+		
+	  }
+
       if( run_as_daemon ) {
+#ifdef _MSC_VER 
+		  std::string cmd_line_str;
+		 for (int i = 1; i < argc; i++) {
+			cmd_line_str += " ";
+			cmd_line_str += argv[i];
+		 }
+		 int ret = start_as_daemon(cmd_line_str.c_str());
+#else
          int ret = start_as_daemon();
+#endif
          if (ret < 0) {
             std::cerr << "Error running as daemon.\n";
             return 1;
