@@ -282,6 +282,7 @@ namespace graphene { namespace wallet {
  * @defgroup WalletAPI_General General
  * @defgroup WalletAPI_Account Account
  * @defgroup WalletAPI_Asset Asset
+ * @defgroup WalletAPI_NonFungibleToken Non Fungible Token
  * @defgroup WalletAPI_Subscription Subscription
  * @defgroup WalletAPI_Content Content
  * @defgroup WalletAPI_Messaging Messaging
@@ -313,6 +314,143 @@ namespace graphene { namespace wallet {
 #include "messaging.hpp"
 #include "monitoring.hpp"
 
+         ////////////////////////
+         // Non Fungible Token //
+         ////////////////////////
+
+         /**
+          * @brief Lists all non fungible tokens registered on the blockchain.
+          * To list all non fungible tokens, pass the empty string \c "" for the \c lowerbound to start
+          * at the beginning of the list, and iterate as necessary.
+          * @param lowerbound the symbol of the first non fungible token to include in the list
+          * @param limit the maximum number of non fungible tokens to return (max: 100)
+          * @return the list of non fungible token objects, ordered by symbol
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_object> list_non_fungible_tokens(const string& lowerbound, uint32_t limit) const;
+
+         /**
+          * @brief Returns information about the given non fungible token.
+          * @param symbol the name or id of the non fungible token symbol in question
+          * @return the information about the non fungible token stored in the block chain
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         non_fungible_token_object get_non_fungible_token(const string& symbol) const;
+
+         /**
+          * @brief Creates a new non fungible token.
+          * @param issuer the name or id of the account who will pay the fee and become the issuer of the new non fungible token
+          * @param symbol the ticker symbol of the new non fungible token
+          * @param description non fungible token description (max: 1000)
+          * @param definitions non fungible token data definitions
+          * @param max_supply the maximum supply of this non fungible token which may exist at any given time or zero for unlimited
+          * @param fixed_max_supply true to deny future modifications of 'max_supply' otherwise false
+          * @param transferable true to allow token transfer to other account otherwise false
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @return the signed transaction creating the new non fungible token
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction create_non_fungible_token(const string& issuer,
+                                                      const string& symbol,
+                                                      const string& description,
+                                                      const non_fungible_token_data_definitions& definitions,
+                                                      uint32_t max_supply,
+                                                      bool fixed_max_supply,
+                                                      bool transferable,
+                                                      bool broadcast = false);
+
+         /**
+          * @brief Updates the new non fungible token.
+          * @note Maximum supply will be changed only if fixed_max_supply is not set.
+          * @param issuer the name or id of the account who will pay the fee
+          * @param symbol the ticker symbol of the non fungible token to update
+          * @param description non fungible token description (max: 1000)
+          * @param max_supply the maximum supply of this non fungible token which may exist at any given time or zero for unlimited
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @return the signed transaction creating the new non fungible token
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction update_non_fungible_token(const string& issuer,
+                                                      const string& symbol,
+                                                      const string& description,
+                                                      uint32_t max_supply,
+                                                      bool broadcast = false);
+
+         /**
+          * @brief Issue new instance of non fungible token.
+          * @param to_account the name or id of the account to receive the new instance
+          * @param symbol the ticker symbol of the non fungible token to issue
+          * @param data non fungible token instance data
+          * @param memo a memo to include in the transaction, readable by the recipient
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @return the signed transaction issuing the new instance
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction issue_non_fungible_token(const string& to_account,
+                                                     const string& symbol,
+                                                     const fc::variants& data,
+                                                     const string& memo,
+                                                     bool broadcast = false);
+
+         /**
+          * @brief Get non fungible token instances by registered token id.
+          * @param symbol the ticker symbol of the non fungible token in question
+          * @return the non fungible token data objects found
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_data_object> list_non_fungible_token_data(const string& symbol) const;
+
+         /**
+          * @brief Get account's balances in various non fungible tokens.
+          * @param account the name or id of the account
+          * @param symbols set of symbols or non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
+          * @return the list of non fungible token data objects
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_data_object> get_non_fungible_token_balances(const string& account,
+                                                                                const set<string>& symbols) const;
+
+         /**
+          * @brief Get non fungible token data object transfer history.
+          * @param nft_data_id the non fungible token data object id to search history for
+          * @return a list of transaction detail objects
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id) const;
+
+         /**
+          * @brief Transfer ownership of token instance.
+          * @param to_account the name or id of the account to receive the token instance
+          * @param nft_data_id the token instance id to transfer
+          * @param memo a memo to include in the transaction, readable by the recipient
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @return the signed transaction transfering the token instance
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction transfer_non_fungible_token_data(const string& to_account,
+                                                             const string& nft_data_id,
+                                                             const string& memo,
+                                                             bool broadcast = false);
+
+         /**
+          * @brief Burn (destroy) the token instance.
+          * @param nft_data_id the token instance id to destroy
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction burn_non_fungible_token_data(const string& nft_data_id, bool broadcast = false);
+
+         /**
+          * @brief Update data of token instance.
+          * @param nft_data_id the token instance id to update
+          * @param data name to value pairs to be updated
+          * @param broadcast \c true to broadcast the transaction on the network
+          * @return the signed transaction updating the token instance
+          * @ingroup WalletAPI_NonFungibleToken
+          */
+         signed_transaction update_non_fungible_token_data(const string& nft_data_id,
+                                                           const std::unordered_map<string, fc::variant>& data,
+                                                           bool broadcast = false);
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
 
@@ -465,6 +603,19 @@ FC_API( graphene::wallet::wallet_api,
         (publish_asset_feed)
         (get_feeds_by_miner)
         (get_real_supply)
+
+        //Non fungible token
+        (list_non_fungible_tokens)
+        (get_non_fungible_token)
+        (create_non_fungible_token)
+        (update_non_fungible_token)
+        (issue_non_fungible_token)
+        (list_non_fungible_token_data)
+        (get_non_fungible_token_balances)
+        (search_non_fungible_token_history)
+        (transfer_non_fungible_token_data)
+        (burn_non_fungible_token_data)
+        (update_non_fungible_token_data)
 
         //Transaction builder
         (begin_builder_transaction)

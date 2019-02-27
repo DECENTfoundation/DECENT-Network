@@ -5,7 +5,7 @@ add_library( graphene_miner
              ${HEADERS}
            )
 
-target_link_libraries( graphene_miner PRIVATE graphene_db graphene_chain graphene_net graphene_app graphene_time graphene_utilities decent_encrypt )
+target_link_libraries( graphene_miner PRIVATE graphene_db graphene_chain graphene_net graphene_app graphene_time decent_encrypt )
 target_include_directories( graphene_miner
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

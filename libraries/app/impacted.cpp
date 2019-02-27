@@ -51,6 +51,11 @@ struct get_impacted_account_visitor
       //NOTE: transfer to content is handled in account_history_plugin
    }
 
+   void operator()( const non_fungible_token_transfer_operation& op )
+   {
+      _impacted.insert( op.to );
+   }
+
    void operator()( const account_create_operation& op )
    {
       _impacted.insert( op.registrar );
@@ -68,6 +73,9 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const asset_create_operation& op ) {}  //uses fee_payer()
+   void operator()( const non_fungible_token_create_operation& op ) {}
+   void operator()( const non_fungible_token_update_operation& op ) {}
+   void operator()( const non_fungible_token_data_operation& op ) {}
    void operator()( const update_monitored_asset_operation& op ) {}
    void operator()( const update_user_issued_asset_operation& op )
    {
@@ -76,6 +84,7 @@ struct get_impacted_account_visitor
    }
    void operator()( const update_user_issued_asset_advanced_operation& op ) {}
    void operator()( const asset_issue_operation& op ) { _impacted.insert( op.issuer ); _impacted.insert( op.issue_to_account ); }
+   void operator()( const non_fungible_token_issue_operation& op ) { _impacted.insert( op.issuer ); _impacted.insert( op.to ); }
    void operator()( const asset_fund_pools_operation& op ) { _impacted.insert( op.from_account ); }
    void operator()( const asset_reserve_operation& op ) { _impacted.insert( op.payer ); }
    void operator()( const asset_claim_fees_operation& op ) { _impacted.insert( op.issuer ); }

@@ -306,6 +306,36 @@ struct get_balance_history_visitor
          _fee = op.fee;
    }
 
+   void operator()( const non_fungible_token_create_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const non_fungible_token_update_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const non_fungible_token_issue_operation& op )
+   {
+      if (op.fee_payer() == _account)
+         _fee = op.fee;
+   }
+
+   void operator()( const non_fungible_token_transfer_operation& op )
+   {
+       if (op.fee_payer() == _account)
+           _fee = op.fee;
+   }
+
+   void operator()( const non_fungible_token_data_operation& op )
+   {
+       if (op.fee_payer() == _account)
+           _fee = op.fee;
+   }
+
    void operator()( const update_monitored_asset_operation& op ) {} // 0 fee
    void operator()( const update_user_issued_asset_operation& op ) {} // 0 fee
 

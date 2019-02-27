@@ -41,6 +41,7 @@
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/miner_schedule_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/non_fungible_token_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -53,6 +54,7 @@
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/miner_evaluator.hpp>
 #include <graphene/chain/subscription_evaluator.hpp>
+#include <graphene/chain/non_fungible_token_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -103,6 +105,8 @@ const uint8_t withdraw_permission_object::type_id;
 const uint8_t miner_object::space_id;
 const uint8_t miner_object::type_id;
 
+const uint8_t non_fungible_token_object::space_id;
+const uint8_t non_fungible_token_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -152,6 +156,11 @@ void database::initialize_evaluators()
    register_evaluator<set_publishing_manager_evaluator>();
    register_evaluator<set_publishing_right_evaluator>();
    register_evaluator<update_user_issued_asset_advanced_evaluator>();
+   register_evaluator<non_fungible_token_create_evaluator>();
+   register_evaluator<non_fungible_token_update_evaluator>();
+   register_evaluator<non_fungible_token_issue_evaluator>();
+   register_evaluator<non_fungible_token_transfer_evaluator>();
+   register_evaluator<non_fungible_token_data_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -161,6 +170,7 @@ void database::initialize_indexes()
 
    //Protocol object indexes
    add_index< graphene::db::primary_index<asset_index> >();
+   add_index< graphene::db::primary_index<non_fungible_token_index> >();
 
    auto acnt_index = add_index< graphene::db::primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
@@ -190,6 +200,7 @@ void database::initialize_indexes()
    add_index< graphene::db::primary_index< transaction_detail_index> >();
    add_index< graphene::db::primary_index< seeding_statistics_index> >();
    add_index< graphene::db::primary_index< budget_record_index> >();
+   add_index< graphene::db::primary_index< non_fungible_token_data_index> >();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

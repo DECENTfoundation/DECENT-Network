@@ -128,6 +128,18 @@ namespace graphene { namespace app {
       share_type get_asset_per_block_by_block_num(uint32_t block_num)const;
       asset price_to_dct( asset price )const;
 
+      // Non Fungible Tokens
+      uint64_t get_non_fungible_token_count()const;
+      vector<optional<non_fungible_token_object>> get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const;
+      vector<non_fungible_token_object> list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const;
+      vector<optional<non_fungible_token_object>> lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const;
+      uint64_t get_non_fungible_token_data_count()const;
+      vector<optional<non_fungible_token_data_object>> get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const;
+      vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
+      void_t burn_non_fungible_token_data(non_fungible_token_data_id_type nft_data_id)const;
+      vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id, const set<non_fungible_token_id_type>& ids)const;
+      vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const;
+
       // Miners
       vector<optional<miner_object>> get_miners(const vector<miner_id_type>& miner_ids)const;
       fc::optional<miner_object> get_miner_by_account(account_id_type account)const;
@@ -913,6 +925,10 @@ namespace graphene { namespace app {
          search_account_history_template<true, by_transaction_fee>(_db, account, limit, id, result);
       else if (order == "-fee")
          search_account_history_template<false, by_transaction_fee>(_db, account, limit, id, result);
+      else if (order == "+nft")
+         search_account_history_template<true, by_nft>(_db, account, limit, id, result);
+      else if (order == "-nft")
+         search_account_history_template<false, by_nft>(_db, account, limit, id, result);
       else if (order == "+description")
          search_account_history_template<true, by_description>(_db, account, limit, id, result);
       else if (order == "-description")
@@ -1116,7 +1132,178 @@ namespace graphene { namespace app {
    {
       return _db.price_to_dct( price );
    }
-   
+
+   //////////////////////////////////////////////////////////////////////
+   //                                                                  //
+   // Non Fungible Tokens                                              //
+   //                                                                  //
+   //////////////////////////////////////////////////////////////////////
+
+   uint64_t database_api::get_non_fungible_token_count()const
+   {
+      return my->get_non_fungible_token_count();
+   }
+
+   uint64_t database_api_impl::get_non_fungible_token_count()const
+   {
+      return _db.get_index_type<non_fungible_token_index>().indices().size();
+   }
+
+   vector<optional<non_fungible_token_object>> database_api::get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const
+   {
+      return my->get_non_fungible_tokens(nft_ids);
+   }
+
+   vector<optional<non_fungible_token_object>> database_api_impl::get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const
+   {
+      vector<optional<non_fungible_token_object>> result;
+      result.reserve(nft_ids.size());
+      std::transform(nft_ids.begin(), nft_ids.end(), std::back_inserter(result),
+                     [this](non_fungible_token_id_type id) -> optional<non_fungible_token_object> {
+                        if(auto o = _db.find(id))
+                        {
+                           subscribe_to_item( id );
+                           return *o;
+                        }
+                        return {};
+                     });
+      return result;
+   }
+
+   vector<non_fungible_token_object> database_api::list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const
+   {
+      return my->list_non_fungible_tokens(lower_bound_symbol, limit);
+   }
+
+   vector<non_fungible_token_object> database_api_impl::list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const
+   {
+      FC_ASSERT( limit <= 100 );
+      const auto& nfts_by_symbol = _db.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
+      vector<non_fungible_token_object> result;
+      result.reserve(limit);
+
+      auto itr = nfts_by_symbol.lower_bound(lower_bound_symbol);
+      if( lower_bound_symbol == "" )
+         itr = nfts_by_symbol.begin();
+
+      while(limit-- && itr != nfts_by_symbol.end())
+         result.emplace_back(*itr++);
+
+      return result;
+   }
+
+   vector<optional<non_fungible_token_object>> database_api::lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const
+   {
+      return my->lookup_non_fungible_token_symbols(symbols_or_ids);
+   }
+
+   vector<optional<non_fungible_token_object>> database_api_impl::lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const
+   {
+      const auto& nfts_by_symbol = _db.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
+
+      vector<optional<non_fungible_token_object> > result;
+      result.reserve(symbols_or_ids.size());
+
+      std::transform(symbols_or_ids.begin(), symbols_or_ids.end(), std::back_inserter(result),
+                     [this, &nfts_by_symbol](const string& symbol_or_id) -> optional<non_fungible_token_object> {
+                        if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
+                        {
+                           auto ptr = _db.find(variant(symbol_or_id).as<non_fungible_token_id_type>());
+                           return ptr == nullptr? optional<non_fungible_token_object>() : *ptr;
+                        }
+                        auto itr = nfts_by_symbol.find(symbol_or_id);
+                        return itr == nfts_by_symbol.end()? optional<non_fungible_token_object>() : *itr;
+                     });
+      return result;
+   }
+
+   uint64_t database_api::get_non_fungible_token_data_count()const
+   {
+      return my->get_non_fungible_token_data_count();
+   }
+
+   uint64_t database_api_impl::get_non_fungible_token_data_count()const
+   {
+      return _db.get_index_type<non_fungible_token_data_index>().indices().size();
+   }
+
+   vector<optional<non_fungible_token_data_object>> database_api::get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const
+   {
+      return my->get_non_fungible_token_data(nft_data_ids);
+   }
+
+   vector<optional<non_fungible_token_data_object>> database_api_impl::get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const
+   {
+      vector<optional<non_fungible_token_data_object>> result;
+      result.reserve(nft_data_ids.size());
+      std::transform(nft_data_ids.begin(), nft_data_ids.end(), std::back_inserter(result),
+                     [this](non_fungible_token_data_id_type id) -> optional<non_fungible_token_data_object> {
+                        if(auto o = _db.find(id))
+                        {
+                           subscribe_to_item( id );
+                           return *o;
+                        }
+                        return {};
+                     });
+      return result;
+   }
+
+   vector<non_fungible_token_data_object> database_api::list_non_fungible_token_data(non_fungible_token_id_type nft_id)const
+   {
+      return my->list_non_fungible_token_data(nft_id);
+   }
+
+   vector<non_fungible_token_data_object> database_api_impl::list_non_fungible_token_data(non_fungible_token_id_type nft_id)const
+   {
+      const auto& nft_data_by_nft = _db.get_index_type<non_fungible_token_data_index>().indices().get<by_nft>();
+
+      auto itr = nft_data_by_nft.lower_bound(nft_id);
+      auto end = nft_data_by_nft.upper_bound(nft_id);
+
+      vector<non_fungible_token_data_object> result;
+      result.reserve(std::distance(itr, end));
+      while(itr != end)
+         result.emplace_back(*itr++);
+
+      return result;
+   }
+
+   vector<non_fungible_token_data_object> database_api::get_non_fungible_token_balances(account_id_type account_id,
+                                                                                        const set<non_fungible_token_id_type>& ids)const
+   {
+      return my->get_non_fungible_token_balances(account_id, ids);
+   }
+
+   vector<non_fungible_token_data_object> database_api_impl::get_non_fungible_token_balances(account_id_type account_id,
+                                                                                             const set<non_fungible_token_id_type>& ids)const
+   {
+      const auto& nft_data_index = _db.get_index_type<non_fungible_token_data_index>();
+      auto nft_data_range = nft_data_index.indices().get<by_account>().equal_range(account_id);
+
+      vector<non_fungible_token_data_object> result;
+      std::for_each(nft_data_range.first, nft_data_range.second, [&](const non_fungible_token_data_object& nft_data) {
+         if(ids.empty() || ids.count(nft_data.nft_id))
+            result.emplace_back(nft_data);
+      });
+      return result;
+   }
+
+   vector<transaction_detail_object> database_api::search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const
+   {
+      return my->search_non_fungible_token_history(nft_data_id);
+   }
+
+   vector<transaction_detail_object> database_api_impl::search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const
+   {
+      auto nft_data_range = _db.get_index_type<transaction_detail_index>().indices().get<by_nft>().equal_range(nft_data_id);
+
+      vector<transaction_detail_object> result;
+      std::for_each(nft_data_range.first, nft_data_range.second, [&](const transaction_detail_object &obj) {
+         result.emplace_back(obj);
+      });
+      return result;
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Miners                                                           //

@@ -21,19 +21,23 @@ namespace graphene { namespace chain {
          content_submit,
          content_buy,
          content_rate,
-         subscription
+         subscription,
+         non_fungible_token
       };
+   
       account_id_type m_from_account;
       account_id_type m_to_account;
       uint8_t m_operation_type;
       asset m_transaction_amount;
       asset m_transaction_fee;
+      optional<non_fungible_token_data_id_type> m_nft_data_id;
       std::string m_str_description;
       optional<memo_data> m_transaction_encrypted_memo;
       fc::time_point_sec m_timestamp;
 
       share_type get_transaction_amount() const;
       share_type get_transaction_fee() const;
+      non_fungible_token_data_id_type get_non_fungible_token_id() const;
    };
 
    struct by_from_account;
@@ -43,6 +47,7 @@ namespace graphene { namespace chain {
    struct by_transaction_fee;
    struct by_description;
    struct by_time;
+   struct by_nft;
 
    template <typename TAG, typename _t_object>
    struct key_extractor;
@@ -93,6 +98,15 @@ namespace graphene { namespace chain {
    };
 
    template <>
+   struct key_extractor<by_nft, transaction_detail_object>
+   {
+      static non_fungible_token_data_id_type get(transaction_detail_object const& ob)
+      {
+         return ob.get_non_fungible_token_id();
+      }
+   };
+
+   template <>
    struct key_extractor<by_description, transaction_detail_object>
    {
       static string get(transaction_detail_object const& ob)
@@ -121,6 +135,7 @@ namespace graphene { namespace chain {
          ordered_non_unique< tag<by_operation_type>, member<transaction_detail_object, uint8_t, &transaction_detail_object::m_operation_type> >,
          ordered_non_unique< tag<by_transaction_amount>, const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_amount> >,
          ordered_non_unique< tag<by_transaction_fee>, const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_fee> >,
+         ordered_non_unique< tag<by_nft>, const_mem_fun<transaction_detail_object, non_fungible_token_data_id_type, &transaction_detail_object::get_non_fungible_token_id> >,
          ordered_non_unique< tag<by_description>, member<transaction_detail_object, std::string, &transaction_detail_object::m_str_description> >,
          ordered_non_unique< tag<by_time>, member<transaction_detail_object, fc::time_point_sec, &transaction_detail_object::m_timestamp> >
       >
@@ -130,4 +145,14 @@ namespace graphene { namespace chain {
 
 } }
 
-FC_REFLECT_DERIVED( graphene::chain::transaction_detail_object, (graphene::db::object), (m_from_account)(m_to_account)(m_operation_type)(m_transaction_amount)(m_transaction_fee)(m_str_description)(m_transaction_encrypted_memo)(m_timestamp) )
+FC_REFLECT_DERIVED( graphene::chain::transaction_detail_object, (graphene::db::object),
+   (m_from_account)
+   (m_to_account)
+   (m_operation_type)
+   (m_transaction_amount)
+   (m_transaction_fee)
+   (m_nft_data_id)
+   (m_str_description)
+   (m_transaction_encrypted_memo)
+   (m_timestamp)
+)

@@ -35,6 +35,7 @@
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/non_fungible_token_object.hpp>
 #include <graphene/app/full_account.hpp>
 
 /**
@@ -47,6 +48,7 @@
  * @defgroup DatabaseAPI_Account Account
  * @defgroup DatabaseAPI_Balance Balance
  * @defgroup DatabaseAPI_Asset Asset
+ * @defgroup DatabaseAPI_NonFungibleToken Non Fungible Token
  * @defgroup DatabaseAPI_Mining Mining
  * @defgroup DatabaseAPI_AuthValidation Authority and Validation
  * @defgroup DatabaseAPI_Proposals Proposals
@@ -329,6 +331,13 @@ namespace graphene { namespace app {
          //////////////
 
          /**
+          * @brief Get the total number of accounts registered on the blockchain.
+          * @return the total number of registered accounts
+          * @ingroup DatabaseAPI_Account
+          */
+         uint64_t get_account_count()const;
+
+         /**
           * @brief Get a list of accounts by ID.
           * @note This function has semantics identical to \c get_objects().
           * @param account_ids IDs of the accounts to retrieve
@@ -439,13 +448,6 @@ namespace graphene { namespace app {
           */
          vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
-         /**
-          * @brief Get the total number of accounts registered on the blockchain.
-          * @return the total number of registered accounts
-          * @ingroup DatabaseAPI_Account
-          */
-         uint64_t get_account_count()const;
-
          ////////////
          // Assets //
          ////////////
@@ -507,6 +509,86 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Asset
           */
          asset price_to_dct( asset price )const;
+
+         /////////////////////////
+         // Non Fungible Tokens //
+         /////////////////////////
+
+         /**
+          * @brief Get the total number of non fungible tokens registered on the blockchain.
+          * @return the total number of registered non fungible tokens
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         uint64_t get_non_fungible_token_count()const;
+
+         /**
+          * @brief Get a list of non fungible tokens by ID.
+          * @note This function has semantics identical to \c get_objects().
+          * @param nft_ids IDs of the non fungible tokens to retrieve
+          * @return the non fungible tokens corresponding to the provided IDs
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<optional<non_fungible_token_object>> get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const;
+
+         /**
+          * @brief Get non fungible tokens alphabetically by symbol name.
+          * @param lower_bound_symbol lower bound of symbol names to retrieve
+          * @param limit maximum number of non fungible tokens to fetch (must not exceed 100)
+          * @return the non fungible tokens found
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_object> list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const;
+
+         /**
+          * @brief Get a list of non fungible tokens by symbol.
+          * @note This function has semantics identical to \c get_objects().
+          * @param symbols_or_ids symbols or stringified IDs of the non fungible tokens to retrieve
+          * @return the non fungible tokens corresponding to the provided symbols or IDs
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<optional<non_fungible_token_object>> lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const;
+
+         /**
+          * @brief Get the total number of non fungible token data objects issued on the blockchain.
+          * @return the total number of issued non fungible token data objects
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         uint64_t get_non_fungible_token_data_count()const;
+
+         /**
+          * @brief Get a list of non fungible token data objects by ID.
+          * @note This function has semantics identical to \c get_objects().
+          * @param nft_data_ids IDs of the non fungible token data objects to retrieve
+          * @return the non fungible token data objects corresponding to the provided IDs
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<optional<non_fungible_token_data_object>> get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const;
+
+         /**
+          * @brief Get non fungible token data objects by registered token id.
+          * @param nft_id non fungible token id to list data objects for
+          * @return the non fungible token data objects found
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
+
+         /**
+          * @brief Get account's balances in various non fungible tokens.
+          * @param account_id account ID to retrieve balances for
+          * @param ids set of non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
+          * @return a list of non fungible token data objects
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id,
+                                                                                const set<non_fungible_token_id_type>& ids)const;
+
+         /**
+          * @brief Get non fungible token data object transfer history.
+          * @param nft_data_id the non fungible token data object id to search history for
+          * @return a list of transaction detail objects
+          * @ingroup DatabaseAPI_NonFungibleToken
+          */
+         vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const;
 
          ///////////////
          // Miners //
@@ -984,6 +1066,17 @@ FC_API(graphene::app::database_api,
           (list_assets)
           (lookup_asset_symbols)
           (price_to_dct)
+
+          // Non Fungible Tokens
+          (get_non_fungible_token_count)
+          (get_non_fungible_tokens)
+          (list_non_fungible_tokens)
+          (lookup_non_fungible_token_symbols)
+          (get_non_fungible_token_data_count)
+          (get_non_fungible_token_data)
+          (list_non_fungible_token_data)
+          (get_non_fungible_token_balances)
+          (search_non_fungible_token_history)
 
           // Miners
           (get_miners)

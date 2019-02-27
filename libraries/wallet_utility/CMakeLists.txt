@@ -5,7 +5,7 @@ add_library( wallet_utility
              ${HEADERS} )
 
 target_link_libraries( wallet_utility
-        PRIVATE graphene_db graphene_chain graphene_net graphene_app graphene_utilities graphene_wallet package_manager decent_encrypt
+        PRIVATE graphene_db graphene_chain graphene_net graphene_app graphene_wallet package_manager decent_encrypt
 )
 
 target_include_directories( wallet_utility

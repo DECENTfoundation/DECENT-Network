@@ -102,6 +102,9 @@ void TransactionsTab::timeToUpdate(const std::string& result)
       case graphene::chain::transaction_detail_object::subscription:
          str_operation_type = tr("Subscription");
          break;
+      case graphene::chain::transaction_detail_object::non_fungible_token:
+         str_operation_type = tr("Non Fungible Token");
+         break;
       }
 
       std::vector<QString> values =
@@ -110,7 +113,8 @@ void TransactionsTab::timeToUpdate(const std::string& result)
          str_operation_type,
          QString::fromStdString(from_account),
          QString::fromStdString(to_account),
-         transaction_amount_ast.getString(),
+         en_operation_type == graphene::chain::transaction_detail_object::non_fungible_token ?
+            QString::fromStdString(content["m_nft_data_id"].get<std::string>()) : transaction_amount_ast.getString(),
          transaction_fee_ast.getString(),
          QString::fromStdString(description)
       };

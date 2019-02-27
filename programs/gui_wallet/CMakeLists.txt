@@ -97,7 +97,6 @@ target_link_libraries(DECENT PRIVATE
                       graphene_chain
                       graphene_net
                       graphene_app
-                      graphene_utilities
                       graphene_wallet
                       wallet_utility
                       package_manager

@@ -875,6 +875,11 @@ This operation will cost %2</source>
         <source>Subscription</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../src/transactions_tab.cpp" line="106"/>
+        <source>Non Fungible Token</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>gui_wallet::TransferWidget</name>

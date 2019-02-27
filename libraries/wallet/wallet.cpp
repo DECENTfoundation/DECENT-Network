@@ -627,6 +627,79 @@ public:
       return *opt;
    }
 
+   optional<non_fungible_token_object> find_non_fungible_token(non_fungible_token_id_type id)const
+   {
+      auto rec = _remote_db->get_non_fungible_tokens({id}).front();
+      if( rec )
+         _nft_cache[id] = *rec;
+      return rec;
+   }
+
+   optional<non_fungible_token_object> find_non_fungible_token(const string& nft_symbol_or_id) const
+   {
+      FC_ASSERT( nft_symbol_or_id.size() > 0 );
+      if( auto id = maybe_id<non_fungible_token_id_type>(nft_symbol_or_id) )
+      {
+         // It's an ID
+         return find_non_fungible_token(*id);
+      } else {
+         // It's a symbol
+         auto rec = _remote_db->lookup_non_fungible_token_symbols({nft_symbol_or_id}).front();
+         if( rec )
+         {
+            if( rec->symbol != nft_symbol_or_id )
+               return optional<non_fungible_token_object>();
+
+            _nft_cache[rec->get_id()] = *rec;
+         }
+         return rec;
+      }
+   }
+
+   non_fungible_token_object get_non_fungible_token(non_fungible_token_id_type id)const
+   {
+      auto opt = find_non_fungible_token(id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
+   non_fungible_token_object get_non_fungible_token(const string& nft_symbol_or_id) const
+   {
+      auto opt = find_non_fungible_token(nft_symbol_or_id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
+   optional<non_fungible_token_data_object> find_non_fungible_token_data(non_fungible_token_data_id_type id)const
+   {
+      return _remote_db->get_non_fungible_token_data({id}).front();
+   }
+
+   optional<non_fungible_token_data_object> find_non_fungible_token_data(const string& nft_data_id) const
+   {
+      FC_ASSERT( nft_data_id.size() > 0 );
+      if( auto id = maybe_id<non_fungible_token_data_id_type>(nft_data_id) )
+      {
+         // It's an ID
+         return find_non_fungible_token_data(*id);
+      }
+      return {};
+   }
+
+   non_fungible_token_data_object get_non_fungible_token_data(non_fungible_token_data_id_type id)const
+   {
+      auto opt = find_non_fungible_token_data(id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
+   non_fungible_token_data_object get_non_fungible_token_data(const string& nft_data_id) const
+   {
+      auto opt = find_non_fungible_token_data(nft_data_id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
    string get_wallet_filename() const
    {
       return _wallet_filename;
@@ -1565,6 +1638,144 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
 
+   //////////////////////////////////////////////////////////////////////
+   //                                                                  //
+   // Non Fungible Tokens                                              //
+   //                                                                  //
+   //////////////////////////////////////////////////////////////////////
+
+   signed_transaction create_non_fungible_token(const string& issuer,
+                                                const string& symbol,
+                                                const string& description,
+                                                const non_fungible_token_data_definitions& definitions,
+                                                uint32_t max_supply,
+                                                bool fixed_max_supply,
+                                                bool transferable,
+                                                bool broadcast /* = false */)
+   {
+      non_fungible_token_create_operation create_op;
+      create_op.symbol = symbol;
+      create_op.fixed_max_supply = fixed_max_supply;
+      create_op.transferable = transferable;
+      create_op.options.issuer = get_account(issuer).get_id();
+      create_op.options.max_supply = max_supply;
+      create_op.options.description = description;
+      create_op.definitions = definitions;
+
+      create_op.validate();
+
+      signed_transaction tx;
+      tx.operations.push_back( create_op );
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction update_non_fungible_token(const string& issuer,
+                                                const string& symbol,
+                                                const string& description,
+                                                uint32_t max_supply,
+                                                bool broadcast /* = false */)
+   {
+      non_fungible_token_update_operation update_op;
+      update_op.nft_id = get_non_fungible_token(symbol).get_id();
+      update_op.options.issuer = get_account(issuer).get_id();
+      update_op.options.max_supply = max_supply;
+      update_op.options.description = description;
+
+      update_op.validate();
+
+      signed_transaction tx;
+      tx.operations.push_back( update_op );
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction issue_non_fungible_token(const string& to_account,
+                                               const string& symbol,
+                                               const fc::variants& data,
+                                               const string& memo,
+                                               bool broadcast /* = false */)
+   {
+      non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
+
+      account_object to = get_account(to_account);
+      account_object issuer = get_account(nft_obj.options.issuer);
+
+      non_fungible_token_issue_operation issue_op;
+      issue_op.issuer = nft_obj.options.issuer;
+      issue_op.to = to.id;
+      issue_op.nft_id = nft_obj.get_id();
+      issue_op.data = data;
+
+      if(!memo.empty())
+         issue_op.memo = memo_data(memo, get_private_key(issuer.options.memo_key), to.options.memo_key);
+
+      issue_op.validate();
+
+      signed_transaction tx;
+      tx.operations.push_back( issue_op );
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction transfer_non_fungible_token_data(const string& to_account,
+                                                       const string& nft_data_id,
+                                                       const string& memo,
+                                                       bool broadcast /* = false */)
+   {
+      non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
+      account_object from = get_account(nft_data.owner);
+      account_object to = get_account(to_account);
+
+      non_fungible_token_transfer_operation transfer_op;
+      transfer_op.from = nft_data.owner;
+      transfer_op.to = to.id;
+      transfer_op.nft_data_id = nft_data.get_id();
+
+      if(!memo.empty())
+         transfer_op.memo = memo_data(memo, get_private_key(from.options.memo_key), to.options.memo_key);
+
+      transfer_op.validate();
+
+      signed_transaction tx;
+      tx.operations.push_back( transfer_op );
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction burn_non_fungible_token_data(const string& nft_data_id, bool broadcast /* = false */)
+   {
+      return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
+   }
+
+   signed_transaction update_non_fungible_token_data(const string& nft_data_id,
+                                                     const std::unordered_map<string, fc::variant>& data,
+                                                     bool broadcast /* = false */)
+   {
+      non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
+
+      non_fungible_token_data_operation data_op;
+      data_op.owner = nft_data.owner;
+      data_op.nft_data_id = nft_data.get_id();
+      data_op.data = data;
+
+      data_op.validate();
+
+      signed_transaction tx;
+      tx.operations.push_back( data_op );
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
 
    miner_object get_miner(const string& owner_account)
    {
@@ -3246,6 +3457,7 @@ signed_transaction content_cancellation(const string& author,
    const string _wallet_filename_extension = ".wallet";
 
    mutable map<asset_id_type, asset_object> _asset_cache;
+   mutable map<non_fungible_token_id_type, non_fungible_token_object> _nft_cache;
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
    seeders_tracker _seeders_tracker;
 };
@@ -3670,6 +3882,83 @@ signed_transaction content_cancellation(const string& author,
 #include "wallet_subscription.inl"
 #include "wallet_messaging.inl"
 #include "wallet_monitoring.inl"
+
+   vector<non_fungible_token_object> wallet_api::list_non_fungible_tokens(const string& lowerbound, uint32_t limit) const
+   {
+      return my->_remote_db->list_non_fungible_tokens(lowerbound, limit);
+   }
+
+   non_fungible_token_object wallet_api::get_non_fungible_token(const string& symbol) const
+   {
+      return my->get_non_fungible_token(symbol);
+   }
+
+   signed_transaction wallet_api::create_non_fungible_token(const string& issuer,
+                                                            const string& symbol,
+                                                            const string& description,
+                                                            const non_fungible_token_data_definitions& definitions,
+                                                            uint32_t max_supply,
+                                                            bool fixed_max_supply,
+                                                            bool transferable,
+                                                            bool broadcast /* = false */)
+   {
+      return my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
+   }
+
+   signed_transaction wallet_api::update_non_fungible_token(const string& issuer,
+                                                            const string& symbol,
+                                                            const string& description,
+                                                            uint32_t max_supply,
+                                                            bool broadcast /* = false */)
+   {
+      return my->update_non_fungible_token(issuer, symbol, description, max_supply, broadcast);
+   }
+
+   signed_transaction wallet_api::issue_non_fungible_token(const string& to_account,
+                                                           const string& symbol,
+                                                           const fc::variants& data,
+                                                           const string& memo,
+                                                           bool broadcast /* = false */)
+   {
+      return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
+   }
+
+   vector<non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const string& symbol) const
+   {
+      return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(symbol).get_id());
+   }
+
+   vector<non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const string& account, const set<string>& symbols) const
+   {
+      std::set<non_fungible_token_id_type> ids;
+      std::for_each(symbols.begin(), symbols.end(), [&](const string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
+      return my->_remote_db->get_non_fungible_token_balances(get_account(account).get_id(), ids);
+   }
+
+   vector<transaction_detail_object> wallet_api::search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id) const
+   {
+      return my->_remote_db->search_non_fungible_token_history(nft_data_id);
+   }
+
+   signed_transaction wallet_api::transfer_non_fungible_token_data(const string& to_account,
+                                                                   const string& nft_data_id,
+                                                                   const string& memo,
+                                                                   bool broadcast /* = false */)
+   {
+      return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
+   }
+
+   signed_transaction wallet_api::burn_non_fungible_token_data(const string& nft_data_id, bool broadcast /* = false */)
+   {
+      return my->burn_non_fungible_token_data(nft_data_id, broadcast);
+   }
+
+   signed_transaction wallet_api::update_non_fungible_token_data(const string& nft_data_id,
+                                                                 const std::unordered_map<string, fc::variant>& data,
+                                                                 bool broadcast /* = false */)
+   {
+      return my->update_non_fungible_token_data(nft_data_id, data, broadcast);
+   }
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
    {

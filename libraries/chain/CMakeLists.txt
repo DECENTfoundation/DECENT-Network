@@ -30,7 +30,7 @@ add_library( graphene_chain
              protocol/transaction.cpp
              protocol/block.cpp
              protocol/fee_schedule.cpp
-
+             protocol/non_fungible_token.cpp
              protocol/vote.cpp
              protocol/decent.cpp
              protocol/subscription.cpp
@@ -52,6 +52,7 @@ add_library( graphene_chain
         decent_evaluator.cpp
              subscription_evaluator.cpp
              custom_evaluator.cpp
+             non_fungible_token_evaluator.cpp
 
              account_object.cpp
              asset_object.cpp
@@ -66,7 +67,7 @@ add_library( graphene_chain
              ${HEADERS}
            )
 
-target_link_libraries( graphene_chain PRIVATE graphene_db decent_encrypt )
+target_link_libraries( graphene_chain PUBLIC graphene_utilities PRIVATE graphene_db decent_encrypt )
 
 target_include_directories( graphene_chain PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 

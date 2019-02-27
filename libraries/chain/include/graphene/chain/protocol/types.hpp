@@ -107,19 +107,20 @@ namespace graphene { namespace chain {
     *  packed_object::type field from enum_type to uint16 to avoid
     *  warnings when converting packed_objects to/from json.
     */
-   enum object_type
+   enum protocol_object_type
    {
-      null_object_type,
+      null_object_type,                // 0
       base_object_type,
       account_object_type,
       asset_object_type,
       miner_object_type,
-      custom_object_type,           // 5
+      custom_object_type,              // 5
       proposal_object_type,
       operation_history_object_type,
       withdraw_permission_object_type,
       vesting_balance_object_type,
-      OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
+      non_fungible_token_object_type,  // 10
+      non_fungible_token_data_object_type
    };
 
    enum impl_object_type
@@ -157,6 +158,8 @@ namespace graphene { namespace chain {
    class operation_history_object;
    class withdraw_permission_object;
    class vesting_balance_object;
+   class non_fungible_token_object;
+   class non_fungible_token_data_object;
 
    typedef graphene::db::object_id<protocol_ids, account_object_type, account_object>                         account_id_type;
    typedef graphene::db::object_id<protocol_ids, asset_object_type, asset_object>                             asset_id_type;
@@ -166,6 +169,8 @@ namespace graphene { namespace chain {
    typedef graphene::db::object_id<protocol_ids, operation_history_object_type, operation_history_object>     operation_history_id_type;
    typedef graphene::db::object_id<protocol_ids, withdraw_permission_object_type,withdraw_permission_object>  withdraw_permission_id_type;
    typedef graphene::db::object_id<protocol_ids, vesting_balance_object_type, vesting_balance_object>         vesting_balance_id_type;
+   typedef graphene::db::object_id<protocol_ids, non_fungible_token_object_type, non_fungible_token_object>   non_fungible_token_id_type;
+   typedef graphene::db::object_id<protocol_ids, non_fungible_token_data_object_type, non_fungible_token_data_object> non_fungible_token_data_id_type;
 
    // implementation types
    class global_property_object;
@@ -314,7 +319,7 @@ FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data)
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
 
-FC_REFLECT_ENUM( graphene::chain::object_type,
+FC_REFLECT_ENUM( graphene::chain::protocol_object_type,
                  (null_object_type)
                  (base_object_type)
                  (account_object_type)
@@ -325,7 +330,8 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (operation_history_object_type)
                  (withdraw_permission_object_type)
                  (vesting_balance_object_type)
-                 (OBJECT_TYPE_COUNT)
+                 (non_fungible_token_object_type)
+                 (non_fungible_token_data_object_type)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_global_property_object_type)
@@ -351,7 +357,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
-
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::miner_id_type )
@@ -360,6 +365,8 @@ FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::withdraw_permission_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::vesting_balance_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::non_fungible_token_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::non_fungible_token_data_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::global_property_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::dynamic_global_property_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_dynamic_data_id_type )
