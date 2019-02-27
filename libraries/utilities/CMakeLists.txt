@@ -17,10 +17,12 @@ add_library( graphene_utilities
              keys_generator.cpp
              string_escape.cpp
              dirhelper.cpp
+             json.cpp
              words.cpp
              ipfs_check.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
              ${HEADERS} )
+
 target_link_libraries( graphene_utilities fc ipfs-api )
 target_include_directories( graphene_utilities
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
