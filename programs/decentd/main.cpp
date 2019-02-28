@@ -53,6 +53,7 @@
 #ifdef WIN32
 #include <signal.h> 
 #include <windows.h>
+#include "winsvc.hpp"
 #else
 # include <csignal>
 #endif
@@ -67,6 +68,11 @@ namespace bpo = boost::program_options;
 static fc::promise<int>::ptr s_exit_promise;
 BOOL s_bStop = FALSE;
 HANDLE s_hStopProcess = NULL;
+
+void StopWinService()
+{
+	s_exit_promise->set_value(SIGTERM);
+}
 
 DWORD WINAPI StopFromGUIThreadProc(void* params)
 {
@@ -152,18 +158,16 @@ int start_as_daemon()
 }
 #else
 
-int start_as_daemon(char* cmd_line_params)
-{
-   //NOTE: this OS is not supported yet...
-   return -1;
-}
+// we dont need
 
 #endif
 
 
 int main(int argc, char** argv) {
 #ifdef _MSC_VER
-   SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+	bool is_win_service = IsRunningAsSystemService();
+	if(is_win_service == false)
+		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 #endif
 
    bpo::options_description app_options("DECENT Daemon");
@@ -230,23 +234,28 @@ int main(int argc, char** argv) {
       fc::path logs_dir, data_dir, config_filename;
       auto& path_finder = utilities::decent_path_finder::instance();
 
-	  run_as_daemon = true;
-	  if (run_as_daemon) {
-		  std::string cmd_line_str;
-		
+#ifdef _MSC_VER
+	  if (is_win_service) {
+		  run_as_daemon = true;
 	  }
-
-      if( run_as_daemon ) {
-#ifdef _MSC_VER 
+	  else if (run_as_daemon) {// install like service a start it
 		  std::string cmd_line_str;
-		 for (int i = 1; i < argc; i++) {
-			cmd_line_str += " ";
-			cmd_line_str += argv[i];
-		 }
-		 int ret = start_as_daemon(cmd_line_str.c_str());
+		  for (int i = 1; i < argc; i++) {
+			  cmd_line_str += " ";
+			  cmd_line_str += argv[i];
+		  }
+		  install_win_service(cmd_line_str.c_str());
+		  return 0;
+	  }
+#endif
+	  
+      if( run_as_daemon ) {
+#ifdef _MSC_VER
+		  char service_data_dir[256] = "";
+		  GetAppDataDir(service_data_dir, sizeof(service_data_dir) - 1);
 #else
          int ret = start_as_daemon();
-#endif
+
          if (ret < 0) {
             std::cerr << "Error running as daemon.\n";
             return 1;
@@ -259,7 +268,7 @@ int main(int argc, char** argv) {
          config_filename = "/etc/decentd";
          logs_dir = "/var/log/decentd/";
          data_dir = "/var/lib/decentd/";
-
+#endif
          path_finder.set_decent_data_path(data_dir);
          path_finder.set_decent_temp_path("/var/tmp/decentd/");
       }
