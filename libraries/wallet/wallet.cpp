@@ -139,7 +139,7 @@ private:
 struct submit_transfer_listener : public EventListenerInterface {
    
    submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol)
-      : _wallet(wallet), _info(info), _op(op), _protocol(protocol) {
+      : _wallet(wallet), _info(info), _op(op), _protocol(protocol), _is_finished(false) {
    }
    
    virtual void package_seed_complete();
@@ -147,12 +147,14 @@ struct submit_transfer_listener : public EventListenerInterface {
    
    fc::ripemd160 get_hash() const { return _info->get_hash(); }
    const content_submit_operation& op() const { return _op; }
+   bool is_finished() { return _is_finished; }
    
 private:
    wallet_api_impl&          _wallet;
    shared_ptr<PackageInfo>   _info;
    content_submit_operation  _op;
    std::string               _protocol;
+   bool                      _is_finished;
 };
 
 struct operation_result_printer
@@ -2599,6 +2601,7 @@ signed_transaction content_cancellation(const string& author,
        string result = "";
        std::atomic_bool cancel_token(false);
        decent::wallet_utility::WalletAPI my_api(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
+       bool contains_submit_content_async = false;
 
        try
        {
@@ -2628,8 +2631,25 @@ signed_transaction content_cancellation(const string& author,
                    }
 
                    result += my_api.RunTask(current_line) + "\n";
+
+                   if (method == "submit_content_async")
+                   {
+                       contains_submit_content_async = true;
+                   }
                }
            }
+
+           if (contains_submit_content_async)
+           {
+               bool still_waiting_for_package_manager = true;
+               // hold on and periodically check if all package manager listeners are in a final state
+               while (still_waiting_for_package_manager)
+               {
+                   still_waiting_for_package_manager = my_api.IsPackageManagerTaskWaiting();
+                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+               }
+           }
+
        } FC_CAPTURE_AND_RETHROW( (command_file_name) )
 
        cancel_token = true;
@@ -2906,6 +2926,19 @@ signed_transaction content_cancellation(const string& author,
 
       return result;
    };
+
+   bool is_package_manager_task_waiting()const
+   {
+      for (const auto& listener : _package_manager_listeners)
+      {
+         if (! listener->is_finished())
+         {
+            return true;
+         }
+      }
+
+      return false;
+   }
 
    vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
    {
@@ -3690,6 +3723,8 @@ signed_transaction content_cancellation(const string& author,
       _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
        _wallet.sign_transaction(tx, true);
+
+       _is_finished = true;
    }
 
 } } // graphene::wallet

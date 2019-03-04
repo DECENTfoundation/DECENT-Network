@@ -360,5 +360,22 @@ namespace wallet_utility
       string str_result = future_run.wait();
       return str_result;
    }
+
+   bool WalletAPI::IsPackageManagerTaskWaiting()
+   {
+       if (!IsConnected())
+          throw wallet_exception("not yet connected");
+
+       std::lock_guard<std::mutex> lock(m_mutex);
+
+       auto& pimpl = m_pimpl->m_ptr_wallet_api;
+       fc::future<bool> future_is_package_manager_task_waiting =
+       m_pthread->async([&pimpl] () -> bool
+                        {
+                           return pimpl->is_package_manager_task_waiting();
+                        });
+       return future_is_package_manager_task_waiting.wait();
+   }
+
 }
 }

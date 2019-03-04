@@ -548,6 +548,7 @@ FC_API( graphene::wallet::wallet_api,
         (upload_package)
         (remove_package)
         (generate_content_keys)
+        (is_package_manager_task_waiting)
 
         //Subscription
         (subscribe_to_author)

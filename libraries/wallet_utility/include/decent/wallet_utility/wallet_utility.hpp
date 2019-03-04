@@ -44,6 +44,7 @@ namespace wallet_utility
       void SetPassword(string const& str_password);
       void Unlock(string const& str_password);
       void SaveWalletFile();
+      bool IsPackageManagerTaskWaiting();
       //std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);
 
       string RunTask(string const& str_command);

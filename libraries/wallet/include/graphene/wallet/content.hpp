@@ -377,4 +377,11 @@ DInteger generate_encryption_key() const;
  */
 content_keys generate_content_keys(vector<account_id_type> const& seeders) const;
 
+/**
+ * @brief Returns true if any package manager task is waiting (e.g. if content submission is still being processed in the background).
+ * @return true if any package manager task is waiting, otherwise false
+ * @ingroup WalletCLI
+ */
+bool is_package_manager_task_waiting();
+
 #endif //DECENT_WALLET_CONTENT_H

@@ -339,3 +339,8 @@ content_keys wallet_api::generate_content_keys(vector<account_id_type> const& se
 {
    return my->_remote_db->generate_content_keys(seeders);
 }
+
+bool wallet_api::is_package_manager_task_waiting()
+{
+   return my->is_package_manager_task_waiting();
+}
