@@ -352,8 +352,8 @@ void Upload_popup::slot_ChooseSeeders()
 
       for (size_t iColIndex = eName; iColIndex < eSpace; ++iColIndex)
       {
-         pSeedersTable->item(static_cast<int>(iIndex), iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         pSeedersTable->item(static_cast<int>(iIndex), iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+         pSeedersTable->item(static_cast<int>(iIndex), static_cast<int>(iColIndex))->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         pSeedersTable->item(static_cast<int>(iIndex), static_cast<int>(iColIndex))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
       }
 
       if (seederItem.second)

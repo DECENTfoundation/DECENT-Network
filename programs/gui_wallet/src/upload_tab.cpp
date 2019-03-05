@@ -209,8 +209,8 @@ void Upload_tab::ShowDigitalContentsGUI()
 
       for (size_t iColIndex = eTitle; iColIndex < eIcon; ++iColIndex)
       {
-         m_pTableWidget->item(static_cast<int>(iIndex), iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         m_pTableWidget->item(static_cast<int>(iIndex), iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+         m_pTableWidget->item(static_cast<int>(iIndex), static_cast<int>(iColIndex))->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         m_pTableWidget->item(static_cast<int>(iIndex), static_cast<int>(iColIndex))->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
       }
       // Icon
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
