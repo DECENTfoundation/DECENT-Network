@@ -122,7 +122,7 @@ void undo_database::undo()
       _stack.emplace_back();
    enable();
    --_active_sessions;
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void undo_database::merge()
 {

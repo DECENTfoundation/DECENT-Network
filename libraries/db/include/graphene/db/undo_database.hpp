@@ -89,7 +89,7 @@ namespace graphene { namespace db {
                   _apply_undo = mv._apply_undo;
                   mv._apply_undo = false;
                   return *this;
-               } FC_CAPTURE_AND_RETHROW() }
+               } FC_RETHROW() }
 
             private:
                friend class undo_database;

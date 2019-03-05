@@ -94,7 +94,7 @@ namespace graphene { namespace db {
             try {
                for( const auto& ptr : _indices )
                   inspector(ptr);
-            } FC_CAPTURE_AND_RETHROW()
+            } FC_RETHROW()
          }
 
          const index_type& indices()const { return _indices; }

@@ -45,7 +45,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
 
       if( apply ) result = this->apply( op );
       return result;
-   } FC_CAPTURE_AND_RETHROW() }
+   } FC_RETHROW() }
 
    void generic_evaluator::prepare_fee(account_id_type account_id, asset fee)
    {
@@ -94,7 +94,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
               addo.asset_pool += core_fee_paid;
          });
       }
-   } FC_CAPTURE_AND_RETHROW() }
+   } FC_RETHROW() }
 
    share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
    {

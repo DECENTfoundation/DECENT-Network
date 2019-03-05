@@ -4247,7 +4247,7 @@ namespace graphene { namespace net { namespace detail {
 
           // limit the rate at which we accept connections to mitigate DOS attacks
           fc::usleep( fc::milliseconds(10) );
-        } FC_CAPTURE_AND_RETHROW()
+        } FC_RETHROW()
       }
     } // accept_loop()
 

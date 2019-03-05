@@ -342,7 +342,7 @@ seeding_plugin_impl::generate_pors()
                             "Seeding plugin PoR generate");
 
    ilog("seeding plugin_impl:  generate_pors() end");
-}FC_CAPTURE_AND_RETHROW()}
+}FC_RETHROW()}
 
 
 void seeding_plugin_impl::send_ready_to_publish()

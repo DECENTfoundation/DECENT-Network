@@ -96,7 +96,7 @@ namespace graphene { namespace db {
                   if( ptr.get() )
                      inspector(*ptr);
                }
-            } FC_CAPTURE_AND_RETHROW()
+            } FC_RETHROW()
          }
          virtual fc::uint128 hash()const override {
             fc::uint128 result;

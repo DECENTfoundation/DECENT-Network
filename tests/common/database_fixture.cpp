@@ -125,7 +125,7 @@ database_fixture::~database_fixture() noexcept(false)
 //        db.close();
 
      return;
-  } FC_CAPTURE_AND_RETHROW() }
+  } FC_RETHROW() }
 
 
 
@@ -290,7 +290,7 @@ account_create_operation database_fixture::make_account(
 
      create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
      return create_account;
-  } FC_CAPTURE_AND_RETHROW() }
+  } FC_RETHROW() }
 
 account_create_operation database_fixture::make_account(
      const std::string& name,
@@ -463,7 +463,7 @@ const miner_object& database_fixture::create_miner( const account_object& owner,
      processed_transaction ptx = db.push_transaction(trx, ~0);
      trx.clear();
      return db.get<miner_object>(ptx.operation_results[0].get<object_id_type>());
-  } FC_CAPTURE_AND_RETHROW()
+  } FC_RETHROW()
 }
 
 int64_t database_fixture::get_balance( account_id_type account, asset_id_type a )const

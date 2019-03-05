@@ -215,14 +215,14 @@ void miner_plugin::plugin_startup()
    } else
       elog("No miners configured! Please add miner IDs and private keys to configuration.");
    ilog("miner plugin:  plugin_startup() end");
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void miner_plugin::plugin_shutdown()
 { try {
    ilog("miner plugin:  plugin_shutdown() begin");
    graphene::time::shutdown_ntp_time();
    ilog("miner plugin:  plugin_shutdown() end");
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void miner_plugin::schedule_production_loop()
 {

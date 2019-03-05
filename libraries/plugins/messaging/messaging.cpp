@@ -46,7 +46,7 @@ void messaging_plugin::plugin_startup()
                                                                                 static_cast<custom_operation_interpreter*>(this));
 
       ilog("messaging plugin:  plugin_startup() end");
-   } FC_CAPTURE_AND_RETHROW()
+   } FC_RETHROW()
 }
 
 void messaging_plugin::plugin_shutdown()
@@ -57,7 +57,7 @@ void messaging_plugin::plugin_shutdown()
       graphene::chain::custom_evaluator_register::instance().unregister_callback(graphene::chain::custom_operation_subtype_messaging);
 
       ilog("messaging plugin:  plugin_shutdown() end");
-   } FC_CAPTURE_AND_RETHROW()
+   } FC_RETHROW()
 }
 
 void_result messaging_plugin::do_evaluate(const custom_operation& o) 

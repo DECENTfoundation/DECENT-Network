@@ -109,7 +109,7 @@ void object_database::open(const fc::path& data_dir)
 void object_database::pop_undo()
 { try {
    _undo_db.pop_commit();
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void object_database::save_undo( const object& obj )
 {

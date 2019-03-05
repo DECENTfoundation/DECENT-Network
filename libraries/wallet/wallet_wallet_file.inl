@@ -39,7 +39,7 @@ void wallet_api::lock()
    my->_el_gamal_keys.clear();
    my->_checksum = fc::sha512();
    my->self.lock_changed(true);
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void wallet_api::unlock(const string& password)
 { try {
@@ -101,7 +101,7 @@ void wallet_api::unlock(const string& password)
       save_wallet_file();
 
    my->self.lock_changed(false);
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void wallet_api::set_password(const string& password )
 {
@@ -150,11 +150,3 @@ variant wallet_api::dump_private_keys()
 
    return result;
 }
-
-
-
-
-
-
-
-

@@ -386,9 +386,7 @@ flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id
          "Duplicate Signature detected" );
    }
    return result;
-} FC_CAPTURE_AND_RETHROW() }
-
-
+} FC_RETHROW() }
 
 set<public_key_type> signed_transaction::get_required_signatures(
    const chain_id_type& chain_id,

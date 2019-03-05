@@ -326,7 +326,7 @@ signed_block database::generate_block(
       result = _generate_block( when, miner_id, block_signing_private_key );
    } );
    return result;
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 signed_block database::_generate_block(
    fc::time_point_sec when,
@@ -448,14 +448,14 @@ void database::pop_block()
 
    _popped_tx.insert( _popped_tx.begin(), head_block->transactions.begin(), head_block->transactions.end() );
 
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void database::clear_pending()
 { try {
    assert( (_pending_tx.size() == 0) || _pending_tx_session.valid() );
    _pending_tx.clear();
    _pending_tx_session.reset();
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 uint32_t database::push_applied_operation( const operation& op )
 {
@@ -587,7 +587,7 @@ void database::notify_changed_objects()
       }
       changed_objects(changed_ids);
    }
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)
 {

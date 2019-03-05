@@ -190,7 +190,7 @@ void database::clear_expired_transactions()
    const auto& dedupe_index = transaction_idx.indices().get<by_expiration>();
    while( (!dedupe_index.empty()) && (head_block_time() > dedupe_index.rbegin()->trx.expiration) )
       transaction_idx.remove(*dedupe_index.rbegin());
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 void database::clear_expired_proposals()
 {

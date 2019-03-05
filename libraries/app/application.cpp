@@ -181,7 +181,7 @@ namespace detail {
          _p2p_network->sync_from(net::item_id(net::core_message_type_enum::block_message_type,
                                               _chain_db->head_block_id()),
                                  std::vector<uint32_t>());
-      } FC_CAPTURE_AND_RETHROW() }
+      } FC_RETHROW() }
 
       std::vector<fc::ip::endpoint> resolve_string_to_ip_endpoints(const std::string& endpoint_string)
       {
@@ -284,7 +284,7 @@ namespace detail {
          ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<string>()));
          _websocket_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-endpoint").as<string>()) );
          _websocket_server->start_accept();
-      } FC_CAPTURE_AND_RETHROW() }
+      } FC_RETHROW() }
 
 
       void reset_websocket_tls_server()
@@ -325,7 +325,7 @@ namespace detail {
          _websocket_tls_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-tls-endpoint").as<string>()) );
          _websocket_tls_server->start_accept();
 
-      } FC_CAPTURE_AND_RETHROW() }
+      } FC_RETHROW() }
 
       application_impl(application* self)
          : _self(self),
@@ -948,7 +948,7 @@ namespace detail {
           idump((synopsis));
           ilog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
           return synopsis;
-      } FC_CAPTURE_AND_RETHROW() }
+      } FC_RETHROW() }
 
       /**
        * Call this after the call to handle_message succeeds.

@@ -124,7 +124,7 @@ void database::update_active_miners()
       });
    });
 
-} FC_CAPTURE_AND_RETHROW() }
+} FC_RETHROW() }
 
 
 /**
@@ -211,7 +211,7 @@ void database::process_budget()
       // available_funds is money we could spend, but don't want to.
       // we simply let it evaporate back into the reserve.
    }
-   FC_CAPTURE_AND_RETHROW()
+   FC_RETHROW()
 }
 
 

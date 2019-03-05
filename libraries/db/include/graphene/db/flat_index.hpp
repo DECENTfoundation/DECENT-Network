@@ -90,7 +90,7 @@ namespace graphene { namespace db {
                {
                   inspector(ptr);
                }
-            } FC_CAPTURE_AND_RETHROW()
+            } FC_RETHROW()
          }
 
          virtual fc::uint128 hash()const override {
