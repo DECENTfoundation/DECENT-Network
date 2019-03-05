@@ -70,7 +70,7 @@ void seeding_plugin_impl::handle_new_content(const content_submit_operation& cs_
          const my_seeding_object& mso = db.create<my_seeding_object>([&](my_seeding_object &so) {
               so.URI = cs_op.URI;
               so.seeder = seeder_itr->seeder;
-              so.space = cs_op.size; //we allocate the whole megabytes per content
+              so.space = static_cast<uint32_t>(cs_op.size); //we allocate the whole megabytes per content
               if( k != cs_op.key_parts.end())
                  so.key = *k;
               so.expiration = cs_op.expiration;
@@ -382,7 +382,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;
+            op.price_per_MByte = static_cast<uint32_t>(dct_price.amount.value);
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
 
@@ -393,7 +393,7 @@ void seeding_plugin_impl::send_ready_to_publish()
             ready_to_publish2_operation op;
             op.seeder = sritr->seeder;
             op.space = sritr->free_space;
-            op.price_per_MByte = dct_price.amount.value;
+            op.price_per_MByte = static_cast<uint32_t>(dct_price.amount.value);
             op.pubKey = get_public_el_gamal_key(sritr->content_privKey);
             op.ipfs_ID = json[ "ID" ];
             op.region_code = sritr->region_code;
@@ -511,7 +511,7 @@ void seeding_plugin_impl::restore_state()
                          so.URI = content_itr->URI;
                          so.seeder = sitr->seeder;
                          so._hash = content_itr->_hash;
-                         so.space = content_itr->size; //we allocate the whole megabytes per content
+                         so.space = static_cast<uint32_t>(content_itr->size); //we allocate the whole megabytes per content
                          so.key = search_itr->second;
                          so.expiration = content_itr->expiration;
                          so.cd = content_itr->cd;

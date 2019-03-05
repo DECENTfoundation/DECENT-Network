@@ -892,7 +892,7 @@ namespace detail {
                 else
                   non_fork_high_block_num = block_header::num_from_id(last_non_fork_block);
 
-                high_block_num = non_fork_high_block_num + fork_history.size();
+                high_block_num = non_fork_high_block_num + static_cast<uint32_t>(fork_history.size());
                 assert(high_block_num == block_header::num_from_id(fork_history.back()));
               }
               catch (const fc::exception& e)

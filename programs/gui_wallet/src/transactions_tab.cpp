@@ -64,7 +64,7 @@ void TransactionsTab::timeToUpdate(const std::string& result)
    if (iSize > m_i_page_size)
       iSize = m_i_page_size;
 
-   m_pTableWidget->setRowCount(iSize);
+   m_pTableWidget->setRowCount(static_cast<int>(iSize));
 
    for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
@@ -117,9 +117,9 @@ void TransactionsTab::timeToUpdate(const std::string& result)
 
       for (int col = 0; col < m_pTableWidget->columnCount(); ++col)
       {
-         m_pTableWidget->setItem(iIndex, col, new QTableWidgetItem(values[col]));
-         m_pTableWidget->item(iIndex, col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget->item(iIndex, col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         m_pTableWidget->setItem(static_cast<int>(iIndex), col, new QTableWidgetItem(values[col]));
+         m_pTableWidget->item(static_cast<int>(iIndex), col)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         m_pTableWidget->item(static_cast<int>(iIndex), col)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       }
    }
    

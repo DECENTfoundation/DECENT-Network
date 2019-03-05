@@ -179,7 +179,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
       FC_ASSERT( db().head_block_time() <= o.expiration);
       fc::microseconds duration = (o.expiration - db().head_block_time() );
-      uint64_t days = duration.to_seconds() / 3600 / 24;
+      uint32_t days = static_cast<uint32_t>(duration.to_seconds() / 3600 / 24);
       FC_ASSERT( days != 0, "time to expiration has to be at least one day" );
 
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();

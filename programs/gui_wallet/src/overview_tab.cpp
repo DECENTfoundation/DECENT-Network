@@ -58,7 +58,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
    if (iSize > m_i_page_size)
       iSize = m_i_page_size;
    
-   m_pTableWidget->setRowCount(iSize);
+   m_pTableWidget->setRowCount(static_cast<int>(iSize));
 
    if (m_pAccountSignalMapper)
       delete m_pAccountSignalMapper;
@@ -73,8 +73,8 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       std::string name = content["name"].get<std::string>();
       std::string id = content["id"].get<std::string>();
       
-      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::fromStdString(name)));
-      m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(id)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 1, new QTableWidgetItem(QString::fromStdString(name)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 0, new QTableWidgetItem(QString::fromStdString(id)));
 
       // Transaction Button
       //
@@ -88,14 +88,14 @@ void Overview_tab::timeToUpdate(const std::string& result) {
                        this, &Overview_tab::slot_Transactions);
       
       m_pAccountSignalMapper->setMapping(pTransactionButton, QString::fromStdString(name));
-      m_pTableWidget->setCellWidget(iIndex, 2, pTransactionButton);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 2, pTransactionButton);
 
       // Details Button
       //
       DecentButton* pDetailsButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       pDetailsButton->setToolTip(tr("Details"));
       pDetailsButton->setEnabled(false);
-      m_pTableWidget->setCellWidget(iIndex, 4, pDetailsButton);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 4, pDetailsButton);
 
       m_pAccountSignalMapper->setMapping(pDetailsButton, QString::fromStdString(name));
       QObject::connect(pDetailsButton, &DecentButton::clicked,
@@ -108,7 +108,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       DecentButton* pTransferButton = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Transfer);
       pTransferButton->setToolTip(tr("Transfer"));
       pTransferButton->setEnabled(false);
-      m_pTableWidget->setCellWidget(iIndex, 3, pTransferButton);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 3, pTransferButton);
             
 
       m_pAccountSignalMapper->setMapping(pTransferButton, QString::fromStdString(name));
@@ -117,17 +117,17 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       QObject::connect(pTransferButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transfer);
 
-      m_pTableWidget->item(iIndex,0)->setBackground(Qt::white);
-      m_pTableWidget->item(iIndex,1)->setBackground(Qt::white);
+      m_pTableWidget->item(static_cast<int>(iIndex), 0)->setBackground(Qt::white);
+      m_pTableWidget->item(static_cast<int>(iIndex), 1)->setBackground(Qt::white);
       
-      m_pTableWidget->item(iIndex,0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-      m_pTableWidget->item(iIndex,1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(static_cast<int>(iIndex), 0)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+      m_pTableWidget->item(static_cast<int>(iIndex), 1)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       
-      m_pTableWidget->item(iIndex,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      m_pTableWidget->item(iIndex,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->item(static_cast<int>(iIndex), 0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+      m_pTableWidget->item(static_cast<int>(iIndex), 1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       
-//      m_pTableWidget->item(iIndex,0)->setForeground(QColor::fromRgb(88,88,88));
-//      m_pTableWidget->item(iIndex,1)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(static_cast<int>(iIndex), 0)->setForeground(QColor::fromRgb(88,88,88));
+//      m_pTableWidget->item(static_cast<int>(iIndex), 1)->setForeground(QColor::fromRgb(88,88,88));
    }
 
    if (contents.size() > m_i_page_size)

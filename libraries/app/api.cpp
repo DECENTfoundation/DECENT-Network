@@ -466,8 +466,8 @@ namespace graphene { namespace app {
          if (itr != refs.message_to_receiver_memberships.end())
          {
             result.reserve(itr->second.size());
-            uint32_t count = itr->second.size();
-            uint32_t counter = 0;
+            size_t count = itr->second.size();
+            size_t counter = 0;
             if (sender) {
                try {
                   (*sender)(db);
@@ -514,10 +514,10 @@ namespace graphene { namespace app {
          auto itr = index_by_sender.lower_bound(*sender);
          itr = range.first;
 
-         uint32_t count = distance(range.first, range.second);
+         size_t count = static_cast<size_t>(distance(range.first, range.second));
          if (count) {
             result.reserve(count);
-            int counter = 0;
+            size_t counter = 0;
 
             while (itr != range.second && result.size() < max_count) {
               if (count - counter <= max_count)

@@ -128,7 +128,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
 
    try {
 
-      m_pTableWidget->setRowCount(iSize);
+      m_pTableWidget->setRowCount(static_cast<int>(iSize));
 
       Asset main_asset = Globals::instance().asset(0);
       QUrl test_url;
@@ -151,7 +151,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          tabItem = new QTableWidgetItem(QString::fromStdString(name));
          tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
          tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-         m_pTableWidget->setItem(iIndex, 0, tabItem);
+         m_pTableWidget->setItem(static_cast<int>(iIndex), 0, tabItem);
 
          tabItem = new QTableWidgetItem(QString::fromStdString(url));
          tabItem->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
@@ -160,10 +160,10 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          if (!url.empty()) {
             test_url.setUrl(QString::fromStdString(url));
             if (test_url.isValid()) {
-               m_indexToUrl.insert(iIndex, QString::fromStdString(url));
+               m_indexToUrl.insert(static_cast<int>(iIndex), QString::fromStdString(url));
             }
          }
-         m_pTableWidget->setItem(iIndex, 1, tabItem);
+         m_pTableWidget->setItem(static_cast<int>(iIndex), 1, tabItem);
 
          QString asset_text = QString::number((uint64_t) total_votes / main_asset.m_scale );
          asset_text += ' ';
@@ -173,7 +173,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          tabItem->setToolTip(QString::number(total_votes));
          tabItem->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
          tabItem->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-         m_pTableWidget->setItem(iIndex, 2, tabItem);
+         m_pTableWidget->setItem(static_cast<int>(iIndex), 2, tabItem);
 
          // Vote Button
          //
@@ -190,8 +190,8 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
          pVoteButton->setProperty(g_vote_state_id, QVariant(voted));
 
 
-         m_pTableWidget->setCellWidget(iIndex, 3, pVoteButton);
-         m_buttonsToIndex.insert(pVoteButton, iIndex);
+         m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 3, pVoteButton);
+         m_buttonsToIndex.insert(pVoteButton, static_cast<int>(iIndex));
 
          QObject::connect(pVoteButton, &DecentButton::clicked, this, &MinerVotingTab::slot_MinerVote);
 
@@ -335,7 +335,7 @@ void MinerVotingTab::getDesiredMinersCount()
    nlohmann::json account_obj = Globals::instance().runTaskParse(cmd);
 
    m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
-   m_curMinersVotedFor = account_obj["options"]["votes"].size();
+   m_curMinersVotedFor = static_cast<uint>(account_obj["options"]["votes"].size());
 }
 
 } //namespace

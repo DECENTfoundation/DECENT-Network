@@ -88,7 +88,7 @@ void block_database::store( const block_id_type& _id, const signed_block& b )
    _blocks.seekp( 0, _blocks.end );
    auto vec = fc::raw::pack( b );
    e.block_pos  = _blocks.tellp();
-   e.block_size = vec.size();
+   e.block_size = static_cast<uint32_t>(vec.size());
    e.block_id   = id;
    _blocks.write( vec.data(), vec.size() );
    _block_num_to_pos.write( (char*)&e, sizeof(e) );

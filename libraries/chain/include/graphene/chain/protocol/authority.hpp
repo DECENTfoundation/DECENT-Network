@@ -108,7 +108,7 @@ namespace graphene { namespace chain {
 
       friend bool operator != ( const authority& a, const authority& b ) { return !( a == b ); }
 
-      uint32_t num_auths()const { return account_auths.size() + key_auths.size(); }
+      size_t   num_auths()const { return account_auths.size() + key_auths.size(); }
       void     clear() { account_auths.clear(); key_auths.clear(); }
 
       static authority null_authority()

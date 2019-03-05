@@ -58,7 +58,7 @@ memo_data::message_type memo_data::encrypt_message(const std::string &message, c
 {
    auto secret = priv.get_shared_secret(pub);
    auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
-   std::string text = memo_message(digest_type::hash(message)._hash[0], message).serialize();
+   std::string text = memo_message(static_cast<uint32_t>(digest_type::hash(message)._hash[0]), message).serialize();
    return fc::aes_encrypt( nonce_plus_secret, vector<char>(text.begin(), text.end()) );
 }
 

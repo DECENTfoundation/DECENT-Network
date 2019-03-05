@@ -125,7 +125,7 @@ uint MiningVotePopup::getNumberOfActualMiners()
       GUI_ELOG("Exception: ${e}", ("e", ex.what()));
    }
 
-   return active_miners.size();
+   return static_cast<uint>(active_miners.size());
 }
 
 void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
@@ -139,7 +139,7 @@ void MiningVotePopup::getMinerVotesForAccount(const std::string& account_name)
       account_obj = Globals::instance().runTaskParse(cmd);
 
       m_minersVotedNum = account_obj["options"]["num_miner"].get<uint>();
-      m_curMinersVotedFor = account_obj["options"]["votes"].size();
+      m_curMinersVotedFor = static_cast<uint>(account_obj["options"]["votes"].size());
    }
    catch (const std::exception& ex)
    {

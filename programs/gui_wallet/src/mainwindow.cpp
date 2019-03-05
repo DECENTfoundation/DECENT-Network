@@ -1069,7 +1069,7 @@ void MainWindow::DisplayWalletContentGUI()
          id = accs[i]["id"].get<std::string>();
          name = accs[i]["name"].get<std::string>();
 
-         m_pAccountList->insertItem(i, QString::fromStdString(name));
+         m_pAccountList->insertItem(static_cast<int>(i), QString::fromStdString(name));
       }
 
       if (accs.size() > 0) {

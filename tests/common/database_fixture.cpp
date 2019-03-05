@@ -286,7 +286,7 @@ account_create_operation database_fixture::make_account(
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
      }
-     create_account.options.num_miner = create_account.options.votes.size();
+     create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
      create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
      return create_account;
@@ -325,7 +325,7 @@ account_create_operation database_fixture::make_account(
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
      }
-     create_account.options.num_miner = create_account.options.votes.size();
+     create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
      create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
      return create_account;

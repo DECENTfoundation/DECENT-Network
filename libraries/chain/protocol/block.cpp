@@ -76,7 +76,7 @@ namespace graphene { namespace chain {
       while( current_number_of_hashes > 1 )
       {
          // hash ID's in pairs
-         uint32_t i_max = current_number_of_hashes - (current_number_of_hashes&1);
+         auto i_max = current_number_of_hashes - (current_number_of_hashes&1);
          uint32_t k = 0;
 
          for( uint32_t i = 0; i < i_max; i += 2 )

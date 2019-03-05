@@ -83,7 +83,7 @@ void proposal_update_operation::get_required_authorities( vector<authority>& o )
       auth.key_auths[k] = 1;
    for( const auto& k : key_approvals_to_remove )
       auth.key_auths[k] = 1;
-   auth.weight_threshold = auth.key_auths.size();
+   auth.weight_threshold = static_cast<uint32_t>(auth.key_auths.size());
 
    o.emplace_back( std::move(auth) );
 }

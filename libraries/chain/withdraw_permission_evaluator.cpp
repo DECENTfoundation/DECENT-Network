@@ -81,7 +81,7 @@ void_result withdraw_permission_claim_evaluator::do_apply(const withdraw_permiss
    const withdraw_permission_object& permit = d.get(op.withdraw_permission);
    d.modify(permit, [&](withdraw_permission_object& p) {
       auto periods = (d.head_block_time() - p.period_start_time).to_seconds() / p.withdrawal_period_sec;
-      p.period_start_time += periods * p.withdrawal_period_sec;
+      p.period_start_time += static_cast<uint32_t>(periods * p.withdrawal_period_sec);
       if( periods == 0 )
          p.claimed_this_period += op.amount_to_withdraw.amount;
       else

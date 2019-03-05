@@ -153,7 +153,7 @@ void database::process_budget()
       //    voting on changes to block interval).
       //
       assert( gpo.parameters.block_interval > 0 );
-      uint64_t blocks_to_maint = (uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots;
+      uint32_t blocks_to_maint = static_cast<uint32_t>((uint64_t(time_to_maint) + gpo.parameters.block_interval - 1) / gpo.parameters.block_interval - gpo.parameters.maintenance_skip_slots);
 
       // blocks_to_maint > 0 because time_to_maint > 0,
       // which means numerator is at least equal to block_interval
@@ -252,7 +252,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          
          if( opinion_account.options.num_miner <= props.parameters.maximum_miner_count )
          {
-            uint16_t offset = std::min(size_t(opinion_account.options.num_miner/2),
+            auto offset = std::min(size_t(opinion_account.options.num_miner/2),
                                        d._miner_count_histogram_buffer.size() - 1);
             // votes for a number greater than maximum_miner_count
             // are turned into votes for maximum_miner_count.
@@ -321,7 +321,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          // So this k suffices.
          //
          auto y = (head_block_time() - next_maintenance_time).to_seconds() / maintenance_interval;
-         next_maintenance_time += (y+1) * maintenance_interval;
+         next_maintenance_time += static_cast<uint32_t>( (y+1) * maintenance_interval );
       }
    }
 

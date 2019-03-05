@@ -187,7 +187,7 @@ struct egenesis_info
          // TODO: gzip
          int width = 40;
          convert_to_c_array( *genesis_json, *genesis_json_array, width );
-         int height = (genesis_json->length() + width-1) / width;
+         int height = static_cast<int>(genesis_json->length() + width-1) / width;
          genesis_json_array_width = width;
          genesis_json_array_height = height;
       }

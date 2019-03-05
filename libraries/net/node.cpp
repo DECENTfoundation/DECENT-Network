@@ -2400,7 +2400,7 @@ namespace graphene { namespace net { namespace detail {
       // the stuff necessary for generating the synopsis.
       // This is pretty expensive, we should find a better way to do this
       std::vector<item_hash_t> original_ids_of_items_to_get(peer->ids_of_items_to_get.begin(), peer->ids_of_items_to_get.end());
-      uint32_t number_of_blocks_after_reference_point = original_ids_of_items_to_get.size();
+      uint32_t number_of_blocks_after_reference_point = static_cast<uint32_t>(original_ids_of_items_to_get.size());
 
       std::vector<item_hash_t> synopsis = _delegate->get_blockchain_synopsis(reference_point, number_of_blocks_after_reference_point);
 
@@ -2421,7 +2421,7 @@ namespace graphene { namespace net { namespace detail {
       {
         // then the synopsis is incomplete, add the missing elements from ids_of_items_to_get
         uint32_t first_block_num_in_ids_to_get = _delegate->get_block_number(original_ids_of_items_to_get.front());
-        uint32_t true_high_block_num = first_block_num_in_ids_to_get + original_ids_of_items_to_get.size() - 1;
+        uint32_t true_high_block_num = first_block_num_in_ids_to_get + static_cast<uint32_t>(original_ids_of_items_to_get.size()) - 1;
 
         // in order to generate a seamless synopsis, we need to be using the same low_block_num as the 
         // backend code; the first block in the synopsis will be the low block number it used

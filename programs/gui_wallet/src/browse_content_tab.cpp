@@ -159,7 +159,7 @@ void BrowseContentTab::slot_Bought()
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
    
-   m_pTableWidget->setRowCount(_digital_contents.size());
+   m_pTableWidget->setRowCount(static_cast<int>(_digital_contents.size()));
 
    if (m_pDetailsSignalMapper)
       delete m_pDetailsSignalMapper;

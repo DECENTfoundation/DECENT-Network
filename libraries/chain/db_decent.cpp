@@ -179,12 +179,12 @@ void database::set_and_reset_seeding_stats()
 
       // multiplied by 10000
       if( avg_buying_ratio > 0 && upload_to_data_recent > 0)
-         seeding_rel_ratio = ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10;
+         seeding_rel_ratio = static_cast<uint32_t>( ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10 );
       else
          seeding_rel_ratio = stats.seeding_rel_ratio;
 
       if( upload_to_data_recent > 0 )
-         seeding_abs_ratio = ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10;
+         seeding_abs_ratio = static_cast<uint32_t>( ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10 );
       else
          seeding_abs_ratio = stats.seeding_abs_ratio;
 
@@ -258,7 +258,7 @@ void database::decent_housekeeping()
    else
    {
       auto y = (head_block_time() - next_maintenance_time).to_seconds() / maintenance_interval;
-      next_maintenance_time += (y+1) * maintenance_interval;
+      next_maintenance_time += static_cast<uint32_t>( (y+1) * maintenance_interval );
    }
 
    const auto& sidx = get_index_type<subscription_index>().indices().get<by_renewal>();

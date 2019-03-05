@@ -150,7 +150,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
 
 void PurchasedTab::ShowDigitalContentsGUI()
 {
-   m_pTableWidget->setRowCount(_current_content.size());
+   m_pTableWidget->setRowCount(static_cast<int>(_current_content.size()));
 
    if (m_pExtractSignalMapper)
       delete m_pExtractSignalMapper;
@@ -179,19 +179,18 @@ void PurchasedTab::ShowDigitalContentsGUI()
       info_icon->setToolTip(tr("Details"));
       info_icon->setEnabled(false);
       //info_icon->setAlignment(Qt::AlignCenter);
-      m_pTableWidget->setCellWidget(iIndex, 6, info_icon);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 6, info_icon);
 
       QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
+      m_pDetailsSignalMapper->setMapping(info_icon, static_cast<int>(iIndex));
 
-
-      m_pTableWidget->setItem(iIndex, 0, new QTableWidgetItem(QString::fromStdString(title)));
-      m_pTableWidget->setItem(iIndex, 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
-      m_pTableWidget->setItem(iIndex, 2, new QTableWidgetItem(contentObject.price.getString()));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 0, new QTableWidgetItem(QString::fromStdString(title)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 2, new QTableWidgetItem(contentObject.price.getString()));
 
       std::string purchase_date = contentObject.purchased_time.substr(0, contentObject.purchased_time.find("T"));
-      m_pTableWidget->setItem(iIndex, 3, new QTableWidgetItem(convertDateToLocale(purchase_date)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 3, new QTableWidgetItem(convertDateToLocale(purchase_date)));
 
       uint32_t total_key_parts = contentObject.total_key_parts;
       uint32_t received_key_parts  = contentObject.received_key_parts;
@@ -202,7 +201,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       if (DCT::WAITING_DELIVERY == contentObject.type)
          is_delivered = false;
       
-      m_pTableWidget->setItem(iIndex, 4, new QTableWidgetItem(contentObject.status_text));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 4, new QTableWidgetItem(contentObject.status_text));
       
       if (total_key_parts == 0) {
          total_key_parts = 1;
@@ -216,9 +215,9 @@ void PurchasedTab::ShowDigitalContentsGUI()
       progress *= 100; // Percent
 
       if ((received_download_bytes < total_download_bytes) || !is_delivered) {
-         m_pTableWidget->setItem(iIndex, 5, new QTableWidgetItem(QString::number(progress) + "%"));
-         m_pTableWidget->item(iIndex, 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-         m_pTableWidget->item(iIndex, 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+         m_pTableWidget->setItem(static_cast<int>(iIndex), 5, new QTableWidgetItem(QString::number(progress) + "%"));
+         m_pTableWidget->item(static_cast<int>(iIndex), 5)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+         m_pTableWidget->item(static_cast<int>(iIndex), 5)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
       } else {
 
          DecentButton* extract_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Export);
@@ -228,17 +227,17 @@ void PurchasedTab::ShowDigitalContentsGUI()
 
          QObject::connect(extract_icon, &DecentButton::clicked,
                           m_pExtractSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-         m_pExtractSignalMapper->setMapping(extract_icon, iIndex);
+         m_pExtractSignalMapper->setMapping(extract_icon, static_cast<int>(iIndex));
 
-         m_pTableWidget->setCellWidget(iIndex, 5, extract_icon);
+         m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 5, extract_icon);
       }
 
       for(int j = 0; j < m_pTableWidget->columnCount() - 2; ++j)
       {
-         auto* item = m_pTableWidget->item(iIndex, j);
+         auto* item = m_pTableWidget->item(static_cast<int>(iIndex), j);
          if (item) {
-            m_pTableWidget->item(iIndex, j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-            m_pTableWidget->item(iIndex, j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            m_pTableWidget->item(static_cast<int>(iIndex), j)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+            m_pTableWidget->item(static_cast<int>(iIndex), j)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
          }
       }
    }

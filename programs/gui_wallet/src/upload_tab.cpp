@@ -142,7 +142,7 @@ std::string Upload_tab::getUpdateCommand()
 
 void Upload_tab::ShowDigitalContentsGUI()
 {
-   m_pTableWidget->setRowCount(_digital_contents.size());
+   m_pTableWidget->setRowCount(static_cast<int>(_digital_contents.size()));
 
    enum {eTitle, eRating, eSize, ePrice, eCreated, eRemaining, eStatus, eIcon, eResubmit};
 
@@ -170,11 +170,11 @@ void Upload_tab::ShowDigitalContentsGUI()
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
       // Title
-      m_pTableWidget->setItem(iIndex, eTitle, new QTableWidgetItem(QString::fromStdString(title)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eTitle, new QTableWidgetItem(QString::fromStdString(title)));
 
       // Rating
       QString rating = QString::number(content.AVG_rating, 'f', 2);
-      m_pTableWidget->setItem(iIndex, eRating, new QTableWidgetItem(rating));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eRating, new QTableWidgetItem(rating));
 
       // Size
       QString unit = " MB";
@@ -185,10 +185,10 @@ void Upload_tab::ShowDigitalContentsGUI()
          unit = " GB";
          sizeAdjusted = content.size / 1024.0;
       }
-      m_pTableWidget->setItem(iIndex, eSize, new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eSize, new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
 
       // Price
-      m_pTableWidget->setItem(iIndex, ePrice, new QTableWidgetItem(content.price.getString()));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), ePrice, new QTableWidgetItem(content.price.getString()));
 
       // Created
       std::string created_date;
@@ -196,42 +196,42 @@ void Upload_tab::ShowDigitalContentsGUI()
          created_date = content.created.substr(0, content.created.find("T"));
       }
 
-      m_pTableWidget->setItem(iIndex, eCreated, new QTableWidgetItem(convertDateToLocale(created_date)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eCreated, new QTableWidgetItem(convertDateToLocale(created_date)));
 
       QDateTime time = convertStringToDateTime(content.expiration);
       QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
 
       // Remaining
-      m_pTableWidget->setItem(iIndex, eRemaining, new QTableWidgetItem(e_str));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eRemaining, new QTableWidgetItem(e_str));
 
       // Status
-      m_pTableWidget->setItem(iIndex, eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), eStatus, new QTableWidgetItem(QString::fromStdString(content.status)));
 
       for (size_t iColIndex = eTitle; iColIndex < eIcon; ++iColIndex)
       {
-         m_pTableWidget->item(iIndex, iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         m_pTableWidget->item(iIndex, iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+         m_pTableWidget->item(static_cast<int>(iIndex), iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         m_pTableWidget->item(static_cast<int>(iIndex), iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
       }
       // Icon
       DecentButton* info_icon = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Detail);
       info_icon->setEnabled(false);
       info_icon->setToolTip(tr("Details"));
-      m_pTableWidget->setCellWidget(iIndex, eIcon, info_icon);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), eIcon, info_icon);
       
       // Resubmit
       DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Resubmit);
       resubmit_button->setEnabled(false);
       resubmit_button->setToolTip(tr("Publish"));
 //      resubmit_button->setText("res");
-      m_pTableWidget->setCellWidget(iIndex, 8, resubmit_button);
+      m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 8, resubmit_button);
 
       QObject::connect(info_icon, &DecentButton::clicked,
                        m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pDetailsSignalMapper->setMapping(info_icon, iIndex);
+      m_pDetailsSignalMapper->setMapping(info_icon, static_cast<int>(iIndex));
       
       QObject::connect(resubmit_button, &DecentButton::clicked,
                        m_pResubmitSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pResubmitSignalMapper->setMapping(resubmit_button, iIndex);
+      m_pResubmitSignalMapper->setMapping(resubmit_button, static_cast<int>(iIndex));
    }
 }
 
@@ -306,4 +306,3 @@ void Upload_tab::slot_cellClicked(int row, int /*col*/)
 
 
 }  // end namespace gui_wallet
-

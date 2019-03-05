@@ -74,7 +74,7 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
       }
       if( (int)current.size() < std::min(100,limit) )
          break;
-      limit -= current.size();
+      limit -= static_cast<int>(current.size());
    }
 
    return result;

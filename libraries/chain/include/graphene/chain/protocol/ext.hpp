@@ -165,7 +165,7 @@ struct graphene_extension_from_variant_visitor
 
    const variant_object& vo;
    T& value;
-   mutable uint32_t count_left = 0;
+   mutable size_t count_left = 0;
 };
 
 template< typename T >

@@ -1729,7 +1729,7 @@ public:
       }
       else
       {
-         unsigned votes_removed = voting_account_object.options.votes.erase(miner_obj->vote_id);
+         auto votes_removed = voting_account_object.options.votes.erase(miner_obj->vote_id);
          if (!votes_removed)
             FC_THROW("Account ${account} is already not voting for miner ${miner}", ("account", voting_account)("miner", miner));
       }
@@ -2387,7 +2387,7 @@ public:
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
 
-         ShamirSecret ss(quorum, seeders.size(), secret);
+         ShamirSecret ss(quorum, static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
          for( int i =0; i<(int)seeders.size(); i++ )
@@ -2468,7 +2468,7 @@ public:
 #endif
 
          keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         ShamirSecret ss(keys.quorum, seeders.size(), secret);
+         ShamirSecret ss(keys.quorum, static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
 
          for( int i =0; i < (int)seeders.size(); i++ )
@@ -2553,10 +2553,9 @@ signed_transaction content_cancellation(const string& author,
          }
 
          content_download_status status;
-         status.received_key_parts = bobj->key_particles.size();
-         status.total_key_parts = content->key_parts.size();
+         status.received_key_parts = static_cast<uint32_t>(bobj->key_particles.size());
+         status.total_key_parts = static_cast<uint32_t>(content->key_parts.size());
 
-         
          auto pack = PackageManager::instance().find_package(URI);
 
          if (!pack) {
@@ -2566,13 +2565,13 @@ signed_transaction content_cancellation(const string& author,
          } else {
             if (pack->get_data_state() == PackageInfo::CHECKED) {
 
-                status.total_download_bytes = pack->get_size();
-                status.received_download_bytes = pack->get_size();
+                status.total_download_bytes = static_cast<int>(pack->get_size());
+                status.received_download_bytes = static_cast<int>(pack->get_size());
                 status.status_text = "Downloaded";
                 
             } else {
-                status.total_download_bytes = pack->get_total_size();
-                status.received_download_bytes = pack->get_downloaded_size();
+                status.total_download_bytes = static_cast<int>(pack->get_total_size());
+                status.received_download_bytes = static_cast<int>(pack->get_downloaded_size());
                 status.status_text = "Downloading...";                
             }
          }
@@ -2890,7 +2889,7 @@ signed_transaction content_cancellation(const string& author,
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
 
-      decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
+      decent::encrypt::ShamirSecret ss( co.quorum, static_cast<uint16_t>(co.key_parts.size()) );
       decent::encrypt::point message;
 
       const auto& el_gamal_priv_key = _el_gamal_keys.find( bo.pubKey );
@@ -3694,7 +3693,7 @@ signed_transaction content_cancellation(const string& author,
       }
 
       fc::microseconds duration = (_op.expiration - fc::time_point::now());
-      uint64_t days = (duration.to_seconds()+3600*24-1) / 3600 / 24;
+      uint32_t days = static_cast<uint32_t>((duration.to_seconds()+3600*24-1) / 3600 / 24);
 
       _op.hash = _info->get_hash();
       _op.size = size;

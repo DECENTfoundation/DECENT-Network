@@ -760,37 +760,37 @@ This operation will cost %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="190"/>
+        <location filename="../src/purchased_tab.cpp" line="189"/>
         <source> MB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="225"/>
+        <location filename="../src/purchased_tab.cpp" line="224"/>
         <source>Download content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="319"/>
+        <location filename="../src/purchased_tab.cpp" line="318"/>
         <source>Extract</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="351"/>
+        <location filename="../src/purchased_tab.cpp" line="350"/>
         <source>Success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="352"/>
+        <location filename="../src/purchased_tab.cpp" line="351"/>
         <source>Package was successfully extracted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="354"/>
+        <location filename="../src/purchased_tab.cpp" line="353"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="355"/>
+        <location filename="../src/purchased_tab.cpp" line="354"/>
         <source>Failed to extract package</source>
         <translation type="unfinished"></translation>
     </message>

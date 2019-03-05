@@ -54,7 +54,7 @@ fc::time_point_sec database::get_slot_time(uint32_t slot_num)const
       return genesis_time + slot_num * interval;
    }
 
-   int64_t head_block_abs_slot = head_block_time().sec_since_epoch() / interval;
+   uint32_t head_block_abs_slot = head_block_time().sec_since_epoch() / interval;
    fc::time_point_sec head_slot_time(head_block_abs_slot * interval);
 
    const global_property_object& gpo = get_global_properties();
@@ -74,7 +74,7 @@ uint32_t database::get_slot_at_time(fc::time_point_sec when)const
    fc::time_point_sec first_slot_time = get_slot_time( 1 );
    if( when < first_slot_time )
       return 0;
-   return (when - first_slot_time).to_seconds() / block_interval() + 1;
+   return static_cast<uint32_t>( (when - first_slot_time).to_seconds() / block_interval() + 1 );
 }
 
 uint32_t database::miner_participation_rate()const
@@ -109,7 +109,7 @@ void database::update_miner_schedule()
             k ^= (k >> 27);
             k *= 2685821657736338717ULL;
 
-            uint32_t jmax = _wso.current_shuffled_miners.size() - i;
+            uint32_t jmax = static_cast<uint32_t>(_wso.current_shuffled_miners.size()) - i;
             uint32_t j = i + k%jmax;
             std::swap( _wso.current_shuffled_miners[i],
                        _wso.current_shuffled_miners[j] );

@@ -796,7 +796,7 @@ Asset Globals::asset(uint64_t amount, const std::string& assetId)
    auto search = m_asset_symbols_cache.find(assetId);
    if (search == m_asset_symbols_cache.end())
    {
-      uint32_t limit = 100;
+      size_t limit = 100;
       std::string lowerbound;
       do
       {
@@ -1210,7 +1210,7 @@ void DecentTable::set_columns(const std::vector<DecentColumn>& cols)
 
    QStringList columns;
    for (size_t i = 0; i < cols.size(); ++i) {
-      this->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
+      this->horizontalHeader()->setSectionResizeMode(static_cast<int>(i), QHeaderView::Fixed);
       columns << cols[i].title;
    }
    setHorizontalHeaderLabels(columns);
@@ -1258,9 +1258,9 @@ void DecentTable::resizeEvent(QResizeEvent * a_event)
 
    for(size_t i = 0; i < _cols.size(); ++i) {
       if (_cols[i].size > 0) {
-         setColumnWidth(i, width * _cols[i].size / _sum_weights);
+         setColumnWidth(static_cast<int>(i), width * _cols[i].size / _sum_weights);
       } else {
-         setColumnWidth(i, -_cols[i].size);
+         setColumnWidth(static_cast<int>(i), -_cols[i].size);
       }
    }
 }

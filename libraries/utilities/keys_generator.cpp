@@ -106,7 +106,7 @@ std::string generate_brain_key()
    fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
    fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
    fc::bigint entropy(entropy1);
-   entropy <<= 8*sha_entropy1.data_size();
+   entropy <<= static_cast<uint32_t>(8*sha_entropy1.data_size());
    entropy += entropy2;
    std::string brain_key = "";
 

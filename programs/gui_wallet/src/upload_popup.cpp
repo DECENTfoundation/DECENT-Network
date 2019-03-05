@@ -332,7 +332,7 @@ void Upload_popup::slot_ChooseSeeders()
    QObject::connect(pSeederCheckSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
                     this, &Upload_popup::slot_UpdateStatus);
 
-   pSeedersTable->setRowCount(m_arrPublishers.size());
+   pSeedersTable->setRowCount(static_cast<int>(m_arrPublishers.size()));
    for (size_t iIndex = 0; iIndex < m_arrPublishers.size(); ++iIndex)
    {
       auto const& seederItem = m_arrPublishers[iIndex];
@@ -345,15 +345,15 @@ void Upload_popup::slot_ChooseSeeders()
          pubFreeSpace = QString::number(free_space / 1024.0, 'f', 2) + " GB free";
 
       EventPassthrough<QCheckBox>* pCheckBox = new EventPassthrough<QCheckBox>(pSeedersTable);
-      pSeedersTable->setCellWidget(iIndex, eCheckBox, pCheckBox);
-      pSeedersTable->setItem(iIndex, eName, new QTableWidgetItem(QString::fromStdString(seeder.m_str_name)));
-      pSeedersTable->setItem(iIndex, ePrice, new QTableWidgetItem(seeder.m_price.getString()));
-      pSeedersTable->setItem(iIndex, eSpace, new QTableWidgetItem(pubFreeSpace));
+      pSeedersTable->setCellWidget(static_cast<int>(iIndex), eCheckBox, pCheckBox);
+      pSeedersTable->setItem(static_cast<int>(iIndex), eName, new QTableWidgetItem(QString::fromStdString(seeder.m_str_name)));
+      pSeedersTable->setItem(static_cast<int>(iIndex), ePrice, new QTableWidgetItem(seeder.m_price.getString()));
+      pSeedersTable->setItem(static_cast<int>(iIndex), eSpace, new QTableWidgetItem(pubFreeSpace));
 
       for (size_t iColIndex = eName; iColIndex < eSpace; ++iColIndex)
       {
-         pSeedersTable->item(iIndex, iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-         pSeedersTable->item(iIndex, iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+         pSeedersTable->item(static_cast<int>(iIndex), iColIndex)->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+         pSeedersTable->item(static_cast<int>(iIndex), iColIndex)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
       }
 
       if (seederItem.second)
@@ -361,7 +361,7 @@ void Upload_popup::slot_ChooseSeeders()
 
       QObject::connect(pCheckBox, &QCheckBox::stateChanged,
                        pSeederCheckSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      pSeederCheckSignalMapper->setMapping(pCheckBox, iIndex);
+      pSeederCheckSignalMapper->setMapping(pCheckBox, static_cast<int>(iIndex));
    }
 
    QObject::connect(pOKButton, &QPushButton::clicked,

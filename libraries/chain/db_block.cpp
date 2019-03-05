@@ -468,7 +468,7 @@ uint32_t database::push_applied_operation( const operation& op )
    oh.op = op;
 //   elog("calling registered callbacks for operation ${o}", ("o",oh));
    on_applied_operation (oh);
-   return _applied_ops.size() - 1;
+   return static_cast<uint32_t>(_applied_ops.size() - 1);
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
 {

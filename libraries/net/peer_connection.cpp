@@ -470,13 +470,13 @@ namespace graphene { namespace net
       // expire old items from inventory_advertised_to_peer
       auto oldest_inventory_to_keep_iter = inventory_advertised_to_peer.get<timestamp_index>().lower_bound(oldest_inventory_to_keep);
       auto begin_iter = inventory_advertised_to_peer.get<timestamp_index>().begin();
-      unsigned number_of_elements_advertised_to_peer_to_discard = std::distance(begin_iter, oldest_inventory_to_keep_iter);
+      uint64_t number_of_elements_advertised_to_peer_to_discard = static_cast<uint64_t>(std::distance(begin_iter, oldest_inventory_to_keep_iter));
       inventory_advertised_to_peer.get<timestamp_index>().erase(begin_iter, oldest_inventory_to_keep_iter);
 
       // also expire items from inventory_peer_advertised_to_us
       oldest_inventory_to_keep_iter = inventory_peer_advertised_to_us.get<timestamp_index>().lower_bound(oldest_inventory_to_keep);
       begin_iter = inventory_peer_advertised_to_us.get<timestamp_index>().begin();
-      unsigned number_of_elements_peer_advertised_to_discard = std::distance(begin_iter, oldest_inventory_to_keep_iter);
+      uint64_t number_of_elements_peer_advertised_to_discard = static_cast<uint64_t>(std::distance(begin_iter, oldest_inventory_to_keep_iter));
       inventory_peer_advertised_to_us.get<timestamp_index>().erase(begin_iter, oldest_inventory_to_keep_iter);
       dlog("Expiring old inventory for peer ${peer}: removing ${to_peer} items advertised to peer (${remain_to_peer} left), and ${to_us} advertised to us (${remain_to_us} left)",
            ("peer", get_remote_endpoint())

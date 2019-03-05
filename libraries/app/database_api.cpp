@@ -1902,7 +1902,7 @@ namespace
       
       const content_object co = *content;
       
-      decent::encrypt::ShamirSecret ss( co.quorum, co.key_parts.size() );
+      decent::encrypt::ShamirSecret ss( co.quorum, static_cast<uint16_t>(co.key_parts.size()) );
       decent::encrypt::point message;
       
       DInteger el_gamal_priv_key = el_gamal_priv_key_string;
@@ -1945,7 +1945,7 @@ namespace
 #endif
 
          keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         ShamirSecret ss(keys.quorum, seeders.size(), secret);
+         ShamirSecret ss(keys.quorum, static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
          
 
@@ -2511,7 +2511,7 @@ namespace
          miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
       }
 
-      uint32_t blocks_in_interval = (uint64_t(miner_reward_input.time_to_maint) + miner_reward_input.block_interval - 1) / miner_reward_input.block_interval;
+      auto blocks_in_interval = (miner_reward_input.time_to_maint + miner_reward_input.block_interval - 1) / miner_reward_input.block_interval;
       return blocks_in_interval > 0 ? miner_reward_input.from_accumulated_fees / blocks_in_interval : 0;
    }
 
