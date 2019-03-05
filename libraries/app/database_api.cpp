@@ -389,9 +389,29 @@ namespace graphene { namespace app {
       return {};
    }
    
-   optional<signed_block> database_api::get_block(uint32_t block_num)const
+   optional<signed_block_with_info> database_api::get_block(uint32_t block_num)const
    {
-      return my->get_block( block_num );
+      auto block = my->get_block( block_num );
+      if( !block )
+         return {};
+
+      optional<signed_block_with_info> result((signed_block_with_info()));
+      reinterpret_cast<signed_block&>(*result) = *block; 
+      result->block_id = block->id();
+      result->signing_key = block->signee();
+      result->transaction_ids.reserve( block->transactions.size() );
+      for( const processed_transaction& tx : block->transactions )
+         result->transaction_ids.push_back( tx.id() );
+
+      share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block->timestamp);
+      share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block_num);
+
+      //this should never happen, but better check.
+      if (miner_pay_from_fees < share_type(0))
+         miner_pay_from_fees = share_type(0);
+
+      result->miner_reward = miner_pay_from_fees + miner_pay_from_reward;
+      return result;
    }
    
    optional<signed_block> database_api_impl::get_block(uint32_t block_num)const

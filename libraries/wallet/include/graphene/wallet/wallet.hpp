@@ -225,17 +225,6 @@ namespace graphene { namespace wallet {
          std::string author;
       };
 
-      struct signed_block_with_info : public signed_block
-      {
-         signed_block_with_info( const signed_block& block );
-         signed_block_with_info( const signed_block_with_info& block ) = default;
-
-         block_id_type block_id;
-         public_key_type signing_key;
-         vector< transaction_id_type > transaction_ids;
-         graphene::chain::share_type miner_reward;
-      };
-
       struct vesting_balance_object_with_info : public vesting_balance_object
       {
          vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now );
@@ -394,10 +383,6 @@ FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                   )
 
 FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex, (graphene::chain::buying_object),(author) )
-
-
-FC_REFLECT_DERIVED( graphene::wallet::signed_block_with_info, (graphene::chain::signed_block),
-                    (block_id)(signing_key)(transaction_ids)(miner_reward) )
 
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )

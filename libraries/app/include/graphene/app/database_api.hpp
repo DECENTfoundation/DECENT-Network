@@ -208,7 +208,7 @@ namespace graphene { namespace app {
           * @return the referenced block, or \c null if no matching block was found
           * @ingroup DatabaseAPI_BlockTx
           */
-         optional<signed_block> get_block(uint32_t block_num)const;
+         optional<signed_block_with_info> get_block(uint32_t block_num)const;
 
          /**
           * @brief Used to fetch an individual transaction.

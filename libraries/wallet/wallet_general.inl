@@ -7,20 +7,7 @@ variant_object wallet_api::about() const
 
 optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
 {
-   optional<signed_block_with_info> result = my->_remote_db->get_block(num);
-   if( !result )
-      return optional<signed_block_with_info>();
-
-   share_type miner_pay_from_fees = my->_remote_db->get_miner_pay_from_fees_by_block_time(result->timestamp);
-   share_type miner_pay_from_reward = my->_remote_db->get_asset_per_block_by_block_num(num);
-
-   //this should never happen, but better check.
-   if (miner_pay_from_fees < share_type(0))
-      miner_pay_from_fees = share_type(0);
-
-   result->miner_reward = miner_pay_from_fees + miner_pay_from_reward;
-
-   return result;
+   return my->_remote_db->get_block(num);
 }
 
 global_property_object wallet_api::get_global_properties() const

@@ -3675,15 +3675,6 @@ signed_transaction content_cancellation(const string& author,
       return my->get_result_formatters();
    }
 
-   signed_block_with_info::signed_block_with_info( const signed_block& block ) : signed_block( block )
-   {
-      block_id = id();
-      signing_key = signee();
-      transaction_ids.reserve( transactions.size() );
-      for( const processed_transaction& tx : transactions )
-         transaction_ids.push_back( tx.id() );
-   }
-
    vesting_balance_object_with_info::vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now )
       : vesting_balance_object( vbo )
    {
