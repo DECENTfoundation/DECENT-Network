@@ -1,6 +1,6 @@
 add_executable( decentd main.cpp )
 if( WIN32 )
-    add_executable( decentd winsvc.cpp )
+    add_executable( decentd winsvc.cpp winsvc.hpp )
 endif()
 
 find_package( Gperftools QUIET )
