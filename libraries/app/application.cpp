@@ -120,7 +120,9 @@ namespace detail {
                  seeds.push_back(seed_string);
              }
 
-         } else {
+         }
+         else if( _chain_db->get_chain_id() == graphene::egenesis::get_egenesis_chain_id() )
+         {
              vector<string> base_seeds_list = {
                "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
