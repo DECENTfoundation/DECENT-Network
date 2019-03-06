@@ -1,4 +1,7 @@
 add_executable( decentd main.cpp )
+if( WIN32 )
+    add_executable( decentd winsvc.cpp )
+endif()
 
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )
