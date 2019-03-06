@@ -109,8 +109,8 @@ void database::update_active_miners()
    modify( get(GRAPHENE_MINER_ACCOUNT), [&]( account_object& a )
    {
       vote_counter vc;
-      for( const miner_object& wit : wits )
-         vc.add( wit.miner_account, _vote_tally_buffer[wit.vote_id] );
+      std::for_each( wits.begin(), wits.begin() + count,
+         [this, &vc](const miner_object& miner){ vc.add( miner.miner_account, _vote_tally_buffer[miner.vote_id] ); } );
       vc.finish( a.active );
    } );
 
