@@ -50,7 +50,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <signal.h> 
 #include <windows.h>
 #include "winsvc.hpp"
@@ -60,18 +60,25 @@
 
 using namespace graphene;
 namespace bpo = boost::program_options;
-         
 
+         
+int main_internal(int argc, char** argv);
 
 #ifdef _MSC_VER
-// Stopping from GUI
+// Stopping from GUI and stopping of win service
 static fc::promise<int>::ptr s_exit_promise;
+
 BOOL s_bStop = FALSE;
 HANDLE s_hStopProcess = NULL;
 
+SERVICE_TABLE_ENTRY DispatchTable[] = {
+		{ (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)main_internal },
+		{ NULL, NULL }
+};
+
 void StopWinService()
 {
-	s_exit_promise->set_value(SIGTERM);
+   s_exit_promise->set_value(SIGTERM);
 }
 
 DWORD WINAPI StopFromGUIThreadProc(void* params)
@@ -156,18 +163,17 @@ int start_as_daemon()
 
    return 0;
 }
-#else
-
-// we dont need
-
 #endif
 
-
-int main(int argc, char** argv) {
+int main_internal(int argc, char** argv) {
 #ifdef _MSC_VER
+   DWORD err = 0;
 	bool is_win_service = IsRunningAsSystemService();
-	if(is_win_service == false)
-		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+	if(is_win_service) {
+      err = InitializeService();
+      if(err)
+			return err;
+	}
 #endif
 
    bpo::options_description app_options("DECENT Daemon");
@@ -188,7 +194,8 @@ int main(int argc, char** argv) {
       app::application::set_program_options(cli, cfg);
       decent_plugins::set_program_options(cli, cfg);
       cli.add_options()
-         ("daemon", "Run DECENT as daemon.")
+         ("daemon", "Run DECENT as daemon. \nWindows only: It registers application like system service and setup other command line parameters as service startup parameters.")
+         ("remove-win-service", "Windows only: It unregisters application if previously registered as Windows service. (If used --daemon option)")
       ;
 
       app_options.add(cli);
@@ -225,34 +232,42 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
    }
 
+   bool run_as_daemon = options.count("daemon");
+
+#ifdef _MSC_VER
+   if(is_win_service) 
+		run_as_daemon = true; 
+   else if(run_as_daemon) { // install like service and start it
+	   std::string cmd_line_str;
+	   for(int i = 1; i < argc; i++) {
+		   cmd_line_str += " ";
+		   cmd_line_str += argv[i];
+	   }
+	   err = install_win_service(cmd_line_str.c_str());
+	   return err;
+	} else {
+		if(options.count("remove-win-service")) {
+         err = remove_win_service();
+         return err;
+		}
+	}
+#endif
    app::application* node = new app::application();
    fc::oexception unhandled_exception;
    try {
       decent_plugins::types plugins = decent_plugins::create(*node);
 
-      bool run_as_daemon = options.count("daemon");
       fc::path logs_dir, data_dir, config_filename;
       auto& path_finder = utilities::decent_path_finder::instance();
-
-#ifdef _MSC_VER
-	  if (is_win_service) {
-		  run_as_daemon = true;
-	  }
-	  else if (run_as_daemon) {// install like service a start it
-		  std::string cmd_line_str;
-		  for (int i = 1; i < argc; i++) {
-			  cmd_line_str += " ";
-			  cmd_line_str += argv[i];
-		  }
-		  install_win_service(cmd_line_str.c_str());
-		  return 0;
-	  }
-#endif
 	  
       if( run_as_daemon ) {
 #ifdef _MSC_VER
 		  char service_data_dir[256] = "";
 		  GetAppDataDir(service_data_dir, sizeof(service_data_dir) - 1);
+		  data_dir = service_data_dir;
+		  data_dir = data_dir / "decentd";
+		  logs_dir = data_dir / "logs";
+		  config_filename = data_dir / "config.ini";
 #else
          int ret = start_as_daemon();
 
@@ -307,8 +322,10 @@ int main(int argc, char** argv) {
       else //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
       {
          ilog("Writing new config file at ${path}", ("path", config_filename));
-         if( !fc::exists(data_dir) )
-            fc::create_directories(data_dir);
+		 if (!fc::exists(data_dir)) {
+			 std::string data_dir_str = data_dir.string();
+			 fc::create_directories(data_dir);
+		 }
 
          if( !run_as_daemon )
             logs_dir /= "logs";
@@ -352,6 +369,8 @@ int main(int argc, char** argv) {
          DWORD tid = 0;
          CreateThread(NULL, 0, StopFromGUIThreadProc, NULL, 0, &tid);
       }
+	  if(is_win_service)
+		  ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 #else
       fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGINT attempting to exit cleanly" );
@@ -393,6 +412,8 @@ int main(int argc, char** argv) {
       node->shutdown();
       delete node;
 #ifdef _MSC_VER
+	  if(is_win_service)
+		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
       s_bStop = TRUE;
 #endif
       return 0;
@@ -411,4 +432,29 @@ int main(int argc, char** argv) {
       delete node;
       return 1;
    }
+}
+
+int main(int argc, char** argv)
+{
+	int result = 0;
+#ifdef _MSC_VER
+	DWORD err = 0;
+	bool is_win_service = IsRunningAsSystemService();
+	if(is_win_service == false) {
+		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+		result = main_internal(argc, argv);
+	} else {
+		
+		if (!StartServiceCtrlDispatcher(DispatchTable)) {
+         err = GetLastError();
+			SvcReportEvent((LPTSTR)"StartServiceCtrlDispatcher");
+         return err;
+		} 
+      return 0;
+	}
+#else
+	result = main_internal(argc, argv);
+#endif
+
+	return result;
 }

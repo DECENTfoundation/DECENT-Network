@@ -1,12 +1,14 @@
-#ifdef _MSC_VER
-#include "winsvc.hpp"
 #include <windows.h>
+
+#include "winsvc.hpp"
+
+#include <iostream>
 #include <stdio.h>
 #include <strsafe.h>
 #include <shlobj.h>
 #include <vector>
-//#include "sample.h"
-#define SVC_ERROR                        ((DWORD)0xC0020001L)
+
+//#define SVC_ERROR                        ((DWORD)0xC0020001L)
 
 enum WinServiceState {
 	WinServiceState_UNKNOWN = 0,
@@ -27,31 +29,20 @@ enum InstalledState {
 
 };
 
-#define SVCNAME "DCore"
-
 static SERVICE_STATUS          s_SvcStatus;
 static SERVICE_STATUS_HANDLE   s_SvcStatusHandle;
-static HANDLE                  s_hSvcStopEvent = NULL;
 
-bool SvcInstall(const char* cmd_line_params);
-bool SvcRemove(void);
-
-
+DWORD SvcInstall(const char* cmd_line_params);
 void WINAPI SvcCtrlHandler(DWORD);
-void WINAPI SvcMain(int, char**);
 
-void ReportSvcStatus(DWORD, DWORD, DWORD);
-void SvcInit(int, char**);
-void SvcReportEvent(LPTSTR);
+
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize);
 InstalledState IsInstalledAsService(WinServiceState& state, char* szErr, int maxLen);
-int main(int argc, char** argv);
 
 void GetAppDataDir(char* path, int max_len)
 {
 	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, (char*)path);
 }
-
 
 bool IsRunningAsSystemService()
 {
@@ -63,12 +54,14 @@ bool IsRunningAsSystemService()
 }
 
 
-int install_win_service(const char *cmd_line_str)
+DWORD install_win_service(const char *cmd_line_str)
 {
-	WinServiceState state;
-	char errStr[256] = "";
-	InstalledState is_installed = IsInstalledAsService(state, errStr, sizeof(errStr));
+	DWORD err = 0;
 	/*
+   WinServiceState state;
+   char errStr[256] = "";
+   InstalledState is_installed = IsInstalledAsService(state, errStr, sizeof(errStr));
+	
 	if(is_installed == 0)
 		printf("Unknown, state: %i, error: %s", state, errStr);
 	if (is_installed == 1)
@@ -76,42 +69,22 @@ int install_win_service(const char *cmd_line_str)
 	if (is_installed == 2)
 		printf("Not installed, state: %i, error: %s", state, errStr);
 	*/
-	if (SvcInstall(cmd_line_str) == false)
-		return 1;
-	
-	/*
-	if (lstrcmpi(argv[1], "--remove-win-service") == 0) {
-		SvcRemove();
-		return 0;
-	}*/
-
-	// TO_DO: Add any additional services for the process to this table.
-	SERVICE_TABLE_ENTRY DispatchTable[] = {
-		{ (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)SvcMain },
-		{ NULL, NULL }
-	};
-
-	// This call returns when the service has stopped. 
-	// The process should simply terminate when the call returns.
-
-	if (!StartServiceCtrlDispatcher(DispatchTable)) {
-		SvcReportEvent((LPTSTR)"StartServiceCtrlDispatcher");
-	}
-	return 0;
+   err = SvcInstall(cmd_line_str);
+	return err;
 }
 
-bool SvcInstall(const char* cmd_line_params)
+DWORD SvcInstall(const char* cmd_line_params)
 {
 	SC_HANDLE schSCManager;
 	SC_HANDLE schService;
-	bool result = false;
+	bool installed = false;
 	DWORD err = 0;
 	char szPath[MAX_PATH];
 
 	if (!GetModuleFileName(NULL, szPath, MAX_PATH)) {
-		printf("Cannot install service (%d)\n", GetLastError());
-
-		return false;
+      err = GetLastError();
+		std::cerr << "Cannot install service, error:" << err << std::endl;
+		return err;
 	}
 
 	// Get a handle to the SCM database. 
@@ -123,20 +96,20 @@ bool SvcInstall(const char* cmd_line_params)
 	if (NULL == schSCManager) {
 		err = GetLastError();
 		if (err == ERROR_ACCESS_DENIED)
-			printf("Insufficient rights to install service\n");
+         std::cerr << "Insufficient rights to install service" << std::endl;
 		else
-			printf("OpenSCManager failed (%d)\n", GetLastError());
-		return false;
+         std::cerr << "OpenSCManager failed, error: " << err << std::endl;
+		return err;
 	}
 
 	// Create the service
 	schService = CreateService(
 		schSCManager,              // SCM database 
 		SVCNAME,                   // name of service 
-		SVCNAME,                   // service name to display 
+      SVCDISPLAYNAME,            // service name to display 
 		SERVICE_ALL_ACCESS,        // desired access 
 		SERVICE_WIN32_OWN_PROCESS, // service type 
-		SERVICE_DEMAND_START,      // start type 
+      SERVICE_AUTO_START,      // start type 
 		SERVICE_ERROR_NORMAL,      // error control type 
 		szPath,                    // path to service's binary 
 		NULL,                      // no load ordering group 
@@ -148,9 +121,9 @@ bool SvcInstall(const char* cmd_line_params)
 	if (schService == NULL) {
 		err = GetLastError();
 		if (err != ERROR_SERVICE_EXISTS) {
-			printf("CreateService failed (%d)\n", GetLastError());
+         std::cerr << "CreateService failed, error: " << err << std::endl; 
 			CloseServiceHandle(schSCManager);
-			return false;
+			return GetLastError();
 		}
 		else // path can be changed
 		{
@@ -178,13 +151,13 @@ bool SvcInstall(const char* cmd_line_params)
 						bool stopped = false;
 						SERVICE_STATUS          ssStatus;
 						if (ControlService(schService, SERVICE_CONTROL_STOP, &ssStatus)) {
-							printf("Stopping %s.", SVCNAME);
+                     std::cout << "Stopping " << SVCNAME << "." << std::endl;;
 							Sleep(1000);
 							DWORD counter = 0;
 							while (QueryServiceStatus(schService, &ssStatus) || counter < 60) {
 
 								if (ssStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-									printf(".");
+                           std::cout << ".";
 									Sleep(1000);
 								}
 								else
@@ -194,52 +167,56 @@ bool SvcInstall(const char* cmd_line_params)
 
 							if (ssStatus.dwCurrentState == SERVICE_STOPPED) {
 								stopped = true;
-								printf("\n%s stopped.\n", SVCNAME);
+                        std::cout << SVCNAME << " stopped." << std::endl;
 							} 
 							else
-								printf("\n%s failed to stop.\n", SVCNAME); 
+                        std::cout << SVCNAME << " failed to stop." << std::endl;
 						}
 						if (ssStatus.dwCurrentState == SERVICE_STOPPED) {
 							stopped = true;
-							printf("\n%s stopped.\n", SVCNAME);
+                     std::cout << SVCNAME << " stopped." << std::endl;
 						}
 						if (stopped) {
 							if (!ChangeServiceConfig(schService, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, szPath, NULL, NULL, NULL, NULL, NULL, NULL)) 
 							{	
 								err = GetLastError();
 								if (err == ERROR_ACCESS_DENIED)
-									printf("Insufficient rights to change service configuration\n");
+                           std::cerr << "Insufficient rights to change service configuration" << std::endl;
 								else
-									printf("Cannot change service config, error: %d\n", GetLastError());
+                           std::cerr << "Cannot change service config, error: " << err << std::endl;
 							} else
-								result = true;// ok, changed
+                        installed = true;// ok, changed
 						}
 					} else
-						result = true;
+                  installed = true;
 				} else
-					printf("Cannot retrieve service config, error: %d\n", err);
+               std::cerr << "Cannot retrieve service config, error: " << err << std::endl;
 				CloseServiceHandle(schService);
 			} else {
 				err = GetLastError();
-				if (err == ERROR_ACCESS_DENIED) {
-					printf("Insufficient rights to open existing service\n");
-				} else {
-					printf("Opening existing service failed, error: %d\n", err);				
-				}
+            if(err == ERROR_ACCESS_DENIED)
+               std::cerr << "Insufficient rights to open existing service" << std::endl;
+				else 
+               std::cerr << "Opening existing service failed, error: " << err << std::endl;
 			}
 		}
+      if(installed == true) 
+         std::cout << "Service " << SVCNAME << " reinstalled successfully. You can start service from control panel or with command: \"net start " << SVCNAME << "\"" << std::endl;
+      
 	} else {
-		printf("Service installed successfully\n");
-		result = true;
+      SERVICE_DESCRIPTION sd;
+      sd.lpDescription = SVCDESCRIPTION;
+      ChangeServiceConfig2(schService, SERVICE_CONFIG_DESCRIPTION, &sd);
+		std::cout << "Service " << SVCNAME << " installed successfully. You can start service from control panel or with command: \"net start " << SVCNAME << "\"" << std::endl;
+      installed = true;
 		CloseServiceHandle(schService);
 	}
 	CloseServiceHandle(schSCManager);
 
-	if (result) {
+	if (installed) {
 		char serviceRegPath[MAX_PATH];
 		lstrcpy(serviceRegPath, "System\\CurrentControlSet\\Services\\");
 		lstrcat(serviceRegPath, SVCNAME);
-		//lstrcat(serviceRegPath, "\\Parameters");
 
 		DWORD disp = 0;
 		HKEY hKey = NULL;
@@ -251,20 +228,22 @@ bool SvcInstall(const char* cmd_line_params)
 			RegCloseKey(hKey);
 		}
 		else {
-			result = false;// cannot change command line
-			printf("Cannot setup command line, error: %d\n", err);
+         installed = false;// cannot change command line
+         std::cerr << "Cannot setup command line, error: " << err << std::endl;
 		}
 	}
-	return result;
+   if(!installed)
+      err = GetLastError();
+	return err;
 }
 
-bool SvcRemove(void)
+DWORD remove_win_service()
 {
 	SC_HANDLE   schService;
 	SC_HANDLE   schSCManager;
 	SERVICE_STATUS          ssStatus;
 	char                   szErr[256];
-	bool result = false;
+	bool deleted = false;
 	DWORD err = 0;
 
 	schSCManager = 
@@ -280,13 +259,13 @@ bool SvcRemove(void)
 		if (schService) {
 			// try to stop the service
 			if (ControlService(schService, SERVICE_CONTROL_STOP, &ssStatus)) {
-				printf("Stopping %s.", SVCNAME);
+            std::cout << "Stopping " << SVCNAME << "." << std::endl;
 				Sleep(1000);
 				DWORD counter = 0;
 				while (QueryServiceStatus(schService, &ssStatus) || counter < 60) {
 
 					if (ssStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-						printf(".");
+                  std::cout << ".";
 						Sleep(1000);
 					}
 					else
@@ -294,43 +273,45 @@ bool SvcRemove(void)
 					counter++;
 				}
 
-				if (ssStatus.dwCurrentState == SERVICE_STOPPED)
-					printf("\n%s stopped.\n", SVCNAME);
+				if (ssStatus.dwCurrentState == SERVICE_STOPPED)					
+               std::cout << SVCNAME << " stopped." << std::endl;
 				else
-					printf("\n%s failed to stop.\n", SVCNAME);
+               std::cerr << SVCNAME << " failed to stop." << std::endl;
 			}
 			// remove the service
 			if (DeleteService(schService)) {
-				printf("%s removed.\n", SVCNAME);
-				result = true;
+            std::cout << SVCNAME << " removed." << std::endl;
+				deleted = true;
 			} 
-			else
-				printf("DeleteService failed - %s\n", GetLastErrorText(szErr, 256));
-
+         else {
+            err = GetLastError();
+            std::cerr << "DeleteService failed, error: " << GetLastErrorText(szErr, 256) << std::endl;
+         }
 
 			CloseServiceHandle(schService);
-		} else
-			printf("OpenService failed - %s\n", GetLastErrorText(szErr, 256));
+      } else {
+         err = GetLastError();
+         std::cerr << "OpenService failed, error: " << GetLastErrorText(szErr, 256) << std::endl;
+      }
 
 		CloseServiceHandle(schSCManager);
-	} else
-		printf("OpenSCManager failed - %s\n", GetLastErrorText(szErr, 256));
-	return result;
+   } else {
+      err = GetLastError();
+      std::cerr << "OpenSCManager failed, error: " << GetLastErrorText(szErr, 256) << std::endl;
+   }
+
+	return err;
 }
 
-
-
-void WINAPI SvcMain(int argc, char* argv[])
+DWORD InitializeService()
 {
-	// Register the handler function for the service
-
 	s_SvcStatusHandle = RegisterServiceCtrlHandler(
 		SVCNAME,
 		SvcCtrlHandler);
 
 	if (!s_SvcStatusHandle) {
 		SvcReportEvent((char*)"RegisterServiceCtrlHandler");
-		return;
+      return GetLastError();
 	}
 
 	// These SERVICE_STATUS members remain as set here
@@ -339,47 +320,8 @@ void WINAPI SvcMain(int argc, char* argv[])
 
 	// Report initial status to the SCM
 	ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
-
-	// Perform service-specific initialization and work.
-	SvcInit(argc, argv);
-}
-
-void SvcInit(int argc, char* argv[])
-{
-	// TO_DO: Declare and set any required variables.
-	//   Be sure to periodically call ReportSvcStatus() with 
-	//   SERVICE_START_PENDING. If initialization fails, call
-	//   ReportSvcStatus with SERVICE_STOPPED.
-
-	// Create an event. The control handler function, SvcCtrlHandler,
-	// signals this event when it receives the stop control code.
-
-	s_hSvcStopEvent = CreateEvent(
-		NULL,    // default security attributes
-		TRUE,    // manual reset event
-		FALSE,   // not signaled
-		NULL);   // no name
-
-	if (s_hSvcStopEvent == NULL) {
-		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
-		return;
-	}
-
-	// Report running status when initialization is complete.
-
-	ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
-
-	// TO_DO: Perform work until service stops.
-	//while (1) {
-		// Check whether to stop the service.
-
-		//WaitForSingleObject(s_hSvcStopEvent, INFINITE);
-	Sleep(20000);
-		main(argc, argv);
-
-		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
-		return;
-	//}
+   
+	return 0;
 }
 
 void
@@ -417,9 +359,6 @@ void WINAPI SvcCtrlHandler(DWORD dwCtrl)
 	case SERVICE_CONTROL_STOP:
 		ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
-		// Signal the service to stop.
-
-		SetEvent(s_hSvcStopEvent);
 		StopWinService();
 		ReportSvcStatus(s_SvcStatus.dwCurrentState, NO_ERROR, 0);
 
@@ -444,7 +383,7 @@ void SvcReportEvent(LPTSTR szFunction)
 
 	if (NULL != hEventSource)
 	{
-		StringCchPrintf(Buffer, 80, TEXT("%s failed with %d"), szFunction, GetLastError());
+		StringCchPrintf(Buffer, 80, "%s failed with %d", szFunction, GetLastError());
 
 		lpszStrings[0] = SVCNAME;
 		lpszStrings[1] = Buffer;
@@ -452,7 +391,7 @@ void SvcReportEvent(LPTSTR szFunction)
 		ReportEvent(hEventSource,        // event log handle
 			EVENTLOG_ERROR_TYPE, // event type
 			0,                   // event category
-			SVC_ERROR,           // event identifier
+			0,                   // event identifier
 			NULL,                // no security identifier
 			2,                   // size of lpszStrings array
 			0,                   // no binary data
@@ -462,7 +401,6 @@ void SvcReportEvent(LPTSTR szFunction)
 		DeregisterEventSource(hEventSource);
 	}
 }
-
 
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize)
 {
@@ -515,12 +453,10 @@ InstalledState IsInstalledAsService(WinServiceState& state, char* szErr, int max
 			// try to stop the service			
 			if (QueryServiceStatus(schService, &ssStatus)) {
 				state = (WinServiceState)ssStatus.dwCurrentState;					
-			}
-			else {
-
+			} else {
 				if (szErr) {
 					GetLastErrorText(szErr, maxLen);
-					printf("QueryServiceStatus failed - %s\n", szErr);
+               std::cerr << "QueryServiceStatus failed, error: " << szErr << std::endl;
 				}
 			}
 			CloseServiceHandle(schService);
@@ -532,26 +468,25 @@ InstalledState IsInstalledAsService(WinServiceState& state, char* szErr, int max
 			
 			switch (err) {
 				case 5:	//Access denied
-					printf("OpenService failed, access denied\n");
+               std::cerr << "OpenService failed, access denied" << std::endl;
 					break;
 				case 0x424:
 					result = InstalledState_NotInstalled;
 					break;
 				default:
-					if (szErr)
-						printf("OpenService failed - %s\n", szErr);
+					if (err)
+                  std::cerr << "OpenService failed, error: " << szErr <<  std::endl;
 					break;
 			}
 		}
 
-		CloseServiceHandle(schSCManager);
+		CloseServiceHandle(schSCManager); 
 	}
 	else {
 		if (szErr) {
 			GetLastErrorText(szErr, maxLen);
-			printf("OpenSCManager failed - %s\n", szErr);
+         std::cerr << "OpenSCManager failed, error: " << szErr << std::endl;
 		}
 	}
 	return result;
 }
-#endif
