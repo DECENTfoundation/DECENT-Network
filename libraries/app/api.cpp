@@ -272,8 +272,8 @@ namespace graphene { namespace app {
       FC_ASSERT( limit <= 100 );
       vector<operation_history_object> result;
       const auto& stats = account(db).statistics(db);
-      if( stats.most_recent_op == account_transaction_history_id_type() ) return result;
-      const account_transaction_history_object* node = &stats.most_recent_op(db);
+      const account_transaction_history_object* node = db.find(stats.most_recent_op);
+      if( stats.most_recent_op == account_transaction_history_id_type() && nullptr == node) { return result; }
       if( start == operation_history_id_type() || start.instance.value > node->operation_id.instance.value )
          start = node->operation_id;
 
