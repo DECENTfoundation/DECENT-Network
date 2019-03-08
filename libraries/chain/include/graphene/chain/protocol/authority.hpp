@@ -113,7 +113,7 @@ namespace graphene { namespace chain {
 
       static authority null_authority()
       {
-         return authority( 1, GRAPHENE_NULL_ACCOUNT, 1 );
+         return authority( 1u, GRAPHENE_NULL_ACCOUNT, weight_type(1) );
       }
 
       uint32_t                              weight_threshold = 0;

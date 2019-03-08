@@ -685,7 +685,7 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
    auto result = eval->evaluate( eval_state, op, true );
    set_applied_operation_result( op_id, result );
    return result;
-} FC_CAPTURE_AND_RETHROW(  ) }
+} FC_CAPTURE_AND_RETHROW( (op) ) }
 
 const miner_object& database::validate_block_header( uint32_t skip, const signed_block& next_block )const
 {

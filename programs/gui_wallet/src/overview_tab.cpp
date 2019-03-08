@@ -158,7 +158,7 @@ void Overview_tab::slot_Details()
       std::string registrar = accountInfo["registrar"].get<std::string>();
       bool is_publishing_manager = accountInfo["rights_to_publish"]["is_publishing_manager"].get<bool>();
       std::string name = accountInfo["name"].get<std::string>();
-      int size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
+      size_t size = accountInfo["rights_to_publish"]["publishing_rights_received"].size();
 
       UserInfoWidget *userInfoWidget = new UserInfoWidget(nullptr,
                                                           is_publishing_manager,

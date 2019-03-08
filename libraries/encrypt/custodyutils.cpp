@@ -21,7 +21,7 @@ namespace {
 template<typename pos_type>
 uint32_t get_n(pos_type length, uint32_t sectors)
 {
-   uint32_t n = length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors);
+   auto n = static_cast<uint32_t>(length / (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors));
    return length % (DECENT_SIZE_OF_NUMBER_IN_THE_FIELD * sectors) ? n + 1 : n;
 }
 
@@ -101,7 +101,7 @@ void CustodyUtils::get_data(std::fstream &file, uint64_t realLen, char buffer[],
       if( file.eof() )
          memset(buffer, 0, size);
       else {
-         uint32_t left = realLen - position;
+         auto left = static_cast<std::streamsize>(realLen - position);
          file.read(buffer, left);
          memset(buffer + left, 0, size - left);
       }
@@ -119,7 +119,7 @@ void CustodyUtils::get_m(std::fstream &file, uint32_t i, uint32_t j, mpz_t &out,
    } else {
       file.seekg(position, file.beg);
       if( realLen < position + DECENT_SIZE_OF_NUMBER_IN_THE_FIELD ) { //we can't read the whole string
-         int left = realLen - (uint64_t) (file.tellg());
+         auto left = static_cast<std::streamsize>(realLen - (uint64_t) (file.tellg()));
          file.read(buffer, left);
          memset(buffer + left, 0, DECENT_SIZE_OF_NUMBER_IN_THE_FIELD - left);
       } else {
@@ -253,7 +253,7 @@ void CustodyUtils::compute_mu(std::fstream &file, unsigned int q, uint64_t indic
          element_t temp;
          mpz_t m;
          element_init_Zr(temp, pairing);
-         get_m(file, indices[i], j, m, sectors);
+         get_m(file, static_cast<uint32_t>(indices[i]), j, m, sectors);
          element_mul_mpz(temp, v[i], m);
 #ifdef _CUSTODY_STATS
          mul++;
@@ -414,7 +414,7 @@ int CustodyUtils::get_number_of_query(int blocks) {
 
 int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigned char *pubKey, unsigned char sigma[],
                                    std::vector<std::string> mus, mpz_t seed) {
-   uint32_t sectors = mus.size();
+   size_t sectors = mus.size();
    //prepate public_key and u
    element_t public_key;
    element_init_G1(public_key, pairing);

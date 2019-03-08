@@ -244,7 +244,7 @@ namespace decent { namespace package { namespace detail {
 
         while (true) {
             fin.read(buffer, RIPEMD160_BUFFER_SIZE);
-            const int bytes_read = fin.gcount();
+            auto bytes_read = static_cast<size_t>(fin.gcount());
 
             if (bytes_read > 0) {
                 ripe_calc.write(buffer, bytes_read);

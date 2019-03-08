@@ -112,7 +112,7 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
       _sock.read(_read_buffer, 16 - (s%16), s);
       s += 16-(s%16);
     }
-    _recv_aes.decode( _read_buffer.get(), s, buffer );
+    _recv_aes.decode( _read_buffer.get(), static_cast<uint32_t>(s), buffer );
     return s;
 } FC_RETHROW_EXCEPTIONS( warn, "", ("len",len) ) }
 
@@ -152,7 +152,7 @@ size_t stcp_socket::writesome( const char* buffer, size_t len )
      * for now because we are going to upgrade to something
      * better.
      */
-    uint32_t ciphertext_len = _send_aes.encode( buffer, len, _write_buffer.get() );
+    uint32_t ciphertext_len = _send_aes.encode( buffer, static_cast<uint32_t>(len), _write_buffer.get() );
     assert(ciphertext_len == len);
     _sock.write( _write_buffer, ciphertext_len );
     return ciphertext_len;
@@ -184,4 +184,3 @@ void stcp_socket::accept()
 
 
 }} // namespace graphene::net
-

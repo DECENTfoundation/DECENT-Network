@@ -155,9 +155,9 @@ void create_unpack_folder(boost::filesystem::path& content_path)
 std::string g_test_packagename;
 std::string g_test_string_as_key = "some_string_to_use_as_a_key";
 
-boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
-
-   std::srand(time(NULL));
+boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[])
+{
+   std::srand(static_cast<unsigned int>(time(NULL)));
    std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
    const char* genesis_timestamp_str = getenv("GRAPHENE_TESTING_GENESIS_TIMESTAMP");
    if( genesis_timestamp_str != nullptr )

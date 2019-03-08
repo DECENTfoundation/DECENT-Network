@@ -59,7 +59,7 @@ namespace decent { namespace package {
                     FC_THROW("Unable to open file ${file} for reading", ("file", source_file_path.string()) );
                 }
 
-                const int file_size = boost::filesystem::file_size(source_file_path);
+                auto file_size = static_cast<int>(boost::filesystem::file_size(source_file_path));
 
                 ArchiveHeader header;
 
@@ -1097,6 +1097,3 @@ namespace decent { namespace package {
 
 
 } } // namespace decent::package
-
-
-
