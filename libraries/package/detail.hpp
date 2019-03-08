@@ -40,13 +40,9 @@ namespace detail {
 
     class PackageTask {
     public:
-
-         PackageTask() = delete;
-         PackageTask(PackageTask& package) = delete;
-         PackageTask(const PackageTask& package) = delete;
-         PackageTask operator =(PackageTask& task) = delete;
-         PackageTask operator =(const PackageTask& task) = delete;
-         PackageTask(PackageTask&& package) = delete;
+        PackageTask() = delete;
+        PackageTask(const PackageTask& package) = delete;
+        PackageTask& operator =(const PackageTask& task) = delete;
         virtual ~PackageTask();
 
         virtual void start(const bool block = false);

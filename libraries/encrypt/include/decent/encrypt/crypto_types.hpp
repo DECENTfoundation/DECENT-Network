@@ -77,8 +77,6 @@ public:
    /* Constructor, creates DIntegerString from string */
    DIntegerString(const std::string& _s) { s = _s; };
    /* copy constructor */
-   DIntegerString(DIntegerString& _s) {s = _s.s; };
-   /* copy constructor */
    DIntegerString(const DIntegerString& _s) {s = _s.s; };
    /* Default constuctor, initializes to zero value */
    DIntegerString();
@@ -297,5 +295,3 @@ FC_REFLECT(decent::encrypt::Ciphertext, (C1)(D1))
 FC_REFLECT(decent::encrypt::CiphertextString, (C1)(D1))
 FC_REFLECT(decent::encrypt::CustodyData, (n)(u_seed)(pubKey))
 FC_REFLECT(decent::encrypt::CustodyProof, (reference_block)(seed)(mus)(sigma))
-
-
