@@ -2998,7 +2998,6 @@ signed_transaction content_cancellation(const string& author,
    vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const
    {
          FC_ASSERT(!is_locked());
-         const auto& mapi = _remote_api->messaging();
          const auto& receiver_id = get_account(receiver).get_id();
          auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(receiver_id);
          if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end()) 
@@ -3028,7 +3027,6 @@ signed_transaction content_cancellation(const string& author,
    vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count)const
    {
       FC_ASSERT(!is_locked());
-      const auto& mapi = _remote_api->messaging();
       const auto& sender_id = get_account(sender).get_id();
       auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(sender_id);
       if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end())
