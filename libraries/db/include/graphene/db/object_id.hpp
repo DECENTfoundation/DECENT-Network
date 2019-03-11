@@ -71,9 +71,9 @@ namespace graphene { namespace db {
             FC_ASSERT(index3 == std::string::npos);
             index3 = str_id.length();
             size_t idx;
-            uint8_t s = std::stoi(str_id.substr(0, index1), &idx);
+            uint8_t s = static_cast<uint8_t>(std::stoi(str_id.substr(0, index1), &idx));
             FC_ASSERT(idx == index1);
-            uint8_t t = std::stoi(str_id.substr(index1 + 1, index2 - index1 - 1), &idx);
+            uint8_t t = static_cast<uint8_t>(std::stoi(str_id.substr(index1 + 1, index2 - index1 - 1), &idx));
             FC_ASSERT(idx == index2 - index1 - 1);
             uint64_t i = std::stoll(str_id.substr(index2 + 1, index3 - index2 - 1), &idx);
             FC_ASSERT(idx == index3 - index2 - 1);
