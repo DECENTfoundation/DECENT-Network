@@ -455,6 +455,5 @@ int main(int argc, char** argv)
 #else
 	result = main_internal(argc, argv);
 #endif
-
 	return result;
 }

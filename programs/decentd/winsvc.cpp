@@ -8,7 +8,6 @@
 #include <shlobj.h>
 #include <vector>
 
-//#define SVC_ERROR                        ((DWORD)0xC0020001L)
 
 enum WinServiceState {
 	WinServiceState_UNKNOWN = 0,
@@ -22,22 +21,13 @@ enum WinServiceState {
 	WinServiceState_COUNT,
 };
 
-enum InstalledState {
-	InstalledState_Unknown = 0,
-	InstalledState_Installed,
-	InstalledState_NotInstalled,
-
-};
 
 static SERVICE_STATUS          s_SvcStatus;
 static SERVICE_STATUS_HANDLE   s_SvcStatusHandle;
 
 DWORD SvcInstall(const char* cmd_line_params);
 void WINAPI SvcCtrlHandler(DWORD);
-
-
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize);
-InstalledState IsInstalledAsService(WinServiceState& state, char* szErr, int maxLen);
 
 void GetAppDataDir(char* path, int max_len)
 {
@@ -47,28 +37,16 @@ void GetAppDataDir(char* path, int max_len)
 bool IsRunningAsSystemService()
 {
 	DWORD sessionId = 0;
-	ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);// Od Visty hore: Ak je session 0, je to sluzba
+	ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
 	if (sessionId == 0) 
 		return true;
 	return false;
 }
 
-
 DWORD install_win_service(const char *cmd_line_str)
 {
 	DWORD err = 0;
-	/*
-   WinServiceState state;
-   char errStr[256] = "";
-   InstalledState is_installed = IsInstalledAsService(state, errStr, sizeof(errStr));
-	
-	if(is_installed == 0)
-		printf("Unknown, state: %i, error: %s", state, errStr);
-	if (is_installed == 1)
-		printf("Installed, state: %i, error: %s", state, errStr);
-	if (is_installed == 2)
-		printf("Not installed, state: %i, error: %s", state, errStr);
-	*/
+
    err = SvcInstall(cmd_line_str);
 	return err;
 }
@@ -391,7 +369,7 @@ void SvcReportEvent(LPTSTR szFunction)
 		ReportEvent(hEventSource,        // event log handle
 			EVENTLOG_ERROR_TYPE, // event type
 			0,                   // event category
-			0,                   // event identifier
+         0,                   // event identifier
 			NULL,                // no security identifier
 			2,                   // size of lpszStrings array
 			0,                   // no binary data
@@ -430,63 +408,3 @@ LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize)
 	return lpszBuf;
 }
 
-InstalledState IsInstalledAsService(WinServiceState& state, char* szErr, int maxLen)
-{
-	SC_HANDLE   schService;
-	SC_HANDLE   schSCManager;
-	SERVICE_STATUS	ssStatus;
-	DWORD err = 0;
-	state = WinServiceState_UNKNOWN;
-	InstalledState result = InstalledState_Unknown;
-
-	schSCManager =
-	OpenSCManager(
-		NULL,
-		NULL,
-		SC_MANAGER_CONNECT
-	);
-
-	if (schSCManager) {
-
-		schService = OpenService(schSCManager, SVCNAME, SERVICE_QUERY_STATUS);
-		if (schService) {
-			// try to stop the service			
-			if (QueryServiceStatus(schService, &ssStatus)) {
-				state = (WinServiceState)ssStatus.dwCurrentState;					
-			} else {
-				if (szErr) {
-					GetLastErrorText(szErr, maxLen);
-               std::cerr << "QueryServiceStatus failed, error: " << szErr << std::endl;
-				}
-			}
-			CloseServiceHandle(schService);
-			result = InstalledState_Installed;
-		}
-		else {
-			err = GetLastError();
-			GetLastErrorText(szErr, maxLen);
-			
-			switch (err) {
-				case 5:	//Access denied
-               std::cerr << "OpenService failed, access denied" << std::endl;
-					break;
-				case 0x424:
-					result = InstalledState_NotInstalled;
-					break;
-				default:
-					if (err)
-                  std::cerr << "OpenService failed, error: " << szErr <<  std::endl;
-					break;
-			}
-		}
-
-		CloseServiceHandle(schSCManager); 
-	}
-	else {
-		if (szErr) {
-			GetLastErrorText(szErr, maxLen);
-         std::cerr << "OpenSCManager failed, error: " << szErr << std::endl;
-		}
-	}
-	return result;
-}
