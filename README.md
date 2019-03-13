@@ -84,6 +84,7 @@ Then, execute in console:
 
     $ brew update
     $ brew install automake autoconf libtool cmake boost qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew link --force readline
     $ mkdir ~/dev
 
 > Note that, if you want to use OpenSSL 1.1 change the `openssl` argument to `openssl@1.1` in the install command line (see also note in building step).
