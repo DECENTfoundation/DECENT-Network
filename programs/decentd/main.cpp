@@ -194,8 +194,12 @@ int main_internal(int argc, char** argv) {
       app::application::set_program_options(cli, cfg);
       decent_plugins::set_program_options(cli, cfg);
       cli.add_options()
-         ("daemon", "Run DECENT as daemon. \nWindows only: It registers application like system service and setup other command line parameters as service startup parameters.")
-         ("remove-win-service", "Windows only: It unregisters application if previously registered as Windows service. (If used --daemon option)")
+#ifndef _MSC_VER 
+         ("daemon", "Run DECENT as daemon.")
+#else
+         ("install-win-service", "It registers application like system service and sets other command line parameters as service startup parameters. It can be used also for re-registering and changing service startup parameters.")
+         ("remove-win-service", "It unregisters application if previously registered as Windows service.")
+#endif
       ;
 
       app_options.add(cli);
@@ -232,12 +236,15 @@ int main_internal(int argc, char** argv) {
       return EXIT_SUCCESS;
    }
 
-   bool run_as_daemon = options.count("daemon");
+   bool run_as_daemon = false;
+#ifndef _MSC_VER
+   run_as_daemon = options.count("daemon");
+#else
+   bool install_winsvc = options.count("install-win-service");
 
-#ifdef _MSC_VER
-   if(is_win_service) 
-		run_as_daemon = true; 
-   else if(run_as_daemon) { // install like service and start it
+   if(is_win_service) {
+      run_as_daemon = true;
+   } else if(install_winsvc) { // install like service and start it
 	   std::string cmd_line_str;
 	   for(int i = 1; i < argc; i++) {
 		   cmd_line_str += " ";
@@ -245,11 +252,9 @@ int main_internal(int argc, char** argv) {
 	   }
 	   err = install_win_service(cmd_line_str.c_str());
 	   return err;
-	} else {
-		if(options.count("remove-win-service")) {
+	} else if(options.count("remove-win-service")) {
          err = remove_win_service();
          return err;
-		}
 	}
 #endif
    app::application* node = new app::application();
