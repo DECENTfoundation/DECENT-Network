@@ -23,9 +23,7 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <fc/exception/exception.hpp>
-#include <fc/io/varint.hpp>
-#include <memory>
+#include <fc/uint48.hpp>
 #define GRAPHENE_DB_MAX_INSTANCE_ID  (uint64_t(-1)>>16)
 
 namespace graphene { namespace db {
@@ -34,8 +32,6 @@ namespace graphene { namespace db {
    using  std::vector;
    using  fc::flat_map;
    using  fc::variant;
-   using  fc::unsigned_int;
-   using  fc::signed_int;
 
    struct object_id_type
    {
@@ -127,8 +123,6 @@ namespace graphene { namespace db {
    };
 
    class object;
-   class object_database;
-
    template<uint8_t SpaceID, uint8_t TypeID, typename T = object>
    struct object_id
    {
@@ -137,10 +131,8 @@ namespace graphene { namespace db {
       static const uint8_t type_id = TypeID;
 
       object_id(){}
-      object_id( unsigned_int i ):instance(i){}
       explicit object_id( uint64_t i ):instance(i)
       {
-         FC_ASSERT( (i >> 48) == 0 );
       }
       object_id( object_id_type id ):instance(id.instance())
       {
@@ -162,12 +154,12 @@ namespace graphene { namespace db {
       friend bool  operator == ( const object_id& b, const object_id_type& a ) { return a == object_id_type(b); }
       friend bool  operator != ( const object_id& b, const object_id_type& a ) { return a != object_id_type(b); }
 
-      friend bool  operator < ( const object_id& a, const object_id& b ) { return a.instance.value < b.instance.value; }
-      friend bool  operator > ( const object_id& a, const object_id& b ) { return a.instance.value > b.instance.value; }
+      friend bool  operator < ( const object_id& a, const object_id& b ) { return a.instance < b.instance; }
+      friend bool  operator > ( const object_id& a, const object_id& b ) { return a.instance > b.instance; }
 
       friend size_t hash_value( object_id v ) { return std::hash<uint64_t>()(v.instance.value); }
 
-      unsigned_int instance;
+      uint48_t instance;
    };
 
 } } // graphene::db
