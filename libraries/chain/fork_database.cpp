@@ -61,7 +61,7 @@ shared_ptr<fork_item>  fork_database::push_block(const signed_block& b)
    try {
       _push_block(item);
    }
-   catch ( const unlinkable_block_exception& e )
+   catch ( const unlinkable_block_exception& )
    {
       wlog( "Pushing block to fork database that failed to link: ${id}, ${num}", ("id",b.id())("num",b.block_num()) );
       wlog( "Head: ${num}, ${id}", ("num",_head->data.block_num())("id",_head->data.id()) );

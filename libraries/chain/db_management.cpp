@@ -179,7 +179,7 @@ void database::close(bool rewind)
             {
             }
          }
-      } catch (const fc::exception &er){
+      } catch (const fc::exception &){
          //elog("database::close Exception caught");
          //elog( "${details}", ("details",er.to_detail_string()) );
       } catch (...)

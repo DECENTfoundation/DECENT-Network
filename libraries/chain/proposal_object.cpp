@@ -41,7 +41,7 @@ bool proposal_object::is_authorized_to_execute(database& db) const
                         available_active_approvals,
                         available_owner_approvals );
    } 
-   catch ( const fc::exception& e )
+   catch ( const fc::exception& )
    {
       //idump((available_active_approvals));
       //wlog((e.to_detail_string()));

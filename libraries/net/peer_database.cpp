@@ -106,7 +106,7 @@ namespace graphene { namespace net {
             _potential_peer_set.erase(iter, _potential_peer_set.end());
           }
         }
-        catch (const fc::exception& e)
+        catch (const fc::exception&)
         {
           elog("error opening peer database file ${peer_database_filename}, starting with a clean database", 
                ("peer_database_filename", _peer_database_filename));
@@ -127,7 +127,7 @@ namespace graphene { namespace net {
           fc::create_directories(peer_database_filename_dir);
         fc::json::save_to_file(peer_records, _peer_database_filename);
       }
-      catch (const fc::exception& e)
+      catch (const fc::exception&)
       {
         elog("error saving peer database to file ${peer_database_filename}", 
              ("peer_database_filename", _peer_database_filename));

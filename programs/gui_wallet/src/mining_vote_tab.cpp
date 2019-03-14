@@ -197,7 +197,7 @@ void MinerVotingTab::timeToUpdate(const std::string& result)
 
       }
    }
-   catch(const std::exception& ex) {
+   catch(const std::exception&) {
       //TODO.. handle error
    }
 

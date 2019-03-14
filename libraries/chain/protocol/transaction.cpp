@@ -441,9 +441,9 @@ set<public_key_type> signed_transaction::minimize_required_signatures(
          graphene::chain::verify_authority( operations, result, get_active, get_owner, max_recursion );
          continue;  // element stays erased if verify_authority is ok
       }
-      catch( const tx_missing_owner_auth& e ) {}
-      catch( const tx_missing_active_auth& e ) {}
-      catch( const tx_missing_other_auth& e ) {}
+      catch( const tx_missing_owner_auth& ) {}
+      catch( const tx_missing_active_auth& ) {}
+      catch( const tx_missing_other_auth& ) {}
       result.insert( k );
    }
    return set<public_key_type>( result.begin(), result.end() );
