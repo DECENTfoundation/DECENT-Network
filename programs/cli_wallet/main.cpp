@@ -24,6 +24,7 @@
  */
 
 #include <openssl/opensslv.h>
+#include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
 
 #include <fc/interprocess/signals.hpp>
@@ -53,21 +54,10 @@ namespace bpo = boost::program_options;
 
 int main( int argc, char** argv )
 {
-    try {
-        decent_path_finder::instance().get_decent_home();
-    } catch (const std::exception& ex) {
-        std::cerr << "Failed to initialize home directory." << std::endl;
-        std::cerr << "Error: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    } catch (const fc::exception& ex) {
-        std::cerr << "Failed to initialize home directory." << std::endl;
-        std::cerr << "Error: " << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-
    try {
+      decent_path_finder &pf = decent_path_finder::instance();
       bpo::options_description opts;
-         opts.add_options()
+      opts.add_options()
          ("help,h", "Print this help message and exit.")
          ("version,v", "Print version information and exit.")
          ("generate-keys,g", "Generate brain, wif private and public keys.")
@@ -75,6 +65,7 @@ int main( int argc, char** argv )
          ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
+         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string()), "Directory to store submitted packages")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
@@ -109,33 +100,21 @@ int main( int argc, char** argv )
          std::cout << " (debug)";
 #endif /* NDEBUG */
          std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << std::endl;
-
          return EXIT_SUCCESS;
       }
       else if( options.count("generate-keys") )
       {
-         try
-         {
-            std::string brain_key = graphene::utilities::generate_brain_key();
-            fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(brain_key);
-            graphene::chain::public_key_type pub_key(priv_key.get_public_key());
+         std::string brain_key = graphene::utilities::generate_brain_key();
+         fc::ecc::private_key priv_key = graphene::utilities::derive_private_key(brain_key);
+         graphene::chain::public_key_type pub_key(priv_key.get_public_key());
 
-            std::cout << "Brain key:    " << brain_key << std::endl;
-            std::cout << "Private key:  " << graphene::utilities::key_to_wif(priv_key) << std::endl;
-            std::cout << "Public key:   " << std::string(pub_key) << std::endl;
-            return EXIT_SUCCESS;
-         }
-         catch (const fc::exception& e)
-         {
-            std::cerr << e.to_detail_string() << std::endl;
-         }
-         catch (const std::exception& e)
-         {
-            std::cerr << e.what() << std::endl;
-         }
-
-         return EXIT_FAILURE;
+         std::cout << "Brain key:    " << brain_key << std::endl;
+         std::cout << "Private key:  " << graphene::utilities::key_to_wif(priv_key) << std::endl;
+         std::cout << "Public key:   " << std::string(pub_key) << std::endl;
+         return EXIT_SUCCESS;
       }
+
+      pf.set_packages_path(options["packages-path"].as<boost::filesystem::path>());
 
       fc::log_level level = fc::log_level::off;
       switch(options["log-level"].as<char>())
@@ -157,7 +136,7 @@ int main( int argc, char** argv )
             return EXIT_FAILURE;
       }
 
-      const fc::path log_dir = decent_path_finder::instance().get_decent_logs();
+      const fc::path log_dir = pf.get_decent_logs();
 
       fc::file_appender::config ac_default;
       ac_default.filename             = log_dir / "cli_wallet.log";
@@ -184,7 +163,7 @@ int main( int argc, char** argv )
       //    designed.
       //
       graphene::wallet::wallet_data wdata;
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : decent_path_finder::instance().get_decent_home() / "wallet.json");
+      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : pf.get_decent_home() / "wallet.json");
       bool has_wallet_file = fc::exists( wallet_file );
       if( has_wallet_file )
       {
@@ -360,6 +339,11 @@ int main( int argc, char** argv )
    catch ( const fc::exception& e )
    {
       std::cerr << e.to_detail_string() << std::endl;
+      return EXIT_FAILURE;
+   }
+   catch ( const std::exception& e )
+   {
+      std::cerr << e.what() << std::endl;
       return EXIT_FAILURE;
    }
 

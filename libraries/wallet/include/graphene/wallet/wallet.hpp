@@ -107,7 +107,6 @@ namespace graphene { namespace wallet {
          string                    ws_server = "ws://localhost:8090";
          string                    ws_user;
          string                    ws_password;
-         string                    packages_path = "./packages/";
          string                    update_time;
       };
 
