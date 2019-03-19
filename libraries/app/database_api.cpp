@@ -973,16 +973,22 @@ namespace graphene { namespace app {
          const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
          auto range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
          for (const account_balance_object& balance : boost::make_iterator_range(range.first, range.second))
-            result.push_back(asset(balance.get_balance()));
+         {
+            const asset &a = balance.get_balance();
+            if (a.amount.value)
+               result.push_back(a);
+         }
       }
       else
       {
          result.reserve(assets.size());
-         
-         std::transform(assets.begin(), assets.end(), std::back_inserter(result),
-                        [this, acnt](asset_id_type id) { return _db.get_balance(acnt, id); });
+         std::for_each(assets.begin(), assets.end(), [&](asset_id_type id) {
+            const asset &a = _db.get_balance(acnt, id);
+            if (a.amount.value)
+               result.push_back(a);
+         });
       }
-      
+
       return result;
    }
    
