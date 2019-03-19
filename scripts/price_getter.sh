@@ -25,4 +25,5 @@ do
 
    echo "$result"
    echo
+   sleep 2 # cmc basic plan limits the number of requests to 30 per minute.
 done
