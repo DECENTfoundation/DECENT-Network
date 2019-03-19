@@ -383,7 +383,10 @@ namespace graphene { namespace app {
            }
 
            start = current.back().id;
-           start = start + (-1);
+           if (start != operation_history_id_type())
+           {
+              start = start + (-1);
+           }
            if (start == operation_history_id_type())
               break;
        }
