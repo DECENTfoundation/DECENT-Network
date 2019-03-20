@@ -39,7 +39,7 @@ void string_to_bytes(std::string& in, unsigned char *data, int len){
    int i = 0;
    while (hex_chars_stream >> std::hex >> c && i < len)
    {
-      data[i] = c;
+      data[i] = static_cast<unsigned char>(c);
       ++i;
    }
 }

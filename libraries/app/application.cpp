@@ -1235,7 +1235,7 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
          } catch(const fc::exception& e) {
             std::cerr << "Unable to parse existing genesis file:\n" << e.to_string()
                       << "\nWould you like to replace it? [y/N] ";
-            char response = std::cin.get();
+            char response = static_cast<char>(std::cin.get());
             if( toupper(response) != 'Y' )
                return;
          }

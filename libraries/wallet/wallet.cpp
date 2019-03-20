@@ -961,7 +961,7 @@ public:
 
    transaction_handle_type begin_builder_transaction()
    {
-      int trx_handle = _builder_transactions.empty()? 0
+      transaction_handle_type trx_handle = _builder_transactions.empty()? 0
                                                     : (--_builder_transactions.end())->first + 1;
       _builder_transactions[trx_handle];
       return trx_handle;
@@ -2047,7 +2047,7 @@ public:
                          const string& memo,
                          time_point_sec expiration)
    {
-      int propose_num = begin_builder_transaction();
+      transaction_handle_type propose_num = begin_builder_transaction();
       transfer_operation op;
       account_object from_account = get_account(from);
       account_object to_account = get_account(to);
@@ -2387,7 +2387,7 @@ public:
          fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
          FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
 
-         ShamirSecret ss(quorum, static_cast<uint16_t>(seeders.size()), secret);
+         ShamirSecret ss(static_cast<uint16_t>(quorum), static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
          content_submit_operation submit_op;
          for( int i =0; i<(int)seeders.size(); i++ )
@@ -2468,7 +2468,7 @@ public:
 #endif
 
          keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         ShamirSecret ss(keys.quorum, static_cast<uint16_t>(seeders.size()), secret);
+         ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
 
          for( int i =0; i < (int)seeders.size(); i++ )
@@ -2889,7 +2889,7 @@ signed_transaction content_cancellation(const string& author,
       const buying_object bo = get_object<buying_object>(buying);
       const content_object co = *(_remote_db->get_content(bo.URI));
 
-      decent::encrypt::ShamirSecret ss( co.quorum, static_cast<uint16_t>(co.key_parts.size()) );
+      decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(co.quorum), static_cast<uint16_t>(co.key_parts.size()) );
       decent::encrypt::point message;
 
       const auto& el_gamal_priv_key = _el_gamal_keys.find( bo.pubKey );

@@ -242,8 +242,8 @@ const account_object& database_fixture::create_account(
 
      account_create_op.registrar = registrar_id;
      account_create_op.name = name;
-     account_create_op.owner = authority(1234, public_key_type(key.get_public_key()), 1234);
-     account_create_op.active = authority(5678, public_key_type(key.get_public_key()), 5678);
+     account_create_op.owner = authority(1234, public_key_type(key.get_public_key()), weight_type(1234));
+     account_create_op.active = authority(5678, public_key_type(key.get_public_key()), weight_type(5678));
      account_create_op.options.memo_key = key.get_public_key();
      account_create_op.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
      trx.operations.push_back( account_create_op );
@@ -270,8 +270,8 @@ account_create_operation database_fixture::make_account(
      create_account.registrar = account_id_type();
 
      create_account.name = name;
-     create_account.owner = authority(123, key, 123);
-     create_account.active = authority(321, key, 321);
+     create_account.owner = authority(123, key, weight_type(123));
+     create_account.active = authority(321, key, weight_type(321));
      create_account.options.memo_key = key;
      create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
@@ -309,8 +309,8 @@ account_create_operation database_fixture::make_account(
      //create_account.referrer_percent   = referrer_percent;
 
      create_account.name = name;
-     create_account.owner = authority(123, key, 123);
-     create_account.active = authority(321, key, 321);
+     create_account.owner = authority(123, key, weight_type(123));
+     create_account.active = authority(321, key, weight_type(321));
      create_account.options.memo_key = key;
      create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 

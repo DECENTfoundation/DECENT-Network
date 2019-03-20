@@ -70,7 +70,7 @@ struct vote_counter
 
    uint64_t last_votes = std::numeric_limits<uint64_t>::max();
    uint64_t total_votes = 0;
-   int8_t bitshift = -1;
+   int bitshift = -1;
    authority auth;
 };
 

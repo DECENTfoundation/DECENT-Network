@@ -1908,7 +1908,7 @@ namespace
       
       const content_object co = *content;
       
-      decent::encrypt::ShamirSecret ss( co.quorum, static_cast<uint16_t>(co.key_parts.size()) );
+      decent::encrypt::ShamirSecret ss( static_cast<uint16_t>(co.quorum), static_cast<uint16_t>(co.key_parts.size()) );
       decent::encrypt::point message;
       
       DInteger el_gamal_priv_key = el_gamal_priv_key_string;
@@ -1951,7 +1951,7 @@ namespace
 #endif
 
          keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         ShamirSecret ss(keys.quorum, static_cast<uint16_t>(seeders.size()), secret);
+         ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
          
 

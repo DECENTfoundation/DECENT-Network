@@ -222,7 +222,7 @@ element_t* CustodyUtils::get_sigmas(std::fstream &file, uint32_t &n, element_t *
 
          fut_pp[w] = t[w].async([=]() {
             char *worker_offset = offset;
-            std::unique_ptr<mpz_t> m(new mpz_t[sectors]);
+            std::unique_ptr<mpz_t[]> m(new mpz_t[sectors]);
             for( uint32_t k = 0; k < signatures; ++k ) {
                  for( uint32_t i = 0; i < sectors; ++i, worker_offset += DECENT_SIZE_OF_NUMBER_IN_THE_FIELD ) {
                     mpz_ptr mi = m.get()[i];
@@ -432,7 +432,7 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
 
    mpz_init_set_str(seedForU, buf_str, 16);
    free(buf_str);
-   get_u_from_seed(seedForU, u, sectors);
+   get_u_from_seed(seedForU, u, static_cast<uint32_t>(sectors));
 
 
    //prepare sigma and mu
@@ -455,10 +455,10 @@ int CustodyUtils::verify_by_miner(const uint32_t &n, const char *u_seed, unsigne
 
    generate_query_from_seed(seed, q, n, indices, &v);
 
-   int res = verify(_sigma, q, indices, v, u, mu, public_key, sectors);
+   int res = verify(_sigma, q, indices, v, u, mu, public_key, static_cast<uint32_t>(sectors));
 
-   clear_elements(u, sectors);
-   clear_elements(mu, sectors);
+   clear_elements(u, static_cast<uint32_t>(sectors));
+   clear_elements(mu, static_cast<uint32_t>(sectors));
    clear_elements(v, q);
    element_clear(public_key);
    mpz_clear(seedForU);
