@@ -1006,38 +1006,38 @@ This operation will cost %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="478"/>
+        <location filename="../src/upload_popup.cpp" line="476"/>
         <source>Publish for</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="504"/>
+        <location filename="../src/upload_popup.cpp" line="502"/>
         <source>Select content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="521"/>
+        <location filename="../src/upload_popup.cpp" line="519"/>
         <source>Select samples</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="634"/>
-        <location filename="../src/upload_popup.cpp" line="730"/>
+        <location filename="../src/upload_popup.cpp" line="632"/>
+        <location filename="../src/upload_popup.cpp" line="728"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="634"/>
+        <location filename="../src/upload_popup.cpp" line="632"/>
         <source>Cannot upload content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="634"/>
+        <location filename="../src/upload_popup.cpp" line="632"/>
         <source>IPFS is not running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="730"/>
+        <location filename="../src/upload_popup.cpp" line="728"/>
         <source>Failed to submit content</source>
         <translation type="unfinished"></translation>
     </message>

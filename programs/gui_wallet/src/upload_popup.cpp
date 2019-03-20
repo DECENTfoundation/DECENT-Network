@@ -433,9 +433,7 @@ void Upload_popup::slot_UpdateStatus()
    QString strDescription = m_pDescriptionText->toPlainText();
 
    boost::system::error_code ec;
-   boost::optional<double> fileSizeGBytes;
-   if (!path.empty())
-      fileSizeGBytes = boost::filesystem::file_size(path, ec) / 1024.0 / 1024.0 / 1024.0;
+   double fileSizeGBytes = !path.empty() ? boost::filesystem::file_size(path, ec) / 1024.0 / 1024.0 / 1024.0 : 0.0;
 
    bool isPublishersValid = false;
    uint64_t publishingPrice = 0;
@@ -456,8 +454,8 @@ void Upload_popup::slot_UpdateStatus()
    {
       if (-1 == m_dPrice ||
           ec ||
-          !fileSizeGBytes ||
-          *fileSizeGBytes > 10 ||
+          fileSizeGBytes == 0.0 ||
+          fileSizeGBytes > 10 ||
           m_strTitle.isEmpty() ||
           strDescription.isEmpty() ||
           Globals::instance().getCurrentUser().empty() ||
@@ -471,7 +469,7 @@ void Upload_popup::slot_UpdateStatus()
          std::string lifeTime = m_pLifeTime->text().toStdString();
          int64_t days = QDate::currentDate().daysTo(m_pLifeTime->date());
 
-         uint64_t effectiveMB = std::max(1.0, (*fileSizeGBytes) * 1024.0 + 1 - 1.0 / 1024 / 1024);
+         uint64_t effectiveMB = std::max(1.0, fileSizeGBytes * 1024 + 1 - 1.0 / 1024 / 1024);
          uint64_t totalPricePerDay = effectiveMB * publishingPrice;
          uint64_t totalPrice = days * totalPricePerDay;
 

@@ -750,7 +750,7 @@ void CommentWidget::update()
 
    QString strFeedbackAuthor;
    QString strFeedbackComment;
-   uint32_t feedback_rating;
+   uint32_t feedback_rating = 0;
 
    std::string const c_str_hack = "hack_to_leave_comment";
 

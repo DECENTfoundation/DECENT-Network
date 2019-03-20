@@ -512,8 +512,7 @@ const miner_object& database_fixture::get_miner(account_id_type id)const
       if (id == wit.miner_account)
          return wit;
    }
-   assert(0);// not found
-   //return miner_object();
+   FC_THROW("Miner not found: ${m}", ("m", id));
 }
 
 void database_fixture::sign(signed_transaction& trx, const fc::ecc::private_key& key)
