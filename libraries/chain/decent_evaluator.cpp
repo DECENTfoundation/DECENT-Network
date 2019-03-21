@@ -192,15 +192,17 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          FC_ASSERT( content_itr->author == o.author );
          FC_ASSERT( content_itr->size == o.size );
          FC_ASSERT( content_itr->_hash == o.hash );
-         FC_ASSERT( content_itr->expiration == o.expiration );
          FC_ASSERT( content_itr->quorum == o.quorum );
          FC_ASSERT( content_itr->key_parts.size() == o.seeders.size() );
          for( const auto& element : content_itr->key_parts )
          {
             FC_ASSERT( std::find(o.seeders.begin(), o.seeders.end(), element.first ) != o.seeders.end() );
          }
-         if( content_itr->cd )
-            FC_ASSERT( *(content_itr->cd) == *(o.cd));
+         if( content_itr->cd.valid() )
+         {
+            FC_ASSERT( *(content_itr->cd) == *(o.cd) );
+            FC_ASSERT( content_itr->expiration == o.expiration ); // expiration can not be changed for non CDN submit
+         }
 
          /* Resubmit that changes other stuff is not supported.
          for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
@@ -311,8 +313,11 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                            itr1++;
                                            itr2++;
                                         }
-                                        co.quorum = o.quorum;
-                                        co.expiration = o.expiration;*/
+                                        co.quorum = o.quorum;*/
+                                        if( !co.cd.valid() )
+                                        {
+                                          co.expiration = o.expiration;
+                                        }
                                      });
       }
       else
