@@ -61,6 +61,7 @@
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
 #include <fc/io/stdio.hpp>
+#include <fc/io/console.hpp>
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/cli.hpp>
 #include <fc/rpc/websocket_api.hpp>
@@ -2593,8 +2594,6 @@ signed_transaction content_cancellation(const string& author,
        return _remote_db->list_operations();
    }
 
-
-
    string from_command_file( const std::string& command_file_name ) const
    {
        string result = "";
@@ -2618,6 +2617,11 @@ signed_transaction content_cancellation(const string& author,
            {
                if (current_line.size() > 0)
                {
+                   if (current_line == "unlock" || current_line == "set_password")
+                   {
+                       current_line = fc::get_password_hidden(current_line);
+                   }
+
                    fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
                    if( args.size() == 0 )
                       continue;
