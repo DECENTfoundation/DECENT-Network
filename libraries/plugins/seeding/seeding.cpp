@@ -596,32 +596,34 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    database().add_index< graphene::db::primary_index < my_seeding_index > >();
    database().add_index< graphene::db::primary_index < my_seeder_index > >();
 
-   fc::optional<fc::ecc::private_key> private_key;
    seeding_plugin_startup_options seeding_options;
 
    if( options.count("seeder-private-key") || options.count("content-private-key") || options.count("seeder")
        || options.count("free-space") || options.count("seeding-price") ) { // minimum required parameters to run seeding plugin
       if( options.count("seeder-private-key")) {
-         private_key = graphene::utilities::wif_to_key(options["seeder-private-key"].as<std::string>());
-         if( !private_key )
+         auto wif_key = graphene::app::dejsonify<string>(options["seeder-private-key"].as<string>());
+         fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(wif_key);
+         if( !private_key.valid() ) {
             try {
-               private_key = fc::variant(options["seeder-private-key"].as<string>()).as<fc::ecc::private_key>();
+               seeding_options.seeder_private_key = fc::variant(wif_key).as<fc::ecc::private_key>();
             }
             catch( const fc::exception & ) {
-               FC_THROW("Invalid WIF-format seeder private key ${key_string}",
-                        ("key_string", options["seeder-private-key"].as<string>()));
+               FC_THROW("Invalid WIF-format seeder private key ${key_string}", ("key_string", wif_key));
             }
+         }
+         else {
+            seeding_options.seeder_private_key = *private_key;
+         }
       } else {
          FC_THROW("missing seeder-private-key parameter");
       }
-      seeding_options.seeder_private_key = *private_key;
 
       if( options.count("content-private-key")) {
+         auto content_key = graphene::app::dejsonify<string>(options["content-private-key"].as<string>());
          try {
-            seeding_options.content_private_key = decent::encrypt::DInteger::from_string(options["content-private-key"].as<string>());
+            seeding_options.content_private_key = decent::encrypt::DInteger::from_string(content_key);
          } catch( ... ) {
-            FC_THROW("Invalid content private key ${key_string}",
-                     ("key_string", options["content-private-key"].as<string>()));
+            FC_THROW("Invalid content private key ${key_string}", ("key_string", content_key));
          }
       } else {
          FC_THROW("missing content-private-key parameter");
@@ -640,7 +642,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       }
 
       if( options.count("seeder"))
-         seeding_options.seeder = fc::variant(options["seeder"].as<string>()).as<account_id_type>();
+         seeding_options.seeder = graphene::app::dejsonify<graphene::chain::account_id_type>(options["seeder"].as<string>());
       else
          FC_THROW("missing seeder parameter");
 
