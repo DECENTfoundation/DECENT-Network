@@ -251,6 +251,7 @@ int main( int argc, char** argv )
          return 1;
       }
       wapiptr->set_wallet_filename( wallet_file.generic_string() );
+      std::clog << "Connected to " << wdata.ws_server << std::endl;
 
       fc::api<graphene::wallet::wallet_api> wapi(wapiptr);
 
