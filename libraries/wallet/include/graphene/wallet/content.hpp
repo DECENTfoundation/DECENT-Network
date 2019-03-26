@@ -28,7 +28,7 @@
 
 /**
  * @brief Submits or resubmits a content to the blockchain. In a case of resubmit, co-authors, price and synopsis fields
- * can be modified.
+ * can be modified (if the content is uploaded to "CDN", you can also change the expiration time).
  * @see \c generate_encryption_key()
  * @see \c submit_content_async()
  * @param author the author of the content
