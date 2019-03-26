@@ -273,6 +273,7 @@ int main_internal(int argc, char** argv) {
 		  data_dir = data_dir / "decentd";
 		  logs_dir = data_dir / "logs";
 		  config_filename = data_dir / "config.ini";
+        path_finder.set_decent_temp_path(data_dir / "tmp");
 #else
          int ret = start_as_daemon();
 
@@ -288,9 +289,9 @@ int main_internal(int argc, char** argv) {
          config_filename = "/etc/decentd";
          logs_dir = "/var/log/decentd/";
          data_dir = "/var/lib/decentd/";
+         path_finder.set_decent_temp_path("/var/tmp/decentd/");
 #endif
          path_finder.set_decent_data_path(data_dir);
-         path_finder.set_decent_temp_path("/var/tmp/decentd/");
       }
       else {
          if( options.count("data-dir") )
