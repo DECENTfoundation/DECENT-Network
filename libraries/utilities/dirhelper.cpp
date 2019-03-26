@@ -9,13 +9,11 @@
 #include <pwd.h>
 #endif
 #include <cstdlib>
-#include <boost/filesystem.hpp>
 
-using namespace graphene;
-using namespace utilities;
+namespace graphene { namespace utilities {
 
-
-decent_path_finder::decent_path_finder() {
+decent_path_finder::decent_path_finder()
+{
 #if defined( _MSC_VER )
    PWSTR path = NULL;
    HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path);
@@ -64,16 +62,15 @@ decent_path_finder::decent_path_finder() {
       _ipfs_bin = ipfs_bin_dir;
    }
    
-   
    const char* ipfs_path_dir = getenv("IPFS_PATH");
    if (ipfs_path_dir != NULL) {
       _ipfs_path = ipfs_path_dir;
    }
-   
-   
-   
+
    create_directories(_decent_home);
    create_directories(_decent_data);
    create_directories(_decent_logs);
    create_directories(_decent_temp);
 }
+
+} } // graphene::utilities
