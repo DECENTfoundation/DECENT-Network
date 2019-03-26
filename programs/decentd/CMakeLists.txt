@@ -1,4 +1,7 @@
-add_executable( decentd main.cpp )
+add_executable( decentd main.cpp ) 
+if( WIN32 )
+    target_sources( decentd PRIVATE winsvc.cpp winsvc.hpp ) 
+endif()
 
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )
