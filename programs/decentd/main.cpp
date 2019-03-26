@@ -438,6 +438,7 @@ int main_internal(int argc, char** argv) {
       delete node;
       return 1;
    }
+   return 0;
 }
 
 int main(int argc, char** argv)
