@@ -360,7 +360,7 @@ namespace graphene { namespace app {
 
                if (assets_list.empty() ||
                    ((info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ||
-                    (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ))
+                    (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset1.asset_id) != assets_list.end()) ))
                {
                    if (partner_account_id) {
                        if (o.op.which() == operation::tag<transfer_operation>::value) {
