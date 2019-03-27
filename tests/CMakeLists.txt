@@ -39,7 +39,7 @@ set(APP_TEST_FILES
 )
 
 add_executable( app_test ${APP_TEST_FILES} )
-target_link_libraries( app_test graphene_db graphene_app graphene_account_history graphene_net graphene_chain graphene_time graphene_egenesis_none decent_encrypt ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( app_test graphene_db graphene_app graphene_account_history graphene_net graphene_chain graphene_egenesis_none decent_encrypt ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( app/main.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
@@ -53,7 +53,7 @@ set(PACKAGE_TEST_FILES
 )
 
 add_executable( package_test ${PACKAGE_TEST_FILES} )
-target_link_libraries( package_test package_manager graphene_app graphene_account_history graphene_net graphene_chain graphene_time graphene_egenesis_none decent_encrypt ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( package_test package_manager graphene_app graphene_account_history graphene_net graphene_chain graphene_egenesis_none decent_encrypt ${PLATFORM_SPECIFIC_LIBS} )
 
 
 
@@ -64,7 +64,7 @@ target_link_libraries( package_test package_manager graphene_app graphene_accoun
 #
 #file(GLOB BENCH_MARKS "benchmarks/*.cpp")
 #add_executable( chain_bench ${BENCH_MARKS} ${COMMON_SOURCES} )
-#target_link_libraries( chain_bench graphene_chain graphene_app graphene_account_history graphene_time graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+#target_link_libraries( chain_bench graphene_chain graphene_app graphene_account_history graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
 #
 #file(GLOB INTENSE_SOURCES "intense/*.cpp")
 #add_executable( intense_test ${INTENSE_SOURCES} ${COMMON_SOURCES} )

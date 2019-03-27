@@ -33,7 +33,7 @@
 #include <fc/io/fstream.hpp>
 #include <fc/network/resolve.hpp>
 #include <fc/rpc/websocket_api.hpp>
-#include <graphene/time/time.hpp>
+#include <graphene/utilities/time.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/net/exceptions.hpp>
@@ -378,7 +378,7 @@ namespace detail {
                bool modified_genesis = false;
                if( _options->count("genesis-timestamp") )
                {
-                  genesis.initial_timestamp = fc::time_point_sec( graphene::time::now() ) + genesis.initial_parameters.block_interval + _options->at("genesis-timestamp").as<uint32_t>();
+                  genesis.initial_timestamp = fc::time_point_sec( graphene::utilities::now() ) + genesis.initial_parameters.block_interval + _options->at("genesis-timestamp").as<uint32_t>();
                   genesis.initial_timestamp -= genesis.initial_timestamp.sec_since_epoch() % genesis.initial_parameters.block_interval;
                   modified_genesis = true;
                   std::cerr << "Used genesis timestamp:  " << genesis.initial_timestamp.to_iso_string() << " (PLEASE RECORD THIS)\n";
@@ -509,7 +509,7 @@ namespace detail {
             _force_validate = true;
          }
 
-         graphene::time::now();
+         graphene::utilities::now();
 
          if( _options->count("api-access") )
             _apiaccess = fc::json::from_file( _options->at("api-access").as<boost::filesystem::path>() )
@@ -609,7 +609,7 @@ namespace detail {
                                 std::vector<fc::uint160_t>& contained_transaction_message_ids) override
       { try {
 
-         auto latency = graphene::time::now() - blk_msg.block.timestamp;
+         auto latency = graphene::utilities::now() - blk_msg.block.timestamp;
          if (!sync_mode || blk_msg.block.block_num() % 10000 == 0)
          {
             const auto& miner = blk_msg.block.miner(*_chain_db);
@@ -991,7 +991,7 @@ namespace detail {
       /** returns graphene::time::now() */
       virtual fc::time_point_sec get_blockchain_now() override
       {
-         return graphene::time::now();
+         return graphene::utilities::now();
       }
 
       virtual item_hash_t get_head_block_id() const override

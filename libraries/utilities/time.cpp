@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/time/time.hpp>
+#include <graphene/utilities/time.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/network/ntp.hpp>
@@ -31,7 +31,7 @@
 
 #include <atomic>
 
-namespace graphene { namespace time {
+namespace graphene { namespace utilities {
 
 static int32_t simulated_time    = 0;
 static int32_t adjusted_time_sec = 0;
@@ -123,4 +123,4 @@ void advance_time( int32_t delta_seconds )
    time_discontinuity_signal();
 }
 
-} } // graphene::time
+} } // graphene::utilities

@@ -18,6 +18,7 @@ add_library( graphene_utilities
              string_escape.cpp
              dirhelper.cpp
              json.cpp
+             time.cpp
              words.cpp
              ipfs_check.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp

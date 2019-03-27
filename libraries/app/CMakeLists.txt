@@ -10,7 +10,7 @@ add_library( graphene_app
              ${HEADERS}
            )
 
-target_link_libraries( graphene_app PRIVATE graphene_chain graphene_db graphene_net graphene_time package_manager decent_encrypt )
+target_link_libraries( graphene_app PRIVATE graphene_chain graphene_db graphene_net package_manager decent_encrypt )
 target_include_directories( graphene_app PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include" )
 
 if(MSVC)
