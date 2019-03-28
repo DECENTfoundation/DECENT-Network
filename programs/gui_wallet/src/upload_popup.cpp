@@ -8,6 +8,8 @@
 #include <QSignalMapper>
 #include <QStyleFactory>
 #include <QTimer>
+
+#include <boost/filesystem.hpp>
 #endif
 
 #include "upload_popup.hpp"

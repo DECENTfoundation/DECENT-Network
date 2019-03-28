@@ -93,12 +93,20 @@ namespace graphene { namespace chain {
 
    enum reserved_spaces
    {
-      relative_protocol_ids = 0,
+      local_ids             = 0,
       protocol_ids          = 1,
       implementation_ids    = 2
    };
 
-   inline bool is_relative( graphene::db::object_id_type o ){ return o.space() == 0; }
+   // local types
+   class seeding_object;
+
+   enum local_object_type
+   {
+      local_seeding_object_type                     // 0
+   };
+
+   typedef graphene::db::object_id<local_ids, local_seeding_object_type, seeding_object> seeding_id_type;
 
    /**
     *  List all object types from all namespaces here so they can
@@ -318,6 +326,10 @@ FC_REFLECT( graphene::chain::extended_public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_public_key_type::binary_key, (check)(data) )
 FC_REFLECT( graphene::chain::extended_private_key_type, (key_data) )
 FC_REFLECT( graphene::chain::extended_private_key_type::binary_key, (check)(data) )
+
+FC_REFLECT_ENUM( graphene::chain::local_object_type,
+                 (local_seeding_object_type)
+               )
 
 FC_REFLECT_ENUM( graphene::chain::protocol_object_type,
                  (null_object_type)

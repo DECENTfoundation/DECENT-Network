@@ -12,17 +12,17 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="146"/>
+        <location filename="../src/gui_wallet_global.cpp" line="148"/>
         <source>expired</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="164"/>
+        <location filename="../src/gui_wallet_global.cpp" line="166"/>
         <source>expiring in a minute</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="190"/>
+        <location filename="../src/gui_wallet_global.cpp" line="192"/>
         <source>%n year(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -30,7 +30,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="192"/>
+        <location filename="../src/gui_wallet_global.cpp" line="194"/>
         <source>%n month(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -38,7 +38,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="194"/>
+        <location filename="../src/gui_wallet_global.cpp" line="196"/>
         <source>%n day(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -46,7 +46,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="196"/>
+        <location filename="../src/gui_wallet_global.cpp" line="198"/>
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -54,7 +54,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="198"/>
+        <location filename="../src/gui_wallet_global.cpp" line="200"/>
         <source>%n minute(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -62,7 +62,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../src/gui_wallet_global.cpp" line="200"/>
+        <location filename="../src/gui_wallet_global.cpp" line="202"/>
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -70,7 +70,7 @@
         </translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="213"/>
+        <location filename="../src/gui_wallet_global.cpp" line="215"/>
         <source>and</source>
         <translation type="unfinished"></translation>
     </message>
@@ -281,17 +281,17 @@
 <context>
     <name>gui_wallet::Globals</name>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="652"/>
+        <location filename="../src/gui_wallet_global.cpp" line="654"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="652"/>
+        <location filename="../src/gui_wallet_global.cpp" line="654"/>
         <source>Submiting or downloading content will not be functional.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="652"/>
+        <location filename="../src/gui_wallet_global.cpp" line="654"/>
         <source>Cannot start IPFS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -927,122 +927,122 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::Upload_popup</name>
     <message>
-        <location filename="../src/upload_popup.cpp" line="41"/>
+        <location filename="../src/upload_popup.cpp" line="43"/>
         <source>Upload new content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="47"/>
+        <location filename="../src/upload_popup.cpp" line="49"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="53"/>
+        <location filename="../src/upload_popup.cpp" line="55"/>
         <source>Description</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="61"/>
+        <location filename="../src/upload_popup.cpp" line="63"/>
         <source>Expiration date</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="73"/>
-        <location filename="../src/upload_popup.cpp" line="129"/>
-        <location filename="../src/upload_popup.cpp" line="306"/>
+        <location filename="../src/upload_popup.cpp" line="75"/>
+        <location filename="../src/upload_popup.cpp" line="131"/>
+        <location filename="../src/upload_popup.cpp" line="308"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="85"/>
+        <location filename="../src/upload_popup.cpp" line="87"/>
         <source>Price in %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="94"/>
-        <location filename="../src/upload_popup.cpp" line="299"/>
+        <location filename="../src/upload_popup.cpp" line="96"/>
+        <location filename="../src/upload_popup.cpp" line="301"/>
         <source>Seeders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="100"/>
+        <location filename="../src/upload_popup.cpp" line="102"/>
         <source>Select Seeders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="107"/>
+        <location filename="../src/upload_popup.cpp" line="109"/>
         <source>Content path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="112"/>
-        <location filename="../src/upload_popup.cpp" line="124"/>
+        <location filename="../src/upload_popup.cpp" line="114"/>
+        <location filename="../src/upload_popup.cpp" line="126"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="119"/>
+        <location filename="../src/upload_popup.cpp" line="121"/>
         <source>Samples (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="137"/>
+        <location filename="../src/upload_popup.cpp" line="139"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="140"/>
+        <location filename="../src/upload_popup.cpp" line="142"/>
         <source>Publish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="305"/>
+        <location filename="../src/upload_popup.cpp" line="307"/>
         <source>Seeder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="307"/>
+        <location filename="../src/upload_popup.cpp" line="309"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="311"/>
+        <location filename="../src/upload_popup.cpp" line="313"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="476"/>
+        <location filename="../src/upload_popup.cpp" line="478"/>
         <source>Publish for</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="502"/>
+        <location filename="../src/upload_popup.cpp" line="504"/>
         <source>Select content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="519"/>
+        <location filename="../src/upload_popup.cpp" line="521"/>
         <source>Select samples</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="632"/>
-        <location filename="../src/upload_popup.cpp" line="728"/>
+        <location filename="../src/upload_popup.cpp" line="634"/>
+        <location filename="../src/upload_popup.cpp" line="730"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="632"/>
+        <location filename="../src/upload_popup.cpp" line="634"/>
         <source>Cannot upload content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="632"/>
+        <location filename="../src/upload_popup.cpp" line="634"/>
         <source>IPFS is not running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="728"/>
+        <location filename="../src/upload_popup.cpp" line="730"/>
         <source>Failed to submit content</source>
         <translation type="unfinished"></translation>
     </message>

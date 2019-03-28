@@ -143,27 +143,6 @@ signed_transaction request_to_buy(const string& consumer,
                                   bool broadcast);
 
 /**
- * @brief This method allows user to start seeding plugin from running application
- * @param account_id_type_or_name name or ID of account controlling this seeder
- * @param content_private_key El Gamal content private key
- * @param seeder_private_key private key of the account controlling this seeder
- * @param free_space allocated disk space, in MegaBytes
- * @param seeding_price price per MegaByte
- * @param seeding_symbol seeding price asset, e.g. DCT
- * @param packages_path packages storage path
- * @param region_code optional ISO 3166-1 alpha-2 two-letter region code
- * @ingroup WalletAPI_Seeding
- */
-void seeding_startup( const string& account_id_type_or_name,
-                      DInteger content_private_key,
-                      const string& seeder_private_key,
-                      uint64_t free_space,
-                      uint32_t seeding_price,
-                      const string& seeding_symbol,
-                      const string& packages_path,
-                      const string& region_code = string() );
-
-/**
  * @brief Rates and comments a content.
  * @param consumer consumer giving the rating
  * @param URI the URI of the content
