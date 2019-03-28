@@ -256,7 +256,7 @@ namespace graphene { namespace app {
    
    database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
    {
-      wlog("creating database api ${x}", ("x",int64_t(this)) );
+      dlog("creating database api ${x}", ("x",int64_t(this)) );
       _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids) {
          on_objects_changed(ids);
       });
@@ -272,7 +272,7 @@ namespace graphene { namespace app {
    
    database_api_impl::~database_api_impl()
    {
-      elog("freeing database api ${x}", ("x",int64_t(this)) );
+      dlog("freeing database api ${x}", ("x",int64_t(this)) );
    }
    
    //////////////////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ namespace graphene { namespace app {
    
    void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter )
    {
-      edump((clear_filter));
+      ddump((clear_filter));
       _subscribe_callback = cb;
       if( clear_filter || !cb )
       {
