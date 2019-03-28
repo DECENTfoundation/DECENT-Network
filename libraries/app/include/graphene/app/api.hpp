@@ -282,27 +282,6 @@ namespace graphene { namespace app {
           */
          std::vector<net::potential_peer_record> get_potential_peers() const;
 
-        /**
-         * @brief This method allows user to start seeding plugin from running application.
-         * @param account_id ID of the account controlling this seeder
-         * @param content_private_key El Gamal content private key
-         * @param seeder_private_key private key of the account controlling this seeder
-         * @param free_space allocated disk space, in MegaBytes
-         * @param seeding_price price per MegaBytes
-         * @param seeding_symbol seeding price asset, e.g. DCT
-         * @param packages_path packages storage path
-         * @param region_code optional ISO 3166-1 alpha-2 two-letter region code
-         * @ingroup Network_NodeAPI
-         */
-         void seeding_startup(const account_id_type& account_id,
-                              const DInteger& content_private_key,
-                              const fc::ecc::private_key& seeder_private_key,
-                              const uint64_t free_space,
-                              const uint32_t seeding_price,
-                              const string seeding_symbol,
-                              const string packages_path,
-                              const string region_code = "" );
-
       private:
          application& _app;
    };
@@ -555,7 +534,6 @@ FC_API(graphene::app::network_node_api,
        (get_potential_peers)
        (get_advanced_node_parameters)
        (set_advanced_node_parameters)
-       (seeding_startup)
      )
 FC_API(graphene::app::crypto_api,
        (info)

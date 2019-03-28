@@ -2994,21 +2994,6 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
-   void seeding_startup( const string& account_id_type_or_name,
-                         DInteger content_private_key,
-                         const string& seeder_private_key,
-                         uint64_t free_space,
-                         uint32_t seeding_price,
-                         const string& seeding_symbol,
-                         const string& packages_path,
-                         const string& region_code)
-   {
-      account_id_type seeder = get_account( account_id_type_or_name ).get_id();
-      use_network_node_api();
-      fc::ecc::private_key seeder_priv_key = *(wif_to_key(seeder_private_key));
-      (*_remote_net_node)->seeding_startup( seeder, content_private_key, seeder_priv_key, free_space, seeding_price, seeding_symbol, packages_path, region_code);
-   }
-
    signed_transaction subscribe_to_author( const string& from,
                                            const string& to,
                                            const string& price_amount,

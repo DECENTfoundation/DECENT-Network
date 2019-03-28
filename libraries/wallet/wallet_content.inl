@@ -61,19 +61,6 @@ signed_transaction wallet_api::request_to_buy(const string& consumer,
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
-void wallet_api::seeding_startup(const string& account_id_type_or_name,
-                                 DInteger content_private_key,
-                                 const string& seeder_private_key,
-                                 uint64_t free_space,
-                                 uint32_t seeding_price,
-                                 const string& seeding_symbol,
-                                 const string& packages_path,
-                                 const string& region_code)
-{
-  return my->seeding_startup(account_id_type_or_name, content_private_key, seeder_private_key,
-                             free_space, seeding_price, seeding_symbol, packages_path, region_code);
-}
-
 void wallet_api::leave_rating_and_comment(const string& consumer,
                                           const string& URI,
                                           uint64_t rating,

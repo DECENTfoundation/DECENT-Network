@@ -28,11 +28,7 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/balance.hpp>
 #include <graphene/app/impacted.hpp>
-#include <graphene/app/seeding_utility.hpp>
 
-namespace decent { namespace seeding {
-      fc::promise<decent::seeding::seeding_plugin_startup_options>::ptr seeding_promise;
-}}
 using namespace monitoring;
 namespace graphene { namespace app {
 
@@ -236,31 +232,6 @@ namespace graphene { namespace app {
    {
       return _app.p2p_node()->set_advanced_node_parameters(params);
    }
-
-   void network_node_api::seeding_startup(const account_id_type& account_id,
-                                          const DInteger& content_private_key,
-                                          const fc::ecc::private_key& seeder_private_key,
-                                          const uint64_t free_space,
-                                          const uint32_t seeding_price,
-                                          const string seeding_symbol,
-                                          const string packages_path,
-                                          const string region_code)
-   {
-      FC_ASSERT( free_space > 0 );
-      FC_ASSERT( seeding_price >= 0 );
-
-      decent::seeding::seeding_plugin_startup_options seeding_options;
-      seeding_options.seeder = account_id;
-      seeding_options.content_private_key = content_private_key;
-      seeding_options.seeder_private_key = seeder_private_key;
-      seeding_options.free_space = free_space;
-      seeding_options.seeding_price = seeding_price;
-      seeding_options.seeding_symbol = seeding_symbol;
-      seeding_options.packages_path = packages_path;
-      seeding_options.region_code = region_code;
-      decent::seeding::seeding_promise->set_value( seeding_options );
-   }
-
 
    vector<operation_history_object> history_api::get_account_history( account_id_type account,
                                                                       operation_history_id_type stop,

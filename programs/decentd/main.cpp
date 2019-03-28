@@ -41,6 +41,7 @@
 #include <fc/log/logger_config.hpp>
 #include <fc/monitoring.hpp>
 
+#include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <openssl/opensslv.h>
 #include <cryptopp/config.h>
@@ -55,7 +56,8 @@
 #include <windows.h>
 #include "winsvc.hpp"
 #else
-# include <csignal>
+#include <csignal>
+#include <sys/stat.h>
 #endif
 
 using namespace graphene;
@@ -395,21 +397,6 @@ int main_internal(int argc, char** argv) {
 #endif
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));
       ilog("Chain ID is ${id}", ("id", node->chain_database()->get_chain_id()) );
-
-      auto seeding_plug = std::get<2>(plugins);
-      if( !seeding_plug->my )
-      {
-         decent::seeding::seeding_promise = new fc::promise<decent::seeding::seeding_plugin_startup_options>("Seeding Promise");
-
-         while( !decent::seeding::seeding_promise->ready() && !exit_promise->ready() ){
-            fc::usleep(fc::microseconds(1000000));
-         }
-
-         if( decent::seeding::seeding_promise->ready() && !exit_promise->ready() ){
-            seeding_plug->plugin_pre_startup(decent::seeding::seeding_promise->wait(fc::microseconds(1)));
-            seeding_plug->plugin_startup();
-         }
-      }
 
       int signal = exit_promise->wait();
       ilog("Exiting from signal ${n}", ("n", signal));

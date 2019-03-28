@@ -663,7 +663,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_download_status)
         (request_to_buy)
         (leave_rating_and_comment)
-        (seeding_startup)
         (restore_encryption_key)
         (generate_encryption_key)
         (get_open_buyings)
