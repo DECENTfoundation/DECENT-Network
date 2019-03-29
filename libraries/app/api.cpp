@@ -305,14 +305,12 @@ namespace graphene { namespace app {
                                                                              unsigned limit) const
    {
       vector<balance_change_result> result;
-      result.reserve(limit);
-
       vector<operation_history_object> current_history;
-      uint32_t current_history_offset = 0;
-      bool account_history_query_required = true;
-
       operation_history_id_type start;
+      uint32_t current_history_offset = 0;
       uint32_t current_offset = 0;
+      bool account_history_query_required = true;
+      result.reserve(limit);
 
       try
       {
@@ -367,7 +365,6 @@ namespace graphene { namespace app {
                            // store the balance change result object
                            if (current_offset >= start_offset)
                               result.push_back(info);
-
                            current_offset++;
                         }
                      }
@@ -379,19 +376,16 @@ namespace graphene { namespace app {
             {
                account_history_query_required = true;
                current_history_offset = 0;
-
                start = current_history.back().id;
                if (start != operation_history_id_type())
                   start = start + (-1);
-               if (start == operation_history_id_type())
-                  break;
             }
 
             if (! account_history_query_required)
                current_history_offset++;
          }
          // while the limit is not reached and there are potentially more entries to be processed
-         while (result.size() < limit && ! current_history.empty() && current_history_offset <= current_history.size());
+         while (result.size() < limit && ! current_history.empty() && current_history_offset <= current_history.size() && (current_history_offset != 0 || start != operation_history_id_type()));
 
          return result;
       }
