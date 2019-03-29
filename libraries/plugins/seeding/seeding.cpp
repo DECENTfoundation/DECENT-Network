@@ -664,8 +664,20 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    ilog("seeding plugin:  plugin_initialize() start");
    my.reset( new seeding_plugin_impl( *this) );
 
-   if( options.count("seeder-private-key")) {
-      auto wif_key = graphene::app::dejsonify<std::string>(options["seeder-private-key"].as<std::string>());
+   if( options.count("seeder") ) {
+      auto seeder = options["seeder"].as<std::string>();
+      graphene::db::object_id_type account(seeder.find_first_of('"') == 0 ? fc::json::from_string(seeder).as<std::string>() : seeder);
+      FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid seeder account ${s}", ("s", seeder) );
+      my->seeding_options.seeder = account;
+   } else {
+      FC_THROW("missing seeder parameter");
+   }
+
+   if( options.count("seeder-private-key") ) {
+      auto wif_key = options["seeder-private-key"].as<std::string>();
+      if( wif_key.find_first_of('"') == 0 )
+         wif_key = fc::json::from_string(wif_key).as<std::string>();
+
       fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(wif_key);
       if( !private_key.valid() ) {
          try {
@@ -682,35 +694,32 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       FC_THROW("missing seeder-private-key parameter");
    }
 
-   if( options.count("content-private-key")) {
-      auto content_key = graphene::app::dejsonify<std::string>(options["content-private-key"].as<std::string>());
-      try {
-         my->seeding_options.content_private_key = decent::encrypt::DInteger::from_string(content_key);
-      } catch( ... ) {
+   if( options.count("content-private-key") ) {
+      auto content_key = options["content-private-key"].as<std::string>();
+      if( content_key.find_first_of('"') == 0 )
+         content_key = fc::json::from_string(content_key).as<std::string>();
+
+      my->seeding_options.content_private_key = decent::encrypt::DInteger::from_string(content_key);
+      if( my->seeding_options.content_private_key.IsZero() ) {
          FC_THROW("Invalid content private key ${key_string}", ("key_string", content_key));
       }
    } else {
       FC_THROW("missing content-private-key parameter");
    }
 
-   if( options.count("seeding-price")) {
+   if( options.count("seeding-price") ) {
       my->seeding_options.seeding_price = options["seeding-price"].as<std::string>();
    } else{
       FC_THROW("missing seeding-price parameter");
    }
 
-   if( options.count("seeding-symbol")) {
+   if( options.count("seeding-symbol") ) {
       my->seeding_options.seeding_symbol = options["seeding-symbol"].as<std::string>();
    } else{
       my->seeding_options.seeding_symbol = "DCT";
    }
 
-   if( options.count("seeder"))
-      my->seeding_options.seeder = graphene::app::dejsonify<graphene::chain::account_id_type>(options["seeder"].as<std::string>());
-   else
-      FC_THROW("missing seeder parameter");
-
-   if( options.count("free-space"))
+   if( options.count("free-space") )
       my->seeding_options.free_space = options["free-space"].as<int>();
    else
       FC_THROW("missing free-space parameter");
@@ -761,9 +770,9 @@ void seeding_plugin::plugin_set_program_options(
         boost::program_options::options_description& cli,
         boost::program_options::options_description& cfg)
 {
-   std::string seeder_id_example = fc::json::to_string(graphene::chain::account_id_type(15));
+   graphene::db::object_id_type seeder_id_example = graphene::chain::account_id_type(15);
    cli.add_options()
-         ("seeder", bpo::value<std::string>(), ("ID of account controlling this seeder, (e.g. " + seeder_id_example + ", quotes are required)").c_str())
+         ("seeder", bpo::value<std::string>(), ("ID of account controlling this seeder, e.g. " + static_cast<std::string>(seeder_id_example)).c_str())
          ("seeder-private-key", bpo::value<std::string>(), "Private key of the account controlling this seeder")
          ("content-private-key", bpo::value<std::string>(), "El Gamal content private key")
          ("free-space", bpo::value<int>(), "Allocated disk space, in MegaBytes")
