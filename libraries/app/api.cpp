@@ -304,65 +304,98 @@ namespace graphene { namespace app {
                                                                              uint32_t start_offset,
                                                                              unsigned limit) const
    {
-       operation_history_id_type start;
-       uint32_t offset_counter = 0xffffffff;
+      vector<balance_change_result> result;
+      result.reserve(limit);
 
-       vector<balance_change_result> result;
-       result.reserve(limit);
+      vector<operation_history_object> current_history;
+      uint32_t current_history_offset = 0;
+      bool account_history_query_required = true;
 
-       while (result.size() < limit) {
+      operation_history_id_type start;
+      uint32_t current_offset = 0;
 
-           vector<operation_history_object> current = this->get_account_history(account_id, operation_history_id_type(), 100, start);
-           if (current.empty())
-               break;
+      try
+      {
+         do
+         {
+            if (account_history_query_required)
+            {
+               current_history = this->get_account_history(account_id, operation_history_id_type(), 100, start);
+               account_history_query_required = false;
+            }
 
-           for( auto& o : current ) {
-               if (from_block != 0 && to_block != 0) {
-                   if (o.block_num < from_block || o.block_num > to_block)
-                       continue;
-               }
+            // access and store the current account history object
+            if (current_history_offset < current_history.size())
+            {
+               auto &o = current_history.at(current_history_offset);
 
-               balance_change_result info;
-               info.hist_object = o;
-               graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
-
-               if (info.balance.asset0.amount == 0ll && info.balance.asset1.amount == 0ll && info.fee.amount == 0ll)
-                   continue;
-
-               if (assets_list.empty() ||
-                   ((info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end()) ||
-                    (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset1.asset_id) != assets_list.end()) ))
+               // if no block range is specified or if the current block is within the block range
+               if ((from_block == 0 && to_block == 0) || (o.block_num >= from_block && o.block_num <= to_block))
                {
-                   if (partner_account_id) {
-                       if (o.op.which() == operation::tag<transfer_operation>::value) {
-                           const transfer_operation& top = o.op.get<transfer_operation>();
-                           if (!top.is_partner_account_id(*partner_account_id))
-                               continue;
-                       }
-                       else if (o.op.which() == operation::tag<transfer2_operation>::value) {
-                           const transfer2_operation& top = o.op.get<transfer2_operation>();
-                           if (!top.is_partner_account_id(*partner_account_id))
-                               continue;
-                       }
-                   }
-                   if(++offset_counter >= start_offset)
-                      result.push_back( info );
+                  // create the balance change result object
+                  balance_change_result info;
+                  info.hist_object = o;
+                  graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
+
+                  if (info.balance.asset0.amount != 0ll || info.balance.asset1.amount != 0ll || info.fee.amount != 0ll)
+                  {
+                     bool is_non_zero_balance_for_asset0 = (info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end());
+                     bool is_non_zero_balance_for_asset1 = (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset1.asset_id) != assets_list.end());
+
+                     if (assets_list.empty() || is_non_zero_balance_for_asset0 || is_non_zero_balance_for_asset1)
+                     {
+                        bool skip_due_to_partner_account_id = false;
+
+                        if (partner_account_id)
+                        {
+                           if (o.op.which() == operation::tag<transfer_operation>::value)
+                           {
+                              const transfer_operation& top = o.op.get<transfer_operation>();
+                              if (! top.is_partner_account_id(*partner_account_id))
+                                 skip_due_to_partner_account_id = true;
+                           }
+                           else if (o.op.which() == operation::tag<transfer2_operation>::value)
+                           {
+                              const transfer2_operation& top = o.op.get<transfer2_operation>();
+                              if (! top.is_partner_account_id(*partner_account_id))
+                                 skip_due_to_partner_account_id = true;
+                           }
+                        }
+
+                        if (! skip_due_to_partner_account_id)
+                        {
+                           // store the balance change result object
+                           if (current_offset >= start_offset)
+                              result.push_back(info);
+
+                           current_offset++;
+                        }
+                     }
+                  }
                }
+            }
+            // rolling in the account transaction history
+            else if (! current_history.empty())
+            {
+               account_history_query_required = true;
+               current_history_offset = 0;
 
-               if (result.size() >= limit)
+               start = current_history.back().id;
+               if (start != operation_history_id_type())
+                  start = start + (-1);
+               if (start == operation_history_id_type())
                   break;
-           }
+            }
 
-           start = current.back().id;
-           if (start != operation_history_id_type())
-           {
-              start = start + (-1);
-           }
-           if (start == operation_history_id_type())
-              break;
-       }
+            if (! account_history_query_required)
+               current_history_offset++;
+         }
+         // while the limit is not reached and there are potentially more entries to be processed
+         while (result.size() < limit && ! current_history.empty() && current_history_offset <= current_history.size());
 
-       return result;
+         return result;
+      }
+      FC_CAPTURE_AND_RETHROW((account_id)(assets_list)(partner_account_id)(from_block)(to_block)(start_offset)(limit));
    }
 
    fc::optional<balance_change_result> history_api::get_account_balance_for_transaction(account_id_type account_id,
