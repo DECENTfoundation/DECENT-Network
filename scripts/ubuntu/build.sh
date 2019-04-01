@@ -1,9 +1,10 @@
 #!/bin/bash
 
-[ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision]"; exit 1; }
+[ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision] [build_type]"; exit 1; }
 
 DCORE_VERSION=$1
 if [ $# -lt 2 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$2; fi
+if [ $# -lt 3 ]; then BUILD_TYPE="Release"; else BUILD_TYPE=$3; fi
 
 . /etc/os-release
 
@@ -35,7 +36,7 @@ cd DECENT-Network
 git submodule update --init --recursive
 mkdir build
 cd build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../../DCore ..
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX=../../DCore ..
 make -j2 install
 cd ../..
 
