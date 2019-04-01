@@ -14,19 +14,9 @@ void non_fungible_token_data_type::validate() const
    }
 }
 
-share_type non_fungible_token_data_type::calculate_fee(uint64_t basic_fee) const
-{
-   return name.size() * basic_fee;
-}  
-
 void non_fungible_token_options::validate() const
 {
    FC_ASSERT( description.size() <= 1000 );
-}
-
-share_type non_fungible_token_options::calculate_fee(uint64_t basic_fee) const
-{
-   return description.size() * basic_fee;
 }
 
 void non_fungible_token_create_operation::validate() const
@@ -61,9 +51,9 @@ share_type non_fungible_token_create_operation::calculate_fee(const fee_paramete
          break;
    }
 
-   fee += options.calculate_fee(param.basic_fee);
-   fee += definitions.size() * 5 * param.basic_fee;
-   std::for_each(definitions.begin(), definitions.end(), [&](const non_fungible_token_data_type &dt) { fee += dt.calculate_fee(1000 * param.basic_fee); } );
+   std::for_each(definitions.begin(), definitions.end(), [&](const non_fungible_token_data_type &dt) {
+      fee += calculate_data_fee(fc::raw::pack_size(dt), param.price_per_kbyte);
+   });
 
    return fee;
 }
@@ -75,11 +65,6 @@ void non_fungible_token_update_operation::validate() const
    options.validate();
 }
 
-share_type non_fungible_token_update_operation::calculate_fee(const fee_parameters_type& param) const
-{
-   return 5 * param.basic_fee + options.calculate_fee(param.basic_fee);
-}
-
 void non_fungible_token_issue_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
@@ -87,7 +72,10 @@ void non_fungible_token_issue_operation::validate() const
 
 share_type non_fungible_token_issue_operation::calculate_fee(const fee_parameters_type& param) const
 {
-   return param.basic_fee + data.size() * 5 * param.basic_fee + calculate_data_fee( fc::raw::pack_size(memo), param.basic_fee );
+   share_type fee = param.fee;
+   std::for_each(data.begin(), data.end(), [&](const variant &v) { fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte); } );
+   fee += calculate_data_fee(fc::raw::pack_size(memo), param.price_per_kbyte);
+   return fee;
 }
 
 void non_fungible_token_transfer_operation::validate()const
@@ -109,7 +97,12 @@ void non_fungible_token_data_operation::validate()const
 
 share_type non_fungible_token_data_operation::calculate_fee(const fee_parameters_type& param) const
 {
-   return param.basic_fee + data.size() * 5 * param.basic_fee;
+   share_type fee = param.fee;
+   std::for_each(data.begin(), data.end(), [&](const std::unordered_map<std::string, fc::variant>::value_type &v) {
+      fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte);
+   });
+
+   return fee;
 }
 
 } } // namespace graphene::chain

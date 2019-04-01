@@ -22,8 +22,6 @@ namespace graphene { namespace chain {
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
       void validate() const;
-
-      share_type calculate_fee( uint64_t basic_fee ) const;
    };
 
    typedef std::vector<non_fungible_token_data_type> non_fungible_token_data_definitions;
@@ -36,17 +34,15 @@ namespace graphene { namespace chain {
       /// The owner of non fungible token
       account_id_type issuer;
 
-      /// The maximum supply of this asset which may exist at any given time
+      /// The maximum supply of non fungible token instances which may exist at any given time
       uint32_t max_supply = 0;
 
-      /// String that describes the meaning/purpose of this token, fee will be charged proportional to size of description
+      /// String that describes the meaning/purpose of non fungible token
       std::string description;
 
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
       void validate() const;
-
-      share_type calculate_fee( uint64_t basic_fee ) const;
    };
 
    /**
@@ -57,6 +53,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type {
          uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint32_t price_per_kbyte = 10;
       };
 
       asset fee;
@@ -88,7 +85,7 @@ namespace graphene { namespace chain {
    struct non_fungible_token_update_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
       };
 
       asset fee;
@@ -104,7 +101,6 @@ namespace graphene { namespace chain {
       void validate() const;
 
       account_id_type fee_payer() const { return options.issuer; }
-      share_type calculate_fee( const fee_parameters_type& k ) const;
    };
 
    /**
@@ -114,7 +110,8 @@ namespace graphene { namespace chain {
    struct non_fungible_token_issue_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint32_t price_per_kbyte = 10;
       };
 
       asset fee;
@@ -146,7 +143,7 @@ namespace graphene { namespace chain {
    struct non_fungible_token_transfer_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
       };
 
       asset fee;
@@ -177,7 +174,8 @@ namespace graphene { namespace chain {
    struct non_fungible_token_data_operation : public base_operation
    {
       struct fee_parameters_type {
-         uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint32_t price_per_kbyte = 10;
       };
 
       asset fee;
@@ -219,6 +217,7 @@ FC_REFLECT( graphene::chain::non_fungible_token_options,
 
 FC_REFLECT( graphene::chain::non_fungible_token_create_operation::fee_parameters_type,
             (basic_fee) 
+            (price_per_kbyte)
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_create_operation,
@@ -232,7 +231,7 @@ FC_REFLECT( graphene::chain::non_fungible_token_create_operation,
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_update_operation::fee_parameters_type,
-            (basic_fee) 
+            (fee) 
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_update_operation,
@@ -243,7 +242,8 @@ FC_REFLECT( graphene::chain::non_fungible_token_update_operation,
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_issue_operation::fee_parameters_type,
-            (basic_fee) 
+            (fee) 
+            (price_per_kbyte)
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_issue_operation,
@@ -270,7 +270,8 @@ FC_REFLECT( graphene::chain::non_fungible_token_transfer_operation,
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_data_operation::fee_parameters_type,
-            (basic_fee) 
+            (fee) 
+            (price_per_kbyte)
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_data_operation,
