@@ -21,6 +21,7 @@ add_library( graphene_utilities
              time.cpp
              words.cpp
              ipfs_check.cpp
+             about.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
              ${HEADERS} )
 

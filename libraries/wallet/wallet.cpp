@@ -88,6 +88,7 @@
 #include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
 #include <decent/wallet_utility/wallet_utility.hpp>
+#include <decent/about.hpp>
 
 #ifndef WIN32
 # include <sys/types.h>
@@ -518,8 +519,9 @@ public:
       result["fc_revision"]              = fc::git_revision_sha;
       result["fc_revision_age"]          = fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) );
       result["compile_date"]             = "compiled on " __DATE__ " at " __TIME__;
-      result["boost_version"]            = boost::replace_all_copy(std::string(BOOST_LIB_VERSION), "_", ".");
+      result["boost_version"]            = decent::get_boost_version();
       result["openssl_version"]          = OPENSSL_VERSION_TEXT;
+      result["cryptopp_version"]         = decent::get_cryptopp_version();
 
       std::string bitness = boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit";
 #if defined(__APPLE__)

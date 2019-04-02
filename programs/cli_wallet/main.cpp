@@ -44,6 +44,8 @@
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
 
+#include <decent/about.hpp>
+
 #ifdef WIN32
 # include <signal.h>
 #else
@@ -86,14 +88,9 @@ int main( int argc, char** argv )
       }
       else if( options.count("version") )
       {
-         unsigned int boost_major_version = BOOST_VERSION / 100000;
-         unsigned int boost_minor_version = BOOST_VERSION / 100 - boost_major_version * 1000;
-         string boost_version_text = to_string(boost_major_version) + "." + to_string(boost_minor_version) + "." + to_string(BOOST_VERSION % 100);
-         string openssl_version_text = string(OPENSSL_VERSION_TEXT);
-         openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
-         unsigned int cryptopp_major_version = CRYPTOPP_VERSION / 100;
-         unsigned int cryptopp_minor_version = CRYPTOPP_VERSION / 10 - cryptopp_major_version * 10;
-         std::string cryptopp_version_text = std::to_string(cryptopp_major_version) + "." + std::to_string(cryptopp_minor_version) + "." + std::to_string(CRYPTOPP_VERSION % 10);
+         std::string boost_version_text = decent::get_boost_version();
+         std::string openssl_version_text = decent::get_openssl_version();
+         std::string cryptopp_version_text = decent::get_cryptopp_version();
 
          std::cout << "CLI Wallet " << graphene::utilities::git_version();
 #ifndef NDEBUG
