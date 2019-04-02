@@ -1,9 +1,10 @@
 #!/bin/bash
 
-[ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision]"; exit 1; }
+[ $# -lt 1 ] && { echo "Usage: $0 dcore_version [git_revision] [build_type]"; exit 1; }
 
 DCORE_VERSION=$1
 if [ $# -lt 2 ]; then GIT_REV=$DCORE_VERSION; else GIT_REV=$2; fi
+if [ $# -lt 3 ]; then BUILD_TYPE="Release"; else BUILD_TYPE=$3; fi
 
 FEDORA=`rpm -E "%{fedora}"`
 
@@ -22,4 +23,4 @@ else
     rm libpbc*
 fi
 
-rpmbuild -bb -D "dcore_version $DCORE_VERSION" -D "pbc_version $PBC_VERSION" -D "git_revision $GIT_REV" $BASEDIR/DCore.spec
+rpmbuild -bb -D "dcore_version $DCORE_VERSION" -D "pbc_version $PBC_VERSION" -D "git_revision $GIT_REV" -D "build_type $BUILD_TYPE" $BASEDIR/DCore.spec

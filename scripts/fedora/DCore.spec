@@ -37,7 +37,7 @@ git submodule update --init --recursive
 %build
 mkdir DECENT-Network/build
 cd DECENT-Network/build
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_builddir}/DCore ..
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=%{build_type} -DCMAKE_INSTALL_PREFIX=%{_builddir}/DCore ..
 make -j$(nproc) install
 
 %install
