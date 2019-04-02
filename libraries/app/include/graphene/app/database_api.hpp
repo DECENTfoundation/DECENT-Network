@@ -314,6 +314,13 @@ namespace graphene { namespace app {
           */
          vector<operation_info> list_operations( )const;
 
+         /**
+          * @brief Retrieve the information about the daemon process.
+          * @return about values
+          * @ingroup DatabaseAPI_Globals
+          */
+         fc::variant_object about()const;
+
          //////////
          // Keys //
          //////////
@@ -1040,6 +1047,7 @@ FC_API(graphene::app::database_api,
           (get_chain_id)
           (get_dynamic_global_properties)
           (list_operations)
+          (about)
 
           // Keys
           (get_key_references)

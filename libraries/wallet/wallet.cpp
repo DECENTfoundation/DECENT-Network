@@ -505,37 +505,7 @@ public:
 
    variant_object about() const
    {
-      string client_version( graphene::utilities::git_revision_description );
-      const size_t pos = client_version.find( '/' );
-      if( pos != string::npos && client_version.size() > pos )
-         client_version = client_version.substr( pos + 1 );
-
-      fc::mutable_variant_object result;
-      //result["blockchain_name"]        = BLOCKCHAIN_NAME;
-      //result["blockchain_description"] = BTS_BLOCKCHAIN_DESCRIPTION;
-      result["client_version"]           = client_version;
-      result["graphene_revision"]        = graphene::utilities::git_revision_sha;
-      result["graphene_revision_age"]    = fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) );
-      result["fc_revision"]              = fc::git_revision_sha;
-      result["fc_revision_age"]          = fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) );
-      result["compile_date"]             = "compiled on " __DATE__ " at " __TIME__;
-      result["boost_version"]            = decent::get_boost_version();
-      result["openssl_version"]          = OPENSSL_VERSION_TEXT;
-      result["cryptopp_version"]         = decent::get_cryptopp_version();
-
-      std::string bitness = boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit";
-#if defined(__APPLE__)
-      std::string os = "osx";
-#elif defined(__linux__)
-      std::string os = "linux";
-#elif defined(_MSC_VER)
-      std::string os = "win32";
-#else
-      std::string os = "other";
-#endif
-      result["build"] = os + " " + bitness;
-
-      return result;
+      return decent::get_about();
    }
 
    chain_property_object get_chain_properties() const
