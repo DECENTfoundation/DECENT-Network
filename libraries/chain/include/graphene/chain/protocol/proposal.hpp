@@ -68,7 +68,7 @@ namespace graphene { namespace chain {
     * expiration_time cannot be farther in the future than the maximum expiration time set in the global properties
     * object.
     */
-   struct proposal_create_operation : public base_operation
+   struct proposal_create_operation : public base_operation<false>
    {
        struct fee_parameters_type { 
           uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
     * If an account's owner and active authority are both required, only the owner authority may approve. An attempt to
     * add or remove active authority approval to such a proposal will fail.
     */
-   struct proposal_update_operation : public base_operation
+   struct proposal_update_operation : public base_operation<false>
    {
       struct fee_parameters_type { 
          uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
@@ -154,7 +154,7 @@ namespace graphene { namespace chain {
     * proposal expires. Using this operation, he can prevent any further breath from being wasted on such an absurd
     * proposal.
     */
-   struct proposal_delete_operation : public base_operation
+   struct proposal_delete_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 1000; };
 

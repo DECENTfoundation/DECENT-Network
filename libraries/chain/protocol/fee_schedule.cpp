@@ -59,6 +59,36 @@ namespace graphene { namespace chain {
       return result;
    }
 
+   struct is_virtual_operation_visitor
+   {
+      typedef void result_type;
+
+      shared_ptr<bool> is_virtual_ptr;
+      is_virtual_operation_visitor(shared_ptr<bool> _is_virtual_ptr) : is_virtual_ptr(_is_virtual_ptr) { }
+      template<typename Type>
+      result_type operator()( const Type& op )const
+      {
+         *is_virtual_ptr = Type::is_virtual();
+      }
+   };
+
+   fee_schedule fee_schedule::get_non_virtual_default()
+   {
+      fee_schedule result;
+      shared_ptr<bool> is_virtual_ptr = std::make_shared<bool>();
+      for( int i = 0; i < fee_parameters().count(); ++i )
+      {
+         operation o; o.set_which(i);
+         o.visit(is_virtual_operation_visitor(is_virtual_ptr));
+         if (! (*is_virtual_ptr))
+         {
+            fee_parameters x; x.set_which(i);
+            result.parameters.insert(x);
+         }
+      }
+      return result;
+   }
+
    struct fee_schedule_validate_visitor
    {
       typedef void result_type;

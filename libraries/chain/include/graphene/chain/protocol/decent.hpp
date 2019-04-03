@@ -23,7 +23,7 @@ namespace graphene { namespace chain {
     * @brief This operation is used to promote account to publishing manager.
     * Such an account can grant or remove right to publish a content. Only DECENT account has permission to use this method.
     */
-   struct set_publishing_manager_operation : public base_operation
+   struct set_publishing_manager_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -42,7 +42,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * @brief Allows account to publish a content. Only account with publishing manager status has permission to use this method.
     */
-   struct set_publishing_right_operation : public base_operation
+   struct set_publishing_right_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -64,7 +64,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * @brief Submits content to the blockchain.
     */
-   struct content_submit_operation : public base_operation
+   struct content_submit_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 100; };
 
@@ -96,7 +96,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * @brief This operation is used to cancel submitted content.
     */
-   struct content_cancellation_operation : public base_operation
+   struct content_cancellation_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -175,7 +175,7 @@ static bool InitCodeAndName() { \
     * @ingroup operations
     * @brief This operation is used to send a request to buy a content.
     */
-   struct request_to_buy_operation : public base_operation
+   struct request_to_buy_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
       
@@ -196,7 +196,7 @@ static bool InitCodeAndName() { \
     * @ingroup operations
     * @brief Rates a content.
     */
-   struct leave_rating_and_comment_operation : public base_operation
+   struct leave_rating_and_comment_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -214,7 +214,7 @@ static bool InitCodeAndName() { \
     * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
     */
-   struct ready_to_publish_operation : public base_operation
+   struct ready_to_publish_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
       
@@ -235,7 +235,7 @@ static bool InitCodeAndName() { \
     * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
     */
-struct ready_to_publish2_operation : public base_operation
+struct ready_to_publish2_operation : public base_operation<false>
 {
    struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -259,7 +259,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief Seeders have to periodically prove that they hold the content.
     */
-   struct proof_of_custody_operation : public base_operation
+   struct proof_of_custody_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -276,7 +276,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This operation is used to send encrypted share of a content and proof of delivery to consumer.
     */
-   struct deliver_keys_operation : public base_operation
+   struct deliver_keys_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -295,7 +295,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This is a virtual operation emitted for the purpose of returning escrow to author
     */
-   struct return_escrow_submission_operation : public base_operation
+   struct return_escrow_submission_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -312,7 +312,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This is a virtual operation emitted for the purpose of returning escrow to consumer
     */
-   struct return_escrow_buying_operation : public base_operation
+   struct return_escrow_buying_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -329,7 +329,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This operation is used to report stats. These stats are later used to rate seeders.
     */
-   struct report_stats_operation : public base_operation
+   struct report_stats_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -346,7 +346,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This is a virtual operation
     */
-   struct pay_seeder_operation : public base_operation
+   struct pay_seeder_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -364,7 +364,7 @@ struct ready_to_publish2_operation : public base_operation
     * @ingroup operations
     * @brief This is a virtual operation
     */
-   struct finish_buying_operation : public base_operation
+   struct finish_buying_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 

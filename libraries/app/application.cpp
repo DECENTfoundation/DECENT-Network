@@ -68,7 +68,7 @@ namespace detail {
       public_key_type decent_pub_key (std::string("DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"));
 
       genesis_state_type initial_state;
-      initial_state.initial_parameters.current_fees = fee_schedule::get_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
+      initial_state.initial_parameters.current_fees = fee_schedule::get_non_virtual_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
       initial_state.initial_active_miners = GRAPHENE_DEFAULT_MIN_MINER_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *

@@ -81,7 +81,7 @@ namespace graphene { namespace chain {
    /**
     *  @ingroup operations
     */
-   struct account_create_operation : public base_operation
+   struct account_create_operation : public base_operation<false>
    {
       struct ext
       {
@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
     * This operation is used to update an existing account. It can be used to update the authorities, or adjust the options on the account.
     * @sa account_object::options_type for the options which may be updated.
     */
-   struct account_update_operation : public base_operation
+   struct account_update_operation : public base_operation<false>
    {
       struct ext
       {

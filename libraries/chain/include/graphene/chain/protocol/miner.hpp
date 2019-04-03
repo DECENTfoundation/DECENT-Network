@@ -35,7 +35,7 @@ namespace graphene { namespace chain {
     * Accounts which wish to become miners may use this operation to create a miner object which stakeholders may
     * vote on to approve its position as a miner.
     */
-   struct miner_create_operation : public base_operation
+   struct miner_create_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 50 * GRAPHENE_BLOCKCHAIN_PRECISION/100; };
 
@@ -53,7 +53,7 @@ namespace graphene { namespace chain {
     * @brief Update a miner object's URL and block signing key.
     * @ingroup operations
     */
-   struct miner_update_operation : public base_operation
+   struct miner_update_operation : public base_operation<false>
    {
       struct fee_parameters_type
       {
@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
     * operation must have a review period specified in the current global parameters before it may be accepted.
     */
-   struct miner_update_global_parameters_operation : public base_operation
+   struct miner_update_global_parameters_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 10; };
 

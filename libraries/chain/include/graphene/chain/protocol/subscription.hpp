@@ -13,7 +13,7 @@ namespace graphene { namespace chain {
     * @ingroup transactions
     * @brief Creates a subscription to author. This function is used by consumers..
     */
-   struct subscribe_operation : public base_operation
+   struct subscribe_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
     * @ingroup transactions
     * @brief Creates a subscription to author. This function is used by author.
     */
-   struct subscribe_by_author_operation : public base_operation
+   struct subscribe_by_author_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -48,7 +48,7 @@ namespace graphene { namespace chain {
     * @ingroup transactions
     * @brief This function is used to allow/disallow automatic renewal of expired subscription.
     */
-   struct automatic_renewal_of_subscription_operation : public base_operation
+   struct automatic_renewal_of_subscription_operation : public base_operation<false>
       {
          struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -67,7 +67,7 @@ namespace graphene { namespace chain {
     * @brief This virtual operation disallows automatic renewal of subscription if consumer doesn't have enought balance to renew
     * expired subscription
     */
-   struct disallow_automatic_renewal_of_subscription_operation : public base_operation
+   struct disallow_automatic_renewal_of_subscription_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -83,7 +83,7 @@ namespace graphene { namespace chain {
     * @ingroup transactions
     * @brief This virtual operation is used to lengthen expired subscription
     */
-   struct renewal_of_subscription_operation : public base_operation
+   struct renewal_of_subscription_operation : public base_operation<true>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 

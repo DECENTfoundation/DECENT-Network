@@ -72,7 +72,7 @@ namespace graphene { namespace chain {
     * There is no validation for this operation other than that required auths are valid and a fee
     * is paid that is appropriate for the data contained.
     */
-   struct custom_operation : public base_operation
+   struct custom_operation : public base_operation<false>
    {
       struct fee_parameters_type { 
          uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/1000;

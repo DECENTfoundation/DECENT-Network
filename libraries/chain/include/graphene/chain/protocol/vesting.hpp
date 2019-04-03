@@ -64,7 +64,7 @@ namespace graphene { namespace chain {
     *
     * @return ID of newly created vesting_balance_object
     */
-   struct vesting_balance_create_operation : public base_operation
+   struct vesting_balance_create_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
 
@@ -91,7 +91,7 @@ namespace graphene { namespace chain {
     *
     * @return Nothing
     */
-   struct vesting_balance_withdraw_operation : public base_operation
+   struct vesting_balance_withdraw_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
 

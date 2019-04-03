@@ -103,7 +103,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Creates an asset.
     */
-   struct asset_create_operation : public base_operation
+   struct asset_create_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -141,7 +141,7 @@ namespace graphene { namespace chain {
    /**
     * @ingroup operations
     */
-   struct asset_issue_operation : public base_operation
+   struct asset_issue_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -173,7 +173,7 @@ namespace graphene { namespace chain {
     * @pre @ref fee SHALL be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @post @ref asset_to_update will have options matching those of new_options
     */
-   struct update_user_issued_asset_operation : public base_operation
+   struct update_user_issued_asset_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -200,7 +200,7 @@ namespace graphene { namespace chain {
     /**
     * @ingroup operations
     */
-   struct asset_fund_pools_operation : public base_operation
+   struct asset_fund_pools_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee =  5*GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
 
@@ -220,7 +220,7 @@ namespace graphene { namespace chain {
     *
     * @note You cannot use this operation on market-issued assets.
     */
-   struct asset_reserve_operation : public base_operation
+   struct asset_reserve_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION/1000; };
 
@@ -236,7 +236,7 @@ namespace graphene { namespace chain {
    /**
     * @brief used to transfer accumulated fees back to the issuer's balance.
     */
-   struct asset_claim_fees_operation : public base_operation
+   struct asset_claim_fees_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -263,7 +263,7 @@ namespace graphene { namespace chain {
     * @pre @ref fee SHALL be nonnegative, and @ref issuer MUST have a sufficient balance to pay it
     * @post @ref asset_to_update will have options matching those of new_options
     */
-   struct update_monitored_asset_operation : public base_operation
+   struct update_monitored_asset_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee      = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -303,7 +303,7 @@ namespace graphene { namespace chain {
     * settlement price may be flipped either direction, as long as it is a ratio between the market-issued asset and
     * its collateral.
     */
-   struct asset_publish_feed_operation : public base_operation
+   struct asset_publish_feed_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION/10000000;  };
 
@@ -324,7 +324,7 @@ namespace graphene { namespace chain {
     *
     * @ingroup operations
     */
-   struct update_user_issued_asset_advanced_operation : public base_operation
+   struct update_user_issued_asset_advanced_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION / 1000;  };
 

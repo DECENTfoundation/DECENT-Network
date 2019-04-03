@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Creates a non fungible token.
     */
-   struct non_fungible_token_create_operation : public base_operation
+   struct non_fungible_token_create_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Updates the non fungible token.
     */
-   struct non_fungible_token_update_operation : public base_operation
+   struct non_fungible_token_update_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -107,7 +107,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Issues a non fungible token instance.
     */
-   struct non_fungible_token_issue_operation : public base_operation
+   struct non_fungible_token_issue_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -140,7 +140,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Transfers the non fungible token instance.
     */
-   struct non_fungible_token_transfer_operation : public base_operation
+   struct non_fungible_token_transfer_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -171,7 +171,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Changes data of the non fungible token instance.
     */
-   struct non_fungible_token_data_operation : public base_operation
+   struct non_fungible_token_data_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;

@@ -47,7 +47,7 @@ namespace graphene { namespace chain {
     * The fee for this operation is paid by withdraw_from_account, and this account is required to authorize this
     * operation.
     */
-   struct withdraw_permission_create_operation : public base_operation
+   struct withdraw_permission_create_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 1000; };
 
@@ -80,7 +80,7 @@ namespace graphene { namespace chain {
     *
     * Fee is paid by withdraw_from_account, which is required to authorize this operation
     */
-   struct withdraw_permission_update_operation : public base_operation
+   struct withdraw_permission_update_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee =  GRAPHENE_BLOCKCHAIN_PRECISION / 1000; };
 
@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
     *
     * Fee is paid by withdraw_to_account, which is required to authorize this operation
     */
-   struct withdraw_permission_claim_operation : public base_operation
+   struct withdraw_permission_claim_operation : public base_operation<false>
    {
       struct fee_parameters_type { 
          uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
@@ -150,7 +150,7 @@ namespace graphene { namespace chain {
     *
     * Fee is paid by withdraw_from_account, which is required to authorize this operation
     */
-   struct withdraw_permission_delete_operation : public base_operation
+   struct withdraw_permission_delete_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 

@@ -89,7 +89,7 @@ namespace graphene { namespace chain {
     *  This operation performs no changes to the database state, but can but used to verify
     *  pre or post conditions for other operations.
     */
-   struct assert_operation : public base_operation
+   struct assert_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/100; };
 

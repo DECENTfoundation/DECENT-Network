@@ -44,6 +44,7 @@ namespace graphene { namespace chain {
       fee_schedule();
 
       static fee_schedule get_default();
+      static fee_schedule get_non_virtual_default();
 
       /**
        *  Finds the appropriate fee parameter struct for the operation

@@ -42,7 +42,7 @@ namespace graphene { namespace chain {
     *  @post to account's balance will be increased by amount
     *  @return n/a
     */
-   struct transfer_operation : public base_operation
+   struct transfer_operation : public base_operation<false>
    {
       struct fee_parameters_type {
       uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
     *  @post to account's balance will be increased by amount
     *  @return n/a
     */
-   struct transfer2_operation : public base_operation
+   struct transfer2_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
