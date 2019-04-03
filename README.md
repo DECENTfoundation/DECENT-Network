@@ -321,7 +321,7 @@ Questions
     connections.  This is a famous source of security vulnerabilities for HTTP applications.  Additionally, HTTP is not really
     designed for "server push" notifications, and we would have to figure out a way to queue notifications for a polling client.
 
-    Websockets solves all these problems.  If you need to access Graphene's stateful methods, you need to use Websockets.
+    Websockets solves all these problems.  If you need to access DCore's stateful methods, you need to use Websockets.
 
 - What is the meaning of `a.b.c` numbers?
 
