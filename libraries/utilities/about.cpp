@@ -13,11 +13,6 @@
 #include <fc/variant_object.hpp>
 
 #include <graphene/utilities/git_revision.hpp>
-#include <decent/about.hpp>
-
-#include <string>
-
-using namespace std;
 
 namespace decent {
 
@@ -43,9 +38,9 @@ namespace decent {
 
    fc::variant_object get_about()
    {
-      string client_version( graphene::utilities::git_revision_description );
+      std::string client_version( graphene::utilities::git_revision_description );
       const size_t pos = client_version.find( '/' );
-      if( pos != string::npos && client_version.size() > pos )
+      if( pos != std::string::npos && client_version.size() > pos )
          client_version = client_version.substr( pos + 1 );
 
       fc::mutable_variant_object result;

@@ -2,9 +2,7 @@
 
 #include <string>
 
-#include <fc/io/json.hpp>
-
-using namespace std;
+#include <fc/variant_object.hpp>
 
 namespace decent {
 
