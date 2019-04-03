@@ -3,12 +3,14 @@
 #include <graphene/chain/non_fungible_token_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 namespace graphene { namespace chain {
 
 void_result non_fungible_token_create_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
+   FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    auto& nft_indx = d.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
    auto nft_symbol_itr = nft_indx.find( op.symbol );
@@ -45,6 +47,7 @@ graphene::db::object_id_type non_fungible_token_create_evaluator::do_apply( cons
 void_result non_fungible_token_update_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
+   FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_object& nft_obj = op.nft_id(d);
    FC_ASSERT( op.options.issuer == nft_obj.options.issuer );
@@ -115,6 +118,7 @@ static void nft_check_data(const database& d, const non_fungible_token_data_type
 void_result non_fungible_token_issue_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
+   FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_object& nft_obj = op.nft_id(d);
    FC_ASSERT( op.issuer == nft_obj.options.issuer );
@@ -167,6 +171,7 @@ graphene::db::object_id_type non_fungible_token_issue_evaluator::do_apply( const
 void_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
+   FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_data_object& nft_data_obj = op.nft_data_id(d);
    FC_ASSERT( op.from == nft_data_obj.owner );
@@ -207,6 +212,7 @@ graphene::db::object_id_type non_fungible_token_transfer_evaluator::do_apply( co
 void_result non_fungible_token_data_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
+   FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_data_object& nft_data_obj = op.nft_data_id(d);
    FC_ASSERT( op.owner == nft_data_obj.owner );

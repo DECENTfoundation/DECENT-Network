@@ -14,3 +14,8 @@
 #ifndef HARDFORK_3_TIME
 #define HARDFORK_3_TIME (fc::time_point_sec( 1536825600 )) //2018-09-13 08:00:00 GMT
 #endif
+
+// #4 - NFT and submit content: removed 10 co-authors constraint, allowed CDN expiration date change
+#ifndef HARDFORK_4_TIME
+#define HARDFORK_4_TIME (fc::time_point_sec( 1551892620 )) //2019-03-06 17:17:00 GMT
+#endif

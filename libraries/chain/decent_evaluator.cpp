@@ -1,7 +1,7 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/decent_evaluator.hpp>
 #include <graphene/chain/protocol/decent.hpp>
-
+#include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/exceptions.hpp>
@@ -130,6 +130,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
    void_result content_submit_evaluator::do_evaluate(const content_submit_operation& o )
    {try{
+      FC_ASSERT( (db().head_block_time() > HARDFORK_4_TIME) || (o.co_authors.size() <= 10) );
 
       if( o.key_parts.size() == 0 ) //simplified content
          FC_ASSERT(db().head_block_time() > HARDFORK_2_TIME);
@@ -202,6 +203,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
          {
             FC_ASSERT( *(content_itr->cd) == *(o.cd) );
             FC_ASSERT( content_itr->expiration == o.expiration ); // expiration can not be changed for non CDN submit
+         }
+         else
+         {
+            FC_ASSERT( (db().head_block_time() > HARDFORK_4_TIME) || (content_itr->expiration == o.expiration) );
          }
 
          /* Resubmit that changes other stuff is not supported.
