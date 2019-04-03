@@ -125,8 +125,10 @@ void miner_plugin::plugin_set_program_options(
          ("required-miners-participation", bpo::value<uint32_t>()->default_value(33), "Percent of miners (0-99) that must be participating in order to produce blocks")
          ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken(),
           ("ID of miner controlled by this node (may specify multiple times), e.g. " + static_cast<std::string>(miner_id_example)).c_str())
+         ("miner-private-key,k", bpo::value<vector<string>>()->composing()->multitoken(),
+          ("Miner WIF private key (may specify multiple times), e.g. " + graphene::utilities::key_to_wif(default_priv_key)).c_str())
          ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->notifier(param_validator_miner("private-key")),
-          ("Tuple of [PublicKey, WIF private key] (may specify multiple times), e.g. [" +
+          ("DEPRECATED: Tuple of [PublicKey, WIF private key] (may specify multiple times), e.g. [" +
           static_cast<std::string>(graphene::chain::public_key_type(default_priv_key.get_public_key())) + "," +
           graphene::utilities::key_to_wif(default_priv_key) + "]").c_str())
          ;
@@ -142,16 +144,6 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
 { try {
    ilog("miner plugin:  plugin_initialize() begin");
 
-   if( options.count("miner-id") )
-   {
-      const std::vector<std::string>& miners = options["miner-id"].as<std::vector<std::string>>();
-      std::for_each(miners.begin(), miners.end(), [this](const std::string &miner) {
-         graphene::db::object_id_type account(miner.find_first_of('"') == 0 ? fc::json::from_string(miner).as<std::string>() : miner);
-         FC_ASSERT( account.is<graphene::chain::miner_id_type>(), "Invalid miner account ${s}", ("s", miner) );
-         _miners.insert(account);
-      });
-   }
-
    if( options.count("enable-stale-production") )
    {
       _production_enabled = options["enable-stale-production"].as<bool>();
@@ -162,7 +154,26 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
       _required_miner_participation = std::min(options["required-miners-participation"].as<uint32_t>(), 99u) * GRAPHENE_1_PERCENT;
    }
 
-   if( options.count("private-key") )
+   if( options.count("miner-id") )
+   {
+      const std::vector<std::string>& miners = options["miner-id"].as<std::vector<std::string>>();
+      std::for_each(miners.begin(), miners.end(), [this](const std::string &miner) {
+         graphene::db::object_id_type account(miner.find_first_of('"') == 0 ? fc::json::from_string(miner).as<std::string>() : miner);
+         FC_ASSERT( account.is<graphene::chain::miner_id_type>(), "Invalid miner account ${s}", ("s", miner) );
+         _miners.insert(account);
+      });
+   }
+
+   if( options.count("miner-private-key") )
+   {
+      const std::vector<std::string>& keys = options["miner-private-key"].as<std::vector<std::string>>();
+      std::for_each(keys.begin(), keys.end(), [this](const std::string &key) {
+         fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key);
+         FC_ASSERT( private_key.valid(), "Invalid miner private key" );
+         _private_keys[private_key->get_public_key()] = *private_key;
+      });
+   }
+   else if( options.count("private-key") )
    {
       const std::vector<std::string>& key_id_to_wif_pairs = options["private-key"].as<std::vector<std::string>>();
       std::for_each(key_id_to_wif_pairs.begin(), key_id_to_wif_pairs.end(), [this](const std::string& key_id_to_wif_pair) {
@@ -182,8 +193,12 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
                FC_THROW("Invalid WIF-format private key ${key_string}", ("key_string", static_cast<std::string>(key_match[2])));
             }
          }
-         _private_keys[graphene::chain::public_key_type(key_match[1])] = *private_key;
+
+         graphene::chain::public_key_type pk(key_match[1]);
+         FC_ASSERT( pk == private_key->get_public_key() );
+         _private_keys[pk] = *private_key;
       });
+      wlog("Using deprecated private-key argument - please use miner-private-key instead (see also help)");
    }
    ilog("miner plugin:  plugin_initialize() end");
 } FC_LOG_AND_RETHROW() }
