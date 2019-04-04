@@ -10,8 +10,8 @@ add_library( graphene_app
              ${HEADERS}
            )
 
-target_link_libraries( graphene_app PRIVATE graphene_chain graphene_db graphene_net package_manager decent_encrypt )
-target_include_directories( graphene_app PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../egenesis/include" )
+target_link_libraries( graphene_app PUBLIC graphene_net PRIVATE package_manager graphene_egenesis_decent )
+target_include_directories( graphene_app PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
   set_source_files_properties( application.cpp api.cpp database_api.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

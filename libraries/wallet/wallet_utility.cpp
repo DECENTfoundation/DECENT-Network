@@ -1,12 +1,11 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include <decent/wallet_utility/wallet_utility.hpp>
+#include <graphene/wallet/wallet_utility.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/network/http/websocket.hpp>
 #include <fc/filesystem.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <fc/api.hpp>
-#include <decent/package/package.hpp>
 #include <iostream>
 
 namespace decent

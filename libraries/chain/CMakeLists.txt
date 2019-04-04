@@ -1,8 +1,6 @@
 file(GLOB HEADERS "include/graphene/chain/*.hpp" "include/graphene/chain/protocol/*.hpp")
 
-## SORT .cpp by most likely to change / break compile
 add_library( graphene_chain
-
              db_balance.cpp
              db_block.cpp
              db_getter.cpp
@@ -12,8 +10,11 @@ add_library( graphene_chain
              db_decent.cpp
              db_update.cpp
              db_miner_schedule.cpp
+             block_database.cpp
              fork_database.cpp
-
+             genesis_state.cpp
+             get_config.cpp
+             pts_address.cpp
              protocol/types.cpp
              protocol/authority.cpp
              protocol/asset.cpp
@@ -34,12 +35,6 @@ add_library( graphene_chain
              protocol/vote.cpp
              protocol/decent.cpp
              protocol/subscription.cpp
-
-             genesis_state.cpp
-             get_config.cpp
-
-             pts_address.cpp
-
              evaluator.cpp
              account_evaluator.cpp
              assert_evaluator.cpp
@@ -47,13 +42,12 @@ add_library( graphene_chain
              asset_evaluator.cpp
              transfer_evaluator.cpp
              proposal_evaluator.cpp
-        vesting_balance_evaluator.cpp
+             vesting_balance_evaluator.cpp
              withdraw_permission_evaluator.cpp
-        decent_evaluator.cpp
+             decent_evaluator.cpp
              subscription_evaluator.cpp
              custom_evaluator.cpp
              non_fungible_token_evaluator.cpp
-
              account_object.cpp
              asset_object.cpp
              content_object.cpp
@@ -61,14 +55,10 @@ add_library( graphene_chain
              vesting_balance_object.cpp
              transaction_detail_object.cpp
              message_object.cpp
-
-             block_database.cpp
-
              ${HEADERS}
            )
 
-target_link_libraries( graphene_chain PUBLIC graphene_utilities PRIVATE graphene_db decent_encrypt )
-
+target_link_libraries( graphene_chain PUBLIC decent_encrypt graphene_db )
 target_include_directories( graphene_chain PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)

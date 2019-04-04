@@ -10,7 +10,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <decent/wallet_utility/wallet_utility.hpp>
+#include <graphene/wallet/wallet_utility.hpp>
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>

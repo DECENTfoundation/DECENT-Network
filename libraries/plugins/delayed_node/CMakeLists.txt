@@ -5,9 +5,8 @@ add_library( graphene_delayed_node
              ${HEADERS}
            )
 
-target_link_libraries( graphene_delayed_node PRIVATE graphene_db graphene_chain graphene_net graphene_app decent_encrypt )
-target_include_directories( graphene_delayed_node
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_link_libraries( graphene_delayed_node PUBLIC graphene_app )
+target_include_directories( graphene_delayed_node PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
   set_source_files_properties( delayed_node_plugin.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )

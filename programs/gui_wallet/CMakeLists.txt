@@ -93,22 +93,16 @@ if( WIN32 )
 endif()
 
 target_link_libraries(DECENT PRIVATE
-                      graphene_db
-                      graphene_chain
-                      graphene_net
-                      graphene_app
                       graphene_wallet
-                      wallet_utility
-                      package_manager
-                      decent_encrypt
                       graphene_account_history
                       graphene_transaction_history
                       decent_messaging
                       decent_seeding
                       graphene_miner
-                      graphene_egenesis_decent
                       Qt5::Widgets
-                      ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS})
+                      ${CMAKE_DL_LIBS}
+                      ${PLATFORM_SPECIFIC_LIBS}
+                     )
 
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "DECENT")
 set_target_properties(DECENT PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")

@@ -81,13 +81,13 @@
 #include <graphene/utilities/string_escape.hpp>
 #include <graphene/utilities/words.hpp>
 #include <graphene/wallet/wallet.hpp>
+#include <graphene/wallet/wallet_utility.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 
 #include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
-#include <decent/wallet_utility/wallet_utility.hpp>
 #include <decent/about.hpp>
 
 #ifndef WIN32

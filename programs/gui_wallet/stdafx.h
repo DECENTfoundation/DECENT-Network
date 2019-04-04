@@ -27,10 +27,10 @@
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
+#include <graphene/wallet/wallet_utility.hpp>
 
 #include <decent/about.hpp>
 #include <decent/decent_config.hpp>
-#include <decent/wallet_utility/wallet_utility.hpp>
 
 #ifdef _MSC_VER
 #include <windows.h>

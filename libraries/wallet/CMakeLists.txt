@@ -27,12 +27,18 @@ else()
                       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/api_documentation_standin.cpp )
 endif()
 
-add_library( graphene_wallet wallet.cpp ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp ${HEADERS} )
-target_link_libraries( graphene_wallet PRIVATE graphene_db graphene_chain graphene_net graphene_app decent_encrypt package_manager wallet_utility )
+add_library( graphene_wallet
+             wallet.cpp
+             wallet_utility.cpp
+             ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp
+             ${HEADERS}
+           )
+
+target_link_libraries( graphene_wallet PUBLIC graphene_app graphene_utilities PRIVATE package_manager ipfs-api )
 target_include_directories( graphene_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
-  set_source_files_properties( wallet.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+  set_source_files_properties( wallet.cpp wallet_utility.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 #install( TARGETS

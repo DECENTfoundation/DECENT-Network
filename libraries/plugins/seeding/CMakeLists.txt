@@ -5,7 +5,7 @@ add_library( decent_seeding
              ${HEADERS}
            )
 
-target_link_libraries( decent_seeding PRIVATE graphene_db graphene_chain graphene_net graphene_app decent_encrypt package_manager )
+target_link_libraries( decent_seeding PUBLIC graphene_app PRIVATE package_manager ipfs-api )
 target_include_directories( decent_seeding PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 #install( TARGETS

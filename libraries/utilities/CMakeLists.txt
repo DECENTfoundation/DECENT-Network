@@ -23,11 +23,11 @@ add_library( graphene_utilities
              ipfs_check.cpp
              about.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
-             ${HEADERS} )
+             ${HEADERS}
+           )
 
-target_link_libraries( graphene_utilities fc ipfs-api )
-target_include_directories( graphene_utilities
-                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_link_libraries( graphene_utilities PUBLIC fc PRIVATE ipfs-api )
+target_include_directories( graphene_utilities PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 #install( TARGETS
 #   graphene_utilities

@@ -37,7 +37,6 @@
 
 #include <graphene/chain/custom_evaluator.hpp> //added
 #include <graphene/messaging/messaging.hpp> //added
-#include <graphene/utilities/key_conversion.hpp> //added
 #include <graphene/chain/message_object.hpp>
 
 #include <graphene/db/simple_index.hpp>
