@@ -21,7 +21,7 @@ RUN dnf install -y \
     qt5-qtbase-devel \
     qt5-linguist \
     rpm-build \
-    rpm-devel \
+    rpm-sign \
     rpmlint \
     rpmdevtools \
     readline-devel \
