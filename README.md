@@ -1,9 +1,9 @@
 Intro for new developers
 ------------------------
 
-This is a quick introduction to get new developers up to speed on Decent.
+This is a quick introduction to get new developers up to speed on DCore.
 
-Building Decent
+Building DCore
 ---------------
 
 ### Installing prerequisites in Linux
@@ -48,7 +48,7 @@ For Fedora 28 or later, execute in console:
     sudo rpm -i /tmp/libpbc*
     mkdir ~/dev
 
-> Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build Boost 1.65.1
      wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
@@ -73,7 +73,7 @@ For Fedora 28 or later, execute in console:
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
 
-> Note for Ubuntu 16.04/18.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build Decent itself):
+> Note for Ubuntu 16.04/18.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build JSON 3.5.0
      wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz
@@ -127,9 +127,9 @@ After all the prerequisites are installed, execute in console (change current pa
     cd DECENT-Network
     git submodule update --init --recursive
 
-### Building and installing Decent in Linux or MacOS
+### Building and installing DCore in Linux or MacOS
 
-In order to build and install Decent, execute in console:
+In order to build and install DCore, execute in console:
 
     mkdir -p ~/dev/DECENT-Network-build
     cd ~/dev/DECENT-Network-build
@@ -143,15 +143,15 @@ In order to build and install Decent, execute in console:
 >
 >     $ make -j -l 3.0 install
 
-Decent artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENT-Network-prefix` to the command line.
+DCore artifacts are installed at `/usr/local` directory by default. You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=~/dev/DECENT-Network-prefix` to the command line.
 
 You can use any path instead of `~/dev` in the steps above.
 
 You can use Xcode, or any other CMake generator, and then, if it is an IDE generator, instead of building and installing via `cmake` in terminal, open the generated project/solution file in the corresponding IDE and perform `ALL_BUILD` and `INSTALL` (or `install`) actions from there.
 
-### Building and installing Decent in Windows
+### Building and installing DCore in Windows
 
-In order to build and install Decent follow the steps:
+In order to build and install DCore follow the steps:
 * start Visual Studio 2017, navigate to _File > Open > Folder_ and choose `C:\Projects\DECENT-Network`
 * navigate to _CMake > Change CMake Settings > Decent_ and adjust installation path and paths to Boost, Qt and vcpkg (if needed)
 * build and install artifacts using _CMake > Install > Decent_
@@ -168,12 +168,12 @@ You can specify any other custom install prefix for `cmake` during the initial c
 
 You can use any path instead of `C:\Projects` in the steps above.
 
-Building Decent in Docker
+Building DCore in Docker
 -------------------------
 
-You can also build Docker image which will run as Decent network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [scripts](scripts/README.md) directory.
+You can also build Docker image which will run as DCore network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [scripts](scripts/README.md) directory.
 
-Starting Decent
+Starting DCore
 ---------------
 
 > In the commands below, change `/usr/local` to `~/dev/DECENT-Network-prefix` or to any other install location, that you specified during initial configuration.
@@ -184,11 +184,11 @@ On first run `decentd` will create `.decent` in the home directory, if doesn't e
 
 Optionally, now press Ctrl-C to stop `decentd`. You can edit configuration in `~/.decent/data/decentd/config.ini`.
 
-Then, run the decent daemon again:
+Then, run the DCore daemon again:
 
     $ /usr/local/bin/decentd
     
-This will launch the decent daemon node with the default genesis. 
+This will launch the DCore daemon node with the default genesis. 
 
 Then, in a separate console, start the command-line wallet by executing:
 
@@ -204,14 +204,14 @@ To import your account keys, execute:
 
     >>> import_key [name] [private_wif_key]
 
-Decent daemon
+DCore daemon
 --------------
 
-The role of the decent daemon is to broadcast transactions, download blocks, and optionally sign them.
+The role of the DCore daemon is to broadcast transactions, download blocks, and optionally sign them.
 
     $ /usr/local/bin/decentd --rpc-endpoint 127.0.0.1:8090 --enable-stale-production -w '"1.4.0"'
 
-Testing Decent
+Testing DCore
 --------------
 
 Seeder plugin is responsible for automatically announce seeder's capablity, downloading content, seeding it and distributing keys. In order to enable it follow these steps:
@@ -219,7 +219,7 @@ Seeder plugin is responsible for automatically announce seeder's capablity, down
 
         generate_el_gamal_keys
 
-2. Add parameters to the decent daemon
+2. Add parameters to the DCore daemon
 
         --seeder [account-id] --seeder-private-key [private_wif_key] --content-private-key [el_gamal_private_key] --packages-path [path] --seeding-price [price] --free-space [free-space]
     
