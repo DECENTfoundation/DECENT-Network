@@ -93,6 +93,10 @@ void non_fungible_token_update_data_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( !data.empty() );
+
+   std::for_each(data.begin(), data.end(), [&](const std::unordered_map<std::string, fc::variant>::value_type &v) {
+      FC_ASSERT( !v.first.empty(), "Data name can not be empty" );
+   });
 }
 
 share_type non_fungible_token_update_data_operation::calculate_fee(const fee_parameters_type& param) const

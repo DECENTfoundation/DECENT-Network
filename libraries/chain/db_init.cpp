@@ -156,11 +156,11 @@ void database::initialize_evaluators()
    register_evaluator<set_publishing_manager_evaluator>();
    register_evaluator<set_publishing_right_evaluator>();
    register_evaluator<update_user_issued_asset_advanced_evaluator>();
-   register_evaluator<non_fungible_token_create_evaluator>();
-   register_evaluator<non_fungible_token_update_evaluator>();
+   register_evaluator<non_fungible_token_create_definition_evaluator>();
+   register_evaluator<non_fungible_token_update_definition_evaluator>();
    register_evaluator<non_fungible_token_issue_evaluator>();
    register_evaluator<non_fungible_token_transfer_evaluator>();
-   register_evaluator<non_fungible_token_data_evaluator>();
+   register_evaluator<non_fungible_token_update_data_evaluator>();
 }
 
 void database::initialize_indexes()

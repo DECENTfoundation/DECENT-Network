@@ -7,7 +7,7 @@
 
 namespace graphene { namespace chain {
 
-void_result non_fungible_token_create_evaluator::do_evaluate( const operation_type& op )
+void_result non_fungible_token_create_definition_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -20,17 +20,17 @@ void_result non_fungible_token_create_evaluator::do_evaluate( const operation_ty
    if( dotpos != std::string::npos )
    {
       auto prefix = op.symbol.substr( 0, dotpos );
-      auto asset_symbol_itr = nft_indx.find( prefix );
-      FC_ASSERT( asset_symbol_itr != nft_indx.end(), "Asset ${s} may only be created by issuer of ${p}, but ${p} has not been registered",
+      auto nft_symbol_itr = nft_indx.find( prefix );
+      FC_ASSERT( nft_symbol_itr != nft_indx.end(), "Non fungible token ${s} may only be created by issuer of ${p}, but ${p} has not been registered",
             ("s",op.symbol)("p",prefix) );
-      FC_ASSERT( asset_symbol_itr->options.issuer == op.options.issuer, "Asset ${s} may only be created by issuer of ${p}, ${i}",
+      FC_ASSERT( nft_symbol_itr->options.issuer == op.options.issuer, "Non fungible token ${s} may only be created by issuer of ${p}, ${i}",
             ("s",op.symbol)("p",prefix)("i", op.options.issuer(d).name) );
    }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_create_evaluator::do_apply( const operation_type& op )
+graphene::db::object_id_type non_fungible_token_create_definition_evaluator::do_apply( const operation_type& op )
 { try {
    const non_fungible_token_object& new_nft =
       db().create<non_fungible_token_object>( [&]( non_fungible_token_object& nft ) {
@@ -44,7 +44,7 @@ graphene::db::object_id_type non_fungible_token_create_evaluator::do_apply( cons
    return new_nft.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_update_evaluator::do_evaluate( const operation_type& op )
+void_result non_fungible_token_update_definition_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -65,7 +65,7 @@ void_result non_fungible_token_update_evaluator::do_evaluate( const operation_ty
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_update_evaluator::do_apply( const operation_type& op )
+graphene::db::object_id_type non_fungible_token_update_definition_evaluator::do_apply( const operation_type& op )
 { try {
    db().modify( *nft_to_update, [&]( non_fungible_token_object& nft_obj ){
       nft_obj.options = op.options;
@@ -130,9 +130,9 @@ void_result non_fungible_token_issue_evaluator::do_evaluate( const operation_typ
    FC_ASSERT( (nft_obj.current_supply + 1) <= nft_obj.options.max_supply, "Max supply reached" );
 
    FC_ASSERT( nft_obj.definitions.size() == op.data.size() );
-   for( auto i = nft_obj.definitions.size(); i > 0; )
+   for( size_t i = 0; i < nft_obj.definitions.size(); i++ )
    {
-      const non_fungible_token_data_type &data_type = nft_obj.definitions[--i];
+      const non_fungible_token_data_type &data_type = nft_obj.definitions[i];
       nft_check_data(d, data_type, nft_obj.get_id(), op.data[i], i);
    }
 
@@ -209,7 +209,7 @@ graphene::db::object_id_type non_fungible_token_transfer_evaluator::do_apply( co
    return op.nft_data_id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_data_evaluator::do_evaluate( const operation_type& op )
+void_result non_fungible_token_update_data_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -234,7 +234,7 @@ void_result non_fungible_token_data_evaluator::do_evaluate( const operation_type
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_data_evaluator::do_apply( const operation_type& op )
+graphene::db::object_id_type non_fungible_token_update_data_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    d.modify( *nft_data_to_update, [&]( non_fungible_token_data_object& nft_data ) {
