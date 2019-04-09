@@ -180,7 +180,8 @@ private:
    const wallet_api_impl& wallet;
    operation_result result;
 
-   std::string fee(const asset& a) const;
+   void fee(const asset& a) const;
+   std::string memo(const optional<memo_data>& data, const account_object& from, const account_object& to) const;
 
 public:
    operation_printer( ostream& out, const wallet_api_impl& wallet, const operation_result& r = operation_result() )
@@ -195,6 +196,8 @@ public:
 
    std::string operator()(const transfer_operation& op)const;
    std::string operator()(const transfer2_operation& op)const;
+   std::string operator()(const non_fungible_token_issue_operation& op) const;
+   std::string operator()(const non_fungible_token_transfer_operation& op) const;
    std::string operator()(const account_create_operation& op)const;
    std::string operator()(const account_update_operation& op)const;
    std::string operator()(const asset_create_operation& op)const;
@@ -558,10 +561,7 @@ public:
    }
    optional<asset_object> find_asset(asset_id_type id)const
    {
-      auto rec = _remote_db->get_assets({id}).front();
-      if( rec )
-         _asset_cache[id] = *rec;
-      return rec;
+      return _remote_db->get_assets({id}).front();
    }
 
    optional<asset_object> find_asset(const string& asset_symbol_or_id) const
@@ -579,8 +579,6 @@ public:
          {
             if( rec->symbol != asset_symbol_or_id )
                return optional<asset_object>();
-
-            _asset_cache[rec->get_id()] = *rec;
          }
          return rec;
       }
@@ -601,10 +599,7 @@ public:
 
    optional<non_fungible_token_object> find_non_fungible_token(non_fungible_token_id_type id)const
    {
-      auto rec = _remote_db->get_non_fungible_tokens({id}).front();
-      if( rec )
-         _nft_cache[id] = *rec;
-      return rec;
+      return _remote_db->get_non_fungible_tokens({id}).front();
    }
 
    optional<non_fungible_token_object> find_non_fungible_token(const string& nft_symbol_or_id) const
@@ -621,8 +616,6 @@ public:
          {
             if( rec->symbol != nft_symbol_or_id )
                return optional<non_fungible_token_object>();
-
-            _nft_cache[rec->get_id()] = *rec;
          }
          return rec;
       }
@@ -1625,6 +1618,8 @@ public:
                                                 bool transferable,
                                                 bool broadcast /* = false */)
    {
+      FC_ASSERT( !self.is_locked() );
+
       non_fungible_token_create_definition_operation create_op;
       create_op.symbol = symbol;
       create_op.transferable = transferable;
@@ -1651,6 +1646,8 @@ public:
                                                 bool fixed_max_supply,
                                                 bool broadcast /* = false */)
    {
+      FC_ASSERT( !self.is_locked() );
+
       non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
       non_fungible_token_update_definition_operation update_op;
       update_op.current_issuer = nft_obj.options.issuer;
@@ -1676,8 +1673,9 @@ public:
                                                const string& memo,
                                                bool broadcast /* = false */)
    {
-      non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
+      FC_ASSERT( !self.is_locked() );
 
+      non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
       account_object to = get_account(to_account);
       account_object issuer = get_account(nft_obj.options.issuer);
 
@@ -1705,6 +1703,8 @@ public:
                                                        const string& memo,
                                                        bool broadcast /* = false */)
    {
+      FC_ASSERT( !self.is_locked() );
+
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
       account_object from = get_account(nft_data.owner);
       account_object to = get_account(to_account);
@@ -1736,8 +1736,9 @@ public:
                                                      const std::unordered_map<string, fc::variant>& data,
                                                      bool broadcast /* = false */)
    {
-      non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
+      FC_ASSERT( !self.is_locked() );
 
+      non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
       non_fungible_token_update_data_operation data_op;
       data_op.owner = nft_data.owner;
       data_op.nft_data_id = nft_data.get_id();
@@ -3417,15 +3418,39 @@ signed_transaction content_cancellation(const string& author,
 #endif
    const string _wallet_filename_extension = ".wallet";
 
-   mutable map<asset_id_type, asset_object> _asset_cache;
-   mutable map<non_fungible_token_id_type, non_fungible_token_object> _nft_cache;
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
    seeders_tracker _seeders_tracker;
 };
 
-   std::string operation_printer::fee(const asset& a)const {
-      out << "   (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
-      return std::string();
+   void operation_printer::fee(const asset& a) const
+   {
+      out << " (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
+   }
+
+   std::string operation_printer::memo(const optional<memo_data>& data, const account_object& from, const account_object& to) const
+   {
+      std::string memo;
+      if( data )
+      {
+         if( wallet.is_locked() )
+         {
+            out << " -- Unlock wallet to see memo.";
+         }
+         else
+         {
+            try
+            {
+               memo = wallet.decrypt_memo( *data, from, to );
+               out << " -- Memo: " << memo;
+            }
+            catch (const fc::exception& e)
+            {
+               out << " -- could not decrypt memo";
+               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
+            }
+         }
+      }
+      return memo;
    }
 
    template<typename T> std::string operation_printer::operator()(const T& op)const
@@ -3456,29 +3481,8 @@ signed_transaction content_cancellation(const string& author,
       const auto& to_account = wallet.get_account(op.to);
       out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
           << " from " << from_account.name << " to " << to_account.name;
-      std::string memo;
-      if( op.memo )
-      {
-         if( wallet.is_locked() )
-         {
-            out << " -- Unlock wallet to see memo.";
-         }
-         else
-         {
-            try
-            {
-               memo = wallet.decrypt_memo( *op.memo, from_account, to_account );
-               out << " -- Memo: " << memo;
-            }
-            catch (const fc::exception& e)
-            {
-               out << " -- could not decrypt memo";
-               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
-            }
-         }
-      }
       fee(op.fee);
-      return memo;
+      return memo(op.memo, from_account, to_account);
    }
 
    string operation_printer::operator()(const transfer2_operation& op) const
@@ -3500,32 +3504,30 @@ signed_transaction content_cancellation(const string& author,
          receiver = std::string(op.to);
       }
 
-
       out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
           << " from " << from_account.name << " to " << receiver;
-      std::string memo;
-      if( op.memo )
-      {
-         if( wallet.is_locked() )
-         {
-            out << " -- Unlock wallet to see memo.";
-         }
-         else
-         {
-            try
-            {
-               memo = wallet.decrypt_memo( *op.memo, from_account, to_account );
-               out << " -- Memo: " << memo;
-            }
-            catch (const fc::exception& e)
-            {
-               out << " -- could not decrypt memo";
-               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
-            }
-         }
-      }
       fee(op.fee);
-      return memo;
+      return memo(op.memo, from_account, to_account);
+   }
+
+   string operation_printer::operator()(const non_fungible_token_issue_operation& op) const
+   {
+      const auto& from_account = wallet.get_account(op.issuer);
+      const auto& to_account = wallet.get_account(op.to);
+      out << "Issue NFT " << wallet.get_non_fungible_token(op.nft_id).symbol << " from " << from_account.name << " to " << to_account.name;
+      fee(op.fee);
+      return memo(op.memo, from_account, to_account);
+   }
+
+   string operation_printer::operator()(const non_fungible_token_transfer_operation& op) const
+   {
+      const auto& from_account = wallet.get_account(op.from);
+      const auto& to_account = wallet.get_account(op.to);
+      const auto& nft_data = wallet.get_non_fungible_token_data(op.nft_data_id);
+      out << "Transfer NFT " << wallet.get_non_fungible_token(nft_data.nft_id).symbol <<
+         " (" << std::string(object_id_type(nft_data.get_id())) << ") from " << from_account.name << " to " << to_account.name;
+      fee(op.fee);
+      return memo(op.memo, from_account, to_account);
    }
 
    std::string operation_printer::operator()(const leave_rating_and_comment_operation& op) const
@@ -3537,20 +3539,23 @@ signed_transaction content_cancellation(const string& author,
          out << " commented " << op.URI << " -- Comment: " << op.comment;
       else
          out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
 
    std::string operation_printer::operator()(const account_create_operation& op) const
    {
       out << "Create Account '" << op.name << "'";
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const account_update_operation& op) const
    {
       out << "Update Account '" << wallet.get_account(op.account).name << "'";
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const asset_create_operation& op) const
@@ -3559,26 +3564,29 @@ signed_transaction content_cancellation(const string& author,
       out << "Monitored Asset ";
 
       out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const content_submit_operation& op) const
    {
       out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI;
-
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const request_to_buy_operation& op) const
    {
       out << "Request to buy by " << wallet.get_account(op.consumer).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const ready_to_publish_operation& op) const
    {
       out << "Ready to publish -- Seeder: " << wallet.get_account(op.seeder).name << " -- space: " << op.space << " -- Price per MB: " << op.price_per_MByte;
-      return fee(op.fee);
+      fee(op.fee);
+      return std::string();
    }
 
    std::string operation_printer::operator()(const custom_operation& op) const
@@ -3664,8 +3672,7 @@ signed_transaction content_cancellation(const string& author,
          fee(op.fee);
          return memo;
       }
-      else
-         return "";
+      return std::string();
    }
 
    std::string operation_result_printer::operator()(const void_result& x) const
@@ -3849,9 +3856,9 @@ signed_transaction content_cancellation(const string& author,
       return my->_remote_db->list_non_fungible_tokens(lowerbound, limit);
    }
 
-   non_fungible_token_object wallet_api::get_non_fungible_token(const string& symbol) const
+   non_fungible_token_object wallet_api::get_non_fungible_token(const string& nft_symbol_or_id) const
    {
-      return my->get_non_fungible_token(symbol);
+      return my->get_non_fungible_token(nft_symbol_or_id);
    }
 
    signed_transaction wallet_api::create_non_fungible_token(const string& issuer,
@@ -3885,15 +3892,15 @@ signed_transaction content_cancellation(const string& author,
       return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
    }
 
-   vector<non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const string& symbol) const
+   vector<non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const string& nft_symbol_or_id) const
    {
-      return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(symbol).get_id());
+      return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(nft_symbol_or_id).get_id());
    }
 
-   vector<non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const string& account, const set<string>& symbols) const
+   vector<non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const string& account, const set<string>& symbols_or_ids) const
    {
       std::set<non_fungible_token_id_type> ids;
-      std::for_each(symbols.begin(), symbols.end(), [&](const string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
+      std::for_each(symbols_or_ids.begin(), symbols_or_ids.end(), [&](const string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
       return my->_remote_db->get_non_fungible_token_balances(get_account(account).get_id(), ids);
    }
 

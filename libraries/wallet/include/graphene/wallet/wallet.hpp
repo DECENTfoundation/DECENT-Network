@@ -330,11 +330,11 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Returns information about the given non fungible token.
-          * @param symbol the name or id of the non fungible token symbol in question
+          * @param nft_symbol_or_id the name or id of the non fungible token symbol in question
           * @return the information about the non fungible token stored in the block chain
           * @ingroup WalletAPI_NonFungibleToken
           */
-         non_fungible_token_object get_non_fungible_token(const string& symbol) const;
+         non_fungible_token_object get_non_fungible_token(const string& nft_symbol_or_id) const;
 
          /**
           * @brief Creates a new non fungible token definition.
@@ -395,21 +395,21 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Gets non fungible token instances by registered token symbol.
-          * @param symbol the ticker symbol of the non fungible token in question
+          * @param nft_symbol_or_id the name or id of the non fungible token symbol in question
           * @return the non fungible token data objects found
           * @ingroup WalletAPI_NonFungibleToken
           */
-         vector<non_fungible_token_data_object> list_non_fungible_token_data(const string& symbol) const;
+         vector<non_fungible_token_data_object> list_non_fungible_token_data(const string& nft_symbol_or_id) const;
 
          /**
           * @brief Gets account's balances in various non fungible tokens.
           * @param account the name or id of the account
-          * @param symbols set of symbols or non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
+          * @param symbols_or_ids set of symbol names or non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
           * @return the list of non fungible token data objects
           * @ingroup WalletAPI_NonFungibleToken
           */
          vector<non_fungible_token_data_object> get_non_fungible_token_balances(const string& account,
-                                                                                const set<string>& symbols) const;
+                                                                                const set<string>& symbols_or_ids) const;
 
          /**
           * @brief Gets non fungible token data object transfer history.
