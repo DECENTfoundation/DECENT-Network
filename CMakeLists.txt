@@ -9,9 +9,7 @@ if (POLICY CMP0048)
 endif()
 
 cmake_minimum_required( VERSION 3.10.2 FATAL_ERROR )
-project( Decent VERSION 1.4.0 LANGUAGES CXX )
-
-set( BLOCKCHAIN_NAME "Decent" )
+project( DCore VERSION 1.4.0 LANGUAGES CXX )
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2 )
@@ -149,7 +147,7 @@ set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_D
 
 if( WIN32 )
 
-    message( STATUS "Configuring Decent on WIN32" )
+    message( STATUS "Configuring DCore on WIN32" )
 
     add_compile_options( /D_WIN32_WINNT=0x0601 )
 
@@ -171,11 +169,11 @@ else() # Apple and Linux
 
     if( APPLE )
         # Apple Specific Options Here
-        message( STATUS "Configuring Decent on OS X" )
+        message( STATUS "Configuring DCore on OS X" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall" )
     else()
         # Linux Specific Options Here
-        message( STATUS "Configuring Decent on Linux" )
+        message( STATUS "Configuring DCore on Linux" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall" )
     endif()
 
@@ -198,7 +196,7 @@ else() # Apple and Linux
 
 endif()
 
-set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Decent for code coverage analysis" )
+set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build DCore for code coverage analysis" )
 
 if( ENABLE_COVERAGE_TESTING )
     set( CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}" )

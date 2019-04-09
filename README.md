@@ -94,7 +94,7 @@ For Fedora 28 or later, execute in console:
 Then, execute in console:
 
     $ brew update
-    $ brew install automake autoconf libtool cmake boost qt5 cryptopp doxygen byacc flex gettext git pbc gmp ipfs openssl readline
+    $ brew install automake autoconf libtool cmake boost cryptopp openssl pbc qt readline doxygen byacc flex git ipfs
     $ brew tap nlohmann/json
     $ brew install nlohmann_json --with-cmake
     $ brew link --force readline
@@ -153,8 +153,8 @@ You can use Xcode, or any other CMake generator, and then, if it is an IDE gener
 
 In order to build and install DCore follow the steps:
 * start Visual Studio 2017, navigate to _File > Open > Folder_ and choose `C:\Projects\DECENT-Network`
-* navigate to _CMake > Change CMake Settings > Decent_ and adjust installation path and paths to Boost, Qt and vcpkg (if needed)
-* build and install artifacts using _CMake > Install > Decent_
+* navigate to _CMake > Change CMake Settings > DCore_ and adjust installation path and paths to Boost, Qt and vcpkg (if needed)
+* build and install artifacts using _CMake > Install > DCore_
 
 You can use CMake generator to create a Visual Studio 2017 project files and perform _Build > Build solution_ action from there, just start the _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
