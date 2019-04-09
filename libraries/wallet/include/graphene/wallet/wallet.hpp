@@ -337,12 +337,12 @@ namespace graphene { namespace wallet {
          non_fungible_token_object get_non_fungible_token(const string& symbol) const;
 
          /**
-          * @brief Creates a new non fungible token.
+          * @brief Creates a new non fungible token definition.
           * @param issuer the name or id of the account who will pay the fee and become the issuer of the new non fungible token
           * @param symbol the ticker symbol of the new non fungible token
           * @param description non fungible token description (max: 1000)
           * @param definitions non fungible token data definitions
-          * @param max_supply the maximum supply of this non fungible token which may exist at any given time or zero for unlimited
+          * @param max_supply the maximum supply of this non fungible token which may exist at any given time
           * @param fixed_max_supply true to deny future modifications of 'max_supply' otherwise false
           * @param transferable true to allow token transfer to other account otherwise false
           * @param broadcast \c true to broadcast the transaction on the network
@@ -359,12 +359,13 @@ namespace graphene { namespace wallet {
                                                       bool broadcast = false);
 
          /**
-          * @brief Updates the new non fungible token.
+          * @brief Updates the non fungible token definition.
           * @note Maximum supply will be changed only if fixed_max_supply is not set.
-          * @param issuer the name or id of the account who will pay the fee
+          * @param issuer the name or id of the account who will become the new issuer (or pass empty string)
           * @param symbol the ticker symbol of the non fungible token to update
           * @param description non fungible token description (max: 1000)
-          * @param max_supply the maximum supply of this non fungible token which may exist at any given time or zero for unlimited
+          * @param max_supply the maximum supply of this non fungible token which may exist at any given time
+          * @param fixed_max_supply true to deny future modifications of 'max_supply'
           * @param broadcast \c true to broadcast the transaction on the network
           * @return the signed transaction creating the new non fungible token
           * @ingroup WalletAPI_NonFungibleToken
@@ -373,10 +374,11 @@ namespace graphene { namespace wallet {
                                                       const string& symbol,
                                                       const string& description,
                                                       uint32_t max_supply,
+                                                      bool fixed_max_supply,
                                                       bool broadcast = false);
 
          /**
-          * @brief Issue new instance of non fungible token.
+          * @brief Issues new instance of non fungible token.
           * @param to_account the name or id of the account to receive the new instance
           * @param symbol the ticker symbol of the non fungible token to issue
           * @param data non fungible token instance data
@@ -392,7 +394,7 @@ namespace graphene { namespace wallet {
                                                      bool broadcast = false);
 
          /**
-          * @brief Get non fungible token instances by registered token id.
+          * @brief Gets non fungible token instances by registered token symbol.
           * @param symbol the ticker symbol of the non fungible token in question
           * @return the non fungible token data objects found
           * @ingroup WalletAPI_NonFungibleToken
@@ -400,7 +402,7 @@ namespace graphene { namespace wallet {
          vector<non_fungible_token_data_object> list_non_fungible_token_data(const string& symbol) const;
 
          /**
-          * @brief Get account's balances in various non fungible tokens.
+          * @brief Gets account's balances in various non fungible tokens.
           * @param account the name or id of the account
           * @param symbols set of symbols or non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
           * @return the list of non fungible token data objects
@@ -410,7 +412,7 @@ namespace graphene { namespace wallet {
                                                                                 const set<string>& symbols) const;
 
          /**
-          * @brief Get non fungible token data object transfer history.
+          * @brief Gets non fungible token data object transfer history.
           * @param nft_data_id the non fungible token data object id to search history for
           * @return a list of transaction detail objects
           * @ingroup WalletAPI_NonFungibleToken
@@ -418,7 +420,7 @@ namespace graphene { namespace wallet {
          vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id) const;
 
          /**
-          * @brief Transfer ownership of token instance.
+          * @brief Transfers ownership of token instance.
           * @param to_account the name or id of the account to receive the token instance
           * @param nft_data_id the token instance id to transfer
           * @param memo a memo to include in the transaction, readable by the recipient
@@ -432,7 +434,7 @@ namespace graphene { namespace wallet {
                                                              bool broadcast = false);
 
          /**
-          * @brief Burn (destroy) the token instance.
+          * @brief Burns (destroys) the token instance.
           * @param nft_data_id the token instance id to destroy
           * @param broadcast \c true to broadcast the transaction on the network
           * @ingroup WalletAPI_NonFungibleToken
@@ -440,7 +442,7 @@ namespace graphene { namespace wallet {
          signed_transaction burn_non_fungible_token_data(const string& nft_data_id, bool broadcast = false);
 
          /**
-          * @brief Update data of token instance.
+          * @brief Updates data of token instance.
           * @param nft_data_id the token instance id to update
           * @param data name to value pairs to be updated
           * @param broadcast \c true to broadcast the transaction on the network

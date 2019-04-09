@@ -1625,12 +1625,12 @@ public:
                                                 bool transferable,
                                                 bool broadcast /* = false */)
    {
-      non_fungible_token_create_operation create_op;
+      non_fungible_token_create_definition_operation create_op;
       create_op.symbol = symbol;
-      create_op.fixed_max_supply = fixed_max_supply;
       create_op.transferable = transferable;
       create_op.options.issuer = get_account(issuer).get_id();
       create_op.options.max_supply = max_supply;
+      create_op.options.fixed_max_supply = fixed_max_supply;
       create_op.options.description = description;
       create_op.definitions = definitions;
 
@@ -1648,12 +1648,16 @@ public:
                                                 const string& symbol,
                                                 const string& description,
                                                 uint32_t max_supply,
+                                                bool fixed_max_supply,
                                                 bool broadcast /* = false */)
    {
-      non_fungible_token_update_operation update_op;
-      update_op.nft_id = get_non_fungible_token(symbol).get_id();
-      update_op.options.issuer = get_account(issuer).get_id();
+      non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
+      non_fungible_token_update_definition_operation update_op;
+      update_op.current_issuer = nft_obj.options.issuer;
+      update_op.nft_id = nft_obj.get_id();
+      update_op.options.issuer = issuer.empty() ? nft_obj.options.issuer : get_account(issuer).get_id();
       update_op.options.max_supply = max_supply;
+      update_op.options.fixed_max_supply = fixed_max_supply;
       update_op.options.description = description;
 
       update_op.validate();
@@ -1734,7 +1738,7 @@ public:
    {
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
 
-      non_fungible_token_data_operation data_op;
+      non_fungible_token_update_data_operation data_op;
       data_op.owner = nft_data.owner;
       data_op.nft_data_id = nft_data.get_id();
       data_op.data = data;
@@ -3866,9 +3870,10 @@ signed_transaction content_cancellation(const string& author,
                                                             const string& symbol,
                                                             const string& description,
                                                             uint32_t max_supply,
+                                                            bool fixed_max_supply,
                                                             bool broadcast /* = false */)
    {
-      return my->update_non_fungible_token(issuer, symbol, description, max_supply, broadcast);
+      return my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
    }
 
    signed_transaction wallet_api::issue_non_fungible_token(const string& to_account,

@@ -50,10 +50,16 @@ void_result non_fungible_token_update_evaluator::do_evaluate( const operation_ty
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_object& nft_obj = op.nft_id(d);
-   FC_ASSERT( op.options.issuer == nft_obj.options.issuer );
+   FC_ASSERT( op.current_issuer == nft_obj.options.issuer );
+   FC_ASSERT( op.options.max_supply >= nft_obj.current_supply, "Max supply must be at least ${c}", ("c", nft_obj.current_supply) );
+   FC_ASSERT( (op.options.fixed_max_supply == nft_obj.options.fixed_max_supply) || !nft_obj.options.fixed_max_supply, "Max supply must remain fixed" );
+   FC_ASSERT( (op.options.max_supply == nft_obj.options.max_supply) || !nft_obj.options.fixed_max_supply, "Can not change max supply (it's fixed)" );
 
-   FC_ASSERT( !( (op.options.max_supply != nft_obj.options.max_supply) && nft_obj.fixed_max_supply ) );
-   FC_ASSERT( (op.options.max_supply != nft_obj.options.max_supply) || (nft_obj.options.description != op.options.description) );
+   FC_ASSERT( (op.options.issuer != nft_obj.options.issuer) ||
+              (op.options.max_supply != nft_obj.options.max_supply) ||
+              (op.options.fixed_max_supply != nft_obj.options.fixed_max_supply) ||
+              (op.options.description != nft_obj.options.description),
+              "Operation has to change something" );
 
    nft_to_update = &nft_obj;
    return void_result();
@@ -62,10 +68,7 @@ void_result non_fungible_token_update_evaluator::do_evaluate( const operation_ty
 graphene::db::object_id_type non_fungible_token_update_evaluator::do_apply( const operation_type& op )
 { try {
    db().modify( *nft_to_update, [&]( non_fungible_token_object& nft_obj ){
-      if( !nft_obj.fixed_max_supply )
-         nft_obj.options.max_supply = op.options.max_supply;
-
-      nft_obj.options.description = op.options.description;
+      nft_obj.options = op.options;
    });
 
    return nft_to_update->id;
@@ -124,10 +127,7 @@ void_result non_fungible_token_issue_evaluator::do_evaluate( const operation_typ
    FC_ASSERT( op.issuer == nft_obj.options.issuer );
    FC_ASSERT( d.find_object(op.to), "Attempt to issue a non fungible token to a non-existing account" );
 
-   if( nft_obj.options.max_supply > 0 )
-   {
-      FC_ASSERT( (nft_obj.current_supply + 1) <= nft_obj.options.max_supply );
-   }
+   FC_ASSERT( (nft_obj.current_supply + 1) <= nft_obj.options.max_supply, "Max supply reached" );
 
    FC_ASSERT( nft_obj.definitions.size() == op.data.size() );
    for( auto i = nft_obj.definitions.size(); i > 0; )

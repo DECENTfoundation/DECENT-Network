@@ -19,7 +19,7 @@ void non_fungible_token_options::validate() const
    FC_ASSERT( description.size() <= 1000 );
 }
 
-void non_fungible_token_create_operation::validate() const
+void non_fungible_token_create_definition_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
@@ -37,7 +37,7 @@ void non_fungible_token_create_operation::validate() const
    });
 }
 
-share_type non_fungible_token_create_operation::calculate_fee(const fee_parameters_type& param) const
+share_type non_fungible_token_create_definition_operation::calculate_fee(const fee_parameters_type& param) const
 {
    share_type fee = 5 * param.basic_fee;
 
@@ -58,7 +58,7 @@ share_type non_fungible_token_create_operation::calculate_fee(const fee_paramete
    return fee;
 }
 
-void non_fungible_token_update_operation::validate() const
+void non_fungible_token_update_definition_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
 
@@ -89,13 +89,13 @@ bool non_fungible_token_transfer_operation::is_partner_account_id(account_id_typ
     return from == acc_id || to == acc_id;
 }
 
-void non_fungible_token_data_operation::validate()const
+void non_fungible_token_update_data_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( !data.empty() );
 }
 
-share_type non_fungible_token_data_operation::calculate_fee(const fee_parameters_type& param) const
+share_type non_fungible_token_update_data_operation::calculate_fee(const fee_parameters_type& param) const
 {
    share_type fee = param.fee;
    std::for_each(data.begin(), data.end(), [&](const std::unordered_map<std::string, fc::variant>::value_type &v) {

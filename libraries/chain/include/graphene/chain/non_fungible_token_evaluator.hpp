@@ -9,7 +9,7 @@ namespace graphene { namespace chain {
    class non_fungible_token_create_evaluator : public evaluator<non_fungible_token_create_evaluator>
    {
       public:
-         typedef non_fungible_token_create_operation operation_type;
+         typedef non_fungible_token_create_definition_operation operation_type;
 
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );
@@ -18,7 +18,7 @@ namespace graphene { namespace chain {
    class non_fungible_token_update_evaluator : public evaluator<non_fungible_token_update_evaluator>
    {
       public:
-         typedef non_fungible_token_update_operation operation_type;
+         typedef non_fungible_token_update_definition_operation operation_type;
 
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );
@@ -54,7 +54,7 @@ namespace graphene { namespace chain {
    class non_fungible_token_data_evaluator : public evaluator<non_fungible_token_data_evaluator>
    {
       public:
-         typedef non_fungible_token_data_operation operation_type;
+         typedef non_fungible_token_update_data_operation operation_type;
 
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );

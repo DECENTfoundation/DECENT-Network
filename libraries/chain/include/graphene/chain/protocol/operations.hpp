@@ -86,11 +86,11 @@ namespace graphene { namespace chain {
             ready_to_publish2_operation,
             transfer2_operation,
             update_user_issued_asset_advanced_operation,      //40
-            non_fungible_token_create_operation,
-            non_fungible_token_update_operation,
+            non_fungible_token_create_definition_operation,
+            non_fungible_token_update_definition_operation,
             non_fungible_token_issue_operation,
             non_fungible_token_transfer_operation,
-            non_fungible_token_data_operation,                //45
+            non_fungible_token_update_data_operation,         //45
             disallow_automatic_renewal_of_subscription_operation,  // VIRTUAL
             return_escrow_submission_operation,                    // VIRTUAL
             return_escrow_buying_operation,                        // VIRTUAL

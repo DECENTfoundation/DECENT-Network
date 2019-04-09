@@ -306,13 +306,13 @@ struct get_balance_history_visitor
          _fee = op.fee;
    }
 
-   void operator()( const non_fungible_token_create_operation& op )
+   void operator()( const non_fungible_token_create_definition_operation& op )
    {
       if (op.fee_payer() == _account)
          _fee = op.fee;
    }
 
-   void operator()( const non_fungible_token_update_operation& op )
+   void operator()( const non_fungible_token_update_definition_operation& op )
    {
       if (op.fee_payer() == _account)
          _fee = op.fee;
@@ -330,7 +330,7 @@ struct get_balance_history_visitor
            _fee = op.fee;
    }
 
-   void operator()( const non_fungible_token_data_operation& op )
+   void operator()( const non_fungible_token_update_data_operation& op )
    {
        if (op.fee_payer() == _account)
            _fee = op.fee;

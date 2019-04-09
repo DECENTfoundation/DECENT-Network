@@ -10,7 +10,7 @@ namespace graphene { namespace chain {
       /// False when owner can issue non data unique token instances
       bool unique = false;
 
-      /// False when owner can not change token instance data
+      /// False when instance owner can not change token instance data
       bool modifiable = false;
 
       /// Type of data
@@ -37,6 +37,9 @@ namespace graphene { namespace chain {
       /// The maximum supply of non fungible token instances which may exist at any given time
       uint32_t max_supply = 0;
 
+      /// False when issuer can change max_supply
+      bool fixed_max_supply = false;
+
       /// String that describes the meaning/purpose of non fungible token
       std::string description;
 
@@ -47,9 +50,9 @@ namespace graphene { namespace chain {
 
    /**
     * @ingroup operations
-    * Creates a non fungible token.
+    * Creates a non fungible token definition.
     */
-   struct non_fungible_token_create_operation : public base_operation<false>
+   struct non_fungible_token_create_definition_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t basic_fee = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -63,8 +66,6 @@ namespace graphene { namespace chain {
       non_fungible_token_options options;
       /// Definitions of data that are assigned to each token instance
       non_fungible_token_data_definitions definitions;
-      /// False when issuer can change max_supply
-      bool fixed_max_supply = false;
       /// False when token can not be transfered to other owner
       bool transferable = true;
       /// Future operation extensions
@@ -80,15 +81,17 @@ namespace graphene { namespace chain {
 
    /**
     * @ingroup operations
-    * Updates the non fungible token.
+    * Updates the non fungible token definition.
     */
-   struct non_fungible_token_update_operation : public base_operation<false>
+   struct non_fungible_token_update_definition_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
       };
 
       asset fee;
+      /// The owner of non fungible token
+      account_id_type current_issuer;
       /// The non fungible token to update
       non_fungible_token_id_type nft_id;
       /// Options for this token
@@ -100,7 +103,7 @@ namespace graphene { namespace chain {
       /// @throws fc::exception if any check fails
       void validate() const;
 
-      account_id_type fee_payer() const { return options.issuer; }
+      account_id_type fee_payer() const { return current_issuer; }
    };
 
    /**
@@ -171,7 +174,7 @@ namespace graphene { namespace chain {
     * @ingroup operations
     * Changes data of the non fungible token instance.
     */
-   struct non_fungible_token_data_operation : public base_operation<false>
+   struct non_fungible_token_update_data_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
@@ -212,30 +215,31 @@ FC_REFLECT( graphene::chain::non_fungible_token_data_type,
 FC_REFLECT( graphene::chain::non_fungible_token_options,
             (issuer)
             (max_supply)
+            (fixed_max_supply)
             (description)
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_create_operation::fee_parameters_type,
+FC_REFLECT( graphene::chain::non_fungible_token_create_definition_operation::fee_parameters_type,
             (basic_fee) 
             (price_per_kbyte)
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_create_operation,
+FC_REFLECT( graphene::chain::non_fungible_token_create_definition_operation,
             (fee)
             (symbol)
             (options)
             (definitions)
-            (fixed_max_supply)
             (transferable)
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_update_operation::fee_parameters_type,
+FC_REFLECT( graphene::chain::non_fungible_token_update_definition_operation::fee_parameters_type,
             (fee) 
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_update_operation,
+FC_REFLECT( graphene::chain::non_fungible_token_update_definition_operation,
             (fee)
+            (current_issuer)
             (nft_id)
             (options)
             (extensions)
@@ -269,12 +273,12 @@ FC_REFLECT( graphene::chain::non_fungible_token_transfer_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_data_operation::fee_parameters_type,
+FC_REFLECT( graphene::chain::non_fungible_token_update_data_operation::fee_parameters_type,
             (fee) 
             (price_per_kbyte)
           )
 
-FC_REFLECT( graphene::chain::non_fungible_token_data_operation,
+FC_REFLECT( graphene::chain::non_fungible_token_update_data_operation,
             (fee)
             (owner)
             (nft_data_id)
