@@ -215,16 +215,28 @@ void_result non_fungible_token_update_data_evaluator::do_evaluate( const operati
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
    const non_fungible_token_data_object& nft_data_obj = op.nft_data_id(d);
-   FC_ASSERT( op.owner == nft_data_obj.owner );
-
    const non_fungible_token_object &nft_obj = nft_data_obj.nft_id(d);
+
    for (const auto &v : op.data)
    {
       auto it = std::find_if(nft_obj.definitions.begin(), nft_obj.definitions.end(),
          [&](const non_fungible_token_data_type &dt) { return dt.name == v.first; });
 
       FC_ASSERT( it != nft_obj.definitions.end(), "Attempt to modify non existing data: ${n}", ("n", v.first) );
-      FC_ASSERT( it->modifiable, "Attempt to modify a non modifiable data: ${n}", ("n", v.first) );
+      switch( it->modifiable )
+      {
+         case non_fungible_token_data_type::issuer:
+            FC_ASSERT( op.modifier == nft_obj.options.issuer, "Only issuer can modify data: ${n}", ("n", v.first) );
+            break;
+         case non_fungible_token_data_type::owner:
+            FC_ASSERT( op.modifier == nft_data_obj.owner, "Only owner can modify data: ${n}", ("n", v.first) );
+            break;
+         case non_fungible_token_data_type::both:
+            FC_ASSERT( op.modifier == nft_data_obj.owner || op.modifier == nft_obj.options.issuer, "Only issuer or owner can modify data: ${n}", ("n", v.first) );
+            break;
+         default:
+            FC_ASSERT( false, "Attempt to modify a non modifiable data: ${n}", ("n", v.first) );
+      }
 
       auto idx = std::distance(nft_obj.definitions.begin(), it);
       nft_check_data(d, *it, nft_obj.get_id(), v.second, idx);

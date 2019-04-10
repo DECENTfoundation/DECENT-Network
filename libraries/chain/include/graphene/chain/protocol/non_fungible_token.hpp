@@ -10,8 +10,8 @@ namespace graphene { namespace chain {
       /// False when owner can issue non data unique token instances
       bool unique = false;
 
-      /// False when instance owner can not change token instance data
-      bool modifiable = false;
+      /// Who can change token instance data
+      enum { nobody, issuer, owner, both } modifiable = nobody;
 
       /// Type of data
       enum { string, integer, boolean } type = string;
@@ -182,8 +182,8 @@ namespace graphene { namespace chain {
       };
 
       asset fee;
-      /// Must be nft_data_id->owner
-      account_id_type owner;
+      /// Must be nft_data_id->owner or nft_id->issuer
+      account_id_type modifier;
       /// The non fungible token instance to transfer
       non_fungible_token_data_id_type nft_data_id;
       /// Name to value pairs to be updated
@@ -195,7 +195,7 @@ namespace graphene { namespace chain {
       /// @throws fc::exception if any check fails
       void validate() const;
 
-      account_id_type fee_payer() const { return owner; }
+      account_id_type fee_payer() const { return modifier; }
       share_type calculate_fee( const fee_parameters_type& k ) const;
    };
 
@@ -204,6 +204,10 @@ namespace graphene { namespace chain {
 FC_REFLECT_TYPENAME( decltype( graphene::chain::non_fungible_token_data_type::string ) )
 
 FC_REFLECT_ENUM( decltype( graphene::chain::non_fungible_token_data_type::string ), (string)(integer)(boolean) )
+
+FC_REFLECT_TYPENAME( decltype( graphene::chain::non_fungible_token_data_type::nobody ) )
+
+FC_REFLECT_ENUM( decltype( graphene::chain::non_fungible_token_data_type::nobody ), (nobody)(issuer)(owner)(both) )
 
 FC_REFLECT( graphene::chain::non_fungible_token_data_type,
             (unique)
@@ -280,7 +284,7 @@ FC_REFLECT( graphene::chain::non_fungible_token_update_data_operation::fee_param
 
 FC_REFLECT( graphene::chain::non_fungible_token_update_data_operation,
             (fee)
-            (owner)
+            (modifier)
             (nft_data_id)
             (data)
             (extensions)

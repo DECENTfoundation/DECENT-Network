@@ -1735,7 +1735,8 @@ public:
       return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
    }
 
-   signed_transaction update_non_fungible_token_data(const string& nft_data_id,
+   signed_transaction update_non_fungible_token_data(const string& modifier,
+                                                     const string& nft_data_id,
                                                      const std::unordered_map<string, fc::variant>& data,
                                                      bool broadcast /* = false */)
    {
@@ -1743,7 +1744,7 @@ public:
 
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
       non_fungible_token_update_data_operation data_op;
-      data_op.owner = nft_data.owner;
+      data_op.modifier = get_account(modifier).get_id();
       data_op.nft_data_id = nft_data.get_id();
       data_op.data = data;
 
@@ -3925,11 +3926,12 @@ signed_transaction content_cancellation(const string& author,
       return my->burn_non_fungible_token_data(nft_data_id, broadcast);
    }
 
-   signed_transaction wallet_api::update_non_fungible_token_data(const string& nft_data_id,
+   signed_transaction wallet_api::update_non_fungible_token_data(const string& modifier,
+                                                                 const string& nft_data_id,
                                                                  const std::unordered_map<string, fc::variant>& data,
                                                                  bool broadcast /* = false */)
    {
-      return my->update_non_fungible_token_data(nft_data_id, data, broadcast);
+      return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
    }
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const

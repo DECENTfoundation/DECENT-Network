@@ -443,13 +443,15 @@ namespace graphene { namespace wallet {
 
          /**
           * @brief Updates data of token instance.
+          * @param modifier the name or id of the modifier account
           * @param nft_data_id the token instance id to update
           * @param data name to value pairs to be updated
           * @param broadcast \c true to broadcast the transaction on the network
           * @return the signed transaction updating the token instance
           * @ingroup WalletAPI_NonFungibleToken
           */
-         signed_transaction update_non_fungible_token_data(const string& nft_data_id,
+         signed_transaction update_non_fungible_token_data(const string& modifier,
+                                                           const string& nft_data_id,
                                                            const std::unordered_map<string, fc::variant>& data,
                                                            bool broadcast = false);
 

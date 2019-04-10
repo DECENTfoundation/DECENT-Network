@@ -8,7 +8,7 @@ void non_fungible_token_data_type::validate() const
 {
    FC_ASSERT( name.size() <= 32 );
 
-   if( modifiable )
+   if( modifiable != nobody )
    {
       FC_ASSERT( !name.empty(), "Modifiable data type must have name" );
    }
