@@ -508,7 +508,10 @@ public:
 
    variant_object about() const
    {
-      return decent::get_about();
+      fc::mutable_variant_object result;
+      result["about_cli_wallet"] = decent::get_about();
+      result["about_decentd"] = _remote_db->about();
+      return result;
    }
 
    chain_property_object get_chain_properties() const
