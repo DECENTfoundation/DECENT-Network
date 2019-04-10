@@ -32,7 +32,6 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/git_revision.hpp>
 
-#include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
 #include <fc/log/console_appender.hpp>
@@ -58,23 +57,15 @@
 #include <sys/stat.h>
 #endif
 
-using namespace graphene;
 namespace bpo = boost::program_options;
 
-         
-int main_internal(int argc, char** argv);
+#if defined(_MSC_VER)
 
-#ifdef _MSC_VER
 // Stopping from GUI and stopping of win service
 static fc::promise<int>::ptr s_exit_promise;
 
 BOOL s_bStop = FALSE;
 HANDLE s_hStopProcess = NULL;
-
-SERVICE_TABLE_ENTRY DispatchTable[] = {
-		{ (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)main_internal },
-		{ NULL, NULL }
-};
 
 void StopWinService()
 {
@@ -121,9 +112,8 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType) {
       return FALSE;
    }
 }
-#endif
 
-#if defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__) || defined(__APPLE__)
 
 int start_as_daemon()
 {
@@ -165,33 +155,24 @@ int start_as_daemon()
 }
 #endif
 
-int main_internal(int argc, char** argv) {
-#ifdef _MSC_VER
-   DWORD err = 0;
-	bool is_win_service = IsRunningAsSystemService();
-	if(is_win_service) {
-      err = InitializeService();
-      if(err)
-			return err;
-	}
-#endif
-
+int main_internal(int argc, char** argv, bool run_as_daemon = false)
+{
    bpo::options_description app_options("DECENT Daemon");
    bpo::options_description cfg_options("DECENT Daemon");
    bpo::variables_map options;
 
    using decent_plugins = graphene::app::plugin_set<
-      miner_plugin::miner_plugin,
-      account_history::account_history_plugin,
+      graphene::miner_plugin::miner_plugin,
+      graphene::account_history::account_history_plugin,
       decent::seeding::seeding_plugin,
       decent::messaging::messaging_plugin,
-      transaction_history::transaction_history_plugin
+      graphene::transaction_history::transaction_history_plugin
    >;
 
    try
    {
       bpo::options_description cli, cfg;
-      app::application::set_program_options(cli, cfg);
+      graphene::app::application::set_program_options(cli, cfg);
       decent_plugins::set_program_options(cli, cfg);
       cli.add_options()
 #ifndef _MSC_VER 
@@ -231,34 +212,31 @@ int main_internal(int argc, char** argv) {
       return EXIT_SUCCESS;
    }
 
-   bool run_as_daemon = false;
-#ifndef _MSC_VER
-   run_as_daemon = options.count("daemon");
-#else
-   bool install_winsvc = options.count("install-win-service");
-
-   if(is_win_service) {
-      run_as_daemon = true;
-   } else if(install_winsvc) { // install like service and start it
+#if defined(_MSC_VER)
+   if( options.count("install-win-service") )
+   {
 	   std::string cmd_line_str;
 	   for(int i = 1; i < argc; i++) {
 		   cmd_line_str += " ";
 		   cmd_line_str += argv[i];
 	   }
-	   err = install_win_service(cmd_line_str.c_str());
-	   return err;
-	} else if(options.count("remove-win-service")) {
-         err = remove_win_service();
-         return err;
+	   return install_win_service(cmd_line_str.c_str());
 	}
+   else if( options.count("remove-win-service") )
+   {
+      return remove_win_service();
+	}
+#else
+   run_as_daemon = options.count("daemon");
 #endif
-   app::application* node = new app::application();
+
+   graphene::app::application* node = new graphene::app::application();
    fc::oexception unhandled_exception;
    try {
       decent_plugins::types plugins = decent_plugins::create(*node);
 
       fc::path logs_dir, data_dir, config_filename;
-      auto& path_finder = utilities::decent_path_finder::instance();
+      auto& path_finder = graphene::utilities::decent_path_finder::instance();
 	  
       if( run_as_daemon ) {
 #ifdef _MSC_VER
@@ -274,10 +252,10 @@ int main_internal(int argc, char** argv) {
 
          if (ret < 0) {
             std::cerr << "Error running as daemon.\n";
-            return 1;
+            return EXIT_FAILURE;
          }
          else if (ret == 1) {
-            return 0;
+            return EXIT_SUCCESS;
          }
 
          //default path settings for daemon
@@ -362,7 +340,7 @@ int main_internal(int argc, char** argv) {
       node->startup_plugins();
 
       fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
       s_exit_promise = exit_promise;
       s_hStopProcess = OpenEventA(SYNCHRONIZE, FALSE, "A883EF36-8168-4E45-A08F-97EFFC5B6694");
       if (s_hStopProcess)
@@ -370,8 +348,11 @@ int main_internal(int argc, char** argv) {
          DWORD tid = 0;
          CreateThread(NULL, 0, StopFromGUIThreadProc, NULL, 0, &tid);
       }
-	  if(is_win_service)
-		  ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
+
+      if (run_as_daemon)
+      {
+         ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
+      }
 #else
       fc::set_signal_handler([&exit_promise](int signal) {
          elog( "Caught SIGINT attempting to exit cleanly" );
@@ -397,17 +378,20 @@ int main_internal(int argc, char** argv) {
       monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
-#ifdef _MSC_VER
-	  if(is_win_service)
-		ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+#if defined(_MSC_VER)
+      if (run_as_daemon)
+      {
+         ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+      }
+
       s_bStop = TRUE;
 #endif
-      return 0;
+      return EXIT_SUCCESS;
    } catch( const fc::exception& e ) {
       // deleting the node can yield, so do this outside the exception handler
       unhandled_exception = e;
    }
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
    s_bStop = TRUE;
 #endif
    if (unhandled_exception)
@@ -416,31 +400,40 @@ int main_internal(int argc, char** argv) {
       monitoring::monitoring_counters_base::stop_monitoring_thread();
       node->shutdown();
       delete node;
-      return 1;
+      return EXIT_FAILURE;
    }
-   return 0;
+   return EXIT_SUCCESS;
 }
+
+#if defined(_MSC_VER)
+void service_main(int argc, char** argv)
+{
+   bool is_win_service = IsRunningAsSystemService();
+	if(!is_win_service || InitializeService() == 0)
+      main_internal(argc, argv, is_win_service);
+}
+
+SERVICE_TABLE_ENTRY DispatchTable[] = {
+		{ (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)service_main },
+		{ NULL, NULL }
+};
+#endif
 
 int main(int argc, char** argv)
 {
-	int result = 0;
-#ifdef _MSC_VER
-	DWORD err = 0;
-	bool is_win_service = IsRunningAsSystemService();
-	if(is_win_service == false) {
-		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
-		result = main_internal(argc, argv);
-	} else {
-		
-		if (!StartServiceCtrlDispatcher(DispatchTable)) {
-         err = GetLastError();
+#if defined(_MSC_VER)
+	if(IsRunningAsSystemService()) {
+		if(!StartServiceCtrlDispatcher(DispatchTable)) {
+         int err = GetLastError();
 			SvcReportEvent((LPTSTR)"StartServiceCtrlDispatcher");
          return err;
-		} 
-      return 0;
+		}
+      return EXIT_SUCCESS;
+   }
+   else {
+		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 	}
-#else
-	result = main_internal(argc, argv);
 #endif
-	return result;
+
+	return main_internal(argc, argv);
 }
