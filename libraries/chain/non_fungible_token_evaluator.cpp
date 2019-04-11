@@ -4,6 +4,7 @@
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <regex>
 
 namespace graphene { namespace chain {
 
@@ -90,6 +91,19 @@ static void nft_check_data(const database& d, const non_fungible_token_data_type
          if( data_type.unique )
          {
             FC_ASSERT( !nft_find_data( d, nft_id, data.as_string(), idx, std::equal_to<std::string>()), "${d} must be unique", ("d", data));
+         }
+
+         if( data_type.validator.valid() )
+         {
+            try
+            {
+               std::regex r(*data_type.validator, std::regex_constants::egrep);
+               FC_ASSERT( std::regex_match(data.as_string(), r), "${d} did not pass validation", ("d", data) );
+            }
+            catch(const std::regex_error& e)
+            {
+               FC_ASSERT( false, "Invalid string validator: ${e}", ("e", e.what()) );
+            }
          }
          break;
 
