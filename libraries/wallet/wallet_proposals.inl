@@ -13,6 +13,7 @@ void wallet_api::propose_transfer(const string& proposer,
                                   const string& memo,
                                   time_point_sec expiration)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->propose_transfer(proposer, from, to, amount, asset_symbol, memo, expiration);
 }
 
@@ -21,6 +22,7 @@ signed_transaction wallet_api::propose_parameter_change( const string& proposing
                                                          const variant_object& changed_values,
                                                          bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->propose_parameter_change( proposing_account, expiration_time, changed_values, broadcast );
 }
 
@@ -29,6 +31,7 @@ signed_transaction wallet_api::propose_fee_change( const string& proposing_accou
                                                    const variant_object& changed_fees,
                                                    bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
 }
 
@@ -37,5 +40,6 @@ signed_transaction wallet_api::approve_proposal(const string& fee_paying_account
                                                 const approval_delta& delta,
                                                 bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
 }

@@ -53,6 +53,7 @@ void set_wallet_filename( const string& wallet_filename );
 /**
  * @brief Get the WIF private key corresponding to a public key.  The
  * private key must already be imported in the wallet.
+ * @note The wallet needs to be unlocked and a required key needs to be imported.
  * @param pubkey public key
  * @return WIF private key corresponding to a public key
  * @ingroup WalletAPI_Wallet
@@ -114,6 +115,7 @@ bool load_wallet_file(const string& wallet_filename = string());
 
 /**
  * @brief Saves the current wallet to the given filename.
+ * @note The wallet needs to be unlocked.
  * @warning This does not change the wallet filename that will be used for future
  * writes, so think of this function as 'Save a Copy As...' instead of 'Save As...'.
  * @param wallet_filename the filename of the new wallet JSON file to create
@@ -129,6 +131,7 @@ void save_wallet_file(const string& wallet_filename = string());
  * named account.
  * @note This command also automatically derives and imports active and memo key
  * if the private key match the owner key.
+ * @note The wallet needs to be unlocked.
  * @see dump_private_keys()
  * @see list_my_accounts()
  * @param account_name_or_id the account owning the key
@@ -142,6 +145,7 @@ bool import_key(const string& account_name_or_id, const string& wif_key);
  * @brief Imports a private key for an existing account.
  * The private key should match an owner key, an active key or a memo key for the
  * named account.
+ * @note The wallet needs to be unlocked.
  * @see dump_private_keys()
  * @see list_my_accounts()
  * @param account_name_or_id the account owning the key
@@ -155,6 +159,7 @@ bool import_single_key(const string& account_name_or_id, const string& wif_key);
  * @brief Dumps all private keys successfully imported in the wallet.
  * @note The keys are printed in WIF format.  You can import these keys into another wallet
  * using \c import_key()
+ * @note The wallet needs to be unlocked.
  * @return a map containing the private keys and corresponding public keys
  * @ingroup WalletAPI_Wallet
  */

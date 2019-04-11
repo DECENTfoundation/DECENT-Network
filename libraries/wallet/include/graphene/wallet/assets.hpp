@@ -57,6 +57,7 @@ monitored_asset_options        get_monitored_asset_data(const string& asset_name
 /**
  * @brief Creates a new monitored asset.
  * @note some parameters can be changed later using \c update_monitored_asset()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param issuer the name or id of the account who will pay the fee and become the
  *               issuer of the new asset.  This can be updated later
  * @param symbol the ticker symbol of the new asset
@@ -79,6 +80,7 @@ signed_transaction create_monitored_asset(const string& issuer,
 
 /**
  * @brief Update the parameters specific to a monitored asset.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param symbol the name or id of the asset to update, which must be a monitored asset
  * @param description asset description
  * @param feed_lifetime_sec time before a price feed expires
@@ -96,6 +98,7 @@ signed_transaction update_monitored_asset(const string& symbol,
 /**
  * @brief Creates a new user-issued asset.
  * @note Some parameters can be changed later using \c update_user_issued_asset()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @see \c issue_asset()
  * @param issuer the name or id of the account who will pay the fee and become the
  *               issuer of the new asset.  This can be updated later
@@ -128,6 +131,7 @@ signed_transaction create_user_issued_asset(const string& issuer,
 
 /**
  * @brief Issue new shares of an asset.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param to_account the name or id of the account to receive the new shares
  * @param amount the amount to issue, in nominal units
  * @param symbol the ticker symbol of the asset to issue
@@ -146,6 +150,7 @@ signed_transaction issue_asset(const string& to_account,
  * @brief Update the parameters specific to a user issued asset.
  * User issued assets have some options which are not relevant to other asset types. This operation is used to update those
  * options an an existing user issues asset.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param symbol the name or id of the asset to update, which must be a user-issued asset
  * @param new_issuer if the asset is to be given a new issuer, specify his ID here
  * @param description asset description
@@ -168,6 +173,7 @@ signed_transaction update_user_issued_asset(const string& symbol,
  * @brief Pay into the pools for the given asset. Allows anyone to deposit core/asset into pools.
  * @note User-issued assets can optionally have two asset pools.
  * This pools are used when conversion between assets is needed (paying fees, paying for a content in different asset ).
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from the name or id of the account sending the core asset
  * @param uia_amount the amount of "this" asset to deposit
  * @param uia_symbol the name or id of the asset whose pool you wish to fund
@@ -188,6 +194,7 @@ signed_transaction fund_asset_pools(const string& from,
  * @brief Burns the given user-issued asset.
  * This command burns the user-issued asset to reduce the amount in circulation.
  * @note you cannot burn monitored asset.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from the account containing the asset you wish to burn
  * @param amount the amount to burn, in nominal units
  * @param symbol the name or id of the asset to burn
@@ -203,6 +210,7 @@ signed_transaction reserve_asset(const string& from,
 /**
  * @brief Transfers accumulated assets from pools back to the issuer's balance.
  * @note You cannot claim assets from pools of monitored asset.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param uia_amount the amount of "this" asset to claim, in nominal units
  * @param uia_symbol the name or id of the asset to claim
  * @param dct_amount the amount of DCT asset to claim, in nominal units
@@ -232,6 +240,7 @@ string price_to_dct(const string& amount, const string& asset_symbol_or_id);
  * used to tune the market for a particular monitored asset. For each value in the feed, the median across all
  * miner feeds for that asset is calculated and the market for the asset is configured with the median of that
  * value.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param publishing_account the account publishing the price feed
  * @param symbol the name or id of the asset whose feed we're publishing
  * @param feed the price feed object for particular monitored asset

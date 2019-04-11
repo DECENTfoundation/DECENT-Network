@@ -434,35 +434,30 @@ public:
 
    void encrypt_keys()
    {
-      if( !is_locked() )
-      {
-         plain_ec_and_el_gamal_keys data;
-         data.ec_keys = _keys;
-         std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
-            [](const std::pair<DInteger,DInteger> el_gamal_pair) {
-               return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
-         data.checksum = _checksum;
-         auto plain_txt = fc::raw::pack(data);
-         _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
-      }
+
+      plain_ec_and_el_gamal_keys data;
+      data.ec_keys = _keys;
+      std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
+         [](const std::pair<DInteger,DInteger> el_gamal_pair) {
+            return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
+      data.checksum = _checksum;
+      auto plain_txt = fc::raw::pack(data);
+      _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
    }
 
    void encrypt_keys2()
    {
-      if( !is_locked() )
-      {
-         plain_ec_and_el_gamal_keys data;
-         data.ec_keys = _keys;
-         std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
-                         [](const std::pair<DInteger,DInteger> el_gamal_pair) {
-                             return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
-         data.checksum = _checksum;
-         auto data_string = fc::json::to_string(data);
-         vector<char> plain_txt;
-         plain_txt.resize(data_string.length());
-         memcpy(plain_txt.data(), data_string.data(), data_string.length());
-         _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
-      }
+      plain_ec_and_el_gamal_keys data;
+      data.ec_keys = _keys;
+      std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
+                      [](const std::pair<DInteger,DInteger> el_gamal_pair) {
+                          return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
+      data.checksum = _checksum;
+      auto data_string = fc::json::to_string(data);
+      vector<char> plain_txt;
+      plain_txt.resize(data_string.length());
+      memcpy(plain_txt.data(), data_string.data(), data_string.length());
+      _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
    }
 
    void on_block_applied( const variant& block_id )
@@ -703,6 +698,7 @@ public:
    //          account, false otherwise (but it is stored either way)
    bool import_key(const string& account_name_or_id, const string& wif_key)
    {
+      FC_ASSERT( !is_locked() );
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
@@ -756,6 +752,7 @@ public:
    //          account, false otherwise (but it is stored either way)
    bool import_single_key(const string& account_name_or_id, const string& wif_key)
    {
+      FC_ASSERT( !is_locked() );
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
       if (!optional_private_key)
          FC_THROW("Invalid private key");
@@ -944,6 +941,7 @@ public:
    void save_wallet_file(string wallet_filename = string() )
    {
       dlog("save_wallet_file() begin");
+      FC_ASSERT( is_locked() );
 
       //
       // Serialize in memory, then save to disk
@@ -1100,7 +1098,6 @@ public:
                                        const string&  registrar_account,
                                        bool broadcast = false)
    { try {
-      FC_ASSERT( !self.is_locked() );
       FC_ASSERT( is_valid_name(name) );
       account_create_operation account_create_op;
 
@@ -1159,7 +1156,6 @@ public:
    {
       try
       {
-         FC_ASSERT( !self.is_locked() );
          FC_ASSERT( is_valid_name(name) );
          account_create_operation account_create_op;
          account_object acc = get_account( registrar_account );
@@ -1293,8 +1289,6 @@ public:
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
-
-      FC_ASSERT( !self.is_locked() );
       string normalized_brain_key = graphene::utilities::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = graphene::utilities::derive_private_key( normalized_brain_key );
@@ -1307,7 +1301,6 @@ public:
                                            fc::optional<public_key_type> memo_pubkey,
                                            bool broadcast )
    { try {
-         FC_ASSERT( !self.is_locked(), "wallet is locked" );
          FC_ASSERT( owner_auth || active_auth || memo_pubkey, "at least one authority/public key needs to be specified");
 
          account_object acc = get_account( name );
@@ -1621,8 +1614,6 @@ public:
                                                 bool transferable,
                                                 bool broadcast /* = false */)
    {
-      FC_ASSERT( !self.is_locked() );
-
       non_fungible_token_create_definition_operation create_op;
       create_op.symbol = symbol;
       create_op.transferable = transferable;
@@ -1649,8 +1640,6 @@ public:
                                                 bool fixed_max_supply,
                                                 bool broadcast /* = false */)
    {
-      FC_ASSERT( !self.is_locked() );
-
       non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
       non_fungible_token_update_definition_operation update_op;
       update_op.current_issuer = nft_obj.options.issuer;
@@ -1676,8 +1665,6 @@ public:
                                                const string& memo,
                                                bool broadcast /* = false */)
    {
-      FC_ASSERT( !self.is_locked() );
-
       non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
       account_object to = get_account(to_account);
       account_object issuer = get_account(nft_obj.options.issuer);
@@ -1706,8 +1693,6 @@ public:
                                                        const string& memo,
                                                        bool broadcast /* = false */)
    {
-      FC_ASSERT( !self.is_locked() );
-
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
       account_object from = get_account(nft_data.owner);
       account_object to = get_account(to_account);
@@ -1740,8 +1725,6 @@ public:
                                                      const std::unordered_map<string, fc::variant>& data,
                                                      bool broadcast /* = false */)
    {
-      FC_ASSERT( !self.is_locked() );
-
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
       non_fungible_token_update_data_operation data_op;
       data_op.modifier = get_account(modifier).get_id();
@@ -2164,8 +2147,6 @@ public:
                                const string& memo,
                                bool broadcast = false)
    { try {
-      FC_ASSERT( !self.is_locked() );
-
       account_object from_account = get_account(from);
       account_id_type from_id = from_account.id;
 
@@ -2561,7 +2542,6 @@ public:
    {
       try
       {
-         FC_ASSERT(!is_locked());
          account_id_type author_account = get_account( author ).get_id();
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
@@ -2628,7 +2608,6 @@ public:
 
       try
       {
-         FC_ASSERT(!is_locked());
          account_object author_account = get_account( author );
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
@@ -2715,8 +2694,6 @@ signed_transaction content_cancellation(const string& author,
 {
    try
    {
-      FC_ASSERT(!is_locked());
-
       content_cancellation_operation cc_op;
       cc_op.author = get_account( author ).get_id();
       cc_op.URI = URI;
@@ -2856,8 +2833,6 @@ signed_transaction content_cancellation(const string& author,
    {
       try
       {
-         FC_ASSERT( !is_locked() );
-
          optional<content_object> content = _remote_db->get_content( URI );
          account_object consumer_account = get_account( consumer );
 
@@ -3123,7 +3098,6 @@ signed_transaction content_cancellation(const string& author,
    vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
    {
       try {
-         FC_ASSERT(!is_locked());
          const auto& mapi = _remote_api->messaging();
          vector<message_object> objects = mapi->get_message_objects(sender, receiver, max_count);
          
@@ -3178,7 +3152,6 @@ signed_transaction content_cancellation(const string& author,
 
    vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const
    {
-         FC_ASSERT(!is_locked());
          const auto& receiver_id = get_account(receiver).get_id();
          auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(receiver_id);
          if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end()) 
@@ -3207,7 +3180,6 @@ signed_transaction content_cancellation(const string& author,
 
    vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count)const
    {
-      FC_ASSERT(!is_locked());
       const auto& sender_id = get_account(sender).get_id();
       auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(sender_id);
       if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end())
@@ -3240,7 +3212,6 @@ signed_transaction content_cancellation(const string& author,
                                    bool broadcast = false)
    {
       try {
-         FC_ASSERT(!is_locked());
          std::set<string> unique_to( to.begin(), to.end() );
          if( to.size() != unique_to.size() )
          {
@@ -3282,7 +3253,6 @@ signed_transaction content_cancellation(const string& author,
                                                bool broadcast = false)
    {
       try {
-         FC_ASSERT(!is_locked());
          std::set<string> unique_to( to.begin(), to.end() );
          if( to.size() != unique_to.size() )
          {

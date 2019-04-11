@@ -28,6 +28,7 @@
 
 /**
  * @brief Sends an encrypted text message to one or many users.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from account sending the message
  * @param to account or multiple accounts receiving the message
  * @param text the body of the message
@@ -41,6 +42,7 @@ signed_transaction send_message(const std::string& from,
 
 /**
  * @brief Sends an unencrypted text message to one or many users.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from account sending the message
  * @param to account or multiple accounts receiving the message
  * @param text the body of the message
@@ -55,6 +57,7 @@ signed_transaction send_unencrypted_message(const std::string& from,
 /**
  * @brief Receives message objects by sender and/or receiver.
  * @note You need to specify at least one account.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param sender name of message sender. If you dont want to filter by sender then let it empty
  * @param receiver name of message receiver. If you dont want to filter by receiver then let it empty
  * @param max_count maximal number of last messages to be displayed
@@ -65,6 +68,7 @@ vector<message_object> get_message_objects(const std::string& sender, const std:
 
 /**
  * @brief Receives messages by receiver.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param receiver name of message receiver which must be imported to caller's wallet
  * @param max_count maximal number of last messages to be displayed
  * @return a vector of message objects
@@ -74,6 +78,7 @@ vector<text_message> get_messages(const std::string& receiver, uint32_t max_coun
 
 /**
  * @brief Receives sent messages by sender.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param sender name of message sender which must be imported to caller's wallet
  * @param max_count maximal number of last messages to be displayed
  * @return a vector of message objects

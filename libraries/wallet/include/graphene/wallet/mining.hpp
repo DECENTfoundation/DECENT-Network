@@ -52,6 +52,7 @@ miner_object get_miner(const string& owner_account);
 /**
  * @brief Creates a miner object owned by the given account.
  * @note an account can have at most one miner object.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param owner_account the name or id of the account which is creating the miner
  * @param url a URL to include in the miner record in the blockchain.  Clients may
  *            display this when showing a list of miners.  May be blank.
@@ -65,6 +66,7 @@ signed_transaction create_miner(const string& owner_account,
 
 /**
  * @brief Update a miner object owned by the given account.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param miner_name The name of the miner's owner account. Also accepts the ID of the owner account or the ID of the miner.
  * @param url Same as for create_miner.  The empty string makes it remain the same.
  * @param block_signing_key the new block signing public key.  The empty string makes it remain the same
@@ -85,6 +87,7 @@ vector< vesting_balance_object_with_info > get_vesting_balances( const string& a
 
 /**
  * @brief Withdraw a vesting balance.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param miner_name the account name of the miner, also accepts account ID or vesting balance ID type.
  * @param amount the amount to withdraw.
  * @param asset_symbol the symbol of the asset to withdraw
@@ -104,6 +107,7 @@ signed_transaction withdraw_vesting(const string& miner_name,
  * core asset owned by that account at the time the votes are tallied.
  * @note You cannot vote against a miner, you can only vote for the miner
  *       or not vote for the miner.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @see \c list_miners()
  * @param voting_account the name or id of the account who is voting with their shares
  * @param miner the name or id of the miner' owner account
@@ -126,6 +130,7 @@ signed_transaction vote_for_miner(const string& voting_account,
  * they remain there but are ignored. If you later null out your vote proxy,
  * your previous votes will take effect again.
  * This setting can be changed at any time.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param account_to_modify the name or id of the account to update
  * @param voting_account the name or id of an account authorized to vote account_to_modify's shares,
  *                       or null to vote your own shares
@@ -148,6 +153,7 @@ signed_transaction set_voting_proxy(const string& account_to_modify,
  * defaulting to 1001).
  * This setting can be changed at any time. If your account has a voting proxy
  * set, your preferences will be ignored.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param account_to_modify the name or id of the account to update
  * @param desired_number_of_miners
  * @param broadcast \c true if you wish to broadcast the transaction

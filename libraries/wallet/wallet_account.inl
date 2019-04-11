@@ -216,6 +216,7 @@ signed_transaction wallet_api::register_account_with_keys(const string& name,
                                                           const string& registrar_account,
                                                           bool broadcast /* = false */)
 {
+   FC_ASSERT( !is_locked() );
    return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -225,6 +226,7 @@ signed_transaction wallet_api::register_account(const string& name,
                                                 const string& registrar_account,
                                                 bool broadcast /* = false */)
 {
+   FC_ASSERT( !is_locked() );
    return my->register_account( name, owner, active, active, registrar_account, broadcast );
 }
 
@@ -235,6 +237,7 @@ signed_transaction wallet_api::register_multisig_account(const string& name,
                                                          const string& registrar_account,
                                                          bool broadcast /* = false */)
 {
+   FC_ASSERT( !is_locked() );
    return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -243,6 +246,7 @@ signed_transaction wallet_api::create_account_with_brain_key(const string& brain
                                                              const string& registrar_account,
                                                              bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked() );
    return my->create_account_with_brain_key(
             brain_key, account_name, registrar_account, true,
             broadcast);
@@ -254,6 +258,7 @@ signed_transaction wallet_api::update_account_keys(const string& name,
                                                    const string& memo,
                                                    bool broadcast /* = false */)
 {
+   FC_ASSERT( !is_locked() );
    fc::optional<authority> new_owner, new_active;
    fc::optional<public_key_type> new_memo;
    account_object acc = my->get_account( name );
@@ -347,6 +352,7 @@ signed_transaction wallet_api::transfer(const string& from, const string& to,
                                         const string& memo,
                                         bool broadcast /* = false */)
 {
+   FC_ASSERT( !is_locked() );
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
 
@@ -356,6 +362,7 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string&
                                                                    const string& asset_symbol,
                                                                    const string& memo)
 {
+   FC_ASSERT( !is_locked() );
    auto trx = transfer( from, to, amount, asset_symbol, memo, true );
    return std::make_pair(trx.id(),trx);
 }

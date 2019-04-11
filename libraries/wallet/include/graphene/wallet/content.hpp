@@ -31,6 +31,7 @@
  * can be modified (if the content is uploaded to "CDN", you can also change the expiration time).
  * @see \c generate_encryption_key()
  * @see \c submit_content_async()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param author the author of the content
  * @param co_authors the co-authors' account name or ID mapped to corresponding payment split based on basis points. The maximum number of co-authors is 10
  * @param URI the URI of the content
@@ -70,6 +71,7 @@ signed_transaction submit_content(const string& author,
  * @see create_package()
  * @see upload_package()
  * @see submit_content()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param author the author of the content
  * @param co_authors the co-authors' account name or ID mapped to corresponding payment split based on basis points. The maximum number of co-authors is 10
  * @param content_dir path to the directory containing all content that should be packed
@@ -95,6 +97,7 @@ content_keys submit_content_async( const string& author,
 /**
  * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
  * Seeders keep seeding this content up to next 24 hours.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param author the author of the content
  * @param URI the URI of the content
  * @param broadcast \c true to broadcast the transaction on the network
@@ -107,6 +110,7 @@ signed_transaction content_cancellation(const string& author,
 
 /**
  * @brief Downloads encrypted content specified by provided URI.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param consumer consumer of the content
  * @param URI the URI of the content
  * @param region_code_from two letter region code
@@ -126,6 +130,7 @@ content_download_status get_download_status(const string& consumer, const string
 
 /**
  * @brief This function is used to send a request to buy a content. This request is caught by seeders.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param consumer consumer of the content
  * @param URI the URI of the content
  * @param price_asset_name ticker symbol of the asset which will be used to buy content
@@ -144,6 +149,7 @@ signed_transaction request_to_buy(const string& consumer,
 
 /**
  * @brief Rates and comments a content.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param consumer consumer giving the rating
  * @param URI the URI of the content
  * @param rating the rating. The available options are 1-5
@@ -288,6 +294,7 @@ pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI(
 /**
  * @brief Creates a package from selected files.
  * @see \c upload_package()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param content_dir the directory containing all content that should be packed
  * @param samples_dir the directory containing samples of the content
  * @param aes_key the AES key for encryption
@@ -301,6 +308,7 @@ std::pair<string, decent::encrypt::CustodyData> create_package(const std::string
 /**
  * @brief Extracts selected package.
  * @see \c download_package()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param package_hash hash of the package that needs to be extracted
  * @param output_dir directory where extracted files will be created
  * @param aes_key the AES key for decryption
@@ -310,6 +318,7 @@ void extract_package(const std::string& package_hash, const std::string& output_
 
 /**
  * @brief Downloads the package.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param url the URL of the package
  * @ingroup WalletAPI_Content
  */
@@ -318,6 +327,7 @@ void download_package(const std::string& url) const;
 /**
  * @brief Starts uploading of the package.
  * @see \c create_package()
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param package_hash hash of the package that needs to be extracted
  * @param protocol protocol for uploading package ( ipfs )
  * @return URL of package
@@ -327,6 +337,7 @@ std::string upload_package(const std::string& package_hash, const std::string& p
 
 /**
  * @brief Removes the package.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param package_hash hash of the package that needs to be removed
  * @ingroup WalletAPI_Content
  */
@@ -334,6 +345,7 @@ void remove_package(const std::string& package_hash) const;
 
 /**
  * @brief Restores AES key( used to encrypt and decrypt a content) from key particles stored in a buying object.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param account consumers account id or name
  * @param buying the buying object containing key particles
  * @return restored AES key from key particles

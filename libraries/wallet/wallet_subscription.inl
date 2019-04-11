@@ -5,6 +5,7 @@ signed_transaction wallet_api::subscribe_to_author( const string& from,
                                                     const string& price_asset_symbol,
                                                     bool broadcast/* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
 }
 
@@ -12,6 +13,7 @@ signed_transaction wallet_api::subscribe_by_author( const string& from,
                                                     const string& to,
                                                     bool broadcast/* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->subscribe_by_author(from, to, broadcast);
 }
 
@@ -22,6 +24,7 @@ signed_transaction wallet_api::set_subscription( const string& account,
                                                  const string& price_asset_symbol,
                                                  bool broadcast/* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
 }
 
@@ -30,6 +33,7 @@ signed_transaction wallet_api::set_automatic_renewal_of_subscription( const stri
                                                           bool automatic_renewal,
                                                           bool broadcast/* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
 }
 

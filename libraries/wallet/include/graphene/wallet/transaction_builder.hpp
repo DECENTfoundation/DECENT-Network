@@ -75,6 +75,7 @@ transaction preview_builder_transaction(transaction_handle_type handle);
 
 /**
  * @brief Signs a transaction from transaction builder
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @see \c prewiev_builder_transaction()
  * @param transaction_handle the number identifying transaction under contruction process
  * @param broadcast \c true to broadcast the transaction on the network
@@ -84,10 +85,13 @@ transaction preview_builder_transaction(transaction_handle_type handle);
 signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
 
 /**
- * @brief Allows creation of a proposed transaction suitable for miner-account. Proposed transaction requires approval of multiple accounts in order to execute.
+ * @brief Allows creation of a proposed transaction suitable for miner-account.
+ * Proposed transaction requires approval of multiple accounts in order to execute.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param handle the number identifying transaction under contruction process
  * @param expiration the expiration time of the transaction
- * @param review_period_seconds the time reserved for reviewing the proposal transaction. It's not allowed to vote for the proposal when the transaction is under review
+ * @param review_period_seconds the time reserved for reviewing the proposal transaction.
+ * It's not allowed to vote for the proposal when the transaction is under review
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction
  * @ingroup WalletAPI_TransactionBuilder
@@ -98,12 +102,15 @@ signed_transaction propose_builder_transaction(transaction_handle_type handle,
                                                bool broadcast = true);
 
 /**
- * @brief Allows creation of a proposed transaction. Proposed transaction requires approval of multiple accounts in order to execute.
+ * @brief Allows creation of a proposed transaction. Proposed transaction requires approval of multiple accounts
+ * in order to execute.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @see \c propose_builder_transaction()
  * @param handle the number identifying transaction under contruction process
  * @param account_name_or_id the account which will pay the fee to propose the transaction
  * @param expiration the expiration time of the transaction
- * @param review_period_seconds the time reserved for reviewing the proposal transaction. It's not allowed to vote for the proposal when the transaction is under review
+ * @param review_period_seconds the time reserved for reviewing the proposal transaction.
+ * It's not allowed to vote for the proposal when the transaction is under review
  * @param broadcast \c true to broadcast the transaction on the network
  * @return the signed transaction
  * @ingroup WalletAPI_TransactionBuilder
@@ -134,7 +141,8 @@ string serialize_transaction(signed_transaction tx) const;
 /**
  * @brief Signs a transaction.
  * Given a fully-formed transaction that is only lacking signatures, this signs
- * the transaction with the necessary keys and optionally broadcasts the transaction
+ * the transaction with the necessary keys and optionally broadcasts the transaction.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param tx the unsigned transaction
  * @param broadcast \c true if you wish to broadcast the transaction
  * @return the signed version of the transaction

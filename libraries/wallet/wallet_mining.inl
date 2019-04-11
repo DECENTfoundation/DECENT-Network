@@ -13,6 +13,7 @@ signed_transaction wallet_api::create_miner(const string& owner_account,
                                             const string& url,
                                             bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->create_miner(owner_account, url, broadcast);
 }
 
@@ -21,6 +22,7 @@ signed_transaction wallet_api::update_miner(const string& miner_name,
                                             const string& block_signing_key,
                                             bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->update_miner(miner_name, url, block_signing_key, broadcast);
 }
 
@@ -34,6 +36,7 @@ signed_transaction wallet_api::withdraw_vesting(const string& miner_name,
                                                 const string& asset_symbol,
                                                 bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
 }
 
@@ -42,6 +45,7 @@ signed_transaction wallet_api::vote_for_miner(const string& voting_account,
                                               bool approve,
                                               bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->vote_for_miner(voting_account, miner, approve, broadcast);
 }
 
@@ -49,6 +53,7 @@ signed_transaction wallet_api::set_voting_proxy(const string& account_to_modify,
                                                 optional<string> voting_account,
                                                 bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
@@ -56,6 +61,7 @@ signed_transaction wallet_api::set_desired_miner_count(const string& account_to_
                                                        uint16_t desired_number_of_miners,
                                                        bool broadcast /* = false */)
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
 }
 

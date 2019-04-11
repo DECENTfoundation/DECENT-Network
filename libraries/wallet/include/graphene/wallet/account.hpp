@@ -147,7 +147,6 @@ fc::optional<balance_operation_detail> get_account_balance_for_transaction(const
 
 /**
  * @brief Returns information about the given account.
- *
  * @param account_name_or_id the name or id of the account to provide information about
  * @return the public account data stored in the blockchain
  * @ingroup WalletAPI_Account

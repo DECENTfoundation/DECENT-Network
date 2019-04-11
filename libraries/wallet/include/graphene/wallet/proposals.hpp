@@ -37,6 +37,7 @@ vector<proposal_object> get_proposed_transactions( const string& account_or_id )
 /**
  * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
  * propose_builder_transaction2(), set_fees_on_builder_transaction() functions for transfer operation.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param proposer proposer
  * @param from the name or id of the account sending the funds
  * @param to the name or id of the account receiving the funds
@@ -58,8 +59,8 @@ void propose_transfer(const string& proposer,
 
 /**
  * @brief Creates a transaction to propose a parameter change.
- * Multiple parameters can be specified if an atomic change is
- * desired.
+ * Multiple parameters can be specified if an atomic change is desired.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param proposing_account the account paying the fee to propose the transaction
  * @param expiration_time timestamp specifying when the proposal will either take effect or expire
  * @param changed_values the values to change; all other chain parameters are filled in with default values
@@ -74,6 +75,7 @@ signed_transaction propose_parameter_change(const string& proposing_account,
 
 /**
  * @brief Propose a fee change.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param proposing_account the account paying the fee to propose the transaction
  * @param expiration_time timestamp specifying when the proposal will either take effect or expire
  * @param changed_values map of operation type to new fee.  Operations may be specified by name or ID
@@ -89,6 +91,7 @@ signed_transaction propose_fee_change(const string& proposing_account,
 
 /**
  * @brief Approve or disapprove a proposal.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param fee_paying_account the account paying the fee for the operation
  * @param proposal_id the proposal to modify
  * @param delta members contain approvals to create or remove.  In JSON you can leave empty members undefined

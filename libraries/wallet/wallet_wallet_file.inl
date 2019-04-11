@@ -16,6 +16,7 @@ void wallet_api::set_wallet_filename( const string& wallet_filename )
 
 string wallet_api::get_private_key( public_key_type pubkey )const
 {
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return key_to_wif( my->get_private_key( pubkey ) );
 }
 
@@ -31,7 +32,7 @@ bool wallet_api::is_locked()const
 
 void wallet_api::lock()
 { try {
-   FC_ASSERT( !is_locked() );
+   FC_ASSERT( !is_locked(), "the wallet is already locked");
    my->encrypt_keys2();
    for( auto & key : my->_keys )
       key.second = key_to_wif(fc::ecc::private_key());
@@ -43,6 +44,7 @@ void wallet_api::lock()
 
 void wallet_api::unlock(const string& password)
 { try {
+   FC_ASSERT( is_locked(), "the wallet is already unlocked");
    FC_ASSERT(password.size() > 0);
    auto pw = fc::sha512::hash(password.c_str(), password.size());
    vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
@@ -106,7 +108,7 @@ void wallet_api::unlock(const string& password)
 void wallet_api::set_password(const string& password )
 {
    if( !is_new() )
-      FC_ASSERT( !is_locked(), "The wallet must be unlocked before the password can be set" );
+      FC_ASSERT( !my->is_locked(), "the wallet must be unlocked before the password can be set" );
    my->_checksum = fc::sha512::hash( password.c_str(), password.size() );
    lock();
 }
@@ -120,12 +122,13 @@ bool wallet_api::load_wallet_file(const string& wallet_filename )
 
 void wallet_api::save_wallet_file(const string& wallet_filename )
 {
+   FC_ASSERT( !my->is_locked(), "the wallet must be unlocked" );
    my->save_wallet_file( wallet_filename );
 }
 
 bool wallet_api::import_key(const string& account_name_or_id, const string& wif_key)
 {
-   FC_ASSERT(!is_locked());
+   FC_ASSERT( !my->is_locked(), "the wallet must be unlocked" );
    bool result = my->import_key(account_name_or_id, wif_key);
    save_wallet_file();
 
@@ -134,7 +137,7 @@ bool wallet_api::import_key(const string& account_name_or_id, const string& wif_
 
 bool wallet_api::import_single_key(const string& account_name_or_id, const string& wif_key)
 {
-   FC_ASSERT(!is_locked());
+   FC_ASSERT( !my->is_locked(), "the wallet must be unlocked" );
    bool result = my->import_single_key(account_name_or_id, wif_key);
    save_wallet_file();
 
@@ -143,7 +146,7 @@ bool wallet_api::import_single_key(const string& account_name_or_id, const strin
 
 variant wallet_api::dump_private_keys()
 {
-   FC_ASSERT(!is_locked());
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    fc::mutable_variant_object result;
    result["ec_keys"] = my->_keys;
    result["el_gamal_keys"] = my->_el_gamal_keys;   // map of public keys to private keys

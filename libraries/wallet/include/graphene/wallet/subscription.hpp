@@ -28,6 +28,7 @@
 
 /**
  * @brief Creates a subscription to author. This function is used by consumers.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from account who wants subscription to author
  * @param to the author you wish to subscribe to
  * @param price_amount price for the subscription
@@ -44,6 +45,7 @@ signed_transaction subscribe_to_author( const string& from,
 
 /**
  * @brief Creates a subscription to author. This function is used by author.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param from the account obtaining subscription from the author
  * @param to the name or id of the author
  * @param broadcast \c true if you wish to broadcast the transaction
@@ -56,6 +58,7 @@ signed_transaction subscribe_by_author( const string& from,
 
 /**
  * @brief This function can be used to allow/disallow subscription.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param account the name or id of the account to update
  * @param allow_subscription \c true if account (author) wants to allow subscription, \c false otherwise
  * @param subscription_period duration of subscription in days
@@ -74,6 +77,7 @@ signed_transaction set_subscription( const string& account,
 
 /**
  * @brief This function can be used to allow/disallow automatic renewal of expired subscription.
+ * @note The wallet needs to be unlocked and a required key/s needs to be imported.
  * @param account_id_or_name the name or id of the account to update
  * @param subscription_id the ID of the subscription.
  * @param automatic_renewal \c true if account (consumer) wants to allow automatic renewal of subscription, \c false otherwise
