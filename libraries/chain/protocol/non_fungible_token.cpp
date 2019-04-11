@@ -1,7 +1,6 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/protocol/non_fungible_token.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
-#include <regex>
 
 namespace graphene { namespace chain {
 
@@ -12,20 +11,6 @@ void non_fungible_token_data_type::validate() const
    if( modifiable != nobody )
    {
       FC_ASSERT( !name.empty(), "Modifiable data type must have name" );
-   }
-
-   if( validator.valid() )
-   {
-      FC_ASSERT( type == string, "Only string data type can have validator" );
-
-      try
-      {
-         std::regex r(*validator, std::regex_constants::egrep);
-      }
-      catch(const std::regex_error& e)
-      {
-         FC_ASSERT( false, "Invalid string validator: ${e}", ("e", e.what()) );
-      }
    }
 }
 

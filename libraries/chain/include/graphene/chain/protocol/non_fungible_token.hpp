@@ -16,9 +16,6 @@ namespace graphene { namespace chain {
       /// Type of data
       enum { string, integer, boolean } type = string;
 
-      /// RegExp for string data validation
-      fc::optional<std::string> validator;
-
       /// Data user name
       std::string name;
 
@@ -216,7 +213,6 @@ FC_REFLECT( graphene::chain::non_fungible_token_data_type,
             (unique)
             (modifiable)
             (type)
-            (validator)
             (name)
           )
 
