@@ -185,7 +185,12 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 
       app_options.add(cli);
       cfg_options.add(cfg);
-      bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
+      bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(app_options).allow_unregistered().run();
+      bpo::store(optparsed, options);
+      if (decent::check_unrecognized(optparsed))
+      {
+         return EXIT_FAILURE;
+      }
    }
    catch (const boost::program_options::error& e)
    {

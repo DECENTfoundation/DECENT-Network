@@ -79,7 +79,13 @@ int main( int argc, char** argv )
       ;
 
       bpo::variables_map options;
-      bpo::store( bpo::parse_command_line(argc, argv, opts), options );
+      bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(opts).allow_unregistered().run();
+      bpo::store( optparsed, options );
+
+      if (decent::check_unrecognized(optparsed))
+      {
+         return EXIT_FAILURE;
+      }
 
       if( options.count("help") )
       {

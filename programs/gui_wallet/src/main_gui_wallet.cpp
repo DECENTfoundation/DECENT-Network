@@ -38,7 +38,12 @@ int main(int argc, char* argv[])
    try
    {
       gui_wallet::Globals::setCommandLine(app_options, cfg_options);
-      bpo::store(bpo::parse_command_line(argc, argv, app_options), options);
+      bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(app_options).allow_unregistered().run();
+      bpo::store(optparsed, options);
+      if (decent::check_unrecognized(optparsed))
+      {
+         return EXIT_FAILURE;
+      }
    }
    catch (const bpo::error& e)
    {

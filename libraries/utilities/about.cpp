@@ -4,6 +4,7 @@
 #include <boost/version.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/program_options/parsers.hpp>
 
 #include <openssl/opensslv.h>
 #include <cryptopp/config.h>
@@ -13,6 +14,8 @@
 #include <fc/variant_object.hpp>
 
 #include <graphene/utilities/git_revision.hpp>
+
+#include <iostream>
 
 namespace decent {
 
@@ -67,6 +70,19 @@ namespace decent {
       result["build"] = os + " " + bitness;
 
       return result;
+   }
+
+   bool check_unrecognized(bpo::parsed_options optparsed)
+   {
+      std::vector<std::string> unrecognized_args = boost::program_options::collect_unrecognized(optparsed.options, boost::program_options::include_positional);
+
+      for (auto const& item : unrecognized_args)
+      {
+         std::cout << "Unrecognized argument: " << item << std::endl;
+         return true;
+      }
+
+      return false;
    }
 
 } //namespace decent
