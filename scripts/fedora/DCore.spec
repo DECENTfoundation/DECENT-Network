@@ -66,4 +66,7 @@ rm -rf %{buildroot}
 %preun
 %systemd_preun %{name}.service
 
+%postun
+%systemd_postun_with_restart %{name}.service
+
 %changelog
