@@ -941,7 +941,7 @@ public:
    void save_wallet_file(string wallet_filename = string() )
    {
       dlog("save_wallet_file() begin");
-      FC_ASSERT( is_locked() );
+      FC_ASSERT( !is_locked() );
 
       //
       // Serialize in memory, then save to disk
