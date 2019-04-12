@@ -1,18 +1,16 @@
 #pragma once
+#include <string>
 
+#define SVCNAME "DCore"
+#define SVCDISPLAYNAME "DCore Network Node"
+#define SVCDESCRIPTION "Fast, powerful and cost-efficient blockchain"
 
-#define SVCNAME "decentd"
-#define SVCDISPLAYNAME "DECENT Network Node"
-#define SVCDESCRIPTION "Synchronizes with other nodes on DECENT Network and provides services."
-
-DWORD install_win_service(const char *cmd_line_str);
+DWORD install_win_service();
 DWORD remove_win_service();
+std::string GetAppDataDir();
 bool IsRunningAsSystemService();
-void GetAppDataDir(char* path, int max_len);
 void StopWinService();
 
 DWORD InitializeService();
 void ReportSvcStatus(DWORD, DWORD, DWORD);
 void SvcReportEvent(LPTSTR);
-
-

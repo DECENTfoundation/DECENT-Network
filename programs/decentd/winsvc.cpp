@@ -25,13 +25,14 @@ enum WinServiceState {
 static SERVICE_STATUS          s_SvcStatus;
 static SERVICE_STATUS_HANDLE   s_SvcStatusHandle;
 
-DWORD SvcInstall(const char* cmd_line_params);
 void WINAPI SvcCtrlHandler(DWORD);
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize);
 
-void GetAppDataDir(char* path, int max_len)
+std::string GetAppDataDir()
 {
-	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, (char*)path);
+	char szPath[MAX_PATH];
+	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
+	return szPath;
 }
 
 bool IsRunningAsSystemService()
@@ -43,15 +44,7 @@ bool IsRunningAsSystemService()
 	return false;
 }
 
-DWORD install_win_service(const char *cmd_line_str)
-{
-	DWORD err = 0;
-
-   err = SvcInstall(cmd_line_str);
-	return err;
-}
-
-DWORD SvcInstall(const char* cmd_line_params)
+DWORD install_win_service()
 {
 	SC_HANDLE schSCManager;
 	SC_HANDLE schService;
@@ -201,7 +194,6 @@ DWORD SvcInstall(const char* cmd_line_params)
 		DWORD err = RegCreateKeyExA(HKEY_LOCAL_MACHINE, serviceRegPath, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, NULL);
 		if (err == 0) {
 			std::string new_cmd_line = szPath;
-			new_cmd_line += cmd_line_params;
 			RegSetValueEx(hKey, "ImagePath", 0, REG_SZ, (BYTE*)new_cmd_line.c_str(), (DWORD)new_cmd_line.size() + 1);
 			RegCloseKey(hKey);
 		}
@@ -407,4 +399,3 @@ LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize)
 
 	return lpszBuf;
 }
-

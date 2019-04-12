@@ -175,11 +175,11 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       graphene::app::application::set_program_options(cli, cfg);
       decent_plugins::set_program_options(cli, cfg);
       cli.add_options()
-#ifndef _MSC_VER 
-         ("daemon", "Run DECENT as daemon.")
+#if defined(_MSC_VER)
+         ("install-win-service", "Register itself as Windows service")
+         ("remove-win-service", "Unregister itself as Windows service")
 #else
-         ("install-win-service", "It registers application like system service and sets other command line parameters as service startup parameters. It can be used also for re-registering and changing service startup parameters.")
-         ("remove-win-service", "It unregisters application if previously registered as Windows service.")
+         ("daemon", "Run DECENT as daemon.")
 #endif
       ;
 
@@ -220,12 +220,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 #if defined(_MSC_VER)
    if( options.count("install-win-service") )
    {
-	   std::string cmd_line_str;
-	   for(int i = 1; i < argc; i++) {
-		   cmd_line_str += " ";
-		   cmd_line_str += argv[i];
-	   }
-	   return install_win_service(cmd_line_str.c_str());
+	   return install_win_service();
 	}
    else if( options.count("remove-win-service") )
    {
@@ -244,14 +239,12 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       auto& path_finder = graphene::utilities::decent_path_finder::instance();
 	  
       if( run_as_daemon ) {
-#ifdef _MSC_VER
-		  char service_data_dir[256] = "";
-		  GetAppDataDir(service_data_dir, sizeof(service_data_dir) - 1);
-		  data_dir = service_data_dir;
-		  data_dir = data_dir / "decentd";
-		  logs_dir = data_dir / "logs";
-		  config_filename = data_dir / "config.ini";
-        path_finder.set_decent_temp_path(data_dir / "tmp");
+#if defined(_MSC_VER)
+         data_dir = GetAppDataDir();
+         data_dir = data_dir / "decentd";
+         logs_dir = data_dir / "logs";
+         config_filename = data_dir / "config.ini";
+         path_finder.set_decent_temp_path(data_dir / "tmp");
 #else
          int ret = start_as_daemon();
 
