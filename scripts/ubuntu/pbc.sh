@@ -8,4 +8,4 @@ if [ $# -lt 3 ]; then GIT_REV=$2; else GIT_REV=$3; fi
 docker run -it -w /root --rm --name ubuntu.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/packages \
     --mount type=bind,src=$PWD/ubuntu,dst=/root/ubuntu,readonly \
-    decent/ubuntu/build:$1 ubuntu/pbc-build.sh $PBC_VERSION $GIT_REV
+    dcore.ubuntu.build:$1 ubuntu/pbc-build.sh $PBC_VERSION $GIT_REV

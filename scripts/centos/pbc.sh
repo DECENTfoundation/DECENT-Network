@@ -11,4 +11,4 @@ echo "Building PBC $PBC_VERSION (git revision $GIT_REV) for CentOS $1"
 docker run -it -w /root --rm --name centos.build.$1 \
     --mount type=bind,src=$PWD/packages,dst=/root/rpmbuild/RPMS/x86_64 \
     --mount type=bind,src=$PWD/centos,dst=/root/centos,readonly \
-    decent/centos/build:$1 rpmbuild -bb -D "pbc_version $PBC_VERSION" -D "git_revision $GIT_REV" $BASEDIR/libpbc.spec
+    dcore.centos.build:$1 rpmbuild -bb -D "pbc_version $PBC_VERSION" -D "git_revision $GIT_REV" $BASEDIR/libpbc.spec
