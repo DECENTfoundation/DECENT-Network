@@ -32,9 +32,11 @@ EXPOSE 40000 8090
 
 ENV DCORE_USER=dcore
 ENV DCORE_HOME=/home/dcore
-RUN useradd --home-dir $DCORE_HOME --create-home $DCORE_USER && mkdir $DCORE_HOME/.decent
+RUN useradd --home-dir $DCORE_HOME --create-home $DCORE_USER
+
 USER $DCORE_USER
 WORKDIR $DCORE_HOME
+RUN mkdir $DCORE_HOME/.decent
 
 ENV DCORE_EXTRA_ARGS=""
 ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"
