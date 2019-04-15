@@ -21,21 +21,20 @@ RUN . /etc/os-release && export ARCH=`dpkg --print-architecture` && \
     dpkg -i /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_${ARCH}.deb && \
     rm /tmp/libpbc_$PBC_VERSION-${ID}${VERSION_ID}_${ARCH}.deb
 
-# prepare directories
-ENV DCORE_HOME=/root
-ENV DCORE_USER=root
-USER $DCORE_USER
-WORKDIR $DCORE_HOME
-
 # DCore
 ARG DCORE_VERSION
 COPY dcore_${DCORE_VERSION}-*.deb /tmp/
 RUN . /etc/os-release && export ARCH=`dpkg --print-architecture` && \
     dpkg -i /tmp/dcore_$DCORE_VERSION-${ID}${VERSION_ID}_${ARCH}.deb && \
-    rm /tmp/dcore_${DCORE_VERSION}-*.deb && \
-    mkdir $DCORE_HOME/.decent
+    rm /tmp/dcore_${DCORE_VERSION}-*.deb
 
 EXPOSE 40000 8090
+
+ENV DCORE_USER=dcore
+ENV DCORE_HOME=/home/dcore
+RUN useradd --home-dir $DCORE_HOME --create-home $DCORE_USER && mkdir $DCORE_HOME/.decent
+USER $DCORE_USER
+WORKDIR $DCORE_HOME
 
 ENV DCORE_EXTRA_ARGS=""
 ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"

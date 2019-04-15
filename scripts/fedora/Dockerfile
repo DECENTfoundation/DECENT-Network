@@ -12,22 +12,21 @@ RUN export FEDORA=`rpm -E "%{fedora}"` && export ARCH=`rpm -E "%{_arch}"` && \
     rpm -i /tmp/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm && \
     rm /tmp/libpbc-$PBC_VERSION-1.fc$FEDORA.$ARCH.rpm
 
-# prepare directories
-ENV DCORE_HOME=/root
-ENV DCORE_USER=root
-USER $DCORE_USER
-WORKDIR $DCORE_HOME
-
 # DCore
 ARG DCORE_VERSION
 COPY DCore-$DCORE_VERSION-1.fc*.rpm /tmp/
 RUN export FEDORA=`rpm -E "%{fedora}"` && \
     export ARCH=`rpm -E "%{_arch}"` && \
     rpm -i /tmp/DCore-$DCORE_VERSION-1.fc$FEDORA.$ARCH.rpm && \
-    rm /tmp/DCore-$DCORE_VERSION-1.fc*.rpm && \
-    mkdir $DCORE_HOME/.decent
+    rm /tmp/DCore-$DCORE_VERSION-1.fc*.rpm
 
 EXPOSE 40000 8090
+
+ENV DCORE_USER=dcore
+ENV DCORE_HOME=/home/dcore
+RUN useradd --home-dir $DCORE_HOME --create-home $DCORE_USER && mkdir $DCORE_HOME/.decent
+USER $DCORE_USER
+WORKDIR $DCORE_HOME
 
 ENV DCORE_EXTRA_ARGS=""
 ENV DCORE_DATA_DIR=$DCORE_HOME"/.decent/data"
