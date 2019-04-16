@@ -16,8 +16,8 @@ namespace graphene { namespace chain {
       /// Type of data
       enum { string, integer, boolean } type = string;
 
-      /// Data user name
-      std::string name;
+      /// Data user name (needed only for modifiable data type)
+      fc::optional<std::string> name;
 
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails

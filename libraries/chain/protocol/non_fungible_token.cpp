@@ -6,11 +6,18 @@ namespace graphene { namespace chain {
 
 void non_fungible_token_data_type::validate() const
 {
-   FC_ASSERT( name.size() <= 32 );
+   FC_ASSERT( modifiable >= nobody && modifiable <= both );
+   FC_ASSERT( type >= string && type <= boolean );
+
+   bool name_valid = name.valid();
+   if( name_valid )
+   {
+      FC_ASSERT( name->size() <= 32 );
+   }
 
    if( modifiable != nobody )
    {
-      FC_ASSERT( !name.empty(), "Modifiable data type must have name" );
+      FC_ASSERT( name_valid && !name->empty(), "Modifiable data type must have name" );
    }
 }
 
@@ -28,7 +35,7 @@ void non_fungible_token_create_definition_operation::validate() const
    std::for_each(definitions.begin(), definitions.end(), [this](const non_fungible_token_data_type &dt) {
       dt.validate();
 
-      if( !dt.name.empty() )
+      if( dt.name.valid() && !dt.name->empty() )
       {
          FC_ASSERT( std::count_if(definitions.begin(), definitions.end(),
                [&](const non_fungible_token_data_type &other) { return dt.name == other.name; }) == 1,
