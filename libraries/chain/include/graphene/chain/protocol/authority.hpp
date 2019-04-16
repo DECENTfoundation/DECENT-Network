@@ -41,15 +41,6 @@ namespace graphene { namespace chain {
          add_authorities(auths...);
       }
 
-      enum classification
-      {
-         /** the key that is authorized to change owner, active, and voting keys */
-         owner  = 0,
-         /** the key that is able to perform normal operations */
-         active = 1,
-         key    = 2
-      };
-
       void add_authority( const public_key_type& k, weight_type w )
       {
          key_auths[k] = w;
@@ -133,5 +124,3 @@ void add_authority_accounts(
 } } // namespace graphene::chain
 
 FC_REFLECT( graphene::chain::authority, (weight_threshold)(account_auths)(key_auths) )
-FC_REFLECT_TYPENAME( graphene::chain::authority::classification )
-FC_REFLECT_ENUM( graphene::chain::authority::classification, (owner)(active)(key) )
