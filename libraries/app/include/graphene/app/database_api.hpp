@@ -205,12 +205,30 @@ namespace graphene { namespace app {
          optional<block_header> get_block_header(uint32_t block_num)const;
 
          /**
+          * @brief Retrieve a list of block headers.
+          * @param block_num height of the first block whose header should be returned
+          * @param count number of block headers to return
+          * @return headers of the referenced blocks
+          * @ingroup DatabaseAPI_BlockTx
+          */
+         vector<optional<block_header>> get_block_headers(uint32_t block_num, uint32_t count)const;
+
+         /**
           * @brief Retrieve a full, signed block.
           * @param block_num height of the block to be returned
           * @return the referenced block, or \c null if no matching block was found
           * @ingroup DatabaseAPI_BlockTx
           */
          optional<signed_block_with_info> get_block(uint32_t block_num)const;
+
+         /**
+          * @brief Retrieve a list of full, signed blocks.
+          * @param block_num height of the first block to be returned
+          * @param count number of blocks to return
+          * @return the referenced blocks
+          * @ingroup DatabaseAPI_BlockTx
+          */
+         vector<optional<signed_block_with_info>> get_blocks(uint32_t block_num, uint32_t count)const;
 
          /**
           * @brief Used to fetch an individual transaction.
@@ -1029,7 +1047,9 @@ FC_API(graphene::app::database_api,
 
           // Blocks and transactions
           (get_block_header)
+          (get_block_headers)
           (get_block)
+          (get_blocks)
           (get_transaction)
           (head_block_time)
           (get_recent_transaction_by_id)

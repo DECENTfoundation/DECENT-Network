@@ -83,7 +83,9 @@ namespace graphene { namespace app {
       
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
+      vector<optional<block_header>> get_block_headers(uint32_t block_num, uint32_t count)const;
       optional<signed_block> get_block(uint32_t block_num)const;
+      vector<optional<signed_block>> get_blocks(uint32_t block_num, uint32_t count)const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
       fc::time_point_sec head_block_time()const;
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
@@ -389,12 +391,26 @@ namespace graphene { namespace app {
    // Blocks and transactions                                          //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
+   static signed_block_with_info signed_block_with_info_from_block(const signed_block& block, share_type miner_reward)
+   {
+      signed_block_with_info result;
+      reinterpret_cast<signed_block&>(result) = block; 
+      result.block_id = block.id();
+      result.signing_key = block.signee();
+      result.transaction_ids.reserve( block.transactions.size() );
+      for( const processed_transaction& tx : block.transactions )
+         result.transaction_ids.push_back( tx.id() );
+
+      result.miner_reward = miner_reward;
+      return result;
+   }
+
    optional<block_header> database_api::get_block_header(uint32_t block_num)const
    {
-      return my->get_block_header( block_num );
+      return my->get_block_header(block_num);
    }
-   
+
    optional<block_header> database_api_impl::get_block_header(uint32_t block_num) const
    {
       auto result = _db.fetch_block_by_number(block_num);
@@ -402,20 +418,27 @@ namespace graphene { namespace app {
          return *result;
       return {};
    }
-   
+
+   vector<optional<block_header>> database_api::get_block_headers(uint32_t block_num, uint32_t count)const
+   {
+      return my->get_block_headers(block_num, count);
+   }
+
+   vector<optional<block_header>> database_api_impl::get_block_headers(uint32_t block_num, uint32_t count)const
+   {
+      vector<optional<block_header>> headers;
+      headers.reserve(count);
+      uint32_t end_block = block_num + count;
+      while(block_num < end_block)
+         headers.push_back(get_block_header(block_num++));
+      return headers;
+   }
+
    optional<signed_block_with_info> database_api::get_block(uint32_t block_num)const
    {
-      auto block = my->get_block( block_num );
+      auto block = my->get_block(block_num);
       if( !block )
          return {};
-
-      optional<signed_block_with_info> result((signed_block_with_info()));
-      reinterpret_cast<signed_block&>(*result) = *block; 
-      result->block_id = block->id();
-      result->signing_key = block->signee();
-      result->transaction_ids.reserve( block->transactions.size() );
-      for( const processed_transaction& tx : block->transactions )
-         result->transaction_ids.push_back( tx.id() );
 
       share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block->timestamp);
       share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block_num);
@@ -424,15 +447,51 @@ namespace graphene { namespace app {
       if (miner_pay_from_fees < share_type(0))
          miner_pay_from_fees = share_type(0);
 
-      result->miner_reward = miner_pay_from_fees + miner_pay_from_reward;
-      return result;
+      return signed_block_with_info_from_block(*block, miner_pay_from_fees + miner_pay_from_reward);
    }
-   
+
    optional<signed_block> database_api_impl::get_block(uint32_t block_num)const
    {
       return _db.fetch_block_by_number(block_num);
    }
-   
+
+   vector<optional<signed_block_with_info>> database_api::get_blocks(uint32_t block_num, uint32_t count)const
+   {
+      auto blocks = my->get_blocks(block_num, count);
+      vector<optional<signed_block_with_info>> result;
+      result.reserve(blocks.size());
+      for( const auto& block : blocks )
+      {
+         if( block )
+         {
+            share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block->timestamp);
+            share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block->block_num());
+
+            //this should never happen, but better check.
+            if (miner_pay_from_fees < share_type(0))
+               miner_pay_from_fees = share_type(0);
+
+            result.emplace_back(signed_block_with_info_from_block(*block, miner_pay_from_fees + miner_pay_from_reward));
+         }
+         else
+         {
+            result.push_back({});
+         }
+      }
+
+      return result;
+   }
+
+   vector<optional<signed_block>> database_api_impl::get_blocks(uint32_t block_num, uint32_t count)const
+   {
+      vector<optional<signed_block>> blocks;
+      blocks.reserve(count);
+      uint32_t end_block = block_num + count;
+      while(block_num < end_block)
+         blocks.push_back(get_block(block_num++));
+      return blocks;
+   }
+
    processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const
    {
       return my->get_transaction( block_num, trx_in_block );
