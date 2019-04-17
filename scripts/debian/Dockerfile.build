@@ -26,13 +26,13 @@ RUN . /etc/os-release && \
     libreadline-dev \
     libcrypto++-dev \
     libgmp-dev \
-    libssl1.0-dev \
+    libssl-dev \
     libboost-all-dev \
     libcurl4-openssl-dev \
     zlib1g-dev \
     dpkg-sig \
     ca-certificates && \
-    if [ $VERSION_ID -gt 9 ]; then apt-get install -y --no-install-recommends nlohmann-json3-dev; fi && \
+    if [ $VERSION_ID -gt 9 ]; then apt-get install -y --no-install-recommends nlohmann-json3-dev libssl1.0-dev; fi && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # prepare directories

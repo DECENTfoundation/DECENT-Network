@@ -57,7 +57,11 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-node/DEBIAN/control
 echo "Priority: optional" >> dcore-node/DEBIAN/control
 echo "Architecture: amd64" >> dcore-node/DEBIAN/control
-echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.1, libcurl3" >> dcore-node/DEBIAN/control
+if [[ $VERSION_ID == "8" ]]; then
+   echo "Depends: libpbc (=$PBC_VERSION), libreadline6, libcrypto++9, libssl1.0.0, libcurl3" >> dcore-node/DEBIAN/control
+else
+   echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.0.2, libcurl3" >> dcore-node/DEBIAN/control
+fi
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-node/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-node/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-node/DEBIAN/control
@@ -73,7 +77,11 @@ echo "Source: https://github.com/DECENTfoundation/DECENT-Network/archive/$DCORE_
 echo "Section: net" >> dcore-gui/DEBIAN/control
 echo "Priority: optional" >> dcore-gui/DEBIAN/control
 echo "Architecture: amd64" >> dcore-gui/DEBIAN/control
-echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.1, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
+if [[ $VERSION_ID == "8" ]]; then
+   echo "Depends: libpbc (=$PBC_VERSION), libreadline6, libcrypto++9, libssl1.0.0, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
+else
+   echo "Depends: libpbc (=$PBC_VERSION), libreadline7, libcrypto++6, libssl1.0.2, libcurl3, qt5-default" >> dcore-gui/DEBIAN/control
+fi
 echo "Description: Fast, powerful and cost-efficient blockchain." >> dcore-gui/DEBIAN/control
 echo " DCore is the blockchain you can easily build on. As the world’s first blockchain" >> dcore-gui/DEBIAN/control
 echo " designed for digital content, media and entertainment, it provides user-friendly" >> dcore-gui/DEBIAN/control

@@ -4,15 +4,23 @@ LABEL maintainer="DECENT"
 
 # prerequisites
 RUN . /etc/os-release && apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libreadline7 \
-        libcrypto++6 \
-        libssl1.0.2 \
-        libcurl3 \
-        less \
-        wget \
-        ca-certificates \
-    && apt-get clean && apt-get autoremove
+     if [ "$VERSION_ID" != "8" ]; then apt-get install -y --no-install-recommends \
+         libreadline7 \
+         libcrypto++6 \
+         libssl1.0.2 \
+         libcurl3 \
+         less \
+         wget \
+         ca-certificates; \
+     else apt-get install -y --no-install-recommends \
+         libreadline6 \
+         libcrypto++9 \
+         libssl1.0.0 \
+         libcurl3 \
+         less \
+         wget \
+         ca-certificates; \
+     fi && apt-get clean && apt-get autoremove
 
 # PBC
 ARG PBC_VERSION=0.5.14
