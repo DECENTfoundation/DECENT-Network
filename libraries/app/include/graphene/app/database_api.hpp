@@ -549,11 +549,11 @@ namespace graphene { namespace app {
          /**
           * @brief Get a list of non fungible tokens by symbol.
           * @note This function has semantics identical to \c get_objects().
-          * @param symbols_or_ids symbols or stringified IDs of the non fungible tokens to retrieve
-          * @return the non fungible tokens corresponding to the provided symbols or IDs
+          * @param symbols symbols of the non fungible tokens to retrieve
+          * @return the non fungible tokens corresponding to the provided symbols
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<optional<non_fungible_token_object>> lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const;
+         vector<optional<non_fungible_token_object>> get_non_fungible_tokens_by_symbols(const vector<string>& symbols)const;
 
          /**
           * @brief Get the total number of non fungible token data objects issued on the blockchain.
@@ -1079,7 +1079,7 @@ FC_API(graphene::app::database_api,
           (get_non_fungible_token_count)
           (get_non_fungible_tokens)
           (list_non_fungible_tokens)
-          (lookup_non_fungible_token_symbols)
+          (get_non_fungible_tokens_by_symbols)
           (get_non_fungible_token_data_count)
           (get_non_fungible_token_data)
           (list_non_fungible_token_data)

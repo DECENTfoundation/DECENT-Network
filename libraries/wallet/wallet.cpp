@@ -513,53 +513,70 @@ public:
    {
       return _remote_db->get_chain_properties();
    }
+
    global_property_object get_global_properties() const
    {
       return _remote_db->get_global_properties();
    }
+
    dynamic_global_property_object get_dynamic_global_properties() const
    {
       return _remote_db->get_dynamic_global_properties();
    }
-   account_object get_account(account_id_type id) const
+
+   optional<account_object> find_account(account_id_type account_id) const
    {
       //if( _wallet.my_accounts.get<by_id>().count(id) )
       //   return *_wallet.my_accounts.get<by_id>().find(id);
-      auto rec = _remote_db->get_accounts({id}).front();
-      FC_ASSERT(rec);
-      return *rec;
+      return _remote_db->get_accounts({account_id}).front();
    }
-   account_object get_account(const string& account_name_or_id) const
+
+   optional<account_object> find_account(const string& account_name_or_id) const
    {
       FC_ASSERT( account_name_or_id.size() > 0 );
 
       if( auto id = maybe_id<account_id_type>(account_name_or_id) )
       {
          // It's an ID
-         return get_account(*id);
+         return find_account(*id);
       } else {
          // It's a name
+         auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
          if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
          {
             auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-            auto blockchain_account = _remote_db->lookup_account_names({account_name_or_id}).front();
-            FC_ASSERT( blockchain_account );
-            if (local_account.id != blockchain_account->id)
-               elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", blockchain_account->id));
-            if (local_account.name != blockchain_account->name)
-               elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", blockchain_account->name));
+            FC_ASSERT( rec, "Account ${acc} is present in the wallet but does not exist on the blockchain", ("acc", account_name_or_id));
+            if (local_account.id != rec->id)
+               elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", rec->id));
+            if (local_account.name != rec->name)
+               elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", rec->name));
 
             //return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-            return *blockchain_account;
+            return rec;
          }
-         auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
-         FC_ASSERT( rec && rec->name == account_name_or_id );
-         return *rec;
+         if( rec && rec->name != account_name_or_id )
+            return optional<account_object>();
+         return rec;
       }
    }
-   optional<asset_object> find_asset(asset_id_type id)const
+
+   account_object get_account(account_id_type account_id) const
    {
-      return _remote_db->get_assets({id}).front();
+      auto rec = find_account(account_id);
+      FC_ASSERT(rec, "Account ${acc} does not exist", ("acc", account_id));
+      return *rec;
+   }
+
+   account_object get_account(const string& account_name_or_id) const
+   {
+      auto rec = find_account(account_name_or_id);
+      FC_ASSERT(rec, "Account ${acc} does not exist", ("acc", account_name_or_id));
+      return *rec;
+   }
+
+   optional<asset_object> find_asset(asset_id_type asset_id)const
+   {
+      return _remote_db->get_assets({asset_id}).front();
    }
 
    optional<asset_object> find_asset(const string& asset_symbol_or_id) const
@@ -581,23 +598,24 @@ public:
          return rec;
       }
    }
-   asset_object get_asset(asset_id_type id)const
+
+   asset_object get_asset(asset_id_type asset_id)const
    {
-      auto opt = find_asset(id);
-      FC_ASSERT(opt);
+      auto opt = find_asset(asset_id);
+      FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_id));
       return *opt;
    }
 
    asset_object get_asset(const string& asset_symbol_or_id) const
    {
       auto opt = find_asset(asset_symbol_or_id);
-      FC_ASSERT(opt);
+      FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_symbol_or_id));
       return *opt;
    }
 
-   optional<non_fungible_token_object> find_non_fungible_token(non_fungible_token_id_type id)const
+   optional<non_fungible_token_object> find_non_fungible_token(non_fungible_token_id_type nft_id)const
    {
-      return _remote_db->get_non_fungible_tokens({id}).front();
+      return _remote_db->get_non_fungible_tokens({nft_id}).front();
    }
 
    optional<non_fungible_token_object> find_non_fungible_token(const string& nft_symbol_or_id) const
@@ -609,7 +627,7 @@ public:
          return find_non_fungible_token(*id);
       } else {
          // It's a symbol
-         auto rec = _remote_db->lookup_non_fungible_token_symbols({nft_symbol_or_id}).front();
+         auto rec = _remote_db->get_non_fungible_tokens_by_symbols({nft_symbol_or_id}).front();
          if( rec )
          {
             if( rec->symbol != nft_symbol_or_id )
@@ -619,46 +637,28 @@ public:
       }
    }
 
-   non_fungible_token_object get_non_fungible_token(non_fungible_token_id_type id)const
+   non_fungible_token_object get_non_fungible_token(non_fungible_token_id_type nft_id)const
    {
-      auto opt = find_non_fungible_token(id);
-      FC_ASSERT(opt);
+      auto opt = find_non_fungible_token(nft_id);
+      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", nft_id));
       return *opt;
    }
 
    non_fungible_token_object get_non_fungible_token(const string& nft_symbol_or_id) const
    {
       auto opt = find_non_fungible_token(nft_symbol_or_id);
-      FC_ASSERT(opt);
+      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", opt->symbol));
       return *opt;
    }
 
-   optional<non_fungible_token_data_object> find_non_fungible_token_data(non_fungible_token_data_id_type id)const
+   optional<non_fungible_token_data_object> find_non_fungible_token_data(non_fungible_token_data_id_type nft_id)const
    {
-      return _remote_db->get_non_fungible_token_data({id}).front();
+      return _remote_db->get_non_fungible_token_data({nft_id}).front();
    }
 
-   optional<non_fungible_token_data_object> find_non_fungible_token_data(const string& nft_data_id) const
+   non_fungible_token_data_object get_non_fungible_token_data(non_fungible_token_data_id_type nft_id)const
    {
-      FC_ASSERT( nft_data_id.size() > 0 );
-      if( auto id = maybe_id<non_fungible_token_data_id_type>(nft_data_id) )
-      {
-         // It's an ID
-         return find_non_fungible_token_data(*id);
-      }
-      return {};
-   }
-
-   non_fungible_token_data_object get_non_fungible_token_data(non_fungible_token_data_id_type id)const
-   {
-      auto opt = find_non_fungible_token_data(id);
-      FC_ASSERT(opt);
-      return *opt;
-   }
-
-   non_fungible_token_data_object get_non_fungible_token_data(const string& nft_data_id) const
-   {
-      auto opt = find_non_fungible_token_data(nft_data_id);
+      auto opt = find_non_fungible_token_data(nft_id);
       FC_ASSERT(opt);
       return *opt;
    }
@@ -1098,14 +1098,12 @@ public:
                                        const string&  registrar_account,
                                        bool broadcast = false)
    { try {
-      FC_ASSERT( is_valid_name(name) );
+      FC_ASSERT(!find_account(name).valid(), "Account with that name already exists!");
       account_create_operation account_create_op;
 
       // TODO:  process when pay_from_account is ID
 
-      account_object registrar_account_object =
-            this->get_account( registrar_account );
-
+      account_object registrar_account_object = get_account( registrar_account );
       account_id_type registrar_account_id = registrar_account_object.id;
 
       account_create_op.registrar = registrar_account_id;
@@ -1156,7 +1154,7 @@ public:
    {
       try
       {
-         FC_ASSERT( is_valid_name(name) );
+         FC_ASSERT(!find_account(name).valid(), "Account with that name already exists!");
          account_create_operation account_create_op;
          account_object acc = get_account( registrar_account );
 
@@ -1217,6 +1215,9 @@ public:
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
+
+         FC_ASSERT(!find_account(account_name).valid(), "Account with that name already exists!");
+
          int active_key_index = find_first_unused_derived_key_index(owner_privkey);
          fc::ecc::private_key active_privkey = derive_private_key( key_to_wif(owner_privkey), active_key_index);
 
@@ -1232,7 +1233,6 @@ public:
          // TODO:  process when pay_from_account is ID
 
          account_object registrar_account_object = get_account( registrar_account );
-
          account_id_type registrar_account_id = registrar_account_object.id;
 
          account_create_op.registrar = registrar_account_id;
@@ -1414,13 +1414,11 @@ public:
                                                bool is_exchangeable,
                                                bool broadcast = false)
    { try {
-         optional<asset_object> asset_to_update = find_asset(symbol);
-         if (!asset_to_update)
-            FC_THROW("No asset with that symbol exists!");
+         asset_object asset_to_update = get_asset(symbol);
 
          update_user_issued_asset_operation update_op;
-         update_op.issuer = asset_to_update->issuer;
-         update_op.asset_to_update = asset_to_update->id;
+         update_op.issuer = asset_to_update.issuer;
+         update_op.asset_to_update = asset_to_update.id;
          update_op.new_description = description;
          update_op.max_supply = max_supply;
          update_op.core_exchange_rate = core_exchange_rate;
@@ -1450,16 +1448,13 @@ public:
                                           bool broadcast /* = false */)
       { try {
             account_object from_account = get_account(from);
-            optional<asset_object> uia_asset_to_fund = find_asset(uia_symbol);
-            FC_ASSERT( uia_asset_to_fund.valid() , "Asset ${uia} does not exist.", ("uia", uia_asset_to_fund->symbol));
-
-            optional<asset_object> dct_asset_to_fund = find_asset(DCT_symbol);
-            FC_ASSERT( dct_asset_to_fund.valid() ,"Asset ${dct} does not exist.", ("dct", dct_asset_to_fund->symbol));
+            asset_object uia_asset_to_fund = get_asset(uia_symbol);
+            asset_object dct_asset_to_fund = get_asset(DCT_symbol);
 
             asset_fund_pools_operation fund_op;
             fund_op.from_account = from_account.id;
-            fund_op.uia_asset = uia_asset_to_fund->amount_from_string(uia_amount);
-            fund_op.dct_asset = dct_asset_to_fund->amount_from_string(DCT_amount);
+            fund_op.uia_asset = uia_asset_to_fund.amount_from_string(uia_amount);
+            fund_op.dct_asset = dct_asset_to_fund.amount_from_string(DCT_amount);
 
             signed_transaction tx;
             tx.operations.push_back( fund_op );
@@ -1475,13 +1470,11 @@ public:
                                     bool broadcast /* = false */)
    { try {
          account_object from_account = get_account(from);
-         optional<asset_object> asset_to_reserve = find_asset(symbol);
-         if (!asset_to_reserve)
-            FC_THROW("No asset with that symbol exists!");
+         asset_object asset_to_reserve = get_asset(symbol);
 
          asset_reserve_operation reserve_op;
          reserve_op.payer = from_account.id;
-         reserve_op.amount_to_reserve = asset_to_reserve->amount_from_string(amount);
+         reserve_op.amount_to_reserve = asset_to_reserve.amount_from_string(amount);
 
          signed_transaction tx;
          tx.operations.push_back( reserve_op );
@@ -1497,18 +1490,15 @@ public:
                                  const string& dct_symbol,
                                  bool broadcast /* = false */)
    { try {
-         optional<asset_object> uia_asset_to_claim = find_asset(uia_symbol);
-         if (!uia_asset_to_claim)
-            FC_THROW("No asset with that symbol exists!");
-         optional<asset_object> dct_asset_to_claim = find_asset(dct_symbol);
-         if (!dct_asset_to_claim)
-            FC_THROW("No asset with that symbol exists!");
-         FC_ASSERT( dct_asset_to_claim->id == asset_id_type() );
+         asset_object uia_asset_to_claim = get_asset(uia_symbol);
+         asset_object dct_asset_to_claim = get_asset(dct_symbol);
+
+         FC_ASSERT( dct_asset_to_claim.id == asset_id_type() );
 
          asset_claim_fees_operation claim_fees_op;
-         claim_fees_op.issuer = uia_asset_to_claim->issuer;
-         claim_fees_op.uia_asset = uia_asset_to_claim->amount_from_string(uia_amount);
-         claim_fees_op.dct_asset = dct_asset_to_claim->amount_from_string(dct_amount);
+         claim_fees_op.issuer = uia_asset_to_claim.issuer;
+         claim_fees_op.uia_asset = uia_asset_to_claim.amount_from_string(uia_amount);
+         claim_fees_op.dct_asset = dct_asset_to_claim.amount_from_string(dct_amount);
 
          signed_transaction tx;
          tx.operations.push_back( claim_fees_op );
@@ -1558,13 +1548,11 @@ public:
                                              uint8_t minimum_feeds,
                                              bool broadcast /* = false */)
    { try {
-      optional<asset_object> asset_to_update = find_asset(symbol);
-      if (!asset_to_update)
-        FC_THROW("No asset with that symbol exists!");
+      asset_object asset_to_update = get_asset(symbol);
 
       update_monitored_asset_operation update_op;
-      update_op.issuer = asset_to_update->issuer;
-      update_op.asset_to_update = asset_to_update->id;
+      update_op.issuer = asset_to_update.issuer;
+      update_op.asset_to_update = asset_to_update.id;
       update_op.new_description = description;
       update_op.new_feed_lifetime_sec = feed_lifetime_sec;
       update_op.new_minimum_feeds = minimum_feeds;
@@ -1582,13 +1570,11 @@ public:
                                          price_feed feed,
                                          bool broadcast /* = false */)
    { try {
-      optional<asset_object> asset_to_update = find_asset(symbol);
-      if (!asset_to_update)
-        FC_THROW("No asset with that symbol exists!");
+      asset_object asset_to_update = get_asset(symbol);
 
       asset_publish_feed_operation publish_op;
       publish_op.publisher = get_account(publishing_account).get_id();
-      publish_op.asset_id = asset_to_update->id;
+      publish_op.asset_id = asset_to_update.id;
       publish_op.feed = feed;
 
       signed_transaction tx;
@@ -1614,6 +1600,8 @@ public:
                                                 bool transferable,
                                                 bool broadcast /* = false */)
    {
+      FC_ASSERT(!find_non_fungible_token(symbol).valid(), "Non fungible token with that symbol already exists!");
+
       non_fungible_token_create_definition_operation create_op;
       create_op.symbol = symbol;
       create_op.transferable = transferable;
@@ -1689,7 +1677,7 @@ public:
    }
 
    signed_transaction transfer_non_fungible_token_data(const string& to_account,
-                                                       const string& nft_data_id,
+                                                       const non_fungible_token_data_id_type nft_data_id,
                                                        const string& memo,
                                                        bool broadcast /* = false */)
    {
@@ -1715,13 +1703,13 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction burn_non_fungible_token_data(const string& nft_data_id, bool broadcast /* = false */)
+   signed_transaction burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id, bool broadcast /* = false */)
    {
       return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
    }
 
    signed_transaction update_non_fungible_token_data(const string& modifier,
-                                                     const string& nft_data_id,
+                                                     const non_fungible_token_data_id_type nft_data_id,
                                                      const std::unordered_map<string, fc::variant>& data,
                                                      bool broadcast /* = false */)
    {
@@ -2150,8 +2138,7 @@ public:
       account_object from_account = get_account(from);
       account_id_type from_id = from_account.id;
 
-      fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+      asset_object asset_obj = get_asset(asset_symbol);
 
       account_object to_account;
       object_id_type to_obj_id;
@@ -2182,7 +2169,7 @@ public:
 
          xfer_op.from = from_id;
          xfer_op.to = to_obj_id;
-         xfer_op.amount = asset_obj->amount_from_string(amount);
+         xfer_op.amount = asset_obj.amount_from_string(amount);
 
          if( !memo.empty() )
          {
@@ -2197,7 +2184,7 @@ public:
 
          xfer_op.from = from_id;
          xfer_op.to = to_obj_id;
-         xfer_op.amount = asset_obj->amount_from_string(amount);
+         xfer_op.amount = asset_obj.amount_from_string(amount);
 
          if( !memo.empty() )
          {
@@ -2227,9 +2214,8 @@ public:
       account_object to_account = get_account(to);
       op.from = from_account.id;
       op.to = to_account.id;
-      fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
-      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
-      op.amount = asset_obj->amount_from_string(amount);
+      asset_object asset_obj = get_asset(asset_symbol);
+      op.amount = asset_obj.amount_from_string(amount);
       if( !memo.empty() )
       {
          op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
@@ -2515,10 +2501,9 @@ public:
          else
             FC_ASSERT(false);
 
-         fc::optional<asset_object> currency = find_asset(item.asset_symbol);
-         FC_ASSERT(currency, "Unknown symbol");
+         asset_object currency = get_asset(item.asset_symbol);
 
-         arr_prices.push_back({region_code_for, currency->amount_from_string(item.amount)});
+         arr_prices.push_back({region_code_for, currency.amount_from_string(item.amount)});
       }
 
       submit_op.price = arr_prices;
@@ -2557,8 +2542,7 @@ public:
          // checking for duplicates
          FC_ASSERT( co_authors.size() == co_authors_id_to_split.size(), "Duplicity in the list of co-authors is not allowed." );
 
-         fc::optional<asset_object> fee_asset_obj = get_asset(publishing_fee_symbol_name);
-         FC_ASSERT(fee_asset_obj, "Could not find asset matching ${asset}", ("asset", publishing_fee_symbol_name));
+         asset_object fee_asset_obj = get_asset(publishing_fee_symbol_name);
 
          ShamirSecret ss(static_cast<uint16_t>(quorum), static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
@@ -2581,7 +2565,7 @@ public:
          submit_op.seeders = seeders;
          submit_op.quorum = quorum;
          submit_op.expiration = expiration;
-         submit_op.publishing_fee = fee_asset_obj->amount_from_string(publishing_fee_amount);
+         submit_op.publishing_fee = fee_asset_obj.amount_from_string(publishing_fee_amount);
          submit_op.synopsis = synopsis;
          submit_op.cd = cd;
 
@@ -2889,8 +2873,7 @@ signed_transaction content_cancellation(const string& author,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
-      fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
-      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+      asset_object asset_obj = get_asset(price_asset_symbol);
 
       request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
@@ -2911,7 +2894,7 @@ signed_transaction content_cancellation(const string& author,
       //
 
       request_op.region_code_from = region_code_from;
-      request_op.price = asset_obj->amount_from_string(price_amount);
+      request_op.price = asset_obj.amount_from_string(price_amount);
 
       signed_transaction tx;
       tx.operations.push_back( request_op );
@@ -2956,13 +2939,13 @@ signed_transaction content_cancellation(const string& author,
                                            const string& price_asset_symbol,
                                            bool broadcast/* = false */)
    { try {
-         fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
-         FC_ASSERT( asset_obj->id == asset_id_type() );
+         asset_object asset_obj = get_asset(price_asset_symbol);
+         FC_ASSERT( asset_obj.id == asset_id_type() );
 
          subscribe_operation subscribe_op;
          subscribe_op.from = get_account( from ).get_id();
          subscribe_op.to = get_account( to ).get_id();
-         subscribe_op.price = asset_obj->amount_from_string(price_amount);
+         subscribe_op.price = asset_obj.amount_from_string(price_amount);
 
          signed_transaction tx;
          tx.operations.push_back( subscribe_op );
@@ -2995,13 +2978,12 @@ signed_transaction content_cancellation(const string& author,
                                         const string& price_asset_symbol,
                                         bool broadcast/* = false */)
    { try {
-         fc::optional<asset_object> asset_obj = get_asset(price_asset_symbol);
-         FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", price_asset_symbol));
+         asset_object asset_obj = get_asset(price_asset_symbol);
 
          account_object account_object_to_modify = get_account( account );
          account_object_to_modify.options.allow_subscription = allow_subscription;
          account_object_to_modify.options.subscription_period = subscription_period;
-         account_object_to_modify.options.price_per_subscribe = asset_obj->amount_from_string(price_amount);
+         account_object_to_modify.options.price_per_subscribe = asset_obj.amount_from_string(price_amount);
 
          account_update_operation account_update_op;
          account_update_op.account = account_object_to_modify.id;
@@ -3488,7 +3470,7 @@ signed_transaction content_cancellation(const string& author,
    {
       const auto& from_account = wallet.get_account(op.issuer);
       const auto& to_account = wallet.get_account(op.to);
-      out << "Issue NFT " << wallet.get_non_fungible_token(op.nft_id).symbol << " from " << from_account.name << " to " << to_account.name;
+      out << "Issue non fungible token " << wallet.get_non_fungible_token(op.nft_id).symbol << " from " << from_account.name << " to " << to_account.name;
       fee(op.fee);
       return memo(op.memo, from_account, to_account);
    }
@@ -3498,7 +3480,7 @@ signed_transaction content_cancellation(const string& author,
       const auto& from_account = wallet.get_account(op.from);
       const auto& to_account = wallet.get_account(op.to);
       const auto& nft_data = wallet.get_non_fungible_token_data(op.nft_data_id);
-      out << "Transfer NFT " << wallet.get_non_fungible_token(nft_data.nft_id).symbol <<
+      out << "Transfer non fungible token " << wallet.get_non_fungible_token(nft_data.nft_id).symbol <<
          " (" << std::string(object_id_type(nft_data.get_id())) << ") from " << from_account.name << " to " << to_account.name;
       fee(op.fee);
       return memo(op.memo, from_account, to_account);
@@ -3884,20 +3866,20 @@ signed_transaction content_cancellation(const string& author,
    }
 
    signed_transaction wallet_api::transfer_non_fungible_token_data(const string& to_account,
-                                                                   const string& nft_data_id,
+                                                                   const non_fungible_token_data_id_type nft_data_id,
                                                                    const string& memo,
                                                                    bool broadcast /* = false */)
    {
       return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
    }
 
-   signed_transaction wallet_api::burn_non_fungible_token_data(const string& nft_data_id, bool broadcast /* = false */)
+   signed_transaction wallet_api::burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id, bool broadcast /* = false */)
    {
       return my->burn_non_fungible_token_data(nft_data_id, broadcast);
    }
 
    signed_transaction wallet_api::update_non_fungible_token_data(const string& modifier,
-                                                                 const string& nft_data_id,
+                                                                 const non_fungible_token_data_id_type nft_data_id,
                                                                  const std::unordered_map<string, fc::variant>& data,
                                                                  bool broadcast /* = false */)
    {
