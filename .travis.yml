@@ -1,0 +1,29 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.4
+
+    - os: osx
+      osx_image: xcode10.2
+
+before_install:
+  - brew update
+  - brew tap decentfoundation/DCore
+
+script:
+  - brew install --build-bottle --verbose --HEAD DCore
+  - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
+
+deploy:
+  skip_cleanup: true
+  provider: bintray
+  file: .bintray.json
+  user: decent-dcore
+  key:
+    secure: x5a5cn6npTo+WJPFMOdPqyWYpO5uRmqDJsHFBE5hA7/jtGKGiS9liN4FIgXRdlUrcf2b+iibpWOYu9DTM/hWaUD+92CzUm5Bh05ygbw3cCqhIjc0t7dG9uo+sfbA2DKZnXS0xUiO7pGYsPRBrx00hpgS/U+DyTqqPfleYY5wvGw1xmy9FePM6yh/1NkOrznbPJ/vL9h72ZM9u7wR0cqay3CgkZc2t55WmnjiY8DgcHJsJZBhJ3RU0FZagW6VWBacgYR56px/pnTMDLANrR0K7PoFKtNrFJ/LeiapncnSkCxwlwqYONpeoj5hUG5ddwKJS1Cm8P9W1m+KM5AV7ntz0osumAuRa4Pw/ZzLLoP8y+wVJ5eZ8F6AeboLy73lo9c+QU76Wbwzdp44E4KVc9j+geKH1KOZmhhjiJXq4a7WO09OV1gRZ6DglkiXD7vLl6GtrIrp+g/Q8GCW54OoARAOxXSkBml4RsN/aKtP9V5GWRPldA7hmwPjRfIPfvT8AKhdHX1jQPEVM7hDkf9NeHOGcLbgWqPXb/1aHyLPeN7++c0095RIYPEbuSgmOfxGwO6M112SfWix/eg8ehe7ZQXKnPs3/Qay6cn8Nk3QPc/saK22WveKM6AC2nT4MFQtF4M7eqmvfPux3hjwuUiLu/u9ro02vsKQzsahMp8EX4bSJoM=
+  on:
+    branch: develop
