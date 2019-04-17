@@ -659,7 +659,7 @@ public:
    non_fungible_token_data_object get_non_fungible_token_data(non_fungible_token_data_id_type nft_id)const
    {
       auto opt = find_non_fungible_token_data(nft_id);
-      FC_ASSERT(opt);
+      FC_ASSERT(opt, "Non fungible token data ${nft} does not exist", ("nft", nft_data_id));
       return *opt;
    }
 
