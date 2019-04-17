@@ -134,7 +134,7 @@ namespace graphene { namespace app {
       uint64_t get_non_fungible_token_count()const;
       vector<optional<non_fungible_token_object>> get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const;
       vector<non_fungible_token_object> list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const;
-      vector<optional<non_fungible_token_object>> lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const;
+      vector<optional<non_fungible_token_object>> get_non_fungible_tokens_by_symbols(const vector<string>& symbols)const;
       uint64_t get_non_fungible_token_data_count()const;
       vector<optional<non_fungible_token_data_object>> get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const;
       vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
@@ -1204,26 +1204,20 @@ namespace graphene { namespace app {
       return result;
    }
 
-   vector<optional<non_fungible_token_object>> database_api::lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const
+   vector<optional<non_fungible_token_object>> database_api::get_non_fungible_tokens_by_symbols(const vector<string>& symbols)const
    {
-      return my->lookup_non_fungible_token_symbols(symbols_or_ids);
+      return my->get_non_fungible_tokens_by_symbols(symbols);
    }
 
-   vector<optional<non_fungible_token_object>> database_api_impl::lookup_non_fungible_token_symbols(const vector<string>& symbols_or_ids)const
+   vector<optional<non_fungible_token_object>> database_api_impl::get_non_fungible_tokens_by_symbols(const vector<string>& symbols)const
    {
       const auto& nfts_by_symbol = _db.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
-
       vector<optional<non_fungible_token_object> > result;
-      result.reserve(symbols_or_ids.size());
+      result.reserve(symbols.size());
 
-      std::transform(symbols_or_ids.begin(), symbols_or_ids.end(), std::back_inserter(result),
-                     [this, &nfts_by_symbol](const string& symbol_or_id) -> optional<non_fungible_token_object> {
-                        if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
-                        {
-                           auto ptr = _db.find(variant(symbol_or_id).as<non_fungible_token_id_type>());
-                           return ptr == nullptr? optional<non_fungible_token_object>() : *ptr;
-                        }
-                        auto itr = nfts_by_symbol.find(symbol_or_id);
+      std::transform(symbols.begin(), symbols.end(), std::back_inserter(result),
+                     [&nfts_by_symbol](const string& symbol) -> optional<non_fungible_token_object> {
+                        auto itr = nfts_by_symbol.find(symbol);
                         return itr == nfts_by_symbol.end()? optional<non_fungible_token_object>() : *itr;
                      });
       return result;

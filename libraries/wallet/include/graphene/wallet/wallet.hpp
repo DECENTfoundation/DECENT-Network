@@ -429,7 +429,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletAPI_NonFungibleToken
           */
          signed_transaction transfer_non_fungible_token_data(const string& to_account,
-                                                             const string& nft_data_id,
+                                                             const non_fungible_token_data_id_type nft_data_id,
                                                              const string& memo,
                                                              bool broadcast = false);
 
@@ -439,7 +439,7 @@ namespace graphene { namespace wallet {
           * @param broadcast \c true to broadcast the transaction on the network
           * @ingroup WalletAPI_NonFungibleToken
           */
-         signed_transaction burn_non_fungible_token_data(const string& nft_data_id, bool broadcast = false);
+         signed_transaction burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id, bool broadcast = false);
 
          /**
           * @brief Updates data of token instance.
@@ -451,7 +451,7 @@ namespace graphene { namespace wallet {
           * @ingroup WalletAPI_NonFungibleToken
           */
          signed_transaction update_non_fungible_token_data(const string& modifier,
-                                                           const string& nft_data_id,
+                                                           const non_fungible_token_data_id_type nft_data_id,
                                                            const std::unordered_map<string, fc::variant>& data,
                                                            bool broadcast = false);
 
