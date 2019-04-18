@@ -15,6 +15,11 @@
             "includePattern": "./(dcore--HEAD-[0-9a-f]+)(.*\\.bottle\\.tar\\.gz)",
             "uploadPattern": "DCore-dev$2",
             "matrixParams": { "override": 1 }
+        },
+        {
+            "includePattern": "./(DCore\\..*\\.pkg)",
+            "uploadPattern": "$1",
+            "matrixParams": { "override": 1 }
         }
     ]
 }

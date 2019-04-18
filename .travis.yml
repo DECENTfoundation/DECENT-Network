@@ -17,6 +17,9 @@ before_install:
 script:
   - brew install --build-bottle --verbose --HEAD DCore
   - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
+  - cd scripts/MacOS
+  - ./prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M")
+  - pkgbuild --root dist --component-plist decent_pkg.plist DCore.dev.pkg
 
 deploy:
   skip_cleanup: true
@@ -24,6 +27,6 @@ deploy:
   file: .bintray.json
   user: decent-dcore
   key:
-    secure: x5a5cn6npTo+WJPFMOdPqyWYpO5uRmqDJsHFBE5hA7/jtGKGiS9liN4FIgXRdlUrcf2b+iibpWOYu9DTM/hWaUD+92CzUm5Bh05ygbw3cCqhIjc0t7dG9uo+sfbA2DKZnXS0xUiO7pGYsPRBrx00hpgS/U+DyTqqPfleYY5wvGw1xmy9FePM6yh/1NkOrznbPJ/vL9h72ZM9u7wR0cqay3CgkZc2t55WmnjiY8DgcHJsJZBhJ3RU0FZagW6VWBacgYR56px/pnTMDLANrR0K7PoFKtNrFJ/LeiapncnSkCxwlwqYONpeoj5hUG5ddwKJS1Cm8P9W1m+KM5AV7ntz0osumAuRa4Pw/ZzLLoP8y+wVJ5eZ8F6AeboLy73lo9c+QU76Wbwzdp44E4KVc9j+geKH1KOZmhhjiJXq4a7WO09OV1gRZ6DglkiXD7vLl6GtrIrp+g/Q8GCW54OoARAOxXSkBml4RsN/aKtP9V5GWRPldA7hmwPjRfIPfvT8AKhdHX1jQPEVM7hDkf9NeHOGcLbgWqPXb/1aHyLPeN7++c0095RIYPEbuSgmOfxGwO6M112SfWix/eg8ehe7ZQXKnPs3/Qay6cn8Nk3QPc/saK22WveKM6AC2nT4MFQtF4M7eqmvfPux3hjwuUiLu/u9ro02vsKQzsahMp8EX4bSJoM=
+    secure: uh3ADpcP6Ng2Jj0T2fd08y6I12SWZY2WZTquFVzOa6T4ki7C5d7JAd3Y1zkyAFHy3/X4GUoj2hUGql+XQOz3HV9DF8ou9fQu9lMtVhqQDyejNttHP77BLQeOazIM4HqgP7JXvG4o9HOOjzrwfadekMWJjFJUvVnLaUlqUvDJNR8NZrppmsp+8pZzWF4uFN9pnIJ68W5W/7/mFAzIWkJJPMC4datVpMLU+JdeWGSC5MY0cMzy9H7ol7jePqBG1IIUil8CTPY96hh9K/sXkb0dgA3SbyDY/QhlqFhNk00k8rGaefeaX08jzsXjn1oqLfMsmPWf1S3p1mqybzDr1GMl+2vm+B88MbwlhnWgcGhcPG4jclrKlj1vaYliY2nFJq6C/nN2UAtstC4NzLDgnSvDndxumP3PHqK3C8kzlxf9SZxUNG8E0pWUCLKTD3/dzxMtcedyjtI/0CQmeRksDGWWLn3ByG/CLovzHn9IrHDte6TjYDHelpdpZwR7zEoUJ2IEzwQqAeqzVdPC2op8VEG9u4UA+k4tFLSALQFicGyH/wmDeHZL8Ef1jCDJHIsN4OTowNWulxUGqlnvHI/rrWfnkFfVrvY3gbedl9Q31VWZ8kM2ZdUuDYX5K1K/ThgHYVq1ik3TCtDYB9BnEi3z5oWZllIistbMArUmSGhseN/9KAY=
   on:
     branch: develop
