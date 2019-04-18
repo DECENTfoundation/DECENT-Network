@@ -1358,13 +1358,7 @@ public:
       opts.max_supply = max_supply;
       opts.core_exchange_rate = core_exchange_rate;
       opts.is_exchangeable = is_exchangeable;
-
-      if( head_block_time() > HARDFORK_2_TIME )
-      {
-         opts.extensions.insert(asset_options::fixed_max_supply_struct(is_fixed_max_supply));
-      }
-      else
-         FC_ASSERT( !is_fixed_max_supply );
+      opts.extensions.insert(asset_options::fixed_max_supply_struct(is_fixed_max_supply));
 
       create_op.options = opts;
       create_op.monitored_asset_opts = optional<monitored_asset_options>();
@@ -2163,36 +2157,18 @@ public:
       }
 
       signed_transaction tx;
-      if( head_block_time() > HARDFORK_2_TIME )
+      transfer2_operation xfer_op;
+
+      xfer_op.from = from_id;
+      xfer_op.to = to_obj_id;
+      xfer_op.amount = asset_obj.amount_from_string(amount);
+
+      if( !memo.empty() )
       {
-         transfer2_operation xfer_op;
-
-         xfer_op.from = from_id;
-         xfer_op.to = to_obj_id;
-         xfer_op.amount = asset_obj.amount_from_string(amount);
-
-         if( !memo.empty() )
-         {
-            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
-         }
-
-         tx.operations.push_back(xfer_op);
+         xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
       }
-      else
-      {
-         transfer_operation xfer_op;
 
-         xfer_op.from = from_id;
-         xfer_op.to = to_obj_id;
-         xfer_op.amount = asset_obj.amount_from_string(amount);
-
-         if( !memo.empty() )
-         {
-            xfer_op.memo = memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
-         }
-
-         tx.operations.push_back(xfer_op);
-      }
+      tx.operations.push_back(xfer_op);
 
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
       tx.validate();
@@ -2655,10 +2631,7 @@ public:
          submit_op.synopsis = synopsis;
 
          uint32_t sectors;
-         if(head_block_time()>HARDFORK_1_TIME )
-            sectors = DECENT_SECTORS;
-         else
-            sectors = DECENT_SECTORS_BIG;
+         sectors = DECENT_SECTORS;
          auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key, sectors);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
