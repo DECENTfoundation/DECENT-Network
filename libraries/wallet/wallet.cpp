@@ -2630,9 +2630,7 @@ public:
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
 
-         uint32_t sectors;
-         sectors = DECENT_SECTORS;
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key, sectors);
+         auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
          

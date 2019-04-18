@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( package_create_test )
    create_fake_content(content_dir, samples_dir);
 
    try {
-      auto package_handle = package_manager.get_package(content_dir, samples_dir, key, DECENT_SECTORS);
+      auto package_handle = package_manager.get_package(content_dir, samples_dir, key);
       BOOST_CHECK(package_handle.get() != nullptr);
 
       package_handle->add_event_listener(std::make_shared<MyEventListener>());

@@ -149,7 +149,7 @@ namespace package {
         PackageInfo(PackageManager& manager,
                     const boost::filesystem::path& content_dir_path,
                     const boost::filesystem::path& samples_dir_path,
-                    const fc::sha256& key, uint32_t custody_sectors);
+                    const fc::sha256& key);
 
         /**
          * Re-reads package out of existing disk structure. Cannot be called directly, call PackageManager::get_package instead
@@ -389,11 +389,10 @@ namespace package {
          * @param content_dir_path Files with content
          * @param samples_dir_path Files with samples
          * @param key Encryption key
-         * @param custody_sectors
          */
         package_handle_t get_package(const boost::filesystem::path& content_dir_path,
                                      const boost::filesystem::path& samples_dir_path,
-                                     const fc::sha256& key, uint32_t custody_sectors);
+                                     const fc::sha256& key);
         /**
          * Creates package info out of the URL and returns handle to it. The package is ready for download.
          * @param url URL of the package
