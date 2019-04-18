@@ -1,46 +1,48 @@
 
-signed_transaction wallet_api::submit_content(const string& author,
-                                              const vector< pair< string, uint32_t>>& co_authors,
-                                              const string& URI,
-                                              const vector <regional_price_info>& price_amounts,
-                                              uint64_t size,
-                                              const fc::ripemd160& hash,
-                                              const vector<account_id_type>& seeders,
-                                              uint32_t quorum,
-                                              const fc::time_point_sec& expiration,
-                                              const string& publishing_fee_asset,
-                                              const string& publishing_fee_amount,
-                                              const string& synopsis,
-                                              const DInteger& secret,
-                                              const decent::encrypt::CustodyData& cd,
-                                              bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::submit_content(const string& author,
+                                                                        const vector< pair< string, uint32_t>>& co_authors,
+                                                                        const string& URI,
+                                                                        const vector <regional_price_info>& price_amounts,
+                                                                        uint64_t size,
+                                                                        const fc::ripemd160& hash,
+                                                                        const vector<account_id_type>& seeders,
+                                                                        uint32_t quorum,
+                                                                        const fc::time_point_sec& expiration,
+                                                                        const string& publishing_fee_asset,
+                                                                        const string& publishing_fee_amount,
+                                                                        const string& synopsis,
+                                                                        const DInteger& secret,
+                                                                        const decent::encrypt::CustodyData& cd,
+                                                                        bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->submit_content(author, co_authors, URI, price_amounts, hash, size,
+   signed_transaction tx = my->submit_content(author, co_authors, URI, price_amounts, hash, size,
                              seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount,
                              synopsis, secret, cd, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 content_keys wallet_api::submit_content_async(const string& author,
-                                      const vector< pair< string, uint32_t>>& co_authors,
-                                      const string& content_dir,
-                                      const string& samples_dir,
-                                      const string& protocol,
-                                      const vector<regional_price_info>& price_amounts,
-                                      const vector<account_id_type>& seeders,
-                                      const fc::time_point_sec& expiration,
-                                      const string& synopsis)
+                                              const vector< pair< string, uint32_t>>& co_authors,
+                                              const string& content_dir,
+                                              const string& samples_dir,
+                                              const string& protocol,
+                                              const vector<regional_price_info>& price_amounts,
+                                              const vector<account_id_type>& seeders,
+                                              const fc::time_point_sec& expiration,
+                                              const string& synopsis)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 }
 
-signed_transaction wallet_api::content_cancellation(const string& author,
-                                                    const string& URI,
-                                                    bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::content_cancellation(const string& author,
+                                                                              const string& URI,
+                                                                              bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->content_cancellation(author, URI, broadcast);
+   signed_transaction tx = my->content_cancellation(author, URI, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 void wallet_api::download_content(const string& consumer, const string& URI, const string& region_code_from, bool broadcast)
@@ -55,25 +57,27 @@ content_download_status wallet_api::get_download_status(const string& consumer,
    return my->get_download_status(consumer, URI);
 }
 
-signed_transaction wallet_api::request_to_buy(const string& consumer,
-                                              const string& URI,
-                                              const string& price_asset_name,
-                                              const string& price_amount,
-                                              const string& str_region_code_from,
-                                              bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::request_to_buy(const string& consumer,
+                                                                        const string& URI,
+                                                                        const string& price_asset_name,
+                                                                        const string& price_amount,
+                                                                        const string& str_region_code_from,
+                                                                        bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
+   signed_transaction tx = my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-void wallet_api::leave_rating_and_comment(const string& consumer,
-                                          const string& URI,
-                                          uint64_t rating,
-                                          const string& comment,
-                                          bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::leave_rating_and_comment(const string& consumer,
+                                                                                  const string& URI,
+                                                                                  uint64_t rating,
+                                                                                  const string& comment,
+                                                                                  bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
+   signed_transaction tx = my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 DInteger wallet_api::restore_encryption_key(const string& consumer, buying_id_type buying)

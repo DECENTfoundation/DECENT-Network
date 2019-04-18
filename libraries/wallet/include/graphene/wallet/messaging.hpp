@@ -35,10 +35,10 @@
  * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Messaging
  */
-signed_transaction send_message(const std::string& from,
-                                const std::vector<string>& to,
-                                const string& text,
-                                bool broadcast = false);
+pair<transaction_id_type,signed_transaction> send_message(const std::string& from,
+                                                          const std::vector<string>& to,
+                                                          const string& text,
+                                                          bool broadcast = false);
 
 /**
  * @brief Sends an unencrypted text message to one or many users.
@@ -49,10 +49,10 @@ signed_transaction send_message(const std::string& from,
  * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Messaging
  */
-signed_transaction send_unencrypted_message(const std::string& from,
-                                            const std::vector<string>& to,
-                                            const string& text,
-                                            bool broadcast = false);
+pair<transaction_id_type,signed_transaction> send_unencrypted_message(const std::string& from,
+                                                                      const std::vector<string>& to,
+                                                                      const string& text,
+                                                                      bool broadcast = false);
 
 /**
  * @brief Receives message objects by sender and/or receiver.

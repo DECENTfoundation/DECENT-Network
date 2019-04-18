@@ -1,20 +1,22 @@
 
-signed_transaction wallet_api::send_message(const std::string& from,
+pair<transaction_id_type,signed_transaction> wallet_api::send_message(const std::string& from,
                                             const std::vector<string>& to,
                                             const string& text,
                                             bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->send_message(from, to, text, broadcast);
+   signed_transaction tx = my->send_message(from, to, text, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::send_unencrypted_message(const std::string& from,
+pair<transaction_id_type,signed_transaction> wallet_api::send_unencrypted_message(const std::string& from,
                                                         const std::vector<string>& to,
                                                         const string& text,
                                                         bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->send_unencrypted_message(from, to, text, broadcast);
+   signed_transaction tx = my->send_unencrypted_message(from, to, text, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 vector<message_object> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const

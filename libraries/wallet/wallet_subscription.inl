@@ -1,40 +1,44 @@
 
-signed_transaction wallet_api::subscribe_to_author( const string& from,
-                                                    const string& to,
-                                                    const string& price_amount,
-                                                    const string& price_asset_symbol,
-                                                    bool broadcast/* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::subscribe_to_author(const string& from,
+                                                                             const string& to,
+                                                                             const string& price_amount,
+                                                                             const string& price_asset_symbol,
+                                                                             bool broadcast/* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
+   signed_transaction tx = my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::subscribe_by_author( const string& from,
-                                                    const string& to,
-                                                    bool broadcast/* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::subscribe_by_author(const string& from,
+                                                                             const string& to,
+                                                                             bool broadcast/* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->subscribe_by_author(from, to, broadcast);
+   signed_transaction tx = my->subscribe_by_author(from, to, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::set_subscription( const string& account,
-                                                 bool allow_subscription,
-                                                 uint32_t subscription_period,
-                                                 const string& price_amount,
-                                                 const string& price_asset_symbol,
-                                                 bool broadcast/* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::set_subscription(const string& account,
+                                                                          bool allow_subscription,
+                                                                          uint32_t subscription_period,
+                                                                          const string& price_amount,
+                                                                          const string& price_asset_symbol,
+                                                                          bool broadcast/* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
+   signed_transaction tx = my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::set_automatic_renewal_of_subscription( const string& account_id_or_name,
-                                                          subscription_id_type subscription_id,
-                                                          bool automatic_renewal,
-                                                          bool broadcast/* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::set_automatic_renewal_of_subscription(const string& account_id_or_name,
+                                                                                               subscription_id_type subscription_id,
+                                                                                               bool automatic_renewal,
+                                                                                               bool broadcast/* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
+   signed_transaction tx = my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 vector< subscription_object > wallet_api::list_active_subscriptions_by_consumer( const string& account_id_or_name, const uint32_t count) const

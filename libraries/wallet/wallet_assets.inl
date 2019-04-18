@@ -18,83 +18,90 @@ monitored_asset_options wallet_api::get_monitored_asset_data(const string& asset
    return *asset.monitored_asset_opts;
 }
 
-signed_transaction wallet_api::create_monitored_asset(const string& issuer,
-                                                      const string& symbol,
-                                                      uint8_t precision,
-                                                      const string& description,
-                                                      uint32_t feed_lifetime_sec,
-                                                      uint8_t minimum_feeds,
-                                                      bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::create_monitored_asset(const string& issuer,
+                                                                                const string& symbol,
+                                                                                uint8_t precision,
+                                                                                const string& description,
+                                                                                uint32_t feed_lifetime_sec,
+                                                                                uint8_t minimum_feeds,
+                                                                                bool broadcast)
 
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
+   signed_transaction tx = my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::update_monitored_asset(const string& symbol,
-                                                      const string& description,
-                                                      uint32_t feed_lifetime_sec,
-                                                      uint8_t minimum_feeds,
-                                                      bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::update_monitored_asset(const string& symbol,
+                                                                                const string& description,
+                                                                                uint32_t feed_lifetime_sec,
+                                                                                uint8_t minimum_feeds,
+                                                                                bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
+   signed_transaction tx = my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::create_user_issued_asset(const string& issuer,
-                                                        const string& symbol,
-                                                        uint8_t precision,
-                                                        const string& description,
-                                                        uint64_t max_supply,
-                                                        price core_exchange_rate,
-                                                        bool is_exchangeable,
-                                                        bool is_fixed_max_supply,
-                                                        bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::create_user_issued_asset(const string& issuer,
+                                                                                  const string& symbol,
+                                                                                  uint8_t precision,
+                                                                                  const string& description,
+                                                                                  uint64_t max_supply,
+                                                                                  price core_exchange_rate,
+                                                                                  bool is_exchangeable,
+                                                                                  bool is_fixed_max_supply,
+                                                                                  bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
+   signed_transaction tx = my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::issue_asset(const string& to_account,
-                                           const string& amount,
-                                           const string& symbol,
-                                           const string& memo,
-                                           bool broadcast)
+pair<transaction_id_type,signed_transaction> wallet_api::issue_asset(const string& to_account,
+                                                                     const string& amount,
+                                                                     const string& symbol,
+                                                                     const string& memo,
+                                                                     bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->issue_asset(to_account, amount, symbol, memo, broadcast);
+   signed_transaction tx = my->issue_asset(to_account, amount, symbol, memo, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::update_user_issued_asset(const string& symbol,
-                                                        const string& new_issuer,
-                                                        const string& description,
-                                                        uint64_t max_supply,
-                                                        price core_exchange_rate,
-                                                        bool is_exchangeable,
-                                                        bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::update_user_issued_asset(const string& symbol,
+                                                                                  const string& new_issuer,
+                                                                                  const string& description,
+                                                                                  uint64_t max_supply,
+                                                                                  price core_exchange_rate,
+                                                                                  bool is_exchangeable,
+                                                                                  bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
+   signed_transaction tx = my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::fund_asset_pools(const string& from,
-                                                const string& uia_amount,
-                                                const string& uia_symbol,
-                                                const string& DCT_amount,
-                                                const string& DCT_symbol,
-                                                bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::fund_asset_pools(const string& from,
+                                                                          const string& uia_amount,
+                                                                          const string& uia_symbol,
+                                                                          const string& DCT_amount,
+                                                                          const string& DCT_symbol,
+                                                                          bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
+   signed_transaction tx = my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::reserve_asset(const string& from,
-                                             const string& amount,
-                                             const string& symbol,
-                                             bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::reserve_asset(const string& from,
+                                                                       const string& amount,
+                                                                       const string& symbol,
+                                                                       bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->reserve_asset(from, amount, symbol, broadcast);
+   signed_transaction tx = my->reserve_asset(from, amount, symbol, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 string wallet_api::price_to_dct(const string& amount, const string& asset_symbol_or_id)
@@ -102,23 +109,25 @@ string wallet_api::price_to_dct(const string& amount, const string& asset_symbol
    return my->price_to_dct(amount, asset_symbol_or_id );
 }
 
-signed_transaction wallet_api::claim_fees(const string& uia_amount,
-                                          const string& uia_symbol,
-                                          const string& dct_amount,
-                                          const string& dct_symbol,
-                                          bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::claim_fees(const string& uia_amount,
+                                                                    const string& uia_symbol,
+                                                                    const string& dct_amount,
+                                                                    const string& dct_symbol,
+                                                                    bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
+   signed_transaction tx = my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::publish_asset_feed(const string& publishing_account,
-                                                  const string& symbol,
-                                                  price_feed feed,
-                                                  bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::publish_asset_feed(const string& publishing_account,
+                                                                            const string& symbol,
+                                                                            price_feed feed,
+                                                                            bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
+   signed_transaction tx = my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 multimap<time_point_sec, price_feed> wallet_api::get_feeds_by_miner(const string& account_name_or_id,

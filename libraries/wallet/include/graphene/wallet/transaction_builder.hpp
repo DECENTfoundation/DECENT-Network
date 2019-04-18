@@ -82,7 +82,7 @@ transaction preview_builder_transaction(transaction_handle_type handle);
  * @return the signed transaction
  * @ingroup WalletAPI_TransactionBuilder
  */
-signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
+pair<transaction_id_type,signed_transaction> sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
 
 /**
  * @brief Allows creation of a proposed transaction suitable for miner-account.
@@ -96,10 +96,10 @@ signed_transaction sign_builder_transaction(transaction_handle_type transaction_
  * @return the signed transaction
  * @ingroup WalletAPI_TransactionBuilder
  */
-signed_transaction propose_builder_transaction(transaction_handle_type handle,
-                                               time_point_sec expiration = time_point::now() + fc::minutes(1),
-                                               uint32_t review_period_seconds = 0,
-                                               bool broadcast = true);
+pair<transaction_id_type,signed_transaction> propose_builder_transaction(transaction_handle_type handle,
+                                                                         time_point_sec expiration = time_point::now() + fc::minutes(1),
+                                                                         uint32_t review_period_seconds = 0,
+                                                                         bool broadcast = true);
 
 /**
  * @brief Allows creation of a proposed transaction. Proposed transaction requires approval of multiple accounts
@@ -115,11 +115,11 @@ signed_transaction propose_builder_transaction(transaction_handle_type handle,
  * @return the signed transaction
  * @ingroup WalletAPI_TransactionBuilder
  */
-signed_transaction propose_builder_transaction2(transaction_handle_type handle,
-                                                const string& account_name_or_id,
-                                                time_point_sec expiration = time_point::now() + fc::minutes(1),
-                                                uint32_t review_period_seconds = 0,
-                                                bool broadcast = true);
+pair<transaction_id_type,signed_transaction> propose_builder_transaction2(transaction_handle_type handle,
+                                                                          const string& account_name_or_id,
+                                                                          time_point_sec expiration = time_point::now() + fc::minutes(1),
+                                                                          uint32_t review_period_seconds = 0,
+                                                                          bool broadcast = true);
 
 /**
  * @brief Removes a transaction from transaction builder
@@ -148,7 +148,7 @@ string serialize_transaction(signed_transaction tx) const;
  * @return the signed version of the transaction
  * @ingroup WalletAPI_TransactionBuilder
  */
-signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);
+pair<transaction_id_type,signed_transaction> sign_transaction(signed_transaction tx, bool broadcast = false);
 
 /**
  * @brief Returns an uninitialized object representing a given blockchain operation.

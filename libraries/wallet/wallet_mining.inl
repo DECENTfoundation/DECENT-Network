@@ -9,21 +9,23 @@ miner_object wallet_api::get_miner(const string& owner_account)
    return my->get_miner(owner_account);
 }
 
-signed_transaction wallet_api::create_miner(const string& owner_account,
-                                            const string& url,
-                                            bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::create_miner(const string& owner_account,
+                                                                      const string& url,
+                                                                      bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->create_miner(owner_account, url, broadcast);
+   signed_transaction tx = my->create_miner(owner_account, url, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::update_miner(const string& miner_name,
-                                            const string& url,
-                                            const string& block_signing_key,
-                                            bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::update_miner(const string& miner_name,
+                                                                      const string& url,
+                                                                      const string& block_signing_key,
+                                                                      bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->update_miner(miner_name, url, block_signing_key, broadcast);
+   signed_transaction tx = my->update_miner(miner_name, url, block_signing_key, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( const string& account_name )
@@ -31,38 +33,42 @@ vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( con
    return my->get_vesting_balances( account_name );
 }
 
-signed_transaction wallet_api::withdraw_vesting(const string& miner_name,
-                                                const string& amount,
-                                                const string& asset_symbol,
-                                                bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::withdraw_vesting(const string& miner_name,
+                                                                          const string& amount,
+                                                                          const string& asset_symbol,
+                                                                          bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
+   signed_transaction tx = my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::vote_for_miner(const string& voting_account,
-                                              const string& miner,
-                                              bool approve,
-                                              bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::vote_for_miner(const string& voting_account,
+                                                                        const string& miner,
+                                                                        bool approve,
+                                                                        bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->vote_for_miner(voting_account, miner, approve, broadcast);
+   signed_transaction tx = my->vote_for_miner(voting_account, miner, approve, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::set_voting_proxy(const string& account_to_modify,
-                                                optional<string> voting_account,
-                                                bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::set_voting_proxy(const string& account_to_modify,
+                                                                          optional<string> voting_account,
+                                                                          bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
+   signed_transaction tx = my->set_voting_proxy(account_to_modify, voting_account, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
-signed_transaction wallet_api::set_desired_miner_count(const string& account_to_modify,
-                                                       uint16_t desired_number_of_miners,
-                                                       bool broadcast /* = false */)
+pair<transaction_id_type,signed_transaction> wallet_api::set_desired_miner_count(const string& account_to_modify,
+                                                                                 uint16_t desired_number_of_miners,
+                                                                                 bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   return my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
+   signed_transaction tx = my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
+   return std::make_pair(tx.id(),tx);
 }
 
 vector<miner_voting_info> wallet_api::search_miner_voting(const string& account_id,
