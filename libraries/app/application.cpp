@@ -107,7 +107,7 @@ namespace detail {
          _p2p_network = std::make_shared<net::node>("Graphene Reference Implementation");
 
          _p2p_network->load_configuration(data_dir / "p2p");
-         _p2p_network->set_node_delegate(this);
+         _p2p_network->set_node_delegate(this, _chain_db->get_global_properties().parameters.maximum_block_size);
 
          vector<string> seeds;
          if( _options->count("seed-node") )
@@ -601,12 +601,12 @@ namespace detail {
        * @brief allows the application to validate an item prior to broadcasting to peers.
        *
        * @param sync_mode true if the message was fetched through the sync process, false during normal operation
-       * @returns true if this message caused the blockchain to switch forks, false if it did not
+       * @returns maximum block size (as set in global properties)
        *
        * @throws exception if error validating the item, otherwise the item is safe to broadcast on.
        */
-      virtual bool handle_block(const graphene::net::block_message& blk_msg, bool sync_mode,
-                                std::vector<fc::uint160_t>& contained_transaction_message_ids) override
+      virtual uint32_t handle_block(const graphene::net::block_message& blk_msg, bool sync_mode,
+                                    std::vector<fc::uint160_t>& contained_transaction_message_ids) override
       { try {
 
          auto latency = graphene::utilities::now() - blk_msg.block.timestamp;
@@ -628,7 +628,7 @@ namespace detail {
             // you can help the network code out by throwing a block_older_than_undo_history exception.
             // when the net code sees that, it will stop trying to push blocks from that chain, but
             // leave that peer connected so that they can get sync blocks from us
-            bool result = _chain_db->push_block(blk_msg.block,
+            _chain_db->push_block(blk_msg.block,
                                                 (_is_block_producer | _force_validate) ? database::skip_nothing
                                                                                        : database::skip_transaction_signatures,
                                                 sync_mode);
@@ -648,7 +648,7 @@ namespace detail {
                }
             }
 
-            return result;
+            return _chain_db->get_global_properties().parameters.maximum_block_size;
          } catch ( const graphene::chain::unlinkable_block_exception& e ) {
             // translate to a graphene::net exception
             MONITORING_COUNTER_VALUE(blocks_unhandled)++;
@@ -657,12 +657,6 @@ namespace detail {
          } catch( const fc::exception& e ) {
             elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
             throw;
-         }
-
-         if( !_is_finished_syncing && !sync_mode )
-         {
-            _is_finished_syncing = true;
-            _self->syncing_finished();
          }
       } FC_CAPTURE_AND_RETHROW( (blk_msg)(sync_mode) ) }
 
@@ -1027,8 +1021,6 @@ namespace detail {
       std::shared_ptr<fc::http::websocket_tls_server>  _websocket_tls_server;
 
       std::map<string, std::shared_ptr<abstract_plugin>> _plugins;
-
-      bool _is_finished_syncing = false;
    };
 
 } // namespace detail
@@ -1283,11 +1275,6 @@ optional< api_access_info > application::get_api_access_info( const string& user
 void application::set_api_access_info(const string& username, api_access_info&& permissions)
 {
    my->set_api_access_info(username, std::move(permissions));
-}
-
-bool application::is_finished_syncing() const
-{
-   return my->_is_finished_syncing;
 }
 
 uint64_t application::get_processed_transactions()

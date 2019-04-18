@@ -396,7 +396,7 @@ namespace graphene { namespace net { namespace detail {
 
       bool has_item( const net::item_id& id ) override;
       void handle_message( const message& ) override;
-      bool handle_block( const graphene::net::block_message& block_message, bool sync_mode, std::vector<fc::uint160_t>& contained_transaction_message_ids ) override;
+      uint32_t handle_block( const graphene::net::block_message& block_message, bool sync_mode, std::vector<fc::uint160_t>& contained_transaction_message_ids ) override;
       void handle_transaction( const graphene::net::trx_message& transaction_message ) override;
       std::vector<item_hash_t> get_block_ids(const std::vector<item_hash_t>& blockchain_synopsis,
                                              uint32_t& remaining_item_count,
@@ -435,6 +435,7 @@ namespace graphene { namespace net { namespace detail {
 #ifdef P2P_IN_DEDICATED_THREAD
       std::shared_ptr<fc::thread> _thread;
 #endif // P2P_IN_DEDICATED_THREAD
+      uint32_t _block_size;
       std::unique_ptr<statistics_gathering_node_delegate_wrapper> _delegate;
       fc::sha256           _chain_id;
 
@@ -704,6 +705,7 @@ namespace graphene { namespace net { namespace detail {
 
       void on_connection_closed(peer_connection* originating_peer) override;
 
+      void set_block_size(uint32_t block_size);
       void send_sync_block_to_node_delegate(const graphene::net::block_message& block_message_to_send);
       void process_backlog_of_sync_blocks();
       void trigger_process_backlog_of_sync_blocks();
@@ -743,7 +745,7 @@ namespace graphene { namespace net { namespace detail {
                                const fc::oexception& additional_data = fc::oexception() );
 
       // methods implementing node's public interface
-      void set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls);
+      void set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls, uint32_t block_size);
       void load_configuration( const fc::path& configuration_directory );
       void listen_to_p2p_network();
       void connect_to_p2p_network();
@@ -821,6 +823,7 @@ namespace graphene { namespace net { namespace detail {
 #ifdef P2P_IN_DEDICATED_THREAD
       _thread(std::make_shared<fc::thread>("p2p")),
 #endif // P2P_IN_DEDICATED_THREAD
+      _block_size(0),
       _delegate(nullptr),
       _is_firewalled(firewalled_state::unknown),
       _potential_peer_database_updated(false),
@@ -3062,6 +3065,17 @@ namespace graphene { namespace net { namespace detail {
       schedule_peer_for_deletion(originating_peer_ptr);
     }
 
+    void node_impl::set_block_size(uint32_t block_size)
+    {
+      if (_block_size == block_size)
+        return;
+
+      ilog("Set new max block size: ${c} -> ${n}", ("c", _block_size)("n", block_size));
+      _block_size = block_size;
+      for( peer_connection_ptr handshaking_peer : _handshaking_connections )
+        handshaking_peer->set_block_size(block_size);
+    }
+
     void node_impl::send_sync_block_to_node_delegate(const graphene::net::block_message& block_message_to_send)
     {
       dlog("in send_sync_block_to_node_delegate()");
@@ -3073,7 +3087,7 @@ namespace graphene { namespace net { namespace detail {
       try
       {
         std::vector<fc::uint160_t> contained_transaction_message_ids;
-        _delegate->handle_block(block_message_to_send, true, contained_transaction_message_ids);
+        set_block_size(_delegate->handle_block(block_message_to_send, true, contained_transaction_message_ids));
         ilog("Successfully pushed sync block ${num} (id:${id})",
              ("num", block_message_to_send.block.block_num())
              ("id", block_message_to_send.block_id));
@@ -3391,7 +3405,7 @@ namespace graphene { namespace net { namespace detail {
                       block_message_to_process.block_id) == _most_recent_blocks_accepted.end())
         {
           std::vector<fc::uint160_t> contained_transaction_message_ids;
-          _delegate->handle_block(block_message_to_process, false, contained_transaction_message_ids);
+          set_block_size(_delegate->handle_block(block_message_to_process, false, contained_transaction_message_ids));
           message_validated_time = fc::time_point::now();
           ilog("Successfully pushed block ${num} (id:${id})",
                 ("num", block_message_to_process.block.block_num())
@@ -4234,6 +4248,7 @@ namespace graphene { namespace net { namespace detail {
           if (_node_is_shutting_down)
             return;
           new_peer->connection_initiation_time = fc::time_point::now();
+          new_peer->set_block_size(_block_size);
           _handshaking_connections.insert( new_peer );
           _rate_limiter.add_tcp_socket( &new_peer->get_socket() );
           std::weak_ptr<peer_connection> new_weak_peer(new_peer);
@@ -4407,7 +4422,7 @@ namespace graphene { namespace net { namespace detail {
     }
 
     // methods implementing node's public interface
-    void node_impl::set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls)
+    void node_impl::set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls, uint32_t block_size)
     {
       VERIFY_CORRECT_THREAD();
       _delegate.reset();
@@ -4415,6 +4430,7 @@ namespace graphene { namespace net { namespace detail {
         _delegate.reset(new statistics_gathering_node_delegate_wrapper(del, thread_for_delegate_calls));
       if( _delegate )
         _chain_id = del->get_chain_id();
+      set_block_size(block_size);
     }
 
     void node_impl::load_configuration( const fc::path& configuration_directory )
@@ -4630,6 +4646,7 @@ namespace graphene { namespace net { namespace detail {
       new_peer->get_socket().open();
       new_peer->get_socket().set_reuse_address();
       new_peer->connection_initiation_time = fc::time_point::now();
+      new_peer->set_block_size(_block_size);
       _handshaking_connections.insert(new_peer);
       _rate_limiter.add_tcp_socket(&new_peer->get_socket());
 
@@ -5157,10 +5174,10 @@ namespace graphene { namespace net { namespace detail {
   {
   }
 
-  void node::set_node_delegate( node_delegate* del )
+  void node::set_node_delegate( node_delegate* del, uint32_t block_size )
   {
     fc::thread* delegate_thread = &fc::thread::current();
-    INVOKE_IN_IMPL(set_node_delegate, del, delegate_thread);
+    INVOKE_IN_IMPL(set_node_delegate, del, delegate_thread, block_size);
   }
 
   void node::load_configuration( const fc::path& configuration_directory )
@@ -5473,7 +5490,7 @@ namespace graphene { namespace net { namespace detail {
       INVOKE_AND_COLLECT_STATISTICS(handle_message, message_to_handle);
     }
 
-    bool statistics_gathering_node_delegate_wrapper::handle_block( const graphene::net::block_message& block_message, bool sync_mode, std::vector<fc::uint160_t>& contained_transaction_message_ids)
+    uint32_t statistics_gathering_node_delegate_wrapper::handle_block( const graphene::net::block_message& block_message, bool sync_mode, std::vector<fc::uint160_t>& contained_transaction_message_ids)
     {
       INVOKE_AND_COLLECT_STATISTICS(handle_block, block_message, sync_mode, contained_transaction_message_ids);
     }

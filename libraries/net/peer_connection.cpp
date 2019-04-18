@@ -182,6 +182,12 @@ namespace graphene { namespace net
       return _message_connection.get_socket();
     }
 
+    void peer_connection::set_block_size(uint32_t block_size)
+    {
+      VERIFY_CORRECT_THREAD();
+      _message_connection.set_block_size(block_size);
+    }
+
     void peer_connection::accept_connection()
     {
       VERIFY_CORRECT_THREAD();

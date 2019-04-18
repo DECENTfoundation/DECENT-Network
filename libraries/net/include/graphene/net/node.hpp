@@ -73,12 +73,12 @@ namespace graphene { namespace net {
           *  @brief Called when a new block comes in from the network
           *
           *  @param sync_mode true if the message was fetched through the sync process, false during normal operation
-          *  @returns true if this message caused the blockchain to switch forks, false if it did not
+          *  @returns maximum block size (as set in global properties)
           *
           *  @throws exception if error validating the item, otherwise the item is
           *          safe to broadcast on.
           */
-         virtual bool handle_block( const graphene::net::block_message& blk_msg, bool sync_mode, 
+         virtual uint32_t handle_block( const graphene::net::block_message& blk_msg, bool sync_mode, 
                                     std::vector<fc::uint160_t>& contained_transaction_message_ids ) = 0;
          
          /**
@@ -201,7 +201,7 @@ namespace graphene { namespace net {
 
         void close();
 
-        void      set_node_delegate( node_delegate* del );
+        void      set_node_delegate( node_delegate* del, uint32_t block_size );
 
         void      load_configuration( const fc::path& configuration_directory );
 
