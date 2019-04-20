@@ -31,7 +31,7 @@ RUN . /etc/os-release && \
     libcurl4-openssl-dev \
     dpkg-sig \
     ca-certificates && \
-    if [ "$VERSION_ID" \> "18.10" ]; then apt-get install -y --no-install-recommends zlib1g-dev nlohmann-json3-dev; fi && \
+    if [ "$VERSION_ID" \> "18.10" ]; then apt-get install -y --no-install-recommends zlib1g-dev; fi && \
     apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # prepare directories
@@ -55,15 +55,13 @@ RUN . /etc/os-release && \
         cd .. && \
         rm -rf boost_1_65_1* cmake-3.13.4*; \
     fi && \
-    if [ "$VERSION_ID" \< "19.04" ]; then \
-        wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz && \
-        tar xvf v3.5.0.tar.gz && \
-        cd json-3.5.0 && \
-        cmake . && \
-        make install && \
-        cd .. && \
-        rm -rf json-3.5.0 v3.5.0.tar.gz; \
-    fi && \
+    wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz && \
+    tar xvf v3.5.0.tar.gz && \
+    cd json-3.5.0 && \
+    cmake . && \
+    make install && \
+    cd .. && \
+    rm -rf json-3.5.0 v3.5.0.tar.gz && \
     mkdir packages
 
 # PBC
