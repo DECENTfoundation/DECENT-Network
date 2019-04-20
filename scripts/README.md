@@ -59,7 +59,7 @@ Because build is specific for each platform, there is a helper script to make li
 
 > Usage: ./build.sh base_image image_version dcore_version [git_revision] [packages_dir]
 
-### Ubuntu (latest, 18.04, 16.04)
+### Ubuntu (latest, 19.04, 18.04, 16.04)
 
 To create deb packages and OS build image:
 
@@ -83,7 +83,7 @@ To create deb packages and OS build image:
     # dcore_1.3.3-debian9_amd64.deb
     # dcore-gui_1.3.3-debian9_amd64.deb
 
-### Fedora (latest, 29, 28)
+### Fedora (latest, 30, 29)
 
 To create rpm packages and OS build image:
 

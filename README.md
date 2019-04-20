@@ -8,10 +8,10 @@ Building DCore
 
 ### Installing prerequisites in Linux
 
-For Ubuntu 18.04 LTS, execute in console:
+For Ubuntu 19.04 and 18.04 LTS, execute in console:
 
     sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev libboost-all-dev
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     . /etc/os-release
     export ARCH=`dpkg --print-architecture`
     wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
@@ -38,7 +38,7 @@ For Debian 9, execute in console:
     sudo dpkg -i /tmp/libpbc*
     mkdir ~/dev
 
-For Fedora 28 or later, execute in console:
+For Fedora 29 or later, execute in console:
 
     sudo dnf clean metadata
     sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel json-devel boost-devel boost-static
@@ -73,7 +73,7 @@ For Fedora 28 or later, execute in console:
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
 
-> Note for Ubuntu 16.04/18.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
+> Note for Ubuntu 19.04, 18.04/16.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build JSON 3.5.0
      wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz
