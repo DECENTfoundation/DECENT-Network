@@ -10,42 +10,36 @@ Building DCore
 
 For Ubuntu 19.04 and 18.04 LTS, execute in console:
 
+    sudo apt-get install apt-transport-https curl
+    curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
+    . /etc/os-release && echo "deb https://dl.bintray.com/decentfoundation/ubuntu $VERSION_CODENAME libpbc" | sudo tee -a /etc/apt/sources.list
     sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
-    . /etc/os-release
-    export ARCH=`dpkg --print-architecture`
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
-    sudo dpkg -i /tmp/libpbc*
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     mkdir ~/dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
+    sudo apt-get install apt-transport-https curl
+    curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
+    . /etc/os-release && echo "deb https://dl.bintray.com/decentfoundation/ubuntu $VERSION_CODENAME libpbc" | sudo tee -a /etc/apt/sources.list
     sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev
-    . /etc/os-release
-    export ARCH=`dpkg --print-architecture`
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
-    sudo dpkg -i /tmp/libpbc*
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev
     mkdir ~/dev
 
 For Debian 9, execute in console:
 
+    sudo apt-get install apt-transport-https curl
+    curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
+    echo "deb https://dl.bintray.com/decentfoundation/debian stretch libpbc" | sudo tee -a /etc/apt/sources.list
     sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make g++ flex bison doxygen unzip wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
-    . /etc/os-release
-    export ARCH=`dpkg --print-architecture`
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-dev_0.5.14-${ID}${VERSION_ID}_${ARCH}.deb
-    sudo dpkg -i /tmp/libpbc*
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
     mkdir ~/dev
 
 For Fedora 29 or later, execute in console:
 
-    sudo dnf clean metadata
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ flex bison doxygen unzip wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel gmp-devel openssl-devel libcurl-devel json-devel boost-devel boost-static
-    export FEDORA=`rpm -E "%{fedora}"`
-    export ARCH=`rpm -E "%{_arch}"`
-    wget -nv -P /tmp https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-0.5.14-1.fc${FEDORA}.${ARCH}.rpm https://github.com/DECENTfoundation/pbc/releases/download/0.5.14/libpbc-devel-0.5.14-1.fc${FEDORA}.${ARCH}.rpm
-    sudo rpm -i /tmp/libpbc*
+    sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
+    sudo curl https://docs.decent.ch/assets/bintray-decentfoundation.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel boost-devel boost-static
     mkdir ~/dev
 
 > Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
