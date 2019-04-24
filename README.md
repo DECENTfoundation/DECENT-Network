@@ -165,7 +165,7 @@ You can use any path instead of `C:\Projects` in the steps above.
 Building DCore in Docker
 -------------------------
 
-You can also build Docker image which will run as DCore network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [Docker](scripts/Docker/README.md) directory.
+You can also build Docker image which will run as DCore network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [Docker](https://github.com/DECENTfoundation/DCore-Docker/blob/master/README.md) repository.
 
 Starting DCore
 ---------------
