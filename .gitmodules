@@ -8,3 +8,7 @@
 	branch = master
 	path = scripts/MacOS
 	url = https://github.com/DECENTfoundation/homebrew-DCore.git
+[submodule "scripts/Docker"]
+	branch = master
+	path = scripts/Docker
+	url = https://github.com/DECENTfoundation/DCore-Docker
