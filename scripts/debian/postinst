@@ -1,4 +1,0 @@
-#!/bin/sh
-if [ "$(pidof systemd)" ]; then
-   systemctl preset DCore &>/dev/null
-fi
