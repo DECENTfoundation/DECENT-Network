@@ -1,14 +1,34 @@
-language: cpp
+dist: xenial
 
-sudo: false
+sudo: required
+
+language: cpp
 
 matrix:
   include:
+    - os: linux
+      compiler: gcc
+      language: cpp
+
     - os: osx
       osx_image: xcode9.4
+      compiler: clang
+      language: cpp
 
     - os: osx
       osx_image: xcode10.2
+      compiler: clang
+      language: cpp
+
+addons:
+  apt:
+    packages:
+      - doxygen
+      - qt5-default
+      - qttools5-dev
+      - qttools5-dev-tools
+      - libcrypto++-dev
+      - libcurl4-openssl-dev
 
 cache:
   timeout: 300
@@ -16,16 +36,19 @@ cache:
     - /usr/local/Cellar/cryptopp
 
 before_install:
-  - brew tap nlohmann/json
-  - brew tap decentfoundation/DCore
-  - test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || rmdir /usr/local/Cellar/cryptopp || brew link cryptopp || true
-  - test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap nlohmann/json && brew tap decentfoundation/DCore; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || rmdir /usr/local/Cellar/cryptopp || brew link cryptopp || true; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update && sudo apt-get install -y libpbc-dev; fi
 
 script:
-  - brew install --build-bottle --verbose --HEAD DCore
-  - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
-  - scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M")
-  - pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install --build-bottle --verbose --HEAD DCore; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M"); fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DCMAKE_BUILD_TYPE=Release . && make -j$(nproc); fi
 
 deploy:
   skip_cleanup: true
@@ -36,3 +59,4 @@ deploy:
     secure: W1hzW/MMczcvNxTeuMd021y1Gxg4yCuq7mqryyS7dbSbWfdbfQmLQJHvg1wqY7sES37XHTDSY3J/Y7IuKnY4pWX40ERQpkGZYqJFf1dx43iw6ETSL8Fb81rZVi+ykxZ4UcjZ6LGhzRMnY2HRlC9i32o/J742StHi6HHpVf3fsxz5f0pCElp18KrC72S05FIJ4dKT0whY4zTLG6T+laYDyB1F2EGjLC1mCMp7kJQoT6WlVjWy+N3+CxIjWKFP7xfO1nf7MveXYBwOh7rATWc/h44Lu9q8wHXl3CeUOXbuwf2N7AW19Zr5ifcyPx1/ooqjb6eR/FH6ENUxPhkRaGHLukLzsp+w97VgEpgeY64J2XqJdBoD2GUA4qH2TjNUiZGxZfxfrEMqv/xkeR4pTTGd0brWUfxwjoYyZewYYWwmZqwR0Cl3/WGm2DCI0WGM39LFGT1Dmk8JbfFBdTZNcJnoDXAxx9GoY6GURaE7CS0p7+xaAGewioZlvc76VO/5sCg/5GnyQbKqknQBekrbKBiMjDGKY5T94atGa8XQub4fS1HhzVvjKp9Sxj/BM7IVEKLghc0SWVK9iE0mgpspf9/wYWIyfaCBw06x3T9la3D1p/nI9EU9oOh6SPomyGAT43+syVqiVNo2XiUmW7W93KeZeM9FOwLtRDVuI2+BfnZILOQ=
   on:
     branch: develop
+    condition: "$TRAVIS_OS_NAME == 'osx'"
