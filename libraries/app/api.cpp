@@ -451,86 +451,68 @@ namespace graphene { namespace app {
    {
    }
 
+   template<typename ID, typename COMP>
+   void find_message_objects(vector<message_object>& result, const ID& ids, const std::set<graphene::db::object_id_type>& objs, uint32_t max_count, const COMP& cmp)
+   {
+      for (const object_id_type& item : objs) {
+         if (max_count == 0)
+            return;
+         auto msg_itr = ids.find(item);
+         if (msg_itr != ids.end()) {
+            const message_object& msg_obj = *msg_itr;
+            if (cmp(msg_obj.sender)) {
+               result.emplace_back(msg_obj);
+               --max_count;
+            }
+         }
+      }
+   }
+
    vector<message_object> messaging_api::get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
    {
       FC_ASSERT(sender.valid() || receiver.valid(), "at least one of the accounts needs to be specified");
       FC_ASSERT(_app.chain_database());
       const auto& db = *_app.chain_database();
-      vector<message_object> result;
+      const auto& idx = db.get_index_type<message_index>();
 
+      vector<message_object> result;
+      result.reserve(max_count);
       if (receiver) {
          try {
             (*receiver)(db);
          }
          FC_CAPTURE_AND_RETHROW( (receiver) );
 
-         const auto& idx = db.get_index_type<message_index>();
-         const auto& aidx = dynamic_cast<const graphene::db::primary_index<message_index>&>(idx);
-         const auto& refs = aidx.get_secondary_index<graphene::chain::message_receiver_index>();
+         const auto& ids = idx.indices().get<graphene::db::by_id>();
+         const auto& midx = dynamic_cast<const graphene::db::primary_index<message_index>&>(idx);
+         const auto& refs = midx.get_secondary_index<graphene::chain::message_receiver_index>();
          auto itr = refs.message_to_receiver_memberships.find(*receiver);
 
          if (itr != refs.message_to_receiver_memberships.end())
          {
             result.reserve(itr->second.size());
-            size_t count = itr->second.size();
-            size_t counter = 0;
             if (sender) {
                try {
                   (*sender)(db);
                }
                FC_CAPTURE_AND_RETHROW( (sender) );
 
-               for (const object_id_type& item : itr->second) {
-                  if (result.size() >= max_count)
-                     break;
-                  auto msg_itr = db.get_index_type<message_index>().indices().get<graphene::db::by_id>().find(item);
-                  if (msg_itr != db.get_index_type<message_index>().indices().get<graphene::db::by_id>().end()) {
-                     message_object o = *msg_itr;
-                     if (count - counter <= max_count && (*msg_itr).sender == *sender)
-                       result.emplace_back(o);
-                     counter++;
-                  }
-               }
+               find_message_objects(result, ids, itr->second, max_count, [&](const account_id_type& s) { return s == *sender; });
             }
-            else
-            {
-               for (const object_id_type& item : itr->second) {
-                  if (result.size() >= max_count)
-                     break;
-                  auto msg_itr = db.get_index_type<message_index>().indices().get<graphene::db::by_id>().find(item);
-                  if (msg_itr != db.get_index_type<message_index>().indices().get<graphene::db::by_id>().end()) {
-                     message_object o = *msg_itr;
-                     if (count - counter <= max_count)
-                       result.emplace_back(o);
-                     counter++;
-                  }
-               }
+            else {
+               find_message_objects(result, ids, itr->second, max_count, [](const account_id_type&) { return true; });
             }
          }
       }
-      else
-      if(sender) {
+      else if (sender) {
          try {
             (*sender)(db);
          }
          FC_CAPTURE_AND_RETHROW( (sender) );
 
-         const auto& range = db.get_index_type<message_index>().indices().get<by_sender>().equal_range(*sender);
-         const auto& index_by_sender = db.get_index_type<message_index>().indices().get<by_sender>();
-         auto itr = index_by_sender.lower_bound(*sender);
-         itr = range.first;
-
-         size_t count = static_cast<size_t>(distance(range.first, range.second));
-         if (count) {
-            result.reserve(count);
-            size_t counter = 0;
-
-            while (itr != range.second && result.size() < max_count) {
-              if (count - counter <= max_count)
-                 result.emplace_back(*itr);
-              itr++;
-              counter++;
-            }
+         auto range = idx.indices().get<by_sender>().equal_range(*sender);
+         while (range.first != range.second && max_count-- > 0) {
+            result.emplace_back(*range.first++);
          }
       }
 
