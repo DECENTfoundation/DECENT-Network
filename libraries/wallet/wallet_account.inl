@@ -80,14 +80,14 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
    return result;
 }
 
-vector<balance_operation_detail> wallet_api::search_account_balance_history(const string& account_name,
-                                                                            const flat_set<string>& assets_list,
-                                                                            const string& partner_account,
-                                                                            uint32_t from_block, uint32_t to_block,
-                                                                            uint32_t start_offset,
-                                                                            int limit) const
+vector<balance_change_result_detail> wallet_api::search_account_balance_history(const string& account_name,
+                                                                                const flat_set<string>& assets_list,
+                                                                                const string& partner_account,
+                                                                                uint32_t from_block, uint32_t to_block,
+                                                                                uint32_t start_offset,
+                                                                                int limit) const
 {
-    vector<balance_operation_detail> result;
+    vector<balance_change_result_detail> result;
     auto account_id = get_account(account_name).get_id();
 
     flat_set<asset_id_type> asset_id_list;
@@ -105,7 +105,7 @@ vector<balance_operation_detail> wallet_api::search_account_balance_history(cons
     vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
     result.reserve( current.size() );
     for(const auto& item : current) {
-       balance_operation_detail info;
+       balance_change_result_detail info;
        info.hist_object = item.hist_object;
        info.balance     = item.balance;
        info.fee         = item.fee;
@@ -121,18 +121,18 @@ vector<balance_operation_detail> wallet_api::search_account_balance_history(cons
     return result;
 }
 
-fc::optional<balance_operation_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
-                                                                                       operation_history_id_type operation_history_id)
+fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
+                                                                                           operation_history_id_type operation_history_id)
 {
    auto account_id = get_account(account_name).get_id();
 
    fc::optional<balance_change_result> result;
    result = my->_remote_hist->get_account_balance_for_transaction(account_id, operation_history_id);
    if (!result) {
-      return fc::optional<balance_operation_detail>();
+      return fc::optional<balance_change_result_detail>();
    }
 
-   balance_operation_detail info;
+   balance_change_result_detail info;
    info.hist_object = result->hist_object;
    info.balance     = result->balance;
    info.fee         = result->fee;

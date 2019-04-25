@@ -128,7 +128,7 @@ vector<operation_detail>  get_relative_account_history(const string& name,
  * @return a list of balance operation history objects
  * @ingroup WalletAPI_Account
  */
-vector<balance_operation_detail>  search_account_balance_history(const string& account_name,
+vector<balance_change_result_detail>  search_account_balance_history(const string& account_name,
                                                                  const flat_set<string>& assets_list,
                                                                  const string& partner_account,
                                                                  uint32_t from_block, uint32_t to_block,
@@ -139,10 +139,10 @@ vector<balance_operation_detail>  search_account_balance_history(const string& a
  * @brief Returns the most recent balance operations on the named account.
  * @param account_name the name or id of the account
  * @param operation_history_id the operation_history_id to search for
- * @return returns balance_operation_detail or empty when not found
+ * @return returns balance_change_result_detail or empty when not found
  * @ingroup WalletAPI_Account
  */
-fc::optional<balance_operation_detail> get_account_balance_for_transaction(const string& account_name,
+fc::optional<balance_change_result_detail> get_account_balance_for_transaction(const string& account_name,
                                                                            operation_history_id_type operation_history_id);
 
 /**
