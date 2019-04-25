@@ -14,6 +14,11 @@ before_install:
   - brew update
   - brew tap decentfoundation/DCore
 
+cache:
+  directories:
+    /usr/local/Cellar
+    /usr/local/opt
+
 script:
   - brew install --build-bottle --verbose --HEAD DCore
   - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
