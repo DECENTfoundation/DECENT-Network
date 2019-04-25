@@ -10,23 +10,36 @@ matrix:
     - os: osx
       osx_image: xcode10.2
 
-before_install:
-  - brew update
-  - brew tap decentfoundation/DCore
+before_cache:
+  - brew cleanup
 
 cache:
-  timeout: 600
+  timeout: 300
   directories:
-    /usr/local/Cellar
-    /usr/local/opt
+    /usr/local/Cellar/boost
+    /usr/local/Cellar/cryptopp
+    /usr/local/Cellar/nlohmann_json
+    /usr/local/Cellar/openssl
+    /usr/local/Cellar/pbc
+    /usr/local/Cellar/qt
+    /usr/local/Cellar/readline
+
+before_install:
+  - brew tap nlohmann/json
+  - brew tap decentfoundation/DCore
+  - test -L /usr/local/opt/boost || test ! -d /usr/local/Cellar/boost || brew link boost || true
+  - test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true
+  - test -L /usr/local/opt/nlohmann_json || test ! -d /usr/local/Cellar/nlohmann_json || brew link nlohmann_json || true
+  - test -L /usr/local/opt/openssl || test ! -d /usr/local/Cellar/openssl || brew link openssl || true
+  - test -L /usr/local/opt/pbc || test ! -d /usr/local/Cellar/pbc || brew link pbc || true
+  - test -L /usr/local/opt/qt || test ! -d /usr/local/Cellar/qt || brew link qt || true
+  - test -L /usr/local/opt/readline || test ! -d /usr/local/Cellar/readline || brew link readline || true
 
 script:
   - brew install --build-bottle --verbose --HEAD DCore
   - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
   - scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M")
   - pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg
-  - brew uninstall DCore
-  - brew cleanup
 
 deploy:
   skip_cleanup: true
