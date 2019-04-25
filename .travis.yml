@@ -10,30 +10,16 @@ matrix:
     - os: osx
       osx_image: xcode10.2
 
-before_cache:
-  - brew cleanup
-
 cache:
   timeout: 300
   directories:
-    /usr/local/Cellar/boost
-    /usr/local/Cellar/cryptopp
-    /usr/local/Cellar/nlohmann_json
-    /usr/local/Cellar/openssl
-    /usr/local/Cellar/pbc
-    /usr/local/Cellar/qt
-    /usr/local/Cellar/readline
+    - /usr/local/Cellar/cryptopp
 
 before_install:
   - brew tap nlohmann/json
   - brew tap decentfoundation/DCore
-  - test -L /usr/local/opt/boost || test ! -d /usr/local/Cellar/boost || brew link boost || true
-  - test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true
-  - test -L /usr/local/opt/nlohmann_json || test ! -d /usr/local/Cellar/nlohmann_json || brew link nlohmann_json || true
-  - test -L /usr/local/opt/openssl || test ! -d /usr/local/Cellar/openssl || brew link openssl || true
-  - test -L /usr/local/opt/pbc || test ! -d /usr/local/Cellar/pbc || brew link pbc || true
-  - test -L /usr/local/opt/qt || test ! -d /usr/local/Cellar/qt || brew link qt || true
-  - test -L /usr/local/opt/readline || test ! -d /usr/local/Cellar/readline || brew link readline || true
+  - test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || rmdir /usr/local/Cellar/cryptopp || brew link cryptopp || true
+  - test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true
 
 script:
   - brew install --build-bottle --verbose --HEAD DCore
