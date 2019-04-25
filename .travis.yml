@@ -15,6 +15,7 @@ before_install:
   - brew tap decentfoundation/DCore
 
 cache:
+  timeout: 600
   directories:
     /usr/local/Cellar
     /usr/local/opt
