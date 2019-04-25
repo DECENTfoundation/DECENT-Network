@@ -12,7 +12,7 @@ install:
 
     bootstrap-vcpkg.bat
 
-    vcpkg --triplet x64-windows-static install cryptopp curl pbc
+    vcpkg --triplet x64-windows-static install cryptopp curl pbc nlohmann-json
 
     cd %APPVEYOR_BUILD_FOLDER%
 
@@ -28,4 +28,4 @@ build_script:
 
     set QT_CMAKE=C:\Qt\5.12\msvc2017_64\lib\cmake
 
-    cmake -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win64 -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" .
+    cmake -DCMAKE_INSTALL_PREFIX=../DCore -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win64 -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" --build . --target install

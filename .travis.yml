@@ -25,6 +25,8 @@ script:
   - brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew DCore
   - scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M")
   - pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg
+  - brew uninstall DCore
+  - brew cleanup
 
 deploy:
   skip_cleanup: true
