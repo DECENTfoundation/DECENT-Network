@@ -312,6 +312,9 @@ namespace graphene { namespace app {
       bool account_history_query_required = true;
       result.reserve(limit);
 
+      FC_ASSERT( _app.chain_database() );
+      const auto& db = *_app.chain_database();
+
       try
       {
          do
@@ -334,6 +337,8 @@ namespace graphene { namespace app {
                   balance_change_result info;
                   info.hist_object = o;
                   graphene::app::operation_get_balance_history(o.op, account_id, info.balance, info.fee);
+                  info.timestamp = db.fetch_block_by_number(o.block_num)->timestamp;
+                  info.transaction_id = db.fetch_block_by_number(o.block_num)->transactions[o.trx_in_block].id();
 
                   if (info.balance.asset0.amount != 0ll || info.balance.asset1.amount != 0ll || info.fee.amount != 0ll)
                   {

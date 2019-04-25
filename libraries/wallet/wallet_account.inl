@@ -109,6 +109,8 @@ vector<balance_operation_detail> wallet_api::search_account_balance_history(cons
        info.hist_object = item.hist_object;
        info.balance     = item.balance;
        info.fee         = item.fee;
+       info.timestamp   = item.timestamp;
+       info.transaction_id = item.transaction_id;
 
        std::stringstream ss;
        info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));

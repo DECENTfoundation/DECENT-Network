@@ -64,6 +64,8 @@ namespace graphene { namespace app {
        operation_history_object hist_object;
        asset_array balance;
        asset fee;
+       fc::time_point_sec timestamp;
+       transaction_id_type transaction_id;
     };
 
    /**
@@ -510,7 +512,7 @@ FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
 //FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
-FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee) )
+FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee)(timestamp)(transaction_id) )
 
 
 FC_API(graphene::app::history_api,

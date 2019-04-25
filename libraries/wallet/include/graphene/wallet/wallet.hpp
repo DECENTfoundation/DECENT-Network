@@ -257,6 +257,8 @@ namespace graphene { namespace wallet {
           operation_history_object hist_object;
           asset_array balance;
           asset fee;
+          fc::time_point_sec timestamp;
+          transaction_id_type transaction_id;
       };
 
       struct extended_asset : public asset
@@ -511,7 +513,7 @@ FC_REFLECT( graphene::wallet::content_download_status,
 
 FC_REFLECT( graphene::wallet::operation_detail, (memo)(description)(op) )
 
-FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance)(fee) )
+FC_REFLECT( graphene::wallet::balance_operation_detail, (memo)(description)(hist_object)(balance)(fee)(timestamp)(transaction_id) )
 
 FC_REFLECT_DERIVED( graphene::wallet::buying_object_ex,
                     (graphene::chain::buying_object)
