@@ -10,27 +10,27 @@ Building DCore
 
 For Ubuntu 19.04 and 18.04 LTS, execute in console:
 
-    sudo apt-get install apt-transport-https curl
+    sudo apt-get install apt-transport-https curl lsb-release
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    . /etc/os-release && echo "deb https://dl.bintray.com/decentfoundation/ubuntu $VERSION_CODENAME libpbc" | sudo tee -a /etc/apt/sources.list
+    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
     sudo apt-get update
     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     mkdir ~/dev
 
 For Ubuntu 16.04 LTS, execute in console:
 
-    sudo apt-get install apt-transport-https curl
+    sudo apt-get install apt-transport-https curl lsb-release
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    . /etc/os-release && echo "deb https://dl.bintray.com/decentfoundation/ubuntu $VERSION_CODENAME libpbc" | sudo tee -a /etc/apt/sources.list
+    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
     sudo apt-get update
     sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev
     mkdir ~/dev
 
 For Debian 9, execute in console:
 
-    sudo apt-get install apt-transport-https curl
+    sudo apt-get install apt-transport-https curl lsb-release
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    echo "deb https://dl.bintray.com/decentfoundation/debian stretch libpbc" | sudo tee -a /etc/apt/sources.list
+    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/debian $(lsb_release -cs) libpbc"
     sudo apt-get update
     sudo apt-get install build-essential autotools-dev automake autoconf libtool make g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
     mkdir ~/dev
@@ -46,7 +46,7 @@ For Fedora 29 or later, execute in console:
 
     # Download and build Boost 1.65.1
      wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
-     tar xvf boost_1_65_1.tar.gz
+     tar xf boost_1_65_1.tar.gz
      mkdir boost
      cd boost_1_65_1
      export BOOST_ROOT=$(realpath ../boost)
@@ -57,7 +57,7 @@ For Fedora 29 or later, execute in console:
 
     # Download and build CMake 3.13.4
      wget -nv https://cmake.org/files/v3.13/cmake-3.13.4.tar.gz
-     tar xvf cmake-3.13.4.tar.gz
+     tar xf cmake-3.13.4.tar.gz
      mkdir cmake
      cd cmake-3.13.4
      export CMAKE_ROOT=$(realpath ../cmake)
@@ -69,14 +69,14 @@ For Fedora 29 or later, execute in console:
 
 > Note for Ubuntu 19.04, 18.04/16.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
-    # Download and build JSON 3.5.0
-     wget -nv https://github.com/nlohmann/json/archive/v3.5.0.tar.gz
-     tar xvf v3.5.0.tar.gz
-     cd json-3.5.0
+    # Download and build JSON 3.6.1
+     wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz
+     tar xf v3.6.1.tar.gz
+     cd json-3.6.1
      cmake .
      sudo make install
      cd ..
-     rm -rf json-3.5.0 v3.5.0.tar.gz
+     rm -rf json-3.6.1 v3.6.1.tar.gz
 
 > At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
