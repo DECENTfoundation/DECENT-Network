@@ -4,6 +4,7 @@ if( NOT BUILD_GUI )
     return()
 endif()
 
+find_package(nlohmann_json REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5LinguistTools REQUIRED)
 
@@ -99,6 +100,7 @@ target_link_libraries(DECENT PRIVATE
                       decent_messaging
                       decent_seeding
                       graphene_miner
+                      nlohmann_json::nlohmann_json
                       Qt5::Widgets
                       ${CMAKE_DL_LIBS}
                       ${PLATFORM_SPECIFIC_LIBS}
