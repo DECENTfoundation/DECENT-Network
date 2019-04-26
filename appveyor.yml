@@ -2,8 +2,6 @@ version: 1.{build}
 
 image: Visual Studio 2017
 
-clone_depth: 1
-
 environment:
   BOOST: C:\Libraries\boost_1_69_0
   QT_CMAKE: C:\Qt\5.12\msvc2017_64\lib\cmake
@@ -35,3 +33,9 @@ build_script:
 artifacts:
 - path: DCore\bin\*
   name: DCore
+
+notifications:
+- provider: Email
+  to:
+  - '{{commitAuthorEmail}}'
+  on_build_success: false
