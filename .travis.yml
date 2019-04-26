@@ -43,11 +43,11 @@ addons:
       - libcurl4-openssl-dev
 
 before_cache:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cleanup; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cleanup && rm -rf $HOME/Library/Caches/Homebrew/DCore--git; fi
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap nlohmann/json && brew tap decentfoundation/DCore; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || rmdir /usr/local/Cellar/cryptopp || brew link cryptopp || true; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"; fi

@@ -16,7 +16,7 @@ install:
 
     bootstrap-vcpkg.bat
 
-    vcpkg --triplet x64-windows-static install cryptopp curl pbc nlohmann-json
+    vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc nlohmann-json
 
     cd %APPVEYOR_BUILD_FOLDER%
 
@@ -28,7 +28,7 @@ build_script:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DOPENSSL_ROOT_DIR=C:\OpenSSL-Win64 -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G Ninja .
+    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G Ninja .
 
     ninja -j2 install
 
