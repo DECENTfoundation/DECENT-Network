@@ -673,7 +673,7 @@ namespace decent { namespace package {
             FC_THROW("package handle was not prepared for creation");
         }
 
-        _create_task->stop(true);
+        _create_task->stop();
 
         _current_task = _create_task;
         _current_task->start(block);
@@ -705,7 +705,7 @@ namespace decent { namespace package {
             }
         }
 
-        _download_task->stop(true);
+        _download_task->stop();
 
         _current_task = _download_task;
         _current_task->start(block);
@@ -804,7 +804,7 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         if (_current_task) {
-            _current_task->stop(true);
+            _current_task->stop();
         }
     }
 

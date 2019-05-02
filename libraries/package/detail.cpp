@@ -274,11 +274,11 @@ namespace decent { namespace package { namespace detail {
     }
 
     PackageTask::~PackageTask() {
-        stop(true);
+        stop();
     }
 
     void PackageTask::start(const bool block) {
-        stop(true);
+        stop();
         if(is_base_class()){
             elog("calling packagetask::start from base class!!!");
             std::abort();
@@ -313,11 +313,12 @@ namespace decent { namespace package { namespace detail {
         return _running;
     }
 
-    void PackageTask::stop(const bool block) {
+    void PackageTask::stop() {
         _stop_requested = true;
+        wait();
 
-        if (block) {
-            wait();
+        if (_thread) {
+            _thread.reset();
         }
     }
 
@@ -327,8 +328,7 @@ namespace decent { namespace package { namespace detail {
 
     void PackageTask::wait() {
         while (is_running()) {
-            // TODO: improve
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::yield();
         }
     }
 

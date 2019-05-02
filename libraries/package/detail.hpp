@@ -47,7 +47,7 @@ namespace detail {
 
         virtual void start(const bool block = false);
         bool is_running() const;
-        void stop(const bool block = false);
+        void stop();
         bool is_stop_requested() const;
         void wait();
         std::exception_ptr consume_last_error();
