@@ -51,6 +51,7 @@ namespace graphene { namespace net {
        void bind(const fc::ip::endpoint& local_endpoint);
        void connect_to(const fc::ip::endpoint& remote_endpoint);
 
+       void set_block_size(uint32_t block_size);
        void send_message(const message& message_to_send);
        void close_connection();
        void destroy_connection();

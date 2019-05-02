@@ -279,6 +279,7 @@ namespace graphene { namespace net
 
       fc::tcp_socket& get_socket();
       void accept_connection();
+      void set_block_size(uint32_t block_size);
       void connect_to(const fc::ip::endpoint& remote_endpoint, fc::optional<fc::ip::endpoint> local_endpoint = fc::optional<fc::ip::endpoint>());
 
       void on_message(message_oriented_connection* originating_connection, const message& received_message) override;
