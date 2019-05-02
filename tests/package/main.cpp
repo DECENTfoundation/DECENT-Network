@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 #include <boost/test/included/unit_test.hpp>
 #include <fc/filesystem.hpp>
 

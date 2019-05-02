@@ -5,8 +5,6 @@
 #include <decent/encrypt/custodyutils.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
-#include <fc/thread/thread.hpp>
-#include <fc/thread/mutex.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/network/url.hpp>
@@ -21,7 +19,6 @@
 #include <mutex>
 #include <set>
 #include <string>
-#include <thread>
 
 
 
@@ -345,17 +342,12 @@ namespace package {
         TransferEngineInterface& operator=(const TransferEngineInterface&)  = delete;
         TransferEngineInterface& operator=(TransferEngineInterface&&)       = delete;
 
-        TransferEngineInterface() {}
-        virtual ~TransferEngineInterface() {}
+        TransferEngineInterface() = default;
+        virtual ~TransferEngineInterface() = default;
 
-    public:
         virtual std::shared_ptr<detail::PackageTask> create_download_task(PackageInfo& package) = 0;
         virtual std::shared_ptr<detail::PackageTask> create_start_seeding_task(PackageInfo& package) = 0;
         virtual std::shared_ptr<detail::PackageTask> create_stop_seeding_task(PackageInfo& package) = 0;
-
-    protected:
-        fc::mutex   _mutex;
-        fc::thread  _thread;
     };
 
 /**
