@@ -34,19 +34,27 @@ namespace decent {
        else {
           out <<   "filename=logs/decentd.log\n";
        }
-       out << "# filename can be absolute or relative to this config file\n"
-              "rotation_interval=86400\n"    //One day
+       out << "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"p2p\" that writes messages to p2p.log\n"
               "[log.file_appender.p2p]\n";
        if (is_daemon) {
-          out <<   "filename=p2p/p2p.log\n";
+          out <<   "filename=p2p.log\n";
        }
        else {
-          out <<   "filename=logs/p2p/p2p.log\n";
+          out <<   "filename=logs/p2p.log\n";
        }
-       out << "# filename can be absolute or relative to this config file\n"
-              "rotation_interval=86400\n"    //One day
+       out << "rotation_interval=86400\n"    //One day
+              "rotation_limit=864000\n\n"    //10 days
+              "# declare an appender named \"rpc\" that writes messages to rpc.log\n"
+              "[log.file_appender.rpc]\n";
+       if (is_daemon) {
+          out <<   "filename=rpc.log\n";
+       }
+       else {
+          out <<   "filename=logs/rpc.log\n";
+       }
+       out << "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# declare an appender named \"transfer\" that writes messages to transfer.log\n"
               "[log.file_appender.transfer]\n";
@@ -56,8 +64,7 @@ namespace decent {
        else {
           out <<   "filename=logs/transfer.log\n";
        }
-       out << "# filename can be absolute or relative to this config file\n"
-              "rotation_interval=86400\n"    //One day
+       out << "rotation_interval=86400\n"    //One day
               "rotation_limit=864000\n\n"    //10 days
               "# route any messages logged to the default logger to the \"default\" logger we\n"
               "# declared above, if they are info level are higher\n"
@@ -74,6 +81,10 @@ namespace decent {
               "[logger.p2p]\n"
               "level=error\n"
               "appenders=p2p\n\n"
+              "# route messages sent to the \"rpc\" logger to the rpc appender declared above\n"
+              "[logger.rpc]\n"
+              "level=error\n"
+              "appenders=rpc\n\n"
               "# route messages sent to the \"transfer\" logger to the transfer appender declared above\n"
               "[logger.transfer]\n"
               "level=error\n"

@@ -304,9 +304,6 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 			 fc::create_directories(data_dir);
 		 }
 
-         if( !run_as_daemon )
-            logs_dir /= "logs";
-
          decent::write_default_config_file(config_filename, cfg_options, run_as_daemon);
       }
 
