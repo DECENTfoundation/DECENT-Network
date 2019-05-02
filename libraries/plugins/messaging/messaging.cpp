@@ -28,35 +28,24 @@ std::string messaging_plugin::plugin_name()
 void messaging_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    try {
-      ilog("messaging plugin:  plugin_initialize() begin");
       auto indx = database().add_index< graphene::db::primary_index < message_index > >();
       indx->add_secondary_index<message_receiver_index>();
       _options = &options;
-
-      ilog("messaging plugin:  plugin_initialize() end");
    } FC_LOG_AND_RETHROW()
 }
 
 void messaging_plugin::plugin_startup()
 {
    try {
-      ilog("messaging plugin:  plugin_startup() begin");
-
       graphene::chain::custom_evaluator_register::instance().register_callback(graphene::chain::custom_operation_subtype_messaging,
                                                                                 static_cast<custom_operation_interpreter*>(this));
-
-      ilog("messaging plugin:  plugin_startup() end");
    } FC_RETHROW()
 }
 
 void messaging_plugin::plugin_shutdown()
 {
    try {
-      ilog("messaging plugin:  plugin_shutdown() begin");
-
       graphene::chain::custom_evaluator_register::instance().unregister_callback(graphene::chain::custom_operation_subtype_messaging);
-
-      ilog("messaging plugin:  plugin_shutdown() end");
    } FC_RETHROW()
 }
 

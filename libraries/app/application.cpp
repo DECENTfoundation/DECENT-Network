@@ -528,7 +528,6 @@ namespace detail {
 
       void shutdown()
       { try {
-         ilog("Shutdown begin");
          if( _p2p_network )
          {
             ilog("Closing p2p node");
@@ -561,7 +560,6 @@ namespace detail {
             _db_lock.reset();
             fc::remove_all(_data_dir / "blockchain/dblock");
          }
-         ilog("Shutdown end");
       } FC_LOG_AND_RETHROW() }
 
       optional< api_access_info > get_api_access_info(const string& username)const

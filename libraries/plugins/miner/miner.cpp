@@ -142,8 +142,6 @@ std::string miner_plugin::plugin_name()
 
 void miner_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 { try {
-   ilog("miner plugin:  plugin_initialize() begin");
-
    if( options.count("enable-stale-production") )
    {
       _production_enabled = options["enable-stale-production"].as<bool>();
@@ -200,12 +198,10 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
       });
       wlog("Using deprecated private-key argument - please use miner-private-key instead (see also help)");
    }
-   ilog("miner plugin:  plugin_initialize() end");
 } FC_LOG_AND_RETHROW() }
 
 void miner_plugin::plugin_startup()
 { try {
-   ilog("miner plugin:  plugin_startup() begin");
    chain::database& d = database();
    //Start NTP time client
    graphene::utilities::now();
@@ -224,14 +220,11 @@ void miner_plugin::plugin_startup()
       schedule_production_loop();
    } else
       dlog("No miners configured! Please add miner IDs and private keys to configuration.");
-   ilog("miner plugin:  plugin_startup() end");
 } FC_RETHROW() }
 
 void miner_plugin::plugin_shutdown()
 { try {
-   ilog("miner plugin:  plugin_shutdown() begin");
    graphene::utilities::shutdown_ntp_time();
-   ilog("miner plugin:  plugin_shutdown() end");
 } FC_RETHROW() }
 
 void miner_plugin::schedule_production_loop()

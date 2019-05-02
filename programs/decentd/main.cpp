@@ -353,18 +353,18 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       }
 #else
       fc::set_signal_handler([&exit_promise](int signal) {
-         elog( "Caught SIGINT attempting to exit cleanly" );
+         dlog( "Caught SIGINT attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGINT);
 
       fc::set_signal_handler([&exit_promise](int signal) {
-         elog( "Caught SIGTERM attempting to exit cleanly" );
+         dlog( "Caught SIGTERM attempting to exit cleanly" );
          exit_promise->set_value(signal);
       }, SIGTERM);
 
       fc::set_signal_handler([&exit_promise](int signal) {
-           elog( "Caught SIGHUP attempting to exit cleanly" );
-           exit_promise->set_value(signal);
+         dlog( "Caught SIGHUP attempting to exit cleanly" );
+         exit_promise->set_value(signal);
       }, SIGHUP);
 #endif
       ilog("Started miner node on a chain with ${h} blocks.", ("h", node->chain_database()->head_block_num()));

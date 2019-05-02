@@ -138,7 +138,6 @@ void transaction_history_plugin::plugin_set_program_options(
 
 void transaction_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-   ilog("transaction history plugin:  plugin_initialize() begin");
    database().add_index< graphene::db::primary_index< transaction_history_index > >();
 
    if( options.at("transaction-id-history").as<bool>() )
@@ -155,17 +154,14 @@ void transaction_history_plugin::plugin_initialize(const boost::program_options:
          }
          std::transform(ops.begin(), ops.end(), std::inserter(my->_tracked_accounts, my->_tracked_accounts.end()), &graphene::app::dejsonify<graphene::chain::account_id_type>);
       }
-      ilog( "tracking of transaction IDs is enabled" );
+      dlog( "tracking of transaction IDs is enabled" );
    }
    else
-      ilog( "tracking of transaction IDs is disabled" );
-
-   ilog("transaction history plugin:  plugin_initialize() end");
+      dlog( "tracking of transaction IDs is disabled" );
 }
 
 void transaction_history_plugin::plugin_startup()
 {
-   ilog("transaction history plugin:  plugin_startup()");
 }
 
 flat_set<account_id_type> transaction_history_plugin::tracked_accounts() const

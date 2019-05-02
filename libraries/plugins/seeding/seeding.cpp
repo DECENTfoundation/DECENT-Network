@@ -647,9 +647,7 @@ void seeding_plugin::plugin_startup()
    if(!my)
       return;
 
-   ilog("seeding plugin:  plugin_startup() start");
    my->restore_state();
-   ilog("seeding plugin:  plugin_startup() end");
 }
 
 void seeding_plugin::plugin_initialize( const boost::program_options::variables_map& options )
@@ -661,7 +659,6 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       return;
    }
 
-   ilog("seeding plugin:  plugin_initialize() start");
    my.reset( new seeding_plugin_impl( *this) );
 
    if( options.count("seeder") ) {
@@ -758,7 +755,6 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    database().on_new_commited_operation_during_sync.connect( [&]( const graphene::chain::operation_history_object& b ){
       my->handle_commited_operation(b, true); } );
 
-   ilog("seeding plugin:  plugin_initialize() end");
 }FC_LOG_AND_RETHROW() }
 
 std::string seeding_plugin::plugin_name()

@@ -140,13 +140,13 @@ void database::open(
       if( last_block.valid() )
       {
          _fork_db.start_block( *last_block );
-         idump((last_block->id())(last_block->block_num()));
+         ddump((last_block->id())(last_block->block_num()));
          if( last_block->id() != head_block_id() )
          {
-            idump((last_block));
-            idump((get( dynamic_global_property_id_type() )));
-            idump((_fork_db.head()->data));
-            idump((_fork_db.head()->num));
+            ddump((last_block));
+            ddump((get( dynamic_global_property_id_type() )));
+            ddump((_fork_db.head()->data));
+            ddump((_fork_db.head()->num));
 
             FC_ASSERT( head_block_num() == 0, "last block ID does not match current chain state" );
          }
