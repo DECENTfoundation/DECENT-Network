@@ -8,7 +8,7 @@
     <QtPath>C:\Projects\Qt\5.12.2\msvc2017_64</QtPath>
     <MergeModulesPath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules</MergeModulesPath>
     <ProductName>DECENT</ProductName>
-    <ProductId></ProductId>
+    <ProductId>$([System.Guid]::NewGuid())</ProductId>
     <ProductVersion></ProductVersion>
     <ProjectGuid>cbe591f1-2c86-435b-be89-bab42bfc4ed2</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
@@ -26,8 +26,8 @@
     <IntermediateOutputPath>$(Configuration)\$(Platform)\obj</IntermediateOutputPath>
     <DefineConstants>ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);MergeModulesPath=$(MergeModulesPath)</DefineConstants>
   </PropertyGroup>
-  <Target Name="EnsureProductProperties" Condition=" '$(ProductId)' == '' OR $(ProductVersion) == ''">
-    <Error Text="You must specify an unique ProductId and ProductVersion properties" />
+  <Target Name="EnsureProductProperties" Condition="$(ProductVersion) == ''">
+    <Error Text="You must specify an unique ProductVersion property" />
   </Target>
   <ItemGroup>
     <Compile Include="Product.wxs" />

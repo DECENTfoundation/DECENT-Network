@@ -4,7 +4,7 @@ image: Visual Studio 2017
 
 environment:
   BOOST: C:\Libraries\boost_1_69_0
-  QT_CMAKE: C:\Qt\5.12\msvc2017_64\lib\cmake
+  QT: C:\Qt\5.12\msvc2017_64
 
 install:
 - cmd: >-
@@ -16,6 +16,8 @@ install:
 
     vcpkg --triplet x64-windows-static install cryptopp curl openssl pbc nlohmann-json
 
+    IF NOT EXIST installed\x64-windows-static\tools\go-ipfs curl https://github.com/ipfs/go-ipfs/releases/download/v0.4.20/go-ipfs_v0.4.20_windows-amd64.zip -L -o downloads\ipfs.zip && 7z x downloads\ipfs.zip -oinstalled\x64-windows-static\tools
+
     cd %APPVEYOR_BUILD_FOLDER%
 
     git submodule update --init --recursive
@@ -26,13 +28,34 @@ build_script:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G Ninja .
+    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT%\lib\cmake\Qt5Widgets -DQt5LinguistTools_DIR=%QT%\lib\cmake\Qt5LinguistTools -G Ninja .
 
     ninja -j2 install
+
+    IF %APPVEYOR_REPO_TAG% == true set DCORE_VERSION=%APPVEYOR_REPO_TAG_NAME%
+
+    IF NOT DEFINED DCORE_VERSION set DCORE_VERSION=%APPVEYOR_BUILD_VERSION%
+
+    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%DCORE_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs
 
 artifacts:
 - path: DCore\bin\*
   name: DCore
+
+deploy:
+- provider: BinTray
+  username: decent-dcore
+  api_key:
+    secure: c3KzyPcAbFCEccXjAVM0B1ejtfKBXSRG7HTNCVCGDvODnc+M4ppWxwLEY8eF9cCg
+  subject: decent-dcore
+  repo: windows
+  package: DCore-dev
+  version: dev
+  artifact: scripts\Windows\Release\x64\bin\DECENTSetup.msi
+  publish: true
+  override: true
+  on:
+    branch: develop
 
 notifications:
 - provider: Email
