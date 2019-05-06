@@ -41,6 +41,8 @@ build_script:
 artifacts:
 - path: DCore\bin\*
   name: DCore
+- path: scripts\Windows\Release\x64\bin\DECENTSetup.msi
+  name: MSI
 
 deploy:
 - provider: BinTray
@@ -51,7 +53,6 @@ deploy:
   repo: windows
   package: DCore-dev
   version: dev
-  artifact: scripts\Windows\Release\x64\bin\DECENTSetup.msi
   publish: true
   override: true
   on:
