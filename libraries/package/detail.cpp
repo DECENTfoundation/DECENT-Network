@@ -3,18 +3,6 @@
 #include "detail.hpp"
 
 #include <fc/network/url.hpp>
-#include <fc/thread/thread.hpp>
-
-#include <boost/filesystem.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
-#include <atomic>
-#include <memory>
-#include <chrono>
-#include <mutex>
-#include <string>
-#include <thread>
-
 
 namespace decent { namespace package { namespace detail {
 
@@ -304,8 +292,7 @@ namespace decent { namespace package { namespace detail {
             run_task();
         }
         else {
-            _thread.reset(new fc::thread());
-            _thread->async(run_task);
+            _future = std::async(std::launch::async, run_task);
         }
     }
 
@@ -316,10 +303,6 @@ namespace decent { namespace package { namespace detail {
     void PackageTask::stop() {
         _stop_requested = true;
         wait();
-
-        if (_thread) {
-            _thread.reset();
-        }
     }
 
     bool PackageTask::is_stop_requested() const {

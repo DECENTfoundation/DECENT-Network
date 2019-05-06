@@ -3,19 +3,15 @@
 #pragma once
 
 #include <fc/crypto/ripemd160.hpp>
-#include <fc/thread/thread.hpp>
-#include <fc/network/url.hpp>
 
 #include <boost/filesystem.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <atomic>
+#include <future>
 #include <memory>
 #include <chrono>
 #include <mutex>
 #include <string>
-#include <thread>
-#include <stdlib.h>
 
 namespace decent { namespace package {
 
@@ -59,13 +55,13 @@ namespace detail {
         virtual void task() {elog("This should never happened!"); std::abort();};
 
     private:
+        std::future<void>   _future;
         std::atomic<bool>   _running;
         std::atomic<bool>   _stop_requested;
         std::exception_ptr  _last_exception;
         virtual bool is_base_class(){return true;};
 
     protected:
-        std::shared_ptr<fc::thread> _thread;
         PackageInfo&                _package;
     };
 
