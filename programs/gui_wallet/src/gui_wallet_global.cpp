@@ -611,7 +611,7 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
       ("generate-keys,g", "Generate brain, wif private and public keys.")
       ("wallet-file,w", bpo::value<std::string>()->default_value(
           (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
-      ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
+      ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
    ;
 
    app_options.add(cli);

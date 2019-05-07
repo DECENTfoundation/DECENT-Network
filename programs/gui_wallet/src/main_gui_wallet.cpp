@@ -167,6 +167,9 @@ int main(int argc, char* argv[])
                case 'E':
                   level = fc::log_level::error;
                   break;
+               case 'O':
+                  level = fc::log_level::off;
+                  break;
                default:
                   std::cerr << "Unknown log level: " << options["log-level"].as<char>() << std::endl;
                   break;

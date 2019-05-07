@@ -64,7 +64,7 @@ int main( int argc, char** argv )
          ("version,v", "Print version information and exit.")
          ("generate-keys,g", "Generate brain, wif private and public keys.")
          ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
-         ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror")
+         ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
          ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string()), "Directory to store submitted packages")
@@ -133,6 +133,9 @@ int main( int argc, char** argv )
             break;
          case 'E':
             level = fc::log_level::error;
+            break;
+         case 'O':
+            level = fc::log_level::off;
             break;
          default:
             std::cerr << "Unknown log level: " << options["log-level"].as<char>() << std::endl;

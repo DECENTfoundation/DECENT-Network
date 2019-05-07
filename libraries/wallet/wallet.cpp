@@ -2108,7 +2108,7 @@ public:
       {
          try
          {
-            elog("about to broadcast tx: ${t}", ("t", tx));
+            dlog("about to broadcast tx: ${t}", ("t", tx));
             _remote_net_broadcast->broadcast_transaction( tx );
          }
          catch (const fc::exception& e)
