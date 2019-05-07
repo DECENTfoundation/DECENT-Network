@@ -23,7 +23,6 @@ namespace decent {
     // used features
     void write_default_logging_config_to_stream(std::ostream& out, bool is_daemon)
     {
-       is_daemon = !is_daemon;
        if (!is_daemon) {
           out << "# declare an appender named \"stderr\" that writes messages to the console\n"
               "[log.console_appender.stderr]\n"
