@@ -2475,7 +2475,7 @@ public:
          if (it != RegionCodes::s_mapNameToCode.end())
             region_code_for = it->second;
          else
-            FC_ASSERT(false);
+            FC_ASSERT(false, "Invalid region code");
 
          asset_object currency = get_asset(item.asset_symbol);
 
