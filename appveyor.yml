@@ -49,10 +49,11 @@ deploy:
   username: decent-dcore
   api_key:
     secure: fc8ctUCKj9rzRdCbbz1K3i8rsJ5fACPvdSsvbVlucIZ7Fa5pb8EERHddfsEIhkkq
-  subject: decent-dcore
+  subject: decentfoundation
   repo: windows
   package: DCore-dev
   version: dev
+  artifact: MSI
   publish: true
   override: true
   on:
