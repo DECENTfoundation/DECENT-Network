@@ -27,11 +27,11 @@
         },
         {
           "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
         },
         {
           "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -66,11 +66,11 @@
         },
         {
           "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
         },
         {
           "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -105,11 +105,11 @@
         },
         {
           "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
         },
         {
           "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -144,11 +144,11 @@
         },
         {
           "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
         },
         {
           "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.2\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
+          "value": "C:\\Projects\\Qt\\5.12.3\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",

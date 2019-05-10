@@ -8,7 +8,7 @@ Building DCore
 
 ### Installing prerequisites in Linux
 
-For Ubuntu 19.04 and 18.04 LTS, execute in console:
+For Ubuntu 18.04 LTS or later, execute in console:
 
     sudo apt-get install apt-transport-https curl lsb-release
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
@@ -67,7 +67,7 @@ For Fedora 29 or later, execute in console:
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
 
-> Note for Ubuntu 19.04, 18.04/16.04 LTS and Debian 9, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
+> Note for any Ubuntu or Debian, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build JSON 3.6.1
      wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz
@@ -102,7 +102,7 @@ Then, execute in console:
 * Install CMake tools (https://cmake.org/download)
 * Install Visual Studio 2017 Community (https://visualstudio.microsoft.com/downloads)
 * Install Boost 1.68 MSVC 14.1 (https://sourceforge.net/projects/boost/files/boost-binaries) (choose *C:\Projects\boost_1_68_0* as installation prefix)
-* Install Qt 5.12.2 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
+* Install Qt 5.12.3 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
 
 Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
@@ -154,7 +154,7 @@ You can use CMake generator to create a Visual Studio 2017 project files and per
 
     cd \Projects\DECENT-Network
     set BOOST=C:\Projects\boost_1_68_0
-    set QT_CMAKE=C:\Projects\Qt\5.12.1\msvc2017_64\lib\cmake
+    set QT_CMAKE=C:\Projects\Qt\5.12.3\msvc2017_64\lib\cmake
     set VCPKG=C:\Projects\vcpkg
     cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG%\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT_CMAKE%\Qt5Widgets -DQt5LinguistTools_DIR=%QT_CMAKE%\Qt5LinguistTools -G "Visual Studio 15 2017 Win64" .
 
