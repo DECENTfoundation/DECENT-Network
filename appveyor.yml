@@ -48,7 +48,7 @@ deploy:
 - provider: BinTray
   username: decent-dcore
   api_key:
-    secure: c3KzyPcAbFCEccXjAVM0B1ejtfKBXSRG7HTNCVCGDvODnc+M4ppWxwLEY8eF9cCg
+    secure: fc8ctUCKj9rzRdCbbz1K3i8rsJ5fACPvdSsvbVlucIZ7Fa5pb8EERHddfsEIhkkq
   subject: decent-dcore
   repo: windows
   package: DCore-dev

@@ -51,7 +51,7 @@ For Fedora 29 or later, execute in console:
      cd boost_1_65_1
      export BOOST_ROOT=$(realpath ../boost)
      ./bootstrap.sh --prefix=$BOOST_ROOT
-     ./b2 install
+     ./b2 -j$(nproc) install
      cd ..
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
@@ -62,7 +62,7 @@ For Fedora 29 or later, execute in console:
      cd cmake-3.13.4
      export CMAKE_ROOT=$(realpath ../cmake)
      ./configure --prefix=$CMAKE_ROOT
-     make install
+     make -j$(nproc) install
      export PATH=$CMAKE_ROOT/bin:$PATH
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
@@ -74,7 +74,7 @@ For Fedora 29 or later, execute in console:
      tar xf v3.6.1.tar.gz
      cd json-3.6.1
      cmake .
-     sudo make install
+     sudo make -j$(nproc) install
      cd ..
      rm -rf json-3.6.1 v3.6.1.tar.gz
 
