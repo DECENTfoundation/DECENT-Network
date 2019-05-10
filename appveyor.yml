@@ -39,8 +39,6 @@ build_script:
     msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%DCORE_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs
 
 artifacts:
-- path: DCore\bin\*
-  name: DCore
 - path: scripts\Windows\Release\x64\bin\DECENTSetup.msi
   name: MSI
 
