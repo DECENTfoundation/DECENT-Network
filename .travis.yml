@@ -49,6 +49,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap nlohmann/json && brew tap decentfoundation/DCore; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' "s,branch =\> \"develop\",revision =\> \"$TRAVIS_COMMIT\"," /usr/local/Homebrew/Library/Taps/decentfoundation/homebrew-dcore/DCore.rb; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update && sudo apt-get install -y libpbc-dev; fi
