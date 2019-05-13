@@ -165,6 +165,7 @@ static bool InitCodeAndName() { \
       map<uint32_t, asset> map_price;
 
       optional<asset> GetPrice(uint32_t region_code) const;
+      void ClearPrices();
       void SetSimplePrice(asset const& price);
       void SetRegionPrice(uint32_t region_code, asset const& price);
       bool Valid(uint32_t region_code) const;

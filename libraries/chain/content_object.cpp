@@ -39,6 +39,10 @@ namespace graphene { namespace chain {
 
       return op_price;
    }
+   void PriceRegions::ClearPrices()
+   {
+      map_price.clear();
+   }
    void PriceRegions::SetSimplePrice(asset const& price)
    {
       map_price.clear();

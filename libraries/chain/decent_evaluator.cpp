@@ -298,6 +298,8 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
                                            co.price.SetSimplePrice(it_no_regions->second);
                                         else
                                         {
+                                           // clearing the region code list first
+                                           co.price.ClearPrices();
                                            for (auto const& price_item : prices)
                                            {
                                               co.price.SetRegionPrice(price_item.first, price_item.second);
