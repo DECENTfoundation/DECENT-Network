@@ -647,7 +647,7 @@ public:
    non_fungible_token_object get_non_fungible_token(const string& nft_symbol_or_id) const
    {
       auto opt = find_non_fungible_token(nft_symbol_or_id);
-      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", opt->symbol));
+      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", nft_symbol_or_id));
       return *opt;
    }
 
