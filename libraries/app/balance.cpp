@@ -48,7 +48,7 @@ struct get_balance_history_visitor
    get_balance_history_visitor( account_id_type account, asset_array& balance, asset& fee ) : _account(account), _balance(balance), _fee(fee) {}
    typedef void result_type;
 
-   void operator()( const transfer_operation& op )
+   void operator()( const transfer_obsolete_operation& op )
    {
        if (op.from == _account) {
            _balance.asset0 = asset(-op.amount.amount, op.amount.asset_id);
@@ -62,7 +62,7 @@ struct get_balance_history_visitor
            _fee = op.fee;
    }
 
-   void operator()( const transfer2_operation& op )
+   void operator()( const transfer_operation& op )
    {
        if (op.from == _account) {
            _balance.asset0 = asset(-op.amount.amount, op.amount.asset_id);

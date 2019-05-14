@@ -1733,7 +1733,7 @@ namespace graphene { namespace app {
       {
          /// reuse trx.verify_authority by creating a dummy transfer
          signed_transaction trx;
-         transfer_operation op;
+         transfer_obsolete_operation op;
          op.from = account->id;
          trx.operations.emplace_back(op);
          trx.verify_authority( keys,

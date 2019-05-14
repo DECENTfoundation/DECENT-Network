@@ -29,22 +29,22 @@
 
 namespace graphene { namespace chain {
 
-   class transfer_evaluator : public evaluator<transfer_evaluator>
+   class transfer_obsolete_evaluator : public evaluator<transfer_obsolete_evaluator>
    {
       public:
-         typedef transfer_operation operation_type;
+         typedef transfer_obsolete_operation operation_type;
 
-         void_result do_evaluate( const transfer_operation& o );
-         void_result do_apply( const transfer_operation& o );
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
    };
 
-   class transfer2_evaluator : public evaluator<transfer2_evaluator>
+   class transfer_evaluator : public evaluator<transfer_evaluator>
    {
    public:
-      typedef transfer2_operation operation_type;
+      typedef transfer_operation operation_type;
 
-      void_result do_evaluate( const transfer2_operation& o );
-      void_result do_apply( const transfer2_operation& o );
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
    };
 
 } } // graphene::chain

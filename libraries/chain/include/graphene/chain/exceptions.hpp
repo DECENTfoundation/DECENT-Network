@@ -92,10 +92,10 @@ namespace graphene { namespace chain {
 
    FC_DECLARE_DERIVED_EXCEPTION( pop_empty_chain,                   graphene::chain::undo_database_exception, 3070001, "there are no blocks to pop" )
 
-   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( from_account_not_whitelisted, transfer, 1, "owner mismatch" )
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( to_account_not_whitelisted, transfer, 2, "owner mismatch" )
-   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( restricted_transfer_asset, transfer, 3, "restricted transfer asset" )
+   //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
+   //GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( from_account_not_whitelisted, transfer, 1, "owner mismatch" )
+   //GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( to_account_not_whitelisted, transfer, 2, "owner mismatch" )
+   //GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( restricted_transfer_asset, transfer, 3, "restricted transfer asset" )
 
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_create );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( limit_order_cancel );

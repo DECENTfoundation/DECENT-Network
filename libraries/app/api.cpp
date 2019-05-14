@@ -351,15 +351,15 @@ namespace graphene { namespace app {
 
                         if (partner_account_id)
                         {
-                           if (o.op.which() == operation::tag<transfer_operation>::value)
+                           if (o.op.which() == operation::tag<transfer_obsolete_operation>::value)
                            {
-                              const transfer_operation& top = o.op.get<transfer_operation>();
+                              const transfer_obsolete_operation& top = o.op.get<transfer_obsolete_operation>();
                               if (! top.is_partner_account_id(*partner_account_id))
                                  skip_due_to_partner_account_id = true;
                            }
-                           else if (o.op.which() == operation::tag<transfer2_operation>::value)
+                           else if (o.op.which() == operation::tag<transfer_operation>::value)
                            {
-                              const transfer2_operation& top = o.op.get<transfer2_operation>();
+                              const transfer_operation& top = o.op.get<transfer_operation>();
                               if (! top.is_partner_account_id(*partner_account_id))
                                  skip_due_to_partner_account_id = true;
                            }

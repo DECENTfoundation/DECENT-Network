@@ -32,7 +32,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace chain {
-void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
+void_result transfer_obsolete_evaluator::do_evaluate( const operation_type& op )
 { try {
    
    const database& d = db();
@@ -53,7 +53,7 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
 
 }  FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result transfer_evaluator::do_apply( const transfer_operation& o )
+void_result transfer_obsolete_evaluator::do_apply( const operation_type& o )
 { try {
    db().adjust_balance( o.from, -o.amount );
    db().adjust_balance( o.to, o.amount );
@@ -75,7 +75,7 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
+void_result transfer_evaluator::do_evaluate( const operation_type& op )
 { try {
       const database& d = db();
 
@@ -117,7 +117,7 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
 
    }  FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result transfer2_evaluator::do_apply( const transfer2_operation& o )
+void_result transfer_evaluator::do_apply( const operation_type& o )
 { try {
       auto & d = db();
       account_id_type to_acc;

@@ -539,7 +539,7 @@ void database_fixture::transfer(
   try
   {
      set_expiration( db, trx );
-     transfer_operation trans;
+     transfer_obsolete_operation trans;
      trans.fee = fee;
      trans.from = from.id;
      trans.to   = to.id;

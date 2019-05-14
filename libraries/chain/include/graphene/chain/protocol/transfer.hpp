@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
     * @brief Transfers an amount of one asset from one account to another.
     * Fees are paid by the "from" account.
     *
-    *  @warning Obsolete operation. Use \c transfer2_operation instead.
+    *  @warning Obsolete operation. Use \c transfer_operation instead.
     *  @pre amount.amount > 0
     *  @pre fee.amount >= 0
     *  @pre from != to
@@ -42,11 +42,11 @@ namespace graphene { namespace chain {
     *  @post to account's balance will be increased by amount
     *  @return n/a
     */
-   struct transfer_operation : public base_operation<false>
+   struct transfer_obsolete_operation : public base_operation<false>
    {
       struct fee_parameters_type {
-      uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
-   };
+         uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+      };
 
       asset            fee;
       /// Account to transfer asset from
@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
     *  @post to account's balance will be increased by amount
     *  @return n/a
     */
-   struct transfer2_operation : public base_operation<false>
+   struct transfer_operation : public base_operation<false>
    {
       struct fee_parameters_type {
          uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
@@ -109,7 +109,7 @@ namespace graphene { namespace chain {
 
 }} // graphene::chain
 
+FC_REFLECT( graphene::chain::transfer_obsolete_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::transfer_obsolete_operation, (fee)(from)(to)(amount)(memo)(extensions) )
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
-FC_REFLECT( graphene::chain::transfer2_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::transfer2_operation, (fee)(from)(to)(amount)(memo)(extensions) )

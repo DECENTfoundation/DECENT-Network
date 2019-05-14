@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       {
          account_id_type nathan_id = db2->get_index_type<account_index>().indices().get<by_name>().find( "nathan" )->id;
          fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
-         transfer_operation xfer_op;
+         transfer_obsolete_operation xfer_op;
          xfer_op.from = nathan_id;
          xfer_op.to = GRAPHENE_NULL_ACCOUNT;
          xfer_op.amount = asset( 1000000 );

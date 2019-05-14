@@ -26,20 +26,19 @@
 
 namespace graphene { namespace chain {
 
-
-void transfer_operation::validate()const
+void transfer_obsolete_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( from != to );
    FC_ASSERT( amount.amount > 0 );
 }
 
-bool transfer_operation::is_partner_account_id(account_id_type acc_id) const
+bool transfer_obsolete_operation::is_partner_account_id(account_id_type acc_id) const
 {
     return (from == acc_id || to == acc_id) ? true : false;
 }
 
-void transfer2_operation::validate()const
+void transfer_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( to.is<account_id_type>() || to.is<content_id_type>() );
@@ -47,7 +46,7 @@ void transfer2_operation::validate()const
    FC_ASSERT( amount.amount > 0 );
 }
 
-bool transfer2_operation::is_partner_account_id(account_id_type acc_id) const
+bool transfer_operation::is_partner_account_id(account_id_type acc_id) const
 {
     if (from == acc_id)
         return true;

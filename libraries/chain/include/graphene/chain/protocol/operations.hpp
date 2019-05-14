@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/account.hpp>
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
@@ -45,7 +44,7 @@ namespace graphene { namespace chain {
     * Defines the set of valid operations as a discriminated union type.
     */
    typedef fc::static_variant<
-            transfer_operation,
+            transfer_obsolete_operation,
             account_create_operation,
             account_update_operation,
             asset_create_operation,
@@ -84,7 +83,7 @@ namespace graphene { namespace chain {
             update_user_issued_asset_operation,
             update_monitored_asset_operation,
             ready_to_publish2_operation,
-            transfer2_operation,
+            transfer_operation,
             update_user_issued_asset_advanced_operation,      //40
             non_fungible_token_create_definition_operation,
             non_fungible_token_update_definition_operation,

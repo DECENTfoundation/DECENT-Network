@@ -374,27 +374,6 @@ pair<transaction_id_type,signed_transaction> transfer(const string& from,
                                                       bool broadcast = false);
 
 /**
- *  @brief This method works just like transfer, except it always broadcasts and
- *  returns the transaction ID along with the signed transaction.
- *  @param from the name or id of the account sending the funds
- *  @param to the name or id of the account or id of the content receiving the funds
- *  @param amount the amount to send (in nominal units -- to send half of a DCT, specify 0.5)
- *  @param asset_symbol the symbol or id of the asset to send
- *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
- *             transaction and readable for the receiver.  There is no length limit
- *             other than the limit imposed by maximum transaction size, but transaction
- *             increase with transaction size
- * @note transaction fee is fixed and does not depend on the length of the memo
- * @return the transaction ID along with the signed transaction
- * @ingroup WalletAPI_Account
- */
-pair<transaction_id_type,signed_transaction> transfer2(const string& from,
-                                                       const string& to,
-                                                       const string& amount,
-                                                       const string& asset_symbol,
-                                                       const string& memo );
-
-/**
  * @brief Generates private El Gamal key and corresponding public key.
  * @return pair of El Gamal keys
  * @ingroup WalletAPI_Account

@@ -582,7 +582,6 @@ FC_API( graphene::wallet::wallet_api,
         (update_account_keys)
         (update_account_keys_to_multisig)
         (transfer)
-        (transfer2)
         (generate_el_gamal_keys)
         (get_el_gammal_key)
         (generate_brain_key_el_gamal_key)

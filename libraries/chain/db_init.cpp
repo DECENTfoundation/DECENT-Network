@@ -122,8 +122,8 @@ void database::initialize_evaluators()
    register_evaluator<asset_reserve_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<assert_evaluator>();
+   register_evaluator<transfer_obsolete_evaluator>();
    register_evaluator<transfer_evaluator>();
-   register_evaluator<transfer2_evaluator>();
    register_evaluator<proposal_create_evaluator>();
    register_evaluator<proposal_update_evaluator>();
    register_evaluator<proposal_delete_evaluator>();
@@ -427,7 +427,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       //create initial balance
    for( const auto& balance: genesis_state.initial_balances )
    {
-      transfer_operation top;
+      transfer_obsolete_operation top;
       top.from = GRAPHENE_MINER_ACCOUNT;
       top.to = get_account_id( balance.owner );
       asset amount( balance.amount, get_asset_id( balance.asset_symbol ) );

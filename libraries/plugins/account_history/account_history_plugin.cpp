@@ -103,9 +103,9 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
          impacted.insert( oho.result.get<graphene::db::object_id_type>() );
-      else if (op.op.which() == operation::tag< transfer2_operation >::value ) {
+      else if (op.op.which() == operation::tag< transfer_operation >::value ) {
 
-         const transfer2_operation& tr2o = op.op.get<transfer2_operation>();
+         const transfer_operation& tr2o = op.op.get<transfer_operation>();
          if( tr2o.to.is<account_id_type>() ) {
             impacted.insert( tr2o.from );
             impacted.insert( tr2o.to.as<graphene::chain::account_id_type>() );

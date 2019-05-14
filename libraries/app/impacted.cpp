@@ -38,12 +38,12 @@ struct get_impacted_account_visitor
    get_impacted_account_visitor( flat_set<account_id_type>& impact ):_impacted(impact) {}
    typedef void result_type;
 
-   void operator()( const transfer_operation& op )
+   void operator()( const transfer_obsolete_operation& op )
    {
       _impacted.insert( op.to );
    }
 
-   void operator()( const transfer2_operation& op )
+   void operator()( const transfer_operation& op )
    {
       if( op.to.is<account_id_type>() )
          _impacted.insert( op.to.as<account_id_type>() );

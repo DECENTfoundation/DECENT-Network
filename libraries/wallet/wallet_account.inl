@@ -362,13 +362,3 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer(const string& 
    auto tx = my->transfer(from, to, amount, asset_symbol, memo, broadcast);
    return std::make_pair(tx.id(),tx);
 }
-
-pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string& from,
-                                                                   const string& to,
-                                                                   const string& amount,
-                                                                   const string& asset_symbol,
-                                                                   const string& memo)
-{
-   FC_ASSERT( !is_locked() );
-   return transfer( from, to, amount, asset_symbol, memo, true );
-}

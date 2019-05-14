@@ -194,8 +194,8 @@ public:
    template<typename T>
    std::string operator()(const T& op)const;
 
+   std::string operator()(const transfer_obsolete_operation& op)const;
    std::string operator()(const transfer_operation& op)const;
-   std::string operator()(const transfer2_operation& op)const;
    std::string operator()(const non_fungible_token_issue_operation& op) const;
    std::string operator()(const non_fungible_token_transfer_operation& op) const;
    std::string operator()(const account_create_operation& op)const;
@@ -2157,7 +2157,7 @@ public:
       }
 
       signed_transaction tx;
-      transfer2_operation xfer_op;
+      transfer_operation xfer_op;
 
       xfer_op.from = from_id;
       xfer_op.to = to_obj_id;
@@ -2185,7 +2185,7 @@ public:
                          time_point_sec expiration)
    {
       transaction_handle_type propose_num = begin_builder_transaction();
-      transfer_operation op;
+      transfer_obsolete_operation op;
       account_object from_account = get_account(from);
       account_object to_account = get_account(to);
       op.from = from_account.id;
@@ -3402,7 +3402,7 @@ signed_transaction content_cancellation(const string& author,
       return std::string();
    }
 
-   string operation_printer::operator()(const transfer_operation& op) const
+   string operation_printer::operator()(const transfer_obsolete_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
       const auto& to_account = wallet.get_account(op.to);
@@ -3412,7 +3412,7 @@ signed_transaction content_cancellation(const string& author,
       return memo(op.memo, from_account, to_account);
    }
 
-   string operation_printer::operator()(const transfer2_operation& op) const
+   string operation_printer::operator()(const transfer_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
       account_object to_account;
