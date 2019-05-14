@@ -18,6 +18,10 @@
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Doxygen;C:\\Strawberry\\perl"
+        },
+        {
           "name": "BOOST_ROOT",
           "value": "C:\\Projects\\boost_1_68_0"
         },
@@ -55,6 +59,10 @@
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Doxygen;C:\\Strawberry\\perl"
         },
         {
           "name": "BOOST_ROOT",
@@ -96,6 +104,10 @@
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Doxygen;C:\\Strawberry\\perl"
+        },
+        {
           "name": "BOOST_ROOT",
           "value": "C:\\Projects\\boost_1_68_0"
         },
@@ -133,6 +145,10 @@
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
           "value": "C:\\Projects\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "C:\\Doxygen;C:\\Strawberry\\perl"
         },
         {
           "name": "BOOST_ROOT",
