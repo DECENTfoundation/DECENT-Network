@@ -67,7 +67,7 @@ namespace graphene { namespace chain {
             content_submit_operation,       //20
             request_to_buy_operation,
             leave_rating_and_comment_operation,
-            ready_to_publish_operation,
+            ready_to_publish_obsolete_operation,
             proof_of_custody_operation,
             deliver_keys_operation,                 //25
             subscribe_operation,
@@ -82,7 +82,7 @@ namespace graphene { namespace chain {
             asset_claim_fees_operation,     //35
             update_user_issued_asset_operation,
             update_monitored_asset_operation,
-            ready_to_publish2_operation,
+            ready_to_publish_operation,
             transfer_operation,
             update_user_issued_asset_advanced_operation,      //40
             non_fungible_token_create_definition_operation,

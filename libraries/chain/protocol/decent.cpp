@@ -67,14 +67,14 @@ void leave_rating_and_comment_operation::validate()const
       FC_ASSERT( comment.length() <= DECENT_MAX_COMMENT_SIZE  );
 }
 
-void ready_to_publish_operation::validate()const
+void ready_to_publish_obsolete_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( space > 0 );
    FC_ASSERT( !ipfs_ID.empty() );
 }
 
-void ready_to_publish2_operation::validate()const
+void ready_to_publish_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( space > 0 );

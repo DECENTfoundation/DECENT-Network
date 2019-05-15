@@ -170,8 +170,8 @@ struct get_impacted_account_visitor
    void operator()( const content_cancellation_operation& op) { _impacted.insert(op.author); }
    void operator()( const request_to_buy_operation& op) { _impacted.insert(op.consumer); }
    void operator()( const leave_rating_and_comment_operation& op) { _impacted.insert(op.consumer);}
+   void operator()( const ready_to_publish_obsolete_operation& op) { _impacted.insert(op.seeder); }
    void operator()( const ready_to_publish_operation& op) { _impacted.insert(op.seeder); }
-   void operator()( const ready_to_publish2_operation& op) { _impacted.insert(op.seeder); }
 
    void operator()( const proof_of_custody_operation& op) { _impacted.insert(op.seeder);}
    void operator()( const deliver_keys_operation& op) {  _impacted.insert(op.seeder);}

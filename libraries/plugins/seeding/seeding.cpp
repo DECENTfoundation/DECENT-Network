@@ -456,25 +456,16 @@ void seeding_plugin_impl::send_ready_to_publish()
          FC_THROW("Seeding price limit ${limit} DCT exceeded.",("limit",dct_ao.amount_to_string(DECENT_MAX_SEEDING_PRICE)));
       }
 
+      graphene::chain::ready_to_publish_operation op;
+      op.seeder = seeding_options.seeder;
+      op.space = seeding_options.free_space;
+      op.price_per_MByte = static_cast<uint32_t>(dct_price.amount.value);
+      op.pubKey = get_public_el_gamal_key(seeding_options.content_private_key);
+      op.ipfs_ID = json[ "ID" ];
+      op.region_code = seeding_options.region_code;
+
       graphene::chain::signed_transaction tx;
-      if( database().head_block_time() < HARDFORK_1_TIME) {
-         graphene::chain::ready_to_publish_operation op;
-         op.seeder = seeding_options.seeder;
-         op.space = seeding_options.free_space;
-         op.price_per_MByte = static_cast<uint32_t>(dct_price.amount.value);
-         op.pubKey = get_public_el_gamal_key(seeding_options.content_private_key);
-         op.ipfs_ID = json[ "ID" ];
-         tx.operations.push_back(op);
-      } else {
-         graphene::chain::ready_to_publish2_operation op;
-         op.seeder = seeding_options.seeder;
-         op.space = seeding_options.free_space;
-         op.price_per_MByte = static_cast<uint32_t>(dct_price.amount.value);
-         op.pubKey = get_public_el_gamal_key(seeding_options.content_private_key);
-         op.ipfs_ID = json[ "ID" ];
-         op.region_code = seeding_options.region_code;
-         tx.operations.push_back(op);
-      }
+      tx.operations.push_back(op);
 
       database().get_global_properties().parameters.current_fees->set_fee(tx.operations.back());
       auto dyn_props = database().get_dynamic_global_properties();

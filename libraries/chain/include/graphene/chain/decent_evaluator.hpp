@@ -71,22 +71,22 @@ namespace graphene { namespace chain {
       void_result do_apply( const leave_rating_and_comment_operation& o );
    };
    
+   class ready_to_publish_obsolete_evaluator : public evaluator<ready_to_publish_obsolete_evaluator>
+   {
+   public:
+      typedef ready_to_publish_obsolete_operation operation_type;
+      
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
+   };
+
    class ready_to_publish_evaluator : public evaluator<ready_to_publish_evaluator>
    {
    public:
       typedef ready_to_publish_operation operation_type;
-      
-      void_result do_evaluate( const ready_to_publish_operation& o );
-      void_result do_apply( const ready_to_publish_operation& o );
-   };
 
-   class ready_to_publish2_evaluator : public evaluator<ready_to_publish2_evaluator>
-   {
-   public:
-      typedef ready_to_publish2_operation operation_type;
-
-      void_result do_evaluate( const ready_to_publish2_operation& o );
-      void_result do_apply( const ready_to_publish2_operation& o );
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
    };
 
    class proof_of_custody_evaluator : public evaluator<proof_of_custody_evaluator>

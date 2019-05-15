@@ -422,8 +422,8 @@ struct get_balance_history_visitor
    void operator()( const content_cancellation_operation& op) {} // 0 fee
 
    void operator()( const leave_rating_and_comment_operation& op) {} // 0 fee
+   void operator()( const ready_to_publish_obsolete_operation& op) {} // 0 fee
    void operator()( const ready_to_publish_operation& op) {} // 0 fee
-   void operator()( const ready_to_publish2_operation& op) {} // 0 fee
 
    void operator()( const proof_of_custody_operation& op) {} // 0 fee
    void operator()( const deliver_keys_operation& op) {} // 0 fee

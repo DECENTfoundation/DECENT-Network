@@ -214,8 +214,9 @@ static bool InitCodeAndName() { \
    /**
     * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
+    * @warning Obsolete operation. Use \c ready_to_publish_operation instead.
     */
-   struct ready_to_publish_operation : public base_operation<false>
+   struct ready_to_publish_obsolete_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
       
@@ -228,33 +229,33 @@ static bool InitCodeAndName() { \
       uint32_t price_per_MByte;
       string ipfs_ID;
 
-      
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
-/**
+
+   /**
     * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
     */
-struct ready_to_publish2_operation : public base_operation<false>
-{
-   struct fee_parameters_type { uint64_t fee = 0; };
+   struct ready_to_publish_operation : public base_operation<false>
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
 
-   asset fee;
-   account_id_type seeder;
-   bigint_type pubKey;
-   /// Available space on seeder's disc dedicated to contents, in MBs
-   uint64_t space;
-   /// The price charged to author for seeding 1 MB per day
-   uint32_t price_per_MByte;
-   string ipfs_ID;
-   /// Optional ISO 3166-1 alpha-2 two-letter region code
-   optional<string> region_code;
-   extensions_type extensions;
+      asset fee;
+      account_id_type seeder;
+      bigint_type pubKey;
+      /// Available space on seeder's disc dedicated to contents, in MBs
+      uint64_t space;
+      /// The price charged to author for seeding 1 MB per day
+      uint32_t price_per_MByte;
+      string ipfs_ID;
+      /// Optional ISO 3166-1 alpha-2 two-letter region code
+      optional<string> region_code;
+      extensions_type extensions;
 
-   account_id_type fee_payer()const { return seeder; }
-   void validate()const;
-};
+      account_id_type fee_payer()const { return seeder; }
+      void validate()const;
+   };
 
    /**
     * @ingroup operations
@@ -392,8 +393,8 @@ FC_REFLECT(graphene::chain::set_publishing_right_operation,(fee)(from)(to)(is_pu
 FC_REFLECT(graphene::chain::content_cancellation_operation,(fee)(author)(URI))
 FC_REFLECT(graphene::chain::request_to_buy_operation,(fee)(URI)(consumer)(price)(region_code_from)(pubKey))
 FC_REFLECT(graphene::chain::leave_rating_and_comment_operation,(fee)(URI)(consumer)(comment)(rating))
-FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID))
-FC_REFLECT(graphene::chain::ready_to_publish2_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID)(region_code))
+FC_REFLECT(graphene::chain::ready_to_publish_obsolete_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID))
+FC_REFLECT(graphene::chain::ready_to_publish_operation,(fee)(seeder)(space)(pubKey)(price_per_MByte)(ipfs_ID)(region_code))
 FC_REFLECT(graphene::chain::proof_of_custody_operation,(fee)(seeder)(URI)(proof))
 FC_REFLECT(graphene::chain::deliver_keys_operation,(fee)(seeder)(proof)(key)(buying))
 FC_REFLECT(graphene::chain::return_escrow_submission_operation,(fee)(author)(escrow)(content))
@@ -408,8 +409,8 @@ FC_REFLECT( graphene::chain::content_submit_operation::fee_parameters_type, (fee
 FC_REFLECT( graphene::chain::content_cancellation_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::request_to_buy_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::leave_rating_and_comment_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::ready_to_publish_obsolete_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::ready_to_publish_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::ready_to_publish2_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::proof_of_custody_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::deliver_keys_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::return_escrow_submission_operation::fee_parameters_type, ( fee ) )

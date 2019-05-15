@@ -731,12 +731,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
    
-   void_result ready_to_publish_evaluator::do_evaluate(const ready_to_publish_operation& o )
-   {
+   void_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
+   {try{
+      FC_ASSERT(db().head_block_time() < HARDFORK_1_TIME );
       return void_result();
-   }
-   
-   void_result ready_to_publish_evaluator::do_apply(const ready_to_publish_operation& o )
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result ready_to_publish_obsolete_evaluator::do_apply(const operation_type& o)
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
@@ -765,18 +766,17 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
 
          });
       }
-   }FC_CAPTURE_AND_RETHROW( (o) ) 
-   return void_result();
-   }
 
-   void_result ready_to_publish2_evaluator::do_evaluate(const ready_to_publish2_operation& o )
+      return void_result();
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
+
+   void_result ready_to_publish_evaluator::do_evaluate(const operation_type& o )
    {try{
-         FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME );
-   }FC_CAPTURE_AND_RETHROW( (o) ) 
-   return void_result();
-   }
+      FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME );
+      return void_result();
+   }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result ready_to_publish2_evaluator::do_apply(const ready_to_publish2_operation& o )
+   void_result ready_to_publish_evaluator::do_apply(const operation_type& o )
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
