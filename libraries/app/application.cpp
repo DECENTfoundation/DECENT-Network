@@ -274,7 +274,7 @@ namespace detail {
 
       application_impl(application* self)
          : _self(self),
-           _chain_db(std::make_shared<chain::database>())
+           _chain_db(std::make_shared<chain::database>(reserved_spaces_count, local_object_type_count, protocol_object_type_count, impl_object_type_count))
       {
       }
 
@@ -441,7 +441,7 @@ namespace detail {
             elog("Detected old database. Nuking and starting over.");
             _chain_db->wipe(_data_dir / "blockchain", true);
             _chain_db.reset();
-            _chain_db = std::make_shared<chain::database>();
+            _chain_db = std::make_shared<chain::database>(reserved_spaces_count, local_object_type_count, protocol_object_type_count, impl_object_type_count);
             _chain_db->add_checkpoints(loaded_checkpoints);
             _chain_db->open(_data_dir / "blockchain", initial_state);
          }

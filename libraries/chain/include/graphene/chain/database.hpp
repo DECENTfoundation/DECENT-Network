@@ -66,8 +66,7 @@ namespace graphene { namespace chain {
    {
       public:
          //////////////////// db_management.cpp ////////////////////
-
-         database();
+         database(uint8_t space_id_count, uint8_t local_id_type_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count);
          ~database();
          bool is_undo_enabled(){ return _undo_db.enabled(); };
 

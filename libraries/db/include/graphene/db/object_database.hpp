@@ -39,10 +39,18 @@ namespace graphene { namespace db {
    class object_database
    {
       public:
-         object_database();
+         object_database(uint8_t space_id_count, uint8_t local_type_id_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count);
+
          ~object_database();
 
-         void reset_indexes() { _index.clear(); _index.resize(255); }
+         void reset_indexes() 
+         {
+            _index.clear(); 
+            _index.resize(_space_id_count);
+            _index[0].resize(_local_object_type_count);
+            _index[1].resize(_proto_type_id_count); 
+            _index[2].resize(_impl_type_id_count);
+         }
 
          void open(const fc::path& data_dir );
 
@@ -131,9 +139,8 @@ namespace graphene { namespace db {
          IndexType* add_index()
          {
             typedef typename IndexType::object_type ObjectType;
-            if( _index[ObjectType::space_id].size() <= ObjectType::type_id  )
-                _index[ObjectType::space_id].resize( 255 );
-            assert(!_index[ObjectType::space_id][ObjectType::type_id]);
+            if(_index[ObjectType::space_id].size() <= ObjectType::type_id)
+               FC_ASSERT(false, "Index for type ${t} is not allocated", ("t", ObjectType::type_id));
             unique_ptr<index> indexptr( new IndexType(*this) );
             _index[ObjectType::space_id][ObjectType::type_id] = std::move(indexptr);
             return static_cast<IndexType*>(_index[ObjectType::space_id][ObjectType::type_id].get());
@@ -166,6 +173,10 @@ namespace graphene { namespace db {
 
          fc::path                                                  _data_dir;
          vector< vector< unique_ptr<index> > >                     _index;
+         uint8_t                                                    _space_id_count;
+         uint8_t                                                    _local_object_type_count;
+         uint8_t                                                    _proto_type_id_count;
+         uint8_t                                                    _impl_type_id_count;
    };
 
 } } // graphene::db

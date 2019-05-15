@@ -36,7 +36,9 @@
 
 namespace graphene { namespace chain {
 
-database::database()
+
+database::database(uint8_t space_id_count, uint8_t local_id_type_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count)
+: object_database(space_id_count, local_id_type_count, proto_type_id_count, impl_type_id_count)
 {
    initialize_indexes();
    initialize_evaluators();

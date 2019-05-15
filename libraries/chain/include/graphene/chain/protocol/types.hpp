@@ -95,7 +95,9 @@ namespace graphene { namespace chain {
    {
       local_ids             = 0,
       protocol_ids          = 1,
-      implementation_ids    = 2
+      implementation_ids    = 2,
+      // insert new here
+      reserved_spaces_count,     // added due to know count
    };
 
    // local types
@@ -103,7 +105,9 @@ namespace graphene { namespace chain {
 
    enum local_object_type
    {
-      local_seeding_object_type                     // 0
+      local_seeding_object_type,                     // 0
+      // insert new here
+      local_object_type_count    // added due to know count
    };
 
    typedef graphene::db::object_id<local_ids, local_seeding_object_type, seeding_object> seeding_id_type;
@@ -128,7 +132,9 @@ namespace graphene { namespace chain {
       withdraw_permission_object_type,
       vesting_balance_object_type,
       non_fungible_token_object_type,  // 10
-      non_fungible_token_data_object_type
+      non_fungible_token_data_object_type,
+      // insert new here
+      protocol_object_type_count       // added due to need to know count
    };
 
    enum impl_object_type
@@ -152,7 +158,9 @@ namespace graphene { namespace chain {
       impl_seeding_statistics_object_type,
       impl_transaction_detail_object_type,
       impl_messaging_object_type,
-      impl_transaction_history_object_type
+      impl_transaction_history_object_type,
+      // insert new here
+      impl_object_type_count       // added due to need to know count
    };
 
    //typedef fc::unsigned_int            object_id_type;

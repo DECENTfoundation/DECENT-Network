@@ -30,10 +30,16 @@
 
 namespace graphene { namespace db {
 
-object_database::object_database()
-:_undo_db(*this)
+
+object_database::object_database(uint8_t space_id_count, uint8_t local_type_id_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count)
+: _undo_db(*this)
+, _space_id_count(space_id_count)
+, _local_object_type_count(local_type_id_count)
+, _proto_type_id_count(proto_type_id_count)
+, _impl_type_id_count(impl_type_id_count)
 {
-   _index.resize(255);
+   reset_indexes();
+
    _undo_db.enable();
 }
 
@@ -54,8 +60,11 @@ const object& object_database::get_object( object_id_type id )const
 
 const index& object_database::get_index(uint8_t space_id, uint8_t type_id)const
 {
-   FC_ASSERT( _index.size() > space_id, "", ("space_id",space_id)("type_id",type_id)("index.size",_index.size()) );
-   FC_ASSERT( _index[space_id].size() > type_id, "", ("space_id",space_id)("type_id",type_id)("index[space_id].size",_index[space_id].size()) );
+   if(space_id >= _index.size())
+      FC_THROW_EXCEPTION(fc::invalid_space_id_exception, "");
+   if(_index[space_id].size() <= type_id)
+      FC_THROW_EXCEPTION(fc::invalid_type_id_exception, "");
+
    const auto& tmp = _index[space_id][type_id];
    FC_ASSERT( tmp );
    return *tmp;
