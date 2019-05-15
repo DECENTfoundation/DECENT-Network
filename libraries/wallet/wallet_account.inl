@@ -211,56 +211,52 @@ brain_key_info wallet_api::suggest_brain_key() const
    return result;
 }
 
-                        pair<transaction_id_type,signed_transaction> wallet_api::register_account_with_keys(const string& name,
-                                                                                    public_key_type owner,
-                                                                                    public_key_type active,
-                                                                                    public_key_type memo,
-                                                                                    const string& registrar_account,
-                                                                                    bool broadcast /* = false */)
+signed_transaction_info wallet_api::register_account_with_keys(const string& name,
+                                                               public_key_type owner,
+                                                               public_key_type active,
+                                                               public_key_type memo,
+                                                               const string& registrar_account,
+                                                               bool broadcast /* = false */)
 {
    FC_ASSERT( !is_locked() );
-   auto tx = my->register_account( name, owner, active, memo, registrar_account,  broadcast );
-   return std::make_pair(tx.id(),tx);
+   return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::register_account(const string& name,
-                                                                          public_key_type owner,
-                                                                          public_key_type active,
-                                                                          const string& registrar_account,
-                                                                          bool broadcast /* = false */)
+signed_transaction_info wallet_api::register_account(const string& name,
+                                                     public_key_type owner,
+                                                     public_key_type active,
+                                                     const string& registrar_account,
+                                                     bool broadcast /* = false */)
 {
    FC_ASSERT( !is_locked() );
-   auto tx = my->register_account( name, owner, active, active, registrar_account, broadcast );
-   return std::make_pair(tx.id(),tx);
+   return my->register_account( name, owner, active, active, registrar_account, broadcast );
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::register_multisig_account(const string& name,
-                                                                                   authority owner,
-                                                                                   authority active,
-                                                                                   public_key_type memo,
-                                                                                   const string& registrar_account,
-                                                                                   bool broadcast /* = false */)
+signed_transaction_info wallet_api::register_multisig_account(const string& name,
+                                                              authority owner,
+                                                              authority active,
+                                                              public_key_type memo,
+                                                              const string& registrar_account,
+                                                              bool broadcast /* = false */)
 {
    FC_ASSERT( !is_locked() );
-   auto tx = my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
-   return std::make_pair(tx.id(),tx);
+   return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::create_account_with_brain_key(const string& brain_key,
-                                                                                       const string& account_name,
-                                                                                       const string& registrar_account,
-                                                                                       bool broadcast /* = false */)
+signed_transaction_info wallet_api::create_account_with_brain_key(const string& brain_key,
+                                                                  const string& account_name,
+                                                                  const string& registrar_account,
+                                                                  bool broadcast /* = false */)
 {
    FC_ASSERT( !my->is_locked() );
-   auto tx = my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
-   return std::make_pair(tx.id(),tx);
+   return my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::update_account_keys(const string& name,
-                                                                             const string& owner,
-                                                                             const string& active,
-                                                                             const string& memo,
-                                                                             bool broadcast /* = false */)
+signed_transaction_info wallet_api::update_account_keys(const string& name,
+                                                        const string& owner,
+                                                        const string& active,
+                                                        const string& memo,
+                                                        bool broadcast /* = false */)
 {
    FC_ASSERT( !is_locked() );
    fc::optional<authority> new_owner, new_active;
@@ -276,15 +272,14 @@ pair<transaction_id_type,signed_transaction> wallet_api::update_account_keys(con
    if( !memo.empty() )
       new_memo = public_key_type( memo );
 
-   auto tx = my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
-   return std::make_pair(tx.id(),tx);
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::update_account_keys_to_multisig(const string& name,
-                                                                                         authority owner,
-                                                                                         authority active,
-                                                                                         public_key_type memo,
-                                                                                         bool broadcast /* = false */)
+signed_transaction_info wallet_api::update_account_keys_to_multisig(const string& name,
+                                                                    authority owner,
+                                                                    authority active,
+                                                                    public_key_type memo,
+                                                                    bool broadcast /* = false */)
 {
    fc::optional<authority> new_owner, new_active;
    fc::optional<public_key_type> new_memo;
@@ -301,8 +296,7 @@ pair<transaction_id_type,signed_transaction> wallet_api::update_account_keys_to_
 
    FC_ASSERT( new_owner || new_active || new_memo, "new authority needs to be different from the existing one" );
 
-   auto tx = my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
-   return std::make_pair(tx.id(),tx);
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
 el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
@@ -352,13 +346,24 @@ brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
    return result;
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::transfer(const string& from, const string& to,
-                                                                  const string& amount,
-                                                                  const string& asset_symbol,
-                                                                  const string& memo,
-                                                                  bool broadcast /* = false */)
+signed_transaction_info wallet_api::transfer(const string& from,
+                                             const string& to,
+                                             const string& amount,
+                                             const string& asset_symbol,
+                                             const string& memo,
+                                             bool broadcast /* = false */)
 {
    FC_ASSERT( !is_locked() );
-   auto tx = my->transfer(from, to, amount, asset_symbol, memo, broadcast);
-   return std::make_pair(tx.id(),tx);
+   return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+}
+
+pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string& from,
+                                                                   const string& to,
+                                                                   const string& amount,
+                                                                   const string& asset_symbol,
+                                                                   const string& memo)
+{
+   FC_ASSERT( !is_locked() );
+   auto trx = my->transfer( from, to, amount, asset_symbol, memo, true );
+   return std::make_pair(trx.id(),trx);
 }

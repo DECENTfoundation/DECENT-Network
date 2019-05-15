@@ -263,6 +263,13 @@ namespace graphene { namespace wallet {
          std::string pretty_amount;
       };
 
+      struct signed_transaction_info : public signed_transaction
+      {
+         signed_transaction_info(const signed_transaction& tx)
+            : signed_transaction( tx ), transaction_id( tx.id() ) {}
+         transaction_id_type transaction_id;
+      };
+
       namespace detail {
          class wallet_api_impl;
       }
@@ -346,14 +353,14 @@ namespace graphene { namespace wallet {
           * @return the signed transaction creating the new non fungible token
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> create_non_fungible_token(const string& issuer,
-                                                                                const string& symbol,
-                                                                                const string& description,
-                                                                                const non_fungible_token_data_definitions& definitions,
-                                                                                uint32_t max_supply,
-                                                                                bool fixed_max_supply,
-                                                                                bool transferable,
-                                                                                bool broadcast = false);
+         signed_transaction_info create_non_fungible_token(const string& issuer,
+                                                           const string& symbol,
+                                                           const string& description,
+                                                           const non_fungible_token_data_definitions& definitions,
+                                                           uint32_t max_supply,
+                                                           bool fixed_max_supply,
+                                                           bool transferable,
+                                                           bool broadcast = false);
 
          /**
           * @brief Updates the non fungible token definition.
@@ -367,12 +374,12 @@ namespace graphene { namespace wallet {
           * @return the signed transaction creating the new non fungible token
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> update_non_fungible_token(const string& issuer,
-                                                                                const string& symbol,
-                                                                                const string& description,
-                                                                                uint32_t max_supply,
-                                                                                bool fixed_max_supply,
-                                                                                bool broadcast = false);
+         signed_transaction_info update_non_fungible_token(const string& issuer,
+                                                           const string& symbol,
+                                                           const string& description,
+                                                           uint32_t max_supply,
+                                                           bool fixed_max_supply,
+                                                           bool broadcast = false);
 
          /**
           * @brief Issues new instance of non fungible token.
@@ -384,11 +391,11 @@ namespace graphene { namespace wallet {
           * @return the signed transaction issuing the new instance
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> issue_non_fungible_token(const string& to_account,
-                                                                               const string& symbol,
-                                                                               const fc::variants& data,
-                                                                               const string& memo,
-                                                                               bool broadcast = false);
+         signed_transaction_info issue_non_fungible_token(const string& to_account,
+                                                          const string& symbol,
+                                                          const fc::variants& data,
+                                                          const string& memo,
+                                                          bool broadcast = false);
 
          /**
           * @brief Gets non fungible token instances by registered token symbol.
@@ -425,10 +432,10 @@ namespace graphene { namespace wallet {
           * @return the signed transaction transfering the token instance
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> transfer_non_fungible_token_data(const string& to_account,
-                                                                                       const non_fungible_token_data_id_type nft_data_id,
-                                                                                       const string& memo,
-                                                                                       bool broadcast = false);
+         signed_transaction_info transfer_non_fungible_token_data(const string& to_account,
+                                                                  const non_fungible_token_data_id_type nft_data_id,
+                                                                  const string& memo,
+                                                                  bool broadcast = false);
 
          /**
           * @brief Burns (destroys) the token instance.
@@ -436,8 +443,8 @@ namespace graphene { namespace wallet {
           * @param broadcast \c true to broadcast the transaction on the network
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id,
-                                                                                   bool broadcast = false);
+         signed_transaction_info burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id,
+                                                              bool broadcast = false);
 
          /**
           * @brief Updates data of token instance.
@@ -448,20 +455,17 @@ namespace graphene { namespace wallet {
           * @return the signed transaction updating the token instance
           * @ingroup WalletAPI_NonFungibleToken
           */
-         pair<transaction_id_type,signed_transaction> update_non_fungible_token_data(const string& modifier,
-                                                                                     const non_fungible_token_data_id_type nft_data_id,
-                                                                                     const std::unordered_map<string, fc::variant>& data,
-                                                                                     bool broadcast = false);
+         signed_transaction_info update_non_fungible_token_data(const string& modifier,
+                                                                const non_fungible_token_data_id_type nft_data_id,
+                                                                const std::unordered_map<string, fc::variant>& data,
+                                                                bool broadcast = false);
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
 
          fc::signal<void(bool)> lock_changed;
          std::shared_ptr<detail::wallet_api_impl> my;
-
       };
-   } }
-
-
+} }
 
 FC_REFLECT( graphene::wallet::wallet_data,
             (chain_id)
@@ -530,6 +534,8 @@ FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(vo
 
 FC_REFLECT_DERIVED( graphene::wallet::extended_asset, (graphene::chain::asset),(pretty_amount))
 
+FC_REFLECT_DERIVED( graphene::wallet::signed_transaction_info,(graphene::chain::signed_transaction),(transaction_id))
+
 FC_API( graphene::wallet::wallet_api,
         //General
         (about)
@@ -582,6 +588,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_account_keys)
         (update_account_keys_to_multisig)
         (transfer)
+        (transfer2)
         (generate_el_gamal_keys)
         (get_el_gammal_key)
         (generate_brain_key_el_gamal_key)

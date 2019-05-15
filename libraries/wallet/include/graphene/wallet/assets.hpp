@@ -70,13 +70,13 @@ monitored_asset_options        get_monitored_asset_data(const string& asset_name
  * @return the signed transaction creating a new asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> create_monitored_asset(const string& issuer,
-                                                                    const string& symbol,
-                                                                    uint8_t precision,
-                                                                    const string& description,
-                                                                    uint32_t feed_lifetime_sec,
-                                                                    uint8_t minimum_feeds,
-                                                                    bool broadcast = false);
+signed_transaction_info create_monitored_asset(const string& issuer,
+                                               const string& symbol,
+                                               uint8_t precision,
+                                               const string& description,
+                                               uint32_t feed_lifetime_sec,
+                                               uint8_t minimum_feeds,
+                                               bool broadcast = false);
 
 /**
  * @brief Update the parameters specific to a monitored asset.
@@ -89,11 +89,11 @@ pair<transaction_id_type,signed_transaction> create_monitored_asset(const string
  * @return the signed transaction updating the monitored asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> update_monitored_asset(const string& symbol,
-                                                                    const string& description,
-                                                                    uint32_t feed_lifetime_sec,
-                                                                    uint8_t minimum_feeds,
-                                                                    bool broadcast = false);
+signed_transaction_info update_monitored_asset(const string& symbol,
+                                               const string& description,
+                                               uint32_t feed_lifetime_sec,
+                                               uint8_t minimum_feeds,
+                                               bool broadcast = false);
 
 /**
  * @brief Creates a new user-issued asset.
@@ -119,15 +119,15 @@ pair<transaction_id_type,signed_transaction> update_monitored_asset(const string
  * @return the signed transaction creating a new asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> create_user_issued_asset(const string& issuer,
-                                                                      const string& symbol,
-                                                                      uint8_t precision,
-                                                                      const string& description,
-                                                                      uint64_t max_supply,
-                                                                      price core_exchange_rate,
-                                                                      bool is_exchangeable,
-                                                                      bool is_fixed_max_supply,
-                                                                      bool broadcast = false);
+signed_transaction_info create_user_issued_asset(const string& issuer,
+                                                 const string& symbol,
+                                                 uint8_t precision,
+                                                 const string& description,
+                                                 uint64_t max_supply,
+                                                 price core_exchange_rate,
+                                                 bool is_exchangeable,
+                                                 bool is_fixed_max_supply,
+                                                 bool broadcast = false);
 
 /**
  * @brief Issue new shares of an asset.
@@ -140,11 +140,11 @@ pair<transaction_id_type,signed_transaction> create_user_issued_asset(const stri
  * @return the signed transaction issuing the new shares
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> issue_asset(const string& to_account,
-                                                         const string& amount,
-                                                         const string& symbol,
-                                                         const string& memo,
-                                                         bool broadcast = false);
+signed_transaction_info issue_asset(const string& to_account,
+                                    const string& amount,
+                                    const string& symbol,
+                                    const string& memo,
+                                    bool broadcast = false);
 
 /**
  * @brief Update the parameters specific to a user issued asset.
@@ -161,13 +161,13 @@ pair<transaction_id_type,signed_transaction> issue_asset(const string& to_accoun
  * @return the signed transaction updating the user-issued asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> update_user_issued_asset(const string& symbol,
-                                                                      const string& new_issuer,
-                                                                      const string& description,
-                                                                      uint64_t max_supply,
-                                                                      price core_exchange_rate,
-                                                                      bool is_exchangeable,
-                                                                      bool broadcast = false);
+signed_transaction_info update_user_issued_asset(const string& symbol,
+                                                 const string& new_issuer,
+                                                 const string& description,
+                                                 uint64_t max_supply,
+                                                 price core_exchange_rate,
+                                                 bool is_exchangeable,
+                                                 bool broadcast = false);
 
 /**
  * @brief Pay into the pools for the given asset. Allows anyone to deposit core/asset into pools.
@@ -183,12 +183,12 @@ pair<transaction_id_type,signed_transaction> update_user_issued_asset(const stri
  * @return the signed transaction funding the asset pools
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> fund_asset_pools(const string& from,
-                                                              const string& uia_amount,
-                                                              const string& uia_symbol,
-                                                              const string& dct_amount,
-                                                              const string& dct_symbol,
-                                                              bool broadcast = false);
+signed_transaction_info fund_asset_pools(const string& from,
+                                         const string& uia_amount,
+                                         const string& uia_symbol,
+                                         const string& dct_amount,
+                                         const string& dct_symbol,
+                                         bool broadcast = false);
 
 /**
  * @brief Burns the given user-issued asset.
@@ -202,10 +202,10 @@ pair<transaction_id_type,signed_transaction> fund_asset_pools(const string& from
  * @return the signed transaction burning the asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> reserve_asset(const string& from,
-                                                           const string& amount,
-                                                           const string& symbol,
-                                                           bool broadcast = false);
+signed_transaction_info reserve_asset(const string& from,
+                                     const string& amount,
+                                     const string& symbol,
+                                     bool broadcast = false);
 
 /**
  * @brief Transfers accumulated assets from pools back to the issuer's balance.
@@ -219,11 +219,11 @@ pair<transaction_id_type,signed_transaction> reserve_asset(const string& from,
  * @return the signed transaction claiming the fees
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> claim_fees(const string& uia_amount,
-                                                        const string& uia_symbol,
-                                                        const string& dct_amount,
-                                                        const string& dct_symbol,
-                                                        bool broadcast = false);
+signed_transaction_info claim_fees(const string& uia_amount,
+                                   const string& uia_symbol,
+                                   const string& dct_amount,
+                                   const string& dct_symbol,
+                                   bool broadcast = false);
 
 /**
  * @brief Converts asset into DCT, using actual price feed.
@@ -248,10 +248,10 @@ string price_to_dct(const string& amount, const string& asset_symbol_or_id);
  * @return the signed transaction updating the price feed for the given asset
  * @ingroup WalletAPI_Asset
  */
-pair<transaction_id_type,signed_transaction> publish_asset_feed(const string& publishing_account,
-                                                                const string& symbol,
-                                                                price_feed feed,
-                                                                bool broadcast = false);
+signed_transaction_info publish_asset_feed(const string& publishing_account,
+                                           const string& symbol,
+                                           price_feed feed,
+                                           bool broadcast = false);
 
 /**
  * @brief Get a list of published price feeds by a miner.

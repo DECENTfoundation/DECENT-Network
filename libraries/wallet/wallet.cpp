@@ -3788,38 +3788,35 @@ signed_transaction content_cancellation(const string& author,
       return my->get_non_fungible_token(nft_symbol_or_id);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::create_non_fungible_token(const string& issuer,
-                                                                                      const string& symbol,
-                                                                                      const string& description,
-                                                                                      const non_fungible_token_data_definitions& definitions,
-                                                                                      uint32_t max_supply,
-                                                                                      bool fixed_max_supply,
-                                                                                      bool transferable,
-                                                                                      bool broadcast /* = false */)
+   signed_transaction_info wallet_api::create_non_fungible_token(const string& issuer,
+                                                                 const string& symbol,
+                                                                 const string& description,
+                                                                 const non_fungible_token_data_definitions& definitions,
+                                                                 uint32_t max_supply,
+                                                                 bool fixed_max_supply,
+                                                                 bool transferable,
+                                                                 bool broadcast /* = false */)
    {
-      signed_transaction tx = my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::update_non_fungible_token(const string& issuer,
-                                                                                      const string& symbol,
-                                                                                      const string& description,
-                                                                                      uint32_t max_supply,
-                                                                                      bool fixed_max_supply,
-                                                                                      bool broadcast /* = false */)
+   signed_transaction_info wallet_api::update_non_fungible_token(const string& issuer,
+                                                                 const string& symbol,
+                                                                 const string& description,
+                                                                 uint32_t max_supply,
+                                                                 bool fixed_max_supply,
+                                                                 bool broadcast /* = false */)
    {
-      signed_transaction tx = my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::issue_non_fungible_token(const string& to_account,
-                                                                                     const string& symbol,
-                                                                                     const fc::variants& data,
-                                                                                     const string& memo,
-                                                                                     bool broadcast /* = false */)
+   signed_transaction_info wallet_api::issue_non_fungible_token(const string& to_account,
+                                                                const string& symbol,
+                                                                const fc::variants& data,
+                                                                const string& memo,
+                                                                bool broadcast /* = false */)
    {
-      signed_transaction tx = my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
    }
 
    vector<non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const string& nft_symbol_or_id) const
@@ -3840,29 +3837,26 @@ signed_transaction content_cancellation(const string& author,
       return my->_remote_db->search_non_fungible_token_history(nft_data_id);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::transfer_non_fungible_token_data(const string& to_account,
-                                                                                             const non_fungible_token_data_id_type nft_data_id,
-                                                                                             const string& memo,
-                                                                                             bool broadcast /* = false */)
+   signed_transaction_info wallet_api::transfer_non_fungible_token_data(const string& to_account,
+                                                                        const non_fungible_token_data_id_type nft_data_id,
+                                                                        const string& memo,
+                                                                        bool broadcast /* = false */)
    {
-      signed_transaction tx = my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id,
-                                                                                         bool broadcast /* = false */)
+   signed_transaction_info wallet_api::burn_non_fungible_token_data(const non_fungible_token_data_id_type nft_data_id,
+                                                                    bool broadcast /* = false */)
    {
-      signed_transaction tx = my->burn_non_fungible_token_data(nft_data_id, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->burn_non_fungible_token_data(nft_data_id, broadcast);
    }
 
-   pair<transaction_id_type,signed_transaction> wallet_api::update_non_fungible_token_data(const string& modifier,
-                                                                                           const non_fungible_token_data_id_type nft_data_id,
-                                                                                           const std::unordered_map<string, fc::variant>& data,
-                                                                                           bool broadcast /* = false */)
+   signed_transaction_info wallet_api::update_non_fungible_token_data(const string& modifier,
+                                                                      const non_fungible_token_data_id_type nft_data_id,
+                                                                      const std::unordered_map<string, fc::variant>& data,
+                                                                      bool broadcast /* = false */)
    {
-      signed_transaction tx = my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
-      return std::make_pair(tx.id(),tx);
+      return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
    }
 
    std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const

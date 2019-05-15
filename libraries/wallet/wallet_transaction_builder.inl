@@ -24,33 +24,29 @@ transaction wallet_api::preview_builder_transaction(transaction_handle_type hand
    return my->preview_builder_transaction(handle);
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle,
-                                                                                  bool broadcast)
+signed_transaction_info wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   signed_transaction tx = my->sign_builder_transaction(transaction_handle, broadcast);
-   return std::make_pair(tx.id(),tx);
+   return my->sign_builder_transaction(transaction_handle, broadcast);
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::propose_builder_transaction(transaction_handle_type handle,
-                                                           time_point_sec expiration,
-                                                           uint32_t review_period_seconds,
-                                                           bool broadcast)
+signed_transaction_info wallet_api::propose_builder_transaction(transaction_handle_type handle,
+                                                                time_point_sec expiration,
+                                                                uint32_t review_period_seconds,
+                                                                bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   signed_transaction tx = my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
-   return std::make_pair(tx.id(),tx);
+   return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::propose_builder_transaction2(transaction_handle_type handle,
-                                                                                      const string& account_name_or_id,
-                                                                                      time_point_sec expiration,
-                                                                                      uint32_t review_period_seconds,
-                                                                                      bool broadcast)
+signed_transaction_info wallet_api::propose_builder_transaction2(transaction_handle_type handle,
+                                                                 const string& account_name_or_id,
+                                                                 time_point_sec expiration,
+                                                                 uint32_t review_period_seconds,
+                                                                 bool broadcast)
 {
    FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-   signed_transaction tx = my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
-   return std::make_pair(tx.id(),tx);
+   return my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
 }
 
 void wallet_api::remove_builder_transaction(transaction_handle_type handle)
@@ -63,12 +59,11 @@ string wallet_api::serialize_transaction( signed_transaction tx )const
    return fc::to_hex(fc::raw::pack(tx));
 }
 
-pair<transaction_id_type,signed_transaction> wallet_api::sign_transaction(signed_transaction tx, bool broadcast /* = false */)
+signed_transaction_info wallet_api::sign_transaction(signed_transaction tx, bool broadcast /* = false */)
 {
     try {
        FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
-       signed_transaction t = my->sign_transaction( tx, broadcast );
-       return std::make_pair(t.id(),t);
+       return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (tx) )
 }
 

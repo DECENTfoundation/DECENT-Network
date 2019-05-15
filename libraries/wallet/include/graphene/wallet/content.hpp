@@ -50,21 +50,21 @@
  * @return the signed transaction submitting the content
  * @ingroup WalletAPI_Content
  */
-pair<transaction_id_type,signed_transaction> submit_content(const string& author,
-                                                            const vector< pair< string, uint32_t>>& co_authors,
-                                                            const string& URI,
-                                                            const vector <regional_price_info>& price_amounts,
-                                                            uint64_t size,
-                                                            const fc::ripemd160& hash,
-                                                            const vector<account_id_type>& seeders,
-                                                            uint32_t quorum,
-                                                            const fc::time_point_sec& expiration,
-                                                            const string& publishing_fee_asset,
-                                                            const string& publishing_fee_amount,
-                                                            const string& synopsis,
-                                                            const DInteger& secret,
-                                                            const decent::encrypt::CustodyData& cd,
-                                                            bool broadcast);
+signed_transaction_info submit_content(const string& author,
+                                       const vector< pair< string, uint32_t>>& co_authors,
+                                       const string& URI,
+                                       const vector <regional_price_info>& price_amounts,
+                                       uint64_t size,
+                                       const fc::ripemd160& hash,
+                                       const vector<account_id_type>& seeders,
+                                       uint32_t quorum,
+                                       const fc::time_point_sec& expiration,
+                                       const string& publishing_fee_asset,
+                                       const string& publishing_fee_amount,
+                                       const string& synopsis,
+                                       const DInteger& secret,
+                                       const decent::encrypt::CustodyData& cd,
+                                       bool broadcast);
 
 /**
  * @brief This function is used to create and upload a package and submit content in one step.
@@ -104,9 +104,9 @@ content_keys submit_content_async(const string& author,
  * @return the signed transaction cancelling the content
  * @ingroup WalletAPI_Content
  */
-pair<transaction_id_type,signed_transaction> content_cancellation(const string& author,
-                                                                  const string& URI,
-                                                                  bool broadcast);
+signed_transaction_info content_cancellation(const string& author,
+                                             const string& URI,
+                                             bool broadcast);
 
 /**
  * @brief Downloads encrypted content specified by provided URI.
@@ -140,12 +140,12 @@ content_download_status get_download_status(const string& consumer, const string
  * @return the signed transaction requesting buying of the content
  * @ingroup WalletAPI_Content
  */
-pair<transaction_id_type,signed_transaction> request_to_buy(const string& consumer,
-                                                            const string& URI,
-                                                            const string& price_asset_name,
-                                                            const string& price_amount,
-                                                            const string& str_region_code_from,
-                                                            bool broadcast);
+signed_transaction_info request_to_buy(const string& consumer,
+                                       const string& URI,
+                                       const string& price_asset_name,
+                                       const string& price_amount,
+                                       const string& str_region_code_from,
+                                       bool broadcast);
 
 /**
  * @brief Rates and comments a content.
@@ -157,11 +157,11 @@ pair<transaction_id_type,signed_transaction> request_to_buy(const string& consum
  * @param broadcast \c true to broadcast the transaction on the network
  * @ingroup WalletAPI_Content
  */
-pair<transaction_id_type,signed_transaction> leave_rating_and_comment(const string& consumer,
-                                                                      const string& URI,
-                                                                      uint64_t rating,
-                                                                      const string& comment,
-                                                                      bool broadcast = false);
+signed_transaction_info leave_rating_and_comment(const string& consumer,
+                                                 const string& URI,
+                                                 uint64_t rating,
+                                                 const string& comment,
+                                                 bool broadcast = false);
 
 /**
  * @brief Get a list of open buyings.

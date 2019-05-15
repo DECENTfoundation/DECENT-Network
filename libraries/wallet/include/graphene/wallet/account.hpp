@@ -223,12 +223,12 @@ pair<brain_key_info, el_gamal_key_pair> generate_brain_key_el_gamal_key() const;
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> register_account_with_keys(const string& name,
-                                                                        public_key_type owner,
-                                                                        public_key_type active,
-                                                                        public_key_type memo,
-                                                                        const string& registrar_account,
-                                                                        bool broadcast = false);
+signed_transaction_info register_account_with_keys(const string& name,
+                                                   public_key_type owner,
+                                                   public_key_type active,
+                                                   public_key_type memo,
+                                                   const string& registrar_account,
+                                                   bool broadcast = false);
 
 /**
  * @brief Registers a third party's account on the blockckain.
@@ -249,11 +249,11 @@ pair<transaction_id_type,signed_transaction> register_account_with_keys(const st
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> register_account(const string& name,
-                                                              public_key_type owner,
-                                                              public_key_type active,
-                                                              const string& registrar_account,
-                                                              bool broadcast = false);
+signed_transaction_info register_account(const string& name,
+                                         public_key_type owner,
+                                         public_key_type active,
+                                         const string& registrar_account,
+                                         bool broadcast = false);
 
 /**
  * @brief Registers a third party's multisignature account on the blockckain.
@@ -277,12 +277,12 @@ pair<transaction_id_type,signed_transaction> register_account(const string& name
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> register_multisig_account(const string& name,
-                                                                       authority owner,
-                                                                       authority active,
-                                                                       public_key_type memo,
-                                                                       const string& registrar_account,
-                                                                       bool broadcast = false);
+signed_transaction_info register_multisig_account(const string& name,
+                                                  authority owner,
+                                                  authority active,
+                                                  public_key_type memo,
+                                                  const string& registrar_account,
+                                                  bool broadcast = false);
 
 /**
  * @brief Creates a new account and registers it on the blockchain.
@@ -295,10 +295,10 @@ pair<transaction_id_type,signed_transaction> register_multisig_account(const str
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> create_account_with_brain_key(const string& brain_key,
-                                                                           const string& account_name,
-                                                                           const string& registrar_account,
-                                                                           bool broadcast = false);
+signed_transaction_info create_account_with_brain_key(const string& brain_key,
+                                                      const string& account_name,
+                                                      const string& registrar_account,
+                                                      bool broadcast = false);
 
 /**
  * @brief Updates an account keys.
@@ -319,11 +319,11 @@ pair<transaction_id_type,signed_transaction> create_account_with_brain_key(const
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> update_account_keys(const string& name,
-                                                                 const string& owner,
-                                                                 const string& active,
-                                                                 const string& memo,
-                                                                 bool broadcast = false);
+signed_transaction_info update_account_keys(const string& name,
+                                            const string& owner,
+                                            const string& active,
+                                            const string& memo,
+                                            bool broadcast = false);
 
 /**
  * @brief Updates an account keys.
@@ -344,11 +344,11 @@ pair<transaction_id_type,signed_transaction> update_account_keys(const string& n
  * @return the signed transaction registering the account
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> update_account_keys_to_multisig(const string& name,
-                                                                             authority owner,
-                                                                             authority active,
-                                                                             public_key_type memo,
-                                                                             bool broadcast = false);
+signed_transaction_info update_account_keys_to_multisig(const string& name,
+                                                        authority owner,
+                                                        authority active,
+                                                        public_key_type memo,
+                                                        bool broadcast = false);
 
 /**
  * @brief Transfer an amount from one account to another account or to content.
@@ -366,12 +366,34 @@ pair<transaction_id_type,signed_transaction> update_account_keys_to_multisig(con
  * @return the signed transaction transferring funds
  * @ingroup WalletAPI_Account
  */
-pair<transaction_id_type,signed_transaction> transfer(const string& from,
-                                                      const string& to,
-                                                      const string& amount,
-                                                      const string& asset_symbol,
-                                                      const string& memo,
-                                                      bool broadcast = false);
+signed_transaction_info transfer(const string& from,
+                                 const string& to,
+                                 const string& amount,
+                                 const string& asset_symbol,
+                                 const string& memo,
+                                 bool broadcast = false);
+
+/**
+ *  @brief This method works just like transfer, except it always broadcasts and
+ *  returns the transaction ID along with the signed transaction.
+ *  @param from the name or id of the account sending the funds
+ *  @param to the name or id of the account or id of the content receiving the funds
+ *  @param amount the amount to send (in nominal units -- to send half of a DCT, specify 0.5)
+ *  @param asset_symbol the symbol or id of the asset to send
+ *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
+ *             transaction and readable for the receiver.  There is no length limit
+ *             other than the limit imposed by maximum transaction size, but transaction
+ *             increase with transaction size
+ * @note transaction fee is fixed and does not depend on the length of the memo
+ * @warning Obsolete method. Use \c transfer instead.
+ * @return the transaction ID along with the signed transaction
+ * @ingroup WalletAPI_Account
+ */
+pair<transaction_id_type,signed_transaction> transfer2(const string& from,
+                                                       const string& to,
+                                                       const string& amount,
+                                                       const string& asset_symbol,
+                                                       const string& memo );
 
 /**
  * @brief Generates private El Gamal key and corresponding public key.

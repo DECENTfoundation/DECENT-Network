@@ -37,11 +37,11 @@
  * @return the signed transaction subscribing the consumer to the author
  * @ingroup WalletAPI_Subscription
  */
-pair<transaction_id_type,signed_transaction> subscribe_to_author(const string& from,
-                                                                 const string& to,
-                                                                 const string& price_amount,
-                                                                 const string& price_asset_symbol,
-                                                                 bool broadcast/* = false */);
+signed_transaction_info subscribe_to_author(const string& from,
+                                            const string& to,
+                                            const string& price_amount,
+                                            const string& price_asset_symbol,
+                                            bool broadcast/* = false */);
 
 /**
  * @brief Creates a subscription to author. This function is used by author.
@@ -52,9 +52,9 @@ pair<transaction_id_type,signed_transaction> subscribe_to_author(const string& f
  * @return the signed transaction subscribing the consumer to the author
  * @ingroup WalletAPI_Subscription
  */
-pair<transaction_id_type,signed_transaction> subscribe_by_author(const string& from,
-                                                                 const string& to,
-                                                                 bool broadcast/* = false */);
+signed_transaction_info subscribe_by_author(const string& from,
+                                            const string& to,
+                                            bool broadcast/* = false */);
 
 /**
  * @brief This function can be used to allow/disallow subscription.
@@ -68,12 +68,12 @@ pair<transaction_id_type,signed_transaction> subscribe_by_author(const string& f
  * @return the signed transaction updating the account
  * @ingroup WalletAPI_Subscription
  */
-pair<transaction_id_type,signed_transaction> set_subscription(const string& account,
-                                                              bool allow_subscription,
-                                                              uint32_t subscription_period,
-                                                              const string& price_amount,
-                                                              const string& price_asset_symbol,
-                                                              bool broadcast/* = false */);
+signed_transaction_info set_subscription(const string& account,
+                                         bool allow_subscription,
+                                         uint32_t subscription_period,
+                                         const string& price_amount,
+                                         const string& price_asset_symbol,
+                                         bool broadcast/* = false */);
 
 /**
  * @brief This function can be used to allow/disallow automatic renewal of expired subscription.
@@ -85,10 +85,10 @@ pair<transaction_id_type,signed_transaction> set_subscription(const string& acco
  * @return the signed transaction allowing/disallowing renewal of the subscription
  * @ingroup WalletAPI_Subscription
  */
-pair<transaction_id_type,signed_transaction> set_automatic_renewal_of_subscription(const string& account_id_or_name,
-                                                                                   subscription_id_type subscription_id,
-                                                                                   bool automatic_renewal,
-                                                                                   bool broadcast/* = false */);
+signed_transaction_info set_automatic_renewal_of_subscription(const string& account_id_or_name,
+                                                              subscription_id_type subscription_id,
+                                                              bool automatic_renewal,
+                                                              bool broadcast/* = false */);
 
 /**
  * @brief Get a list of consumer's active (not expired) subscriptions.

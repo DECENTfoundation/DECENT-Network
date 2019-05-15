@@ -49,13 +49,13 @@ vector<proposal_object> get_proposed_transactions( const string& account_or_id )
  * @param expiration expiration time
  * @ingroup WalletAPI_Proposals
  */
-pair<transaction_id_type,signed_transaction> propose_transfer(const string& proposer,
-                                                              const string& from,
-                                                              const string& to,
-                                                              const string& amount,
-                                                              const string& asset_symbol,
-                                                              const string& memo,
-                                                              time_point_sec expiration);
+signed_transaction_info propose_transfer(const string& proposer,
+                                         const string& from,
+                                         const string& to,
+                                         const string& amount,
+                                         const string& asset_symbol,
+                                         const string& memo,
+                                         time_point_sec expiration);
 
 /**
  * @brief Creates a transaction to propose a parameter change.
@@ -68,10 +68,10 @@ pair<transaction_id_type,signed_transaction> propose_transfer(const string& prop
  * @return the signed version of the transaction
  * @ingroup WalletAPI_Proposals
  */
-pair<transaction_id_type,signed_transaction> propose_parameter_change(const string& proposing_account,
-                                                                      fc::time_point_sec expiration_time,
-                                                                      const variant_object& changed_values,
-                                                                      bool broadcast = false);
+signed_transaction_info propose_parameter_change(const string& proposing_account,
+                                                 fc::time_point_sec expiration_time,
+                                                 const variant_object& changed_values,
+                                                 bool broadcast = false);
 
 /**
  * @brief Propose a fee change.
@@ -84,10 +84,10 @@ pair<transaction_id_type,signed_transaction> propose_parameter_change(const stri
  * @return the signed version of the transaction
  * @ingroup WalletAPI_Proposals
  */
-pair<transaction_id_type,signed_transaction> propose_fee_change(const string& proposing_account,
-                                                                fc::time_point_sec expiration_time,
-                                                                const variant_object& changed_values,
-                                                                bool broadcast = false);
+signed_transaction_info propose_fee_change(const string& proposing_account,
+                                           fc::time_point_sec expiration_time,
+                                           const variant_object& changed_values,
+                                           bool broadcast = false);
 
 /**
  * @brief Approve or disapprove a proposal.
@@ -99,9 +99,9 @@ pair<transaction_id_type,signed_transaction> propose_fee_change(const string& pr
  * @return the signed version of the transaction
  * @ingroup WalletAPI_Proposals
  */
-pair<transaction_id_type,signed_transaction> approve_proposal(const string& fee_paying_account,
-                                                              const string& proposal_id,
-                                                              const approval_delta& delta,
-                                                              bool broadcast /* = false */);
+signed_transaction_info approve_proposal(const string& fee_paying_account,
+                                         const string& proposal_id,
+                                         const approval_delta& delta,
+                                         bool broadcast /* = false */);
 
 #endif //DECENT_WALLET_PROPOSALS_H

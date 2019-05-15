@@ -60,9 +60,9 @@ miner_object get_miner(const string& owner_account);
  * @return the signed transaction registering a miner
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> create_miner(const string& owner_account,
-                                                          const string& url,
-                                                          bool broadcast = false);
+signed_transaction_info create_miner(const string& owner_account,
+                                     const string& url,
+                                     bool broadcast = false);
 
 /**
  * @brief Update a miner object owned by the given account.
@@ -73,10 +73,10 @@ pair<transaction_id_type,signed_transaction> create_miner(const string& owner_ac
  * @param broadcast \c true if you wish to broadcast the transaction.
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> update_miner(const string& miner_name,
-                                                          const string& url,
-                                                          const string& block_signing_key,
-                                                          bool broadcast = false);
+signed_transaction_info update_miner(const string& miner_name,
+                                     const string& url,
+                                     const string& block_signing_key,
+                                     bool broadcast = false);
 
 /**
  * @brief Get information about a vesting balance object.
@@ -94,10 +94,10 @@ vector< vesting_balance_object_with_info > get_vesting_balances( const string& a
  * @param broadcast \c true if you wish to broadcast the transaction
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> withdraw_vesting(const string& miner_name,
-                                                              const string& amount,
-                                                              const string& asset_symbol,
-                                                              bool broadcast = false);
+signed_transaction_info withdraw_vesting(const string& miner_name,
+                                         const string& amount,
+                                         const string& asset_symbol,
+                                         bool broadcast = false);
 
 /**
  * @brief Vote for a given miner.
@@ -117,10 +117,10 @@ pair<transaction_id_type,signed_transaction> withdraw_vesting(const string& mine
  * @return the signed transaction changing your vote for the given miner
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> vote_for_miner(const string& voting_account,
-                                                            const string& miner,
-                                                            bool approve,
-                                                            bool broadcast = false);
+signed_transaction_info vote_for_miner(const string& voting_account,
+                                       const string& miner,
+                                       bool approve,
+                                       bool broadcast = false);
 
 /**
  * @brief Set the voting proxy for an account.
@@ -138,9 +138,9 @@ pair<transaction_id_type,signed_transaction> vote_for_miner(const string& voting
  * @return the signed transaction changing your vote proxy settings
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> set_voting_proxy(const string& account_to_modify,
-                                                              optional<string> voting_account,
-                                                              bool broadcast = false);
+signed_transaction_info set_voting_proxy(const string& account_to_modify,
+                                         optional<string> voting_account,
+                                         bool broadcast = false);
 
 /**
  * @brief Set your vote for the number of miners in the system.
@@ -160,9 +160,9 @@ pair<transaction_id_type,signed_transaction> set_voting_proxy(const string& acco
  * @return the signed transaction changing your vote proxy settings
  * @ingroup WalletAPI_Mining
  */
-pair<transaction_id_type,signed_transaction> set_desired_miner_count(const string& account_to_modify,
-                                                                     uint16_t desired_number_of_miners,
-                                                                     bool broadcast = false);
+signed_transaction_info set_desired_miner_count(const string& account_to_modify,
+                                                uint16_t desired_number_of_miners,
+                                                bool broadcast = false);
 
 /**
  * @brief Get miner voting info list by account that match search term.
