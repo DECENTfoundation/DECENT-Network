@@ -43,27 +43,57 @@ addons:
       - libcurl4-openssl-dev
 
 before_cache:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cleanup && rm -rf $HOME/Library/Caches/Homebrew/DCore--git; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew cleanup &&
+      rm -rf $HOME/Library/Caches/Homebrew/DCore--git;
+    fi
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap nlohmann/json && brew tap decentfoundation/DCore; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' "s,branch =\> \"develop\",revision =\> \"$TRAVIS_COMMIT\"," /usr/local/Homebrew/Library/Taps/decentfoundation/homebrew-dcore/DCore.rb; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update && sudo apt-get install -y libpbc-dev; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz &&
-    cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install && cd ..); fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz && tar xf v3.6.1.tar.gz &&
-    cd json-3.6.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install && cd ..); fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew tap nlohmann/json &&
+      brew tap decentfoundation/DCore;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      test ! -L /usr/local/opt/cryptopp || brew upgrade cryptopp || true;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      sed -i '' "s,branch =\> \"develop\",revision =\> \"$TRAVIS_COMMIT\"," /usr/local/Homebrew/Library/Taps/decentfoundation/homebrew-dcore/DCore.rb;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc" &&
+      sudo apt-get update &&
+      sudo apt-get install -y libpbc-dev;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install && cd ..);
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz && tar xf v3.6.1.tar.gz && cd json-3.6.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install && cd ..);
+    fi
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install --build-bottle --verbose --HEAD DCore; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew --skip-relocation DCore; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M"); fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/json -DBOOST_ROOT=$HOME/boost . && make -j$(nproc); fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      cd $HOME/Library/Caches/Homebrew &&
+      mv $TRAVIS_BUILD_DIR DCore--git &&
+      brew install --build-bottle --verbose --HEAD DCore &&
+      mv DCore--git $TRAVIS_BUILD_DIR &&
+      cd $TRAVIS_BUILD_DIR;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew bottle --root-url=https://dl.bintray.com/decentfoundation/homebrew --skip-relocation DCore &&
+      scripts/MacOS/prepare_dist.sh /usr/local/opt/DCore $TRAVIS_BUILD_NUMBER.$(date -u "+%H%M") &&
+      pkgbuild --root scripts/MacOS/dist --component-plist scripts/MacOS/decent_pkg.plist dcore.$(ls dcore-* | sed 's/dcore-.*\.\(.*\)\.bottle\.tar\.gz/\1/').pkg;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/DCore -DCMAKE_PREFIX_PATH=$HOME/json -DBOOST_ROOT=$HOME/boost . &&
+      make -j$(nproc) install;
+    fi
 
 deploy:
   skip_cleanup: true
@@ -75,3 +105,8 @@ deploy:
   on:
     branch: develop
     condition: "$TRAVIS_OS_NAME == 'osx'"
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
