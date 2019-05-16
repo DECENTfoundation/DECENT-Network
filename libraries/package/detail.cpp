@@ -56,13 +56,11 @@ namespace decent { namespace package { namespace detail {
     }
 
     void get_files_recursive(const boost::filesystem::path& dir, std::vector<boost::filesystem::path>& all_files) {
-        using namespace boost::filesystem;
-
         if (!is_directory(dir)) {
             FC_THROW("${path} does not point to an existing diectory", ("path", dir.string()) );
         }
 
-        for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
+        for (boost::filesystem::recursive_directory_iterator it(dir); it != boost::filesystem::recursive_directory_iterator(); ++it) {
             if (is_regular_file(*it)) {
                 all_files.push_back(*it);
             }
@@ -74,13 +72,11 @@ namespace decent { namespace package { namespace detail {
 
     void get_files_recursive_except(const boost::filesystem::path& dir, std::vector<boost::filesystem::path>& some_files,
                                     const std::set<boost::filesystem::path>& paths_to_skip) {
-        using namespace boost::filesystem;
-
         if (!is_directory(dir)) {
             FC_THROW("${path} does not point to an existing diectory", ("path", dir.string()) );
         }
 
-        for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
+        for (boost::filesystem::recursive_directory_iterator it(dir); it != boost::filesystem::recursive_directory_iterator(); ++it) {
             if (is_regular_file(*it) && paths_to_skip.find(*it) == paths_to_skip.end()) {
                 some_files.push_back(*it);
             }
@@ -91,16 +87,14 @@ namespace decent { namespace package { namespace detail {
     }
 
     void remove_all_except(boost::filesystem::path dir, const std::set<boost::filesystem::path>& paths_to_skip) {
-        using namespace boost::filesystem;
-
         if (!is_directory(dir)) {
             FC_THROW("${path} does not point to an existing diectory", ("path", dir.string()) );
         }
 
         dir = dir.lexically_normal();
-        std::set<path> paths_to_remove;
+        std::set<boost::filesystem::path> paths_to_remove;
 
-        for (recursive_directory_iterator it(dir); it != recursive_directory_iterator(); ++it) {
+        for (boost::filesystem::recursive_directory_iterator it(dir); it != boost::filesystem::recursive_directory_iterator(); ++it) {
             if (is_directory(*it) && is_symlink(*it)) {
                 it.no_push();
             }
@@ -130,8 +124,6 @@ namespace decent { namespace package { namespace detail {
     }
 
     void move_all_except(boost::filesystem::path from_dir, boost::filesystem::path to_dir, const std::set<boost::filesystem::path>& paths_to_skip) {
-        using namespace boost::filesystem;
-
         if (!is_directory(from_dir)) {
             FC_THROW("${path} does not point to an existing diectory", ("path", from_dir.string()) );
         }
@@ -142,9 +134,9 @@ namespace decent { namespace package { namespace detail {
 
         from_dir = from_dir.lexically_normal();
         to_dir = to_dir.lexically_normal();
-        std::map<path, path> paths_to_rename;
+        std::map<boost::filesystem::path, boost::filesystem::path> paths_to_rename;
 
-        for (recursive_directory_iterator it(from_dir); it != recursive_directory_iterator(); ++it) {
+        for (boost::filesystem::recursive_directory_iterator it(from_dir); it != boost::filesystem::recursive_directory_iterator(); ++it) {
             if (is_directory(*it) && is_symlink(*it)) {
                 it.no_push();
             }
@@ -175,14 +167,12 @@ namespace decent { namespace package { namespace detail {
         }
 
         for (const auto& path_to_rename : paths_to_rename) {
-            rename(path_to_rename.first, path_to_rename.second);
+            copy_file(path_to_rename.first, path_to_rename.second);
+            remove(path_to_rename.first);
         }
     }
 
     void touch(const boost::filesystem::path& file_path) {
-        using namespace boost::filesystem;
-        using namespace boost::interprocess;
-
         const auto file_dir = file_path.parent_path();
         if (!create_directories(file_dir) && !is_directory(file_dir)) {
             FC_THROW("Unable to create directory ${path}", ("path", file_dir.string()) );
