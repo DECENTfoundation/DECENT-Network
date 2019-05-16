@@ -328,7 +328,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    }
 
    chain_id_type chain_id = genesis_state.compute_chain_id();
-   idump((chain_id));
+   ddump((chain_id));
    // Create global properties
    create<global_property_object>([&](global_property_object& p) {
        p.parameters = genesis_state.initial_parameters;
@@ -359,7 +359,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Create initial accounts
    for( const auto& account : genesis_state.initial_accounts )
    {
-      idump((account));
+      ddump((account));
       account_create_operation cop;
       cop.name = account.name;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
@@ -432,9 +432,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       top.to = get_account_id( balance.owner );
       asset amount( balance.amount, get_asset_id( balance.asset_symbol ) );
       top.amount = amount;
-      ilog("creating balance");
-      idump((top));
-      idump((balance));
+      dlog("creating balance");
+      ddump((top));
+      ddump((balance));
       apply_operation(genesis_eval_state, top);
    }
 

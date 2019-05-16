@@ -939,8 +939,8 @@ namespace detail {
           }
           while (low_block_num <= high_block_num);
 
-          idump((synopsis));
-          ilog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
+          ddump((synopsis));
+          dlog("synopsis for blocks ${l} - ${h}",("l", orig_low_block_num)("h", high_block_num));
           return synopsis;
       } FC_RETHROW() }
 
