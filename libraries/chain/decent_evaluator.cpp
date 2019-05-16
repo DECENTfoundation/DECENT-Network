@@ -733,7 +733,6 @@ void_result set_publishing_right_evaluator::do_evaluate( const set_publishing_ri
    
    void_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
    {try{
-      FC_ASSERT(db().head_block_time() < HARDFORK_1_TIME );
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
