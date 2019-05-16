@@ -8,7 +8,13 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      language: cpp
+      cache:
+        directories:
+          - $HOME/boost
+          - $HOME/json
+
+    - os: linux
+      compiler: clang
       cache:
         directories:
           - $HOME/boost
@@ -17,7 +23,6 @@ matrix:
     - os: osx
       osx_image: xcode9.4
       compiler: clang
-      language: cpp
       cache:
         directories:
           - /usr/local/Cellar/cryptopp
@@ -26,7 +31,6 @@ matrix:
     - os: osx
       osx_image: xcode10.2
       compiler: clang
-      language: cpp
       cache:
         directories:
           - /usr/local/Cellar/cryptopp
@@ -71,10 +75,10 @@ before_install:
       sudo apt-get install -y libpbc-dev;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install && cd ..);
+      test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install);
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz && tar xf v3.6.1.tar.gz && cd json-3.6.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install && cd ..);
+      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz && tar xf v3.6.1.tar.gz && cd json-3.6.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install);
     fi
 
 script:
