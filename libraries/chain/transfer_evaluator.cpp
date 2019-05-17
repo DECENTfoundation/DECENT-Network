@@ -91,7 +91,7 @@ void_result transfer_evaluator::do_evaluate( const operation_type& op )
          FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
          to_account_name = content_itr->author(d).name;
       }
-      else if (db().head_block_time() > HARDFORK_4_TIME)
+      else if (db().head_block_time() > HARDFORK_3_TIME)
       {
          const account_object& to_account = op.to.as<account_id_type>()(d);
          to_account_name = to_account.name;
@@ -99,7 +99,7 @@ void_result transfer_evaluator::do_evaluate( const operation_type& op )
 
       try {
          bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
-         if (db().head_block_time() > HARDFORK_4_TIME)
+         if (db().head_block_time() > HARDFORK_3_TIME)
          {
             FC_ASSERT( insufficient_balance,
                        "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
