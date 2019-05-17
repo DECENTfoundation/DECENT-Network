@@ -34,8 +34,6 @@
 
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
-#include <fc/log/console_appender.hpp>
-#include <fc/log/file_appender.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/log/logger_config.hpp>
 #include <fc/monitoring.hpp>
@@ -46,7 +44,6 @@
 #include <decent/about.hpp>
 
 #include <iostream>
-#include <fstream>
 
 #ifdef _MSC_VER
 #include <signal.h> 
