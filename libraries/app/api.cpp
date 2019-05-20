@@ -344,8 +344,9 @@ namespace graphene { namespace app {
                   {
                      bool is_non_zero_balance_for_asset0 = (info.balance.asset0.amount != 0ll && assets_list.find(info.balance.asset0.asset_id) != assets_list.end());
                      bool is_non_zero_balance_for_asset1 = (info.balance.asset1.amount != 0ll && assets_list.find(info.balance.asset1.asset_id) != assets_list.end());
+                     bool is_non_zero_fee = (info.fee.amount != 0ll && assets_list.find(info.fee.asset_id) != assets_list.end());
 
-                     if (assets_list.empty() || is_non_zero_balance_for_asset0 || is_non_zero_balance_for_asset1)
+                     if (assets_list.empty() || is_non_zero_balance_for_asset0 || is_non_zero_balance_for_asset1 || is_non_zero_fee)
                      {
                         bool skip_due_to_partner_account_id = false;
 
