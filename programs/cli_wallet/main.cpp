@@ -336,7 +336,8 @@ int main( int argc, char** argv )
         exit_promise->wait();
       }
 
-      wapi->save_wallet_file(wallet_file.generic_string());
+      if( !wapi->is_locked() )
+         wapi->save_wallet_file(wallet_file.generic_string());
       locked_connection.disconnect();
       closed_connection.disconnect();
    }
