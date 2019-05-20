@@ -455,10 +455,8 @@ namespace graphene { namespace app {
    template<typename ID, typename COMP>
    void find_message_objects(vector<message_object>& result, const ID& ids, const std::set<graphene::db::object_id_type>& objs, uint32_t max_count, const COMP& cmp)
    {
-      for (const object_id_type& item : objs) {
-         if (max_count == 0)
-            return;
-         auto msg_itr = ids.find(item);
+      for (auto it = objs.crbegin(); max_count > 0 && it != objs.crend(); ++it) {
+         auto msg_itr = ids.find(*it);
          if (msg_itr != ids.end()) {
             const message_object& msg_obj = *msg_itr;
             if (cmp(msg_obj.sender)) {
@@ -512,8 +510,8 @@ namespace graphene { namespace app {
          FC_CAPTURE_AND_RETHROW( (sender) );
 
          auto range = idx.indices().get<by_sender>().equal_range(*sender);
-         while (range.first != range.second && max_count-- > 0) {
-            result.emplace_back(*range.first++);
+         while (range.first != range.second-- && max_count-- > 0) {
+            result.emplace_back(*range.second);
          }
       }
 
