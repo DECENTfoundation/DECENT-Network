@@ -175,7 +175,7 @@ void_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_
 
    const non_fungible_token_data_object& nft_data_obj = op.nft_data_id(d);
    FC_ASSERT( op.from == nft_data_obj.owner );
-   FC_ASSERT( nft_data_obj.nft_id(d).transferable, "Attempt to transfer a non transferable token" );
+   FC_ASSERT( nft_data_obj.nft_id(d).transferable || op.to == GRAPHENE_NULL_ACCOUNT, "Attempt to transfer a non transferable token" );
    FC_ASSERT( d.find_object(op.to), "Attempt to transfer a non fungible token data to a non-existing account" );
 
    nft_data_to_update = &nft_data_obj;
