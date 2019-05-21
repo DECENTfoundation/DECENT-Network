@@ -1320,15 +1320,14 @@ namespace graphene { namespace app {
 
    vector<non_fungible_token_data_object> database_api_impl::list_non_fungible_token_data(non_fungible_token_id_type nft_id)const
    {
-      const auto& nft_data_by_nft = _db.get_index_type<non_fungible_token_data_index>().indices().get<by_nft>();
-
-      auto itr = nft_data_by_nft.lower_bound(nft_id);
-      auto end = nft_data_by_nft.upper_bound(nft_id);
+      const auto& nft_data_range = _db.get_index_type<non_fungible_token_data_index>().indices().get<by_nft>().equal_range(nft_id);
 
       vector<non_fungible_token_data_object> result;
-      result.reserve(std::distance(itr, end));
-      while(itr != end)
-         result.emplace_back(*itr++);
+      result.reserve(std::distance(nft_data_range.first, nft_data_range.second));
+      std::for_each(nft_data_range.first, nft_data_range.second, [&](const non_fungible_token_data_object& nft_data) {
+         if( nft_data.owner != GRAPHENE_NULL_ACCOUNT )
+            result.emplace_back(nft_data);
+      });
 
       return result;
    }
