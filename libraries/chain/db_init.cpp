@@ -35,12 +35,15 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/seeding_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/chain/message_object.hpp>
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/miner_schedule_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/transaction_history_object.hpp>
 #include <graphene/chain/non_fungible_token_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
@@ -75,17 +78,23 @@ namespace graphene { namespace chain {
 //
 // [1] http://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
 
+const uint8_t account_balance_object::space_id;
+const uint8_t account_balance_object::type_id;
+
 const uint8_t account_object::space_id;
 const uint8_t account_object::type_id;
+
+const uint8_t account_transaction_history_object::space_id;
+const uint8_t account_transaction_history_object::type_id;
 
 const uint8_t account_statistics_object::space_id;
 const uint8_t account_statistics_object::type_id;
 
-const uint8_t asset_object::space_id;
-const uint8_t asset_object::type_id;
-
 const uint8_t asset_dynamic_data_object::space_id;
 const uint8_t asset_dynamic_data_object::type_id;
+
+const uint8_t asset_object::space_id;
+const uint8_t asset_object::type_id;
 
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
@@ -93,23 +102,59 @@ const uint8_t block_summary_object::type_id;
 const uint8_t budget_record_object::space_id;
 const uint8_t budget_record_object::type_id;
 
+const uint8_t buying_object::space_id;
+const uint8_t buying_object::type_id;
+
+const uint8_t content_object::space_id;
+const uint8_t content_object::type_id;
+
 const uint8_t chain_property_object::space_id;
 const uint8_t chain_property_object::type_id;
-
-const uint8_t dynamic_global_property_object::space_id;
-const uint8_t dynamic_global_property_object::type_id;
 
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
 
+const uint8_t dynamic_global_property_object::space_id;
+const uint8_t dynamic_global_property_object::type_id;
+
+const uint8_t message_object::space_id;
+const uint8_t message_object::type_id;
+
+const uint8_t miner_object::space_id;
+const uint8_t miner_object::type_id;
+
 const uint8_t miner_schedule_object::space_id;
 const uint8_t miner_schedule_object::type_id;
+
+const uint8_t non_fungible_token_object::space_id;
+const uint8_t non_fungible_token_object::type_id;
+
+const uint8_t non_fungible_token_data_object::space_id;
+const uint8_t non_fungible_token_data_object::type_id;
 
 const uint8_t operation_history_object::space_id;
 const uint8_t operation_history_object::type_id;
 
 const uint8_t proposal_object::space_id;
 const uint8_t proposal_object::type_id;
+
+const uint8_t seeder_object::space_id;
+const uint8_t seeder_object::type_id;
+
+const uint8_t seeding_object::space_id;
+const uint8_t seeding_object::type_id;
+
+const uint8_t seeding_statistics_object::space_id;
+const uint8_t seeding_statistics_object::type_id;
+
+const uint8_t subscription_object::space_id;
+const uint8_t subscription_object::type_id;
+
+const uint8_t transaction_detail_object::space_id;
+const uint8_t transaction_detail_object::type_id;
+
+const uint8_t transaction_history_object::space_id;
+const uint8_t transaction_history_object::type_id;
 
 const uint8_t transaction_object::space_id;
 const uint8_t transaction_object::type_id;
@@ -119,15 +164,6 @@ const uint8_t vesting_balance_object::type_id;
 
 const uint8_t withdraw_permission_object::space_id;
 const uint8_t withdraw_permission_object::type_id;
-
-const uint8_t miner_object::space_id;
-const uint8_t miner_object::type_id;
-
-const uint8_t non_fungible_token_object::space_id;
-const uint8_t non_fungible_token_object::type_id;
-
-const uint8_t non_fungible_token_data_object::space_id;
-const uint8_t non_fungible_token_data_object::type_id;
 
 void database::initialize_evaluators()
 {
