@@ -78,14 +78,32 @@ namespace graphene { namespace chain {
 const uint8_t account_object::space_id;
 const uint8_t account_object::type_id;
 
+const uint8_t account_statistics_object::space_id;
+const uint8_t account_statistics_object::type_id;
+
 const uint8_t asset_object::space_id;
 const uint8_t asset_object::type_id;
+
+const uint8_t asset_dynamic_data_object::space_id;
+const uint8_t asset_dynamic_data_object::type_id;
 
 const uint8_t block_summary_object::space_id;
 const uint8_t block_summary_object::type_id;
 
+const uint8_t budget_record_object::space_id;
+const uint8_t budget_record_object::type_id;
+
+const uint8_t chain_property_object::space_id;
+const uint8_t chain_property_object::type_id;
+
+const uint8_t dynamic_global_property_object::space_id;
+const uint8_t dynamic_global_property_object::type_id;
+
 const uint8_t global_property_object::space_id;
 const uint8_t global_property_object::type_id;
+
+const uint8_t miner_schedule_object::space_id;
+const uint8_t miner_schedule_object::type_id;
 
 const uint8_t operation_history_object::space_id;
 const uint8_t operation_history_object::type_id;
@@ -107,6 +125,9 @@ const uint8_t miner_object::type_id;
 
 const uint8_t non_fungible_token_object::space_id;
 const uint8_t non_fungible_token_object::type_id;
+
+const uint8_t non_fungible_token_data_object::space_id;
+const uint8_t non_fungible_token_data_object::type_id;
 
 void database::initialize_evaluators()
 {
