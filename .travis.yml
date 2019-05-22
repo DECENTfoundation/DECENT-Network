@@ -4,6 +4,9 @@ sudo: required
 
 language: cpp
 
+git:
+  depth: false
+
 matrix:
   include:
     - os: linux
