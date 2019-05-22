@@ -76,7 +76,6 @@ optional<signed_block> database::fetch_block_by_number( uint32_t num )const
       return results[0]->data;
    else
       return _block_id_to_block.fetch_by_number(num);
-   return optional<signed_block>();
 }
 
 const signed_transaction& database::get_recent_transaction(const transaction_id_type& trx_id) const
@@ -305,7 +304,7 @@ processed_transaction database::push_proposal(const proposal_object& proposal)
       session.merge();
    } catch ( const fc::exception& e ) {
       _applied_ops.resize( old_applied_ops_size );
-      elog( "e", ("e",e.to_detail_string() ) );
+      elog("Failed to push proposal:\n${e}", ("e", e.to_detail_string()));
       throw;
    }
 

@@ -185,7 +185,7 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
                disallow_automatic_renewal_of_subscription_operation op;
                op.consumer = element.from;
                op.subscription = element.id;
-               idump((op));
+               ddump((op));
 
                d.push_applied_operation(op);
             });
