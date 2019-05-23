@@ -83,7 +83,6 @@ FC_REFLECT_DERIVED( graphene::chain::non_fungible_token_object, (graphene::db::o
                     (symbol)
                     (options)
                     (definitions)
-                    (fixed_max_supply)
                     (transferable)
                     (current_supply)
                   )
