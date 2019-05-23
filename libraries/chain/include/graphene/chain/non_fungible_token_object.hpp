@@ -24,8 +24,6 @@ namespace graphene { namespace chain {
          non_fungible_token_options options;
          /// Definitions of data that are assigned to each token instance, fee will be charged proportional to size of definitions
          non_fungible_token_data_definitions definitions;
-         /// False when issuer can change max_supply
-         bool fixed_max_supply = false;
          /// False when token can not be transfered to other owner
          bool transferable = true;
          /// The number of tokens currently in existence
