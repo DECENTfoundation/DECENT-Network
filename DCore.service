@@ -3,6 +3,7 @@ Description=DCore node daemon
 
 [Service]
 Type=forking
+Restart=on-failure
 ExecStart=/usr/bin/decentd --daemon
 
 [Install]
