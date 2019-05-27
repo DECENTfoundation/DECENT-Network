@@ -328,12 +328,10 @@ Questions
     Implementation space objects cannot appear on the wire and solely exist for implementation
     purposes, such as optimization or internal bookkeeping.
 
-    The second number specifies the *type*.  The type of the object determines what fields it has.  For a
-    complete list of type ID's, see `enum object_type` and `enum impl_object_type` in
-    `types.hpp`.
+    The second number specifies the *type*.  The type of the object determines what fields it has.  For a complete
+    list of type ID's, see `enum local_object_type`, `enum protocol_object_type` and `enum impl_object_type` in `types.hpp`.
 
-    The third number specifies the *instance*.  The instance of the object is different for each individual
-    object.
+    The third number specifies the *instance*.  The instance of the object is different for each individual object.
 
 - The answer to the previous question was really confusing.  Can you make it clearer?
 
