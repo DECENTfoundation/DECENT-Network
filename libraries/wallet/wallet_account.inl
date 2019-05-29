@@ -90,32 +90,35 @@ vector<balance_change_result_detail> wallet_api::search_account_balance_history(
     vector<balance_change_result_detail> result;
     auto account_id = get_account(account_name).get_id();
 
-    flat_set<asset_id_type> asset_id_list;
-    if (!assets_list.empty()) {
-        for( const auto& item : assets_list) {
-           asset_id_list.insert( get_asset(item).get_id() );
-        }
-    }
+    if( limit > 0 )
+    {
+       flat_set<asset_id_type> asset_id_list;
+       if (!assets_list.empty()) {
+           for( const auto& item : assets_list) {
+              asset_id_list.insert( get_asset(item).get_id() );
+           }
+       }
 
-   fc::optional<account_id_type> partner_id;
-    if (!partner_account.empty()) {
-       partner_id = get_account(partner_account).get_id();
-    }
+       fc::optional<account_id_type> partner_id;
+       if (!partner_account.empty()) {
+          partner_id = get_account(partner_account).get_id();
+       }
 
-    vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
-    result.reserve( current.size() );
-    for(const auto& item : current) {
-       balance_change_result_detail info;
-       info.hist_object = item.hist_object;
-       info.balance     = item.balance;
-       info.fee         = item.fee;
-       info.timestamp   = item.timestamp;
-       info.transaction_id = item.transaction_id;
+       vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
+       result.reserve( current.size() );
+       for(const auto& item : current) {
+          balance_change_result_detail info;
+          info.hist_object = item.hist_object;
+          info.balance     = item.balance;
+          info.fee         = item.fee;
+          info.timestamp   = item.timestamp;
+          info.transaction_id = item.transaction_id;
 
-       std::stringstream ss;
-       info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));
+          std::stringstream ss;
+          info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));
 
-       result.push_back(info);
+          result.push_back(info);
+       }
     }
 
     return result;
