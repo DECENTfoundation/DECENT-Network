@@ -286,12 +286,11 @@ namespace graphene { namespace app {
          auto itr = by_seq_idx.upper_bound( boost::make_tuple( account, start ) );
          auto itr_stop = by_seq_idx.lower_bound( boost::make_tuple( account, stop ) );
 
-         do
+         while( itr != itr_stop && result.size() < limit )
          {
             --itr;
             result.push_back( itr->operation_id(db) );
          }
-         while( itr != itr_stop && result.size() < limit );
       }
 
       return result;
