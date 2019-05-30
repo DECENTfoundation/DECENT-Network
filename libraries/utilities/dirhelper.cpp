@@ -12,22 +12,22 @@
 
 namespace graphene { namespace utilities {
 
+
 decent_path_finder::decent_path_finder()
 {
 #if defined( _MSC_VER )
    PWSTR path = NULL;
    HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path);
-   char home_dir[MAX_PATH];
-   memset(home_dir, 0, sizeof(home_dir));
+   std::string dest;
    if (SUCCEEDED(hr)) {
-      wcstombs(home_dir, path, MAX_PATH - 1);
+     _user_home = std::wstring(path);
       CoTaskMemFree(path);
-   }
+   } 
 #else
    struct passwd *pw = getpwuid(getuid());
    const char *home_dir = pw->pw_dir;
-#endif
    _user_home = home_dir;
+#endif
    
    const char* decent_home = getenv("DECENT_HOME");
    if (decent_home == NULL) {
