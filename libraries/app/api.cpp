@@ -517,8 +517,8 @@ namespace graphene { namespace app {
          FC_CAPTURE_AND_RETHROW( (sender) );
 
          auto range = idx.indices().get<by_sender>().equal_range(*sender);
-         while (range.first != range.second-- && max_count-- > 0) {
-            result.emplace_back(*range.second);
+         while (range.first != range.second && max_count-- > 0) {
+            result.emplace_back(*(--range.second));
          }
       }
 
