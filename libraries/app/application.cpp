@@ -25,13 +25,10 @@
 
 #include <iostream>
 #include <regex>
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/reverse.hpp>
-#include <boost/asio/ip/address_v4.hpp>
-#include <boost/asio.hpp>
 #include <fc/io/fstream.hpp>
-#include <fc/network/resolve.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <graphene/utilities/time.hpp>
 #include <graphene/utilities/dirhelper.hpp>
@@ -42,8 +39,6 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
-
-#include <boost/filesystem.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -140,24 +135,21 @@ namespace detail {
 
          for( const string& endpoint_string : seeds ) {
              std::vector<fc::ip::endpoint> endpoints;
-             try{
-                 endpoints = resolve_string_to_ip_endpoints(endpoint_string);
-             } catch (...) {
-                 continue;
+             try {
+               for (const fc::ip::endpoint& endpoint : fc::ip::endpoint::resolve_string(endpoint_string)) {
+                  ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+                  _p2p_network->add_node(endpoint);
+                  _p2p_network->connect_to_endpoint(endpoint);
+               }
              }
-             for (const fc::ip::endpoint& endpoint : endpoints)
-             {
-                 ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
-                 _p2p_network->add_node(endpoint);
-                 _p2p_network->connect_to_endpoint(endpoint);
+             catch(const fc::exception& e) {
+               elog(e.to_detail_string());
              }
          }
 
-         if( _options->count("ipfs-api") ){
-            std::string api_string = _options->at("ipfs-api").as<std::string>();
-            fc::ip::endpoint api = fc::ip::endpoint::from_string( api_string );
-            fc::string api_host = api.get_address();
-            decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api_host, api.port());
+         if( _options->count("ipfs-api") ) {
+            fc::ip::endpoint api = fc::ip::endpoint::resolve_string( _options->at("ipfs-api").as<std::string>() ).back();
+            decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api.get_address(), api.port());
          }
 
          bool ipfs_check = true;
@@ -173,7 +165,7 @@ namespace detail {
             FC_THROW("Unsupported IPFS version is used. Minimal version is 0.4.12");
 
          if( _options->count("p2p-endpoint") )
-            _p2p_network->listen_on_endpoint(fc::ip::endpoint::from_string(_options->at("p2p-endpoint").as<string>()), true);
+            _p2p_network->listen_on_endpoint(fc::ip::endpoint::resolve_string(_options->at("p2p-endpoint").as<string>()).back(), true);
          else
             _p2p_network->listen_on_port(0, false);
          _p2p_network->listen_to_p2p_network();
@@ -184,33 +176,6 @@ namespace detail {
                                               _chain_db->head_block_id()),
                                  std::vector<uint32_t>());
       } FC_RETHROW() }
-
-      std::vector<fc::ip::endpoint> resolve_string_to_ip_endpoints(const std::string& endpoint_string)
-      {
-         try
-         {
-            string::size_type colon_pos = endpoint_string.find(':');
-            if (colon_pos == std::string::npos)
-               FC_THROW("Missing required port number in endpoint string \"${endpoint_string}\"",
-                        ("endpoint_string", endpoint_string));
-            std::string port_string = endpoint_string.substr(colon_pos + 1);
-            try
-            {
-               uint16_t port = boost::lexical_cast<uint16_t>(port_string);
-
-               std::string hostname = endpoint_string.substr(0, colon_pos);
-               std::vector<fc::ip::endpoint> endpoints = fc::resolve(hostname, port);
-               if (endpoints.empty())
-                  FC_THROW_EXCEPTION(fc::unknown_host_exception, "The host name can not be resolved: ${hostname}", ("hostname", hostname));
-               return endpoints;
-            }
-            catch (const boost::bad_lexical_cast&)
-            {
-               FC_THROW("Bad port: ${port}", ("port", port_string));
-            }
-         }
-         FC_CAPTURE_AND_RETHROW((endpoint_string))
-      }
 
       void register_apis( std::shared_ptr<fc::rpc::websocket_api_connection>& wsc )
       {
@@ -284,7 +249,7 @@ namespace detail {
             c->set_session_data( wsc );
          });
          ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<string>()));
-         _websocket_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-endpoint").as<string>()) );
+         _websocket_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-endpoint").as<string>()).back() );
          _websocket_server->start_accept();
       } FC_RETHROW() }
 
@@ -324,7 +289,7 @@ namespace detail {
             c->set_session_data( wsc );
          });
          ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip",_options->at("rpc-tls-endpoint").as<string>()));
-         _websocket_tls_server->listen( fc::ip::endpoint::from_string(_options->at("rpc-tls-endpoint").as<string>()) );
+         _websocket_tls_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-tls-endpoint").as<string>()).back() );
          _websocket_tls_server->start_accept();
 
       } FC_RETHROW() }
@@ -1030,10 +995,6 @@ public:
       : _name(param_name)
    {
    }
-   const std::string REG_EXPR_IPV4_AND_PORT =
-      "^"
-      "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\x2E){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))" // ipv4::port or
-      "$";
    // ipv4:port or dnsname:port
    const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS = 
       "^"
@@ -1046,12 +1007,6 @@ public:
       bool matches_reg_expr = std::regex_match(val, rx);
       if(!matches_reg_expr)
          FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
-   }
-
-   bool check_reg_expr_no_exc(const std::regex& rx, const std::string& val)
-   {
-      bool matches_reg_expr = std::regex_match(val, rx);
-      return matches_reg_expr;
    }
 
    void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
@@ -1068,32 +1023,13 @@ public:
       if (_name == "p2p-endpoint" || _name == "ipfs-api" || _name == "rpc-endpoint" || _name == "rpc-tls-endpoint")
       {
          const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
-         const std::regex rx_ip_and_port(REG_EXPR_IPV4_AND_PORT);
          check_reg_expr(rx, val);
-         bool is_ip = check_reg_expr_no_exc(rx_ip_and_port, val);
          // additional checks
-         if (is_ip) {
-            try {
-               fc::ip::endpoint::from_string(val);
-            }
-            catch (...) {
-               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val));
-            }
+         try {
+            fc::ip::endpoint::resolve_string(val);
          }
-         else {
-            auto pos = val.find(':');
-            boost::asio::ip::tcp::resolver::query resolver_query(val.substr(0, pos),
-               "", boost::asio::ip::tcp::resolver::query::numeric_service);
-
-            boost::asio::io_service ios;
-            boost::asio::ip::tcp::resolver resolver(ios);
-
-            boost::system::error_code ec;
-            resolver.resolve(resolver_query, ec);
-
-            if (ec) {
-               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val));
-            }
+         catch (...) {
+            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val));
          }
       }
       else if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file") {
@@ -1111,35 +1047,16 @@ public:
       if (_name == "seed-node")
       {
          const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
-         const std::regex rx_ip_and_port(REG_EXPR_IPV4_AND_PORT);
 
          // additional checks
          for (size_t i = 0; i < val.size(); i++) {
             check_reg_expr(rx, val);
-            bool is_ip = check_reg_expr_no_exc(rx_ip_and_port, val[i]);
-            if (is_ip) {
-               try
-               {
-                  fc::ip::endpoint::from_string(val[i]);
-               }
-               catch (...) {
-                  FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
-               }
+            try
+            {
+               fc::ip::endpoint::resolve_string(val[i]);
             }
-            else {
-               auto pos = val[i].find(':');
-               boost::asio::ip::tcp::resolver::query resolver_query(val[i].substr(0, pos),
-                  "", boost::asio::ip::tcp::resolver::query::numeric_service);
-
-               boost::asio::io_service ios;
-               boost::asio::ip::tcp::resolver resolver(ios);
-
-               boost::system::error_code ec;
-               resolver.resolve(resolver_query, ec);
-
-               if (ec) {
-                  FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot translate DNS name to IP address", ("name", _name)("value", val[i]));
-               }
+            catch (...) {
+               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
             }
          }
       }

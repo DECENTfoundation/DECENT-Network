@@ -3290,7 +3290,7 @@ signed_transaction content_cancellation(const string& author,
       use_network_node_api();
       for( const string& node_address : nodes )
       {
-         (*_remote_net_node)->add_node( fc::ip::endpoint::from_string( node_address ) );
+         (*_remote_net_node)->add_node( fc::ip::endpoint::resolve_string( node_address ).back() );
       }
    }
 

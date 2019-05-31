@@ -275,7 +275,7 @@ int main( int argc, char** argv )
             c->set_session_data( wsc );
          });
          ilog( "Listening for incoming RPC requests on ${p}", ("p", options.at("rpc-endpoint").as<std::string>() ));
-         _websocket_server->listen( fc::ip::endpoint::from_string(options.at("rpc-endpoint").as<std::string>()) );
+         _websocket_server->listen( fc::ip::endpoint::resolve_string(options.at("rpc-endpoint").as<std::string>()).back() );
          _websocket_server->start_accept();
       }
 
@@ -293,7 +293,7 @@ int main( int argc, char** argv )
          });
          ilog( "Listening for incoming TLS RPC requests on ${p}, certificate file ${c}",
                ("p", options.at("rpc-tls-endpoint").as<std::string>() )("c", options.at("rpc-tls-certificate").as<std::string>() ));
-         _websocket_tls_server->listen( fc::ip::endpoint::from_string(options.at("rpc-tls-endpoint").as<std::string>()) );
+         _websocket_tls_server->listen( fc::ip::endpoint::resolve_string(options.at("rpc-tls-endpoint").as<std::string>()).back() );
          _websocket_tls_server->start_accept();
       }
 
@@ -304,7 +304,7 @@ int main( int argc, char** argv )
       if( _http_server )
       {
          ilog( "Listening for incoming HTTP RPC requests on ${p}", ("p", options.at("rpc-http-endpoint").as<std::string>() ) );
-         _http_server->listen( fc::ip::endpoint::from_string( options.at( "rpc-http-endpoint" ).as<std::string>() ) );
+         _http_server->listen( fc::ip::endpoint::resolve_string(options.at("rpc-http-endpoint").as<std::string>()).back() );
          //
          // due to implementation, on_request() must come AFTER listen()
          //
