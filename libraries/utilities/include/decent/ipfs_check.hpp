@@ -10,7 +10,6 @@ namespace decent {
  * @param port [in] Port to connect to.
  * @return returns true when check is OK, otherwise false
  */
-bool check_ipfs_minimal_version(const std::string& host, int port);
+void check_ipfs_minimal_version(const std::string& host, int port);
 
 } //namespace decent
-

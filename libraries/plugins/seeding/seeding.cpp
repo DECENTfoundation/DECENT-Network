@@ -7,6 +7,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <decent/package/package_config.hpp>
 #include <decent/package/package.hpp>
+#include <decent/ipfs_check.hpp>
 #include <ipfs/client.h>
 
 namespace bpo = boost::program_options;
@@ -730,6 +731,19 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    else
       FC_THROW("invalid country-code parameter");
 
+   auto& pmc = decent::package::PackageManagerConfigurator::instance();
+   if( options.count("ipfs-api") ) {
+      try {
+         fc::ip::endpoint api = fc::ip::endpoint::resolve_string( options["ipfs-api"].as<std::string>() ).back();
+         pmc.set_ipfs_endpoint(api.get_address(), api.port());
+      } catch( ... ) {
+         FC_THROW_EXCEPTION(fc::unknown_host_exception, "Invalid IPFS daemon API address ${address}",
+                  ("address", options["ipfs-api"].as<std::string>()));
+      }      
+   }
+
+   decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());
+
    database().add_index<graphene::db::primary_index<graphene::chain::seeding_index>>();
 
    auto& dir_helper = graphene::utilities::decent_path_finder::instance();
@@ -767,6 +781,7 @@ void seeding_plugin::plugin_set_program_options(
          ("seeding-price", bpo::value<std::string>(), "Price amount per MegaBytes")
          ("seeding-symbol", bpo::value<std::string>()->default_value("DCT"), "Seeding price asset" )
          ("region-code", bpo::value<std::string>(), "Optional ISO 3166-1 alpha-2 two-letter region code")
+         ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
          ;
 
    cfg.add(cli);

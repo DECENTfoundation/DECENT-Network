@@ -34,8 +34,6 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/net/exceptions.hpp>
-#include <decent/ipfs_check.hpp>
-#include <decent/package/package_config.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
@@ -146,23 +144,6 @@ namespace detail {
                elog(e.to_detail_string());
              }
          }
-
-         if( _options->count("ipfs-api") ) {
-            fc::ip::endpoint api = fc::ip::endpoint::resolve_string( _options->at("ipfs-api").as<std::string>() ).back();
-            decent::package::PackageManagerConfigurator::instance().set_ipfs_endpoint(api.get_address(), api.port());
-         }
-
-         bool ipfs_check = true;
-         try {
-            ipfs_check = decent::check_ipfs_minimal_version(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(),
-                                                                 decent::package::PackageManagerConfigurator::instance().get_ipfs_port());
-         }
-         catch(...) {
-            //ignore exceptions.
-         }
-
-         if (!ipfs_check)
-            FC_THROW("Unsupported IPFS version is used. Minimal version is 0.4.12");
 
          if( _options->count("p2p-endpoint") )
             _p2p_network->listen_on_endpoint(fc::ip::endpoint::resolve_string(_options->at("p2p-endpoint").as<string>()).back(), true);
@@ -1020,7 +1001,7 @@ public:
 
    void operator()(const std::string& val)
    {
-      if (_name == "p2p-endpoint" || _name == "ipfs-api" || _name == "rpc-endpoint" || _name == "rpc-tls-endpoint")
+      if (_name == "p2p-endpoint" || _name == "rpc-endpoint" || _name == "rpc-tls-endpoint")
       {
          const std::regex rx(REG_EXPR_IPV4_AND_PORT_OR_DNS);
          check_reg_expr(rx, val);
@@ -1106,7 +1087,6 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")
-         ("ipfs-api", bpo::value<string>()->notifier(param_validator_app("ipfs-api")), "IPFS control API")
          ;
 
    bpo::options_description common_options("Common options");
