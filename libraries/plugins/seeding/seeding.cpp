@@ -732,14 +732,12 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
       FC_THROW("invalid country-code parameter");
 
    auto& pmc = decent::package::PackageManagerConfigurator::instance();
-   if( options.count("ipfs-api") ) {
-      try {
-         fc::ip::endpoint api = fc::ip::endpoint::resolve_string( options["ipfs-api"].as<std::string>() ).back();
-         pmc.set_ipfs_endpoint(api.get_address(), api.port());
-      } catch( ... ) {
-         FC_THROW_EXCEPTION(fc::unknown_host_exception, "Invalid IPFS daemon API address ${address}",
-                  ("address", options["ipfs-api"].as<std::string>()));
-      }      
+   try {
+      fc::ip::endpoint api = fc::ip::endpoint::resolve_string( options["ipfs-api"].as<std::string>() ).back();
+      pmc.set_ipfs_endpoint(api.get_address(), api.port());
+   } catch( ... ) {
+      FC_THROW_EXCEPTION(fc::unknown_host_exception, "Invalid IPFS daemon API address ${address}",
+               ("address", options["ipfs-api"].as<std::string>()));
    }
 
    decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());

@@ -45,6 +45,7 @@
 #include <graphene/wallet/wallet.hpp>
 
 #include <decent/about.hpp>
+#include <decent/package/package_config.hpp>
 
 #ifdef WIN32
 # include <signal.h>
@@ -68,6 +69,7 @@ int main( int argc, char** argv )
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
          ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string()), "Directory to store submitted packages")
+         ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
@@ -225,6 +227,18 @@ int main( int argc, char** argv )
       else if( remote_api->database()->get_chain_id() != wdata.chain_id )
       {
          std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match database chain ID\n";
+         return 1;
+      }
+
+      try
+      {
+         fc::ip::endpoint api = fc::ip::endpoint::resolve_string(options.at("ipfs-api").as<std::string>()).back();
+         auto& pmc = decent::package::PackageManagerConfigurator::instance();
+         pmc.set_ipfs_endpoint(api.get_address(), api.port());
+      }
+      catch( const fc::exception& e )
+      {
+         std::cerr << "Failed to resolve IPFS daemon API address " << options.at("ipfs-api").as<std::string>() << ", " << e.what() << std::endl;
          return 1;
       }
 
