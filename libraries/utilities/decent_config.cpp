@@ -11,6 +11,7 @@
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/reflect/variant.hpp>
+#include <fc/utf8.hpp>
 
 namespace decent {
 
@@ -75,7 +76,8 @@ namespace decent {
 
     // Log ini parser. It is needed to use small adjustment because original boost ini parser throw exception when reads the same key again.
     template<class Ptree>
-    void read_log_ini(std::basic_istream<
+    void read_log_ini(
+       std::basic_istream<
           typename Ptree::key_type::value_type> &stream,
                       Ptree &pt) {
        typedef typename Ptree::key_type::value_type Ch;
@@ -152,21 +154,42 @@ namespace decent {
     }
 
     template<class Ptree>
-    void read_log_ini(const std::string &filename,
-                      Ptree &pt,
-                      const std::locale &loc = std::locale()) {
+    void 
+    read_log_ini(
+#ifdef _MSC_VER
+       const std::wstring &filename,
+#else
+       const std::string &filename,
+#endif
+       Ptree &pt,
+       const std::locale &loc = std::locale()
+      ) 
+    {
        std::basic_ifstream<typename Ptree::key_type::value_type>
              stream(filename.c_str());
-       if (!stream)
-          BOOST_PROPERTY_TREE_THROW(boost::property_tree::ini_parser_error(
-                                          "cannot open file", filename, 0));
+       if(!stream) {
+          std::string bad_filename;
+#ifdef _MSC_VER
+          fc::encodeUtf8(filename, &bad_filename);
+#else
+          bad_filename = filename;
+#endif
+             BOOST_PROPERTY_TREE_THROW(boost::property_tree::ini_parser_error(
+                "cannot open file", bad_filename, 0));
+       }
        stream.imbue(loc);
        try {
           read_log_ini(stream, pt);
        }
        catch (boost::property_tree::ini_parser_error &e) {
+          std::string bad_filename;
+#ifdef _MSC_VER
+          fc::encodeUtf8(filename, &bad_filename);
+#else
+          bad_filename = filename;
+#endif
           BOOST_PROPERTY_TREE_THROW(boost::property_tree::ini_parser_error(
-                e.message(), filename, e.line()));
+                e.message(), bad_filename, e.line()));
        }
     }
 
@@ -177,7 +200,11 @@ namespace decent {
           bool found_logging_config = false;
 
           boost::property_tree::ptree config_ini_tree;
+#ifdef _MSC_VER
+          read_log_ini(config_ini_filename.preferred_wstring().c_str(), config_ini_tree);
+#else
           read_log_ini(config_ini_filename.preferred_string().c_str(), config_ini_tree);
+#endif
           for (const auto &section : config_ini_tree) {
              const std::string &section_name = section.first;
              const boost::property_tree::ptree &section_tree = section.second;
@@ -267,7 +294,11 @@ namespace decent {
 
     void write_default_config_file(const fc::path& config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
     {
+#if defined( _MSC_VER )
+       std::ofstream out_cfg(config_ini_filename.wstring());
+#else
        std::ofstream out_cfg(config_ini_filename.preferred_string());
+#endif
        for( const auto &od : cfg_options.options() )
        {
           if( !od->description().empty() )

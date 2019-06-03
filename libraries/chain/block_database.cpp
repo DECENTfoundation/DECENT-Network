@@ -47,13 +47,23 @@ void block_database::open( const fc::path& dbdir )
 
    if( !fc::exists( dbdir/"index" ) )
    {
+#ifdef _MSC_VER
+      _block_num_to_pos.open((dbdir / "index").generic_wstring().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+      _blocks.open((dbdir / "blocks").generic_wstring().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+#else
      _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+#endif
    }
    else
    {
+#ifdef _MSC_VER
+      _block_num_to_pos.open((dbdir / "index").generic_wstring().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out);
+      _blocks.open((dbdir / "blocks").generic_wstring().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out);
+#else
      _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
+#endif
    }
 } FC_CAPTURE_AND_RETHROW( (dbdir) ) }
 

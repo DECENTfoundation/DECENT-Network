@@ -276,12 +276,17 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
          config_filename = data_dir / "config.ini";
          logs_dir = data_dir;
       }
-
+      
       if( fc::exists(config_filename) )
       {
          // get the basic options
          try {
+#ifdef _MSC_VER
+            std::ifstream cfg_file_stream(config_filename.preferred_wstring().c_str());
+            bpo::store(bpo::parse_config_file<char>(cfg_file_stream, cfg_options, true), options);
+#else
             bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+#endif
          }
          
          catch (std::exception& e) {

@@ -1463,7 +1463,12 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       if( fc::exists(config_ini_path) )
       {
          // get the basic options
+#ifdef _MSC_VER
+         std::ifstream cfg_file_stream(config_ini_path.preferred_string().c_str());
+         bpo::store(bpo::parse_config_file<char>(cfg_file_stream, cfg_options, true), options);
+#else
          bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+#endif
       }
 
       bpo::notify(options);
