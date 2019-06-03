@@ -88,6 +88,7 @@
 
 #include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
+#include <decent/ipfs_check.hpp>
 #include <decent/about.hpp>
 
 #ifndef WIN32
@@ -2503,6 +2504,8 @@ public:
    {
       try
       {
+         auto& pmc = decent::package::PackageManagerConfigurator::instance();
+         decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());
          account_id_type author_account = get_account( author ).get_id();
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
@@ -2564,10 +2567,10 @@ public:
                                        fc::time_point_sec const& expiration,
                                        string const& synopsis)
    {
-      auto& package_manager = decent::package::PackageManager::instance();
-
       try
       {
+         auto& pmc = decent::package::PackageManagerConfigurator::instance();
+         decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());
          account_object author_account = get_account( author );
 
          map<account_id_type, uint32_t> co_authors_id_to_split;
@@ -2630,6 +2633,7 @@ public:
          submit_op.expiration = expiration;
          submit_op.synopsis = synopsis;
 
+         auto& package_manager = decent::package::PackageManager::instance();
          auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
