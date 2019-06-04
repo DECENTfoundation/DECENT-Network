@@ -424,6 +424,8 @@ namespace graphene { namespace net { namespace detail {
     MONITORING_DEFINE_COUNTER(connections_node_inbound_active_max)
     MONITORING_DEFINE_TRANSIENT_COUNTER(connections_node_outbound_active)
     MONITORING_DEFINE_COUNTER(connections_node_outbound_active_max)
+    MONITORING_DEFINE_COUNTER(transactions_queued_to_broadcast)
+    MONITORING_DEFINE_COUNTER(transactions_received)
     MONITORING_COUNTERS_DEPENDENCIES
     MONITORING_COUNTER_DEPENDENCY(connections_node_inbound_active_max, connections_node_inbound_active)
     MONITORING_COUNTER_DEPENDENCY(connections_node_outbound_active_max, connections_node_outbound_active)
@@ -3880,6 +3882,7 @@ namespace graphene { namespace net { namespace detail {
             trx_message transaction_message_to_process = message_to_process.as<trx_message>();
             dlog("passing message containing transaction ${trx} to client", ("trx", transaction_message_to_process.trx.id()));
             _delegate->handle_transaction(transaction_message_to_process);
+            MONITORING_COUNTER_VALUE(transactions_received)++;
           }
           else
             _delegate->handle_message( message_to_process );
@@ -4963,6 +4966,7 @@ namespace graphene { namespace net { namespace detail {
         graphene::net::trx_message transaction_message_to_broadcast = item_to_broadcast.as<graphene::net::trx_message>();
         hash_of_message_contents = transaction_message_to_broadcast.trx.id(); // for debugging
         dlog( "broadcasting trx: ${trx}", ("trx", transaction_message_to_broadcast) );
+        MONITORING_COUNTER_VALUE(transactions_queued_to_broadcast)++;
       }
       message_hash_type hash_of_item_to_broadcast = item_to_broadcast.id();
 
