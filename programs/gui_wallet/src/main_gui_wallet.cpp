@@ -117,13 +117,12 @@ int main(int argc, char* argv[])
 
    if(data_dir.is_relative())
       data_dir = fc::current_path() / data_dir;
-
    fc::path config_filename = data_dir / "config.ini";
    if( fc::exists(config_filename) )
    {
       // get the basic options
 #ifdef _MSC_VER
-      std::ifstream cfg_file_stream(config_filename.preferred_string().c_str());
+      std::ifstream cfg_file_stream(config_filename.preferred_wstring().c_str());
       bpo::store(bpo::parse_config_file<char>(cfg_file_stream, cfg_options, true), options);
 #else
       bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);

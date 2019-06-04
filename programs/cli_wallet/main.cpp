@@ -68,8 +68,14 @@ int main( int argc, char** argv )
          ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
-         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string()), "Directory to store submitted packages")
          ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
+         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().
+#ifdef _MSC_VER
+            generic_wstring()
+#else
+            generic_string()
+#endif
+         ), "Directory to store submitted packages")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
@@ -79,7 +85,7 @@ int main( int argc, char** argv )
          ("rpc-http-endpoint,H", bpo::value<std::string>()->implicit_value("127.0.0.1:8093"), "Endpoint for wallet HTTP RPC to listen on")
          ("from-command-file,f", bpo::value<std::string>(), "Load commands from a command file")
       ;
-
+      
       bpo::variables_map options;
       bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(opts).allow_unregistered().run();
       bpo::store( optparsed, options );
