@@ -30,7 +30,6 @@
 #include <graphene/chain/get_config.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
-#include <decent/about.hpp>
 #include <graphene/app/database_api.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
@@ -99,7 +98,6 @@ namespace graphene { namespace app {
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
-      fc::variant_object about()const;
       
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
@@ -608,12 +606,7 @@ namespace graphene { namespace app {
       return _db.get(dynamic_global_property_id_type());
    }
 
-   fc::variant_object database_api::about()const
-   {
-      return my->about();
-   }
-
-   fc::variant_object database_api_impl::about()const
+   decent::about_info database_api::about()const
    {
       return decent::get_about();
    }

@@ -34,7 +34,7 @@ add_library( graphene_wallet
              ${HEADERS}
            )
 
-target_link_libraries( graphene_wallet PUBLIC graphene_app graphene_utilities PRIVATE package_manager ipfs-api )
+target_link_libraries( graphene_wallet PUBLIC graphene_app PRIVATE package_manager ipfs-api )
 target_include_directories( graphene_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)

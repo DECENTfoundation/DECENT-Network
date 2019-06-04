@@ -10,7 +10,7 @@ add_library( graphene_app
              ${HEADERS}
            )
 
-target_link_libraries( graphene_app PUBLIC graphene_net PRIVATE package_manager graphene_egenesis_decent )
+target_link_libraries( graphene_app PUBLIC graphene_net graphene_utilities PRIVATE package_manager graphene_egenesis_decent )
 target_include_directories( graphene_app PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)

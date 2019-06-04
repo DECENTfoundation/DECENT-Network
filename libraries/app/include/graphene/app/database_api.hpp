@@ -37,6 +37,7 @@
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/non_fungible_token_object.hpp>
 #include <graphene/app/full_account.hpp>
+#include <decent/about.hpp>
 
 /**
  * @defgroup DatabaseAPI Database API
@@ -337,7 +338,7 @@ namespace graphene { namespace app {
           * @return about values
           * @ingroup DatabaseAPI_Globals
           */
-         fc::variant_object about()const;
+         decent::about_info about()const;
 
          //////////
          // Keys //

@@ -11,7 +11,6 @@ endif()
 
 target_link_libraries( decentd PRIVATE
                        graphene_app
-                       graphene_utilities
                        graphene_account_history
                        graphene_transaction_history
                        decent_messaging

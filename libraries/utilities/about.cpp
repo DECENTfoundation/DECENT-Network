@@ -39,40 +39,37 @@ namespace decent {
       return cryptopp_version_text;
    }
 
-   fc::variant_object get_about()
+   about_info get_about()
    {
       std::string client_version( graphene::utilities::git_revision_description );
       const size_t pos = client_version.find( '/' );
       if( pos != std::string::npos && client_version.size() > pos )
          client_version = client_version.substr( pos + 1 );
 
-      fc::mutable_variant_object result;
-      result["client_version"]           = client_version;
-      result["graphene_revision"]        = graphene::utilities::git_revision_sha;
-      result["graphene_revision_age"]    = fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) );
-      result["fc_revision"]              = fc::git_revision_sha;
-      result["fc_revision_age"]          = fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) );
-      result["compile_date"]             = "compiled on " __DATE__ " at " __TIME__;
-      result["boost_version"]            = decent::get_boost_version();
-      result["openssl_version"]          = OPENSSL_VERSION_TEXT;
-      result["cryptopp_version"]         = decent::get_cryptopp_version();
-
-      std::string bitness = boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit";
+      return {
+         client_version,
+         graphene::utilities::git_revision_sha,
+         fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) ),
+         fc::git_revision_sha,
+         fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) ),
+         "compiled on " __DATE__ " at " __TIME__,
+         decent::get_boost_version(),
+         OPENSSL_VERSION_TEXT,
+         decent::get_cryptopp_version(),
 #if defined(__APPLE__)
-      std::string os = "osx";
+         "osx "
 #elif defined(__linux__)
-      std::string os = "linux";
+         "linux "
 #elif defined(_MSC_VER)
-      std::string os = "win32";
+         "win32 "
 #else
-      std::string os = "other";
+         "other "
 #endif
-      result["build"] = os + " " + bitness;
-
-      return result;
+         + boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit"
+      };
    }
 
-   bool check_unrecognized(bpo::parsed_options optparsed)
+   bool check_unrecognized(const boost::program_options::parsed_options& optparsed)
    {
       std::vector<std::string> unrecognized_args = boost::program_options::collect_unrecognized(optparsed.options, boost::program_options::include_positional);
 
