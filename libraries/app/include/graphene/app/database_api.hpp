@@ -424,7 +424,7 @@ namespace graphene { namespace app {
           * @param order sort data by field
           * @param id \c object_id to start searching from
           * @param limit maximum number of results to return ( must not exceed 1000 )
-          * @return map of account names to corresponding IDs
+          * @return list of corresponding accounts
           * @ingroup DatabaseAPI_Account
           */
          vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
