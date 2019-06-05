@@ -246,7 +246,7 @@ namespace graphene { namespace db {
 
          virtual void save( const path& db ) override 
          {
-            std::ofstream out( db.generic_string(), 
+            std::ofstream out( db.generic_string_multiplatform(), 
                                std::ofstream::binary | std::ofstream::out | std::ofstream::trunc );
             FC_ASSERT( out );
             auto ver  = get_object_version();

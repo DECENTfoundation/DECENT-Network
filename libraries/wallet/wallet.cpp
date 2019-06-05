@@ -70,6 +70,7 @@
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
 #include <fc/rpc/api_connection.hpp>
+#include <fc/utf8.hpp>
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/asset_object.hpp>
@@ -978,7 +979,13 @@ public:
          //
          // http://en.wikipedia.org/wiki/Most_vexing_parse
          //
+#ifdef _MSC_VER
+         std::wstring wide_wallet_filename;
+         fc::decodeUtf8(wallet_filename, &wide_wallet_filename);
+         fc::ofstream outfile{ fc::path(wide_wallet_filename) };
+#else
          fc::ofstream outfile{ fc::path( wallet_filename ) };
+#endif
          outfile.write( data.c_str(), data.length() );
          outfile.flush();
          outfile.close();

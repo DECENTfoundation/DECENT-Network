@@ -609,14 +609,7 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
    gui_wallet::Globals::Plugins::set_program_options(cli, cfg);
    cli.add_options()
       ("generate-keys,g", "Generate brain, wif private and public keys.")
-      ("wallet-file,w", bpo::value<std::string>()->default_value(
-          (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").
-#ifdef _MSC_VER
-         generic_wstring()
-#else
-         generic_string()
-#endif
-       ), "Wallet to load.")
+      ("wallet-file,w", bpo::value<std::string>()->default_value((graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").to_native_ansi_path()), "Wallet to load.")
       ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
    ;
 

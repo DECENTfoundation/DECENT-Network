@@ -110,8 +110,8 @@ namespace wallet_utility
                                    });
 
             if (has_wallet_file)
-               m_ptr_wallet_api->load_wallet_file(wallet_file.generic_string());
-            m_ptr_wallet_api->set_wallet_filename( wallet_file.generic_string() );
+               m_ptr_wallet_api->load_wallet_file(wallet_file.to_native_ansi_path());
+            m_ptr_wallet_api->set_wallet_filename( wallet_file.to_native_ansi_path() );
 
             fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
 

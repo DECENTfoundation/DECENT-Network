@@ -200,11 +200,7 @@ namespace decent {
           bool found_logging_config = false;
 
           boost::property_tree::ptree config_ini_tree;
-#ifdef _MSC_VER
-          read_log_ini(config_ini_filename.preferred_wstring().c_str(), config_ini_tree);
-#else
-          read_log_ini(config_ini_filename.preferred_string().c_str(), config_ini_tree);
-#endif
+          read_log_ini(config_ini_filename.preferred_string_multiplatform().c_str(), config_ini_tree);
           for (const auto &section : config_ini_tree) {
              const std::string &section_name = section.first;
              const boost::property_tree::ptree &section_tree = section.second;
@@ -294,11 +290,8 @@ namespace decent {
 
     void write_default_config_file(const fc::path& config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
     {
-#if defined( _MSC_VER )
-       std::ofstream out_cfg(config_ini_filename.wstring());
-#else
-       std::ofstream out_cfg(config_ini_filename.preferred_string());
-#endif
+       std::ofstream out_cfg(config_ini_filename.preferred_string_multiplatform());
+
        for( const auto &od : cfg_options.options() )
        {
           if( !od->description().empty() )

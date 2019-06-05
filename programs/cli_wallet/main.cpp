@@ -69,13 +69,7 @@ int main( int argc, char** argv )
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
          ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
-         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().
-#ifdef _MSC_VER
-            generic_wstring()
-#else
-            generic_string()
-#endif
-         ), "Directory to store submitted packages")
+         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string_multiplatform()), "Directory to store submitted packages")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<std::string>(), "Server Password")
@@ -250,12 +244,12 @@ int main( int argc, char** argv )
 
       graphene::wallet::server_data ws{ wdata.ws_server, wdata.ws_user, wdata.ws_password };
       auto wapiptr = std::make_shared<graphene::wallet::wallet_api>( remote_api, wdata.chain_id, ws );
-      if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.generic_string()) )
+      if( has_wallet_file && !wapiptr->load_wallet_file(wallet_file.to_native_ansi_path()) )
       {
          std::cerr << "Failed to load wallet file " << wallet_file.generic_string() << std::endl;
          return 1;
       }
-      wapiptr->set_wallet_filename( wallet_file.generic_string() );
+      wapiptr->set_wallet_filename( wallet_file.to_native_ansi_path() );
       std::clog << "Connected to " << wdata.ws_server << std::endl;
 
       fc::api<graphene::wallet::wallet_api> wapi(wapiptr);
@@ -360,7 +354,7 @@ int main( int argc, char** argv )
       }
 
       if( !wapi->is_locked() )
-         wapi->save_wallet_file(wallet_file.generic_string());
+         wapi->save_wallet_file(wallet_file.to_native_ansi_path());
       locked_connection.disconnect();
       closed_connection.disconnect();
    }
