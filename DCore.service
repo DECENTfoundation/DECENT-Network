@@ -1,5 +1,7 @@
 [Unit]
 Description=DCore node daemon
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=forking
