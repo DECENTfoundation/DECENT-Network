@@ -45,7 +45,6 @@
  * @defgroup DatabaseAPI_Subscription Subscription
  * @defgroup DatabaseAPI_BlockTx Blocks and Transactions
  * @defgroup DatabaseAPI_Globals Globals
- * @defgroup DatabaseAPI_Key Key
  * @defgroup DatabaseAPI_Account Account
  * @defgroup DatabaseAPI_Balance Balance
  * @defgroup DatabaseAPI_Asset Asset
@@ -340,21 +339,17 @@ namespace graphene { namespace app {
           */
          decent::about_info about()const;
 
-         //////////
-         // Keys //
-         //////////
+         //////////////
+         // Accounts //
+         //////////////
 
          /**
           * @brief Get all accounts that refer to the key in their owner or active authorities.
           * @param key list of public keys
           * @return list of lists of account IDs. One list of account IDs per public key
-          * @ingroup DatabaseAPI_Key
+          * @ingroup DatabaseAPI_Account
           */
          vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
-
-         //////////////
-         // Accounts //
-         //////////////
 
          /**
           * @brief Get the total number of accounts registered on the blockchain.
