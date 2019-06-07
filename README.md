@@ -88,7 +88,7 @@ For Fedora 29 or later, execute in console:
 Then, execute in console:
 
     $ brew update
-    $ brew install automake autoconf libtool cmake boost cryptopp openssl pbc qt readline doxygen byacc flex git ipfs
+    $ brew install automake autoconf libtool cmake boost cryptopp openssl pbc qt readline doxygen git ipfs
     $ brew tap nlohmann/json
     $ brew install nlohmann_json --with-cmake
     $ brew link --force readline
