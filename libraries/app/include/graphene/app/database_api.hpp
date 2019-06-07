@@ -337,7 +337,7 @@ namespace graphene { namespace app {
           * @return about values
           * @ingroup DatabaseAPI_Globals
           */
-         decent::about_info about()const;
+         decent::about_info_daemon about()const;
 
          //////////////
          // Accounts //

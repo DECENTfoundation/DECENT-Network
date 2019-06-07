@@ -606,9 +606,9 @@ namespace graphene { namespace app {
       return _db.get(dynamic_global_property_id_type());
    }
 
-   decent::about_info database_api::about()const
+   decent::about_info_daemon database_api::about()const
    {
-      return decent::get_about();
+      return decent::get_about_daemon();
    }
 
    //////////////////////////////////////////////////////////////////////

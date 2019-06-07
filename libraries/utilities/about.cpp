@@ -39,7 +39,37 @@ namespace decent {
       return cryptopp_version_text;
    }
 
-   about_info get_about()
+   about_info_daemon get_about_daemon()
+   {
+      std::string daemon_version( graphene::utilities::git_revision_description );
+      const size_t pos = daemon_version.find( '/' );
+      if( pos != std::string::npos && daemon_version.size() > pos )
+         daemon_version = daemon_version.substr( pos + 1 );
+
+      return {
+         daemon_version,
+         graphene::utilities::git_revision_sha,
+         fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) ),
+         fc::git_revision_sha,
+         fc::get_approximate_relative_time_string( fc::time_point_sec( fc::git_revision_unix_timestamp ) ),
+         "compiled on " __DATE__ " at " __TIME__,
+         decent::get_boost_version(),
+         OPENSSL_VERSION_TEXT,
+         decent::get_cryptopp_version(),
+#if defined(__APPLE__)
+         "osx "
+#elif defined(__linux__)
+         "linux "
+#elif defined(_MSC_VER)
+         "win32 "
+#else
+         "other "
+#endif
+         + boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit"
+      };
+   }
+
+   about_info_wallet get_about_wallet()
    {
       std::string client_version( graphene::utilities::git_revision_description );
       const size_t pos = client_version.find( '/' );

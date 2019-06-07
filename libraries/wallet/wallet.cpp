@@ -505,7 +505,7 @@ public:
    variant_object about() const
    {
       fc::mutable_variant_object result;
-      result["about_cli_wallet"] = decent::get_about();
+      result["about_cli_wallet"] = decent::get_about_wallet();
       result["about_decentd"] = _remote_db->about();
       return result;
    }
