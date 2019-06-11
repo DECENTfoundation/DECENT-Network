@@ -40,7 +40,7 @@ namespace fc
 
 void to_variant(const graphene::chain::vote_id_type& var, variant& vo)
 {
-   vo = string(var);
+   vo = std::string(var);
 }
 
 void from_variant(const variant& var, graphene::chain::vote_id_type& vo)

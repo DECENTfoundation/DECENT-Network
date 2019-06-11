@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
 
    pts_address::pts_address( const std::string& base58str )
    {
-      std::vector<char> v = fc::from_base58( fc::string(base58str) );
+      std::vector<char> v = fc::from_base58( std::string(base58str) );
       if( v.size() )
          memcpy( addr.data, v.data(), std::min<size_t>( v.size(), sizeof(addr) ) );
 

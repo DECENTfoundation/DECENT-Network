@@ -173,7 +173,7 @@ struct get_typename<graphene::db::object_id<SpaceID,TypeID,T>>
 {
    static const char* name() {
       return typeid(get_typename).name();
-      static std::string _str = string("graphene::db::object_id<")+fc::to_string(SpaceID) + ":" + fc::to_string(TypeID)+">";
+      static std::string _str = std::string("graphene::db::object_id<")+fc::to_string(SpaceID) + ":" + fc::to_string(TypeID)+">";
       return _str.c_str();
    }
 };

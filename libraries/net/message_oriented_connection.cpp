@@ -160,7 +160,7 @@ namespace graphene { namespace net {
       fc::oexception exception_to_rethrow;
       bool call_on_connection_closed = false;
       fc::ip::endpoint rep = _sock.get_socket().remote_endpoint();
-      std::string rep_addr_str = rep.operator fc::string();
+      std::string rep_addr_str = rep.operator std::string();
 
       try
       {

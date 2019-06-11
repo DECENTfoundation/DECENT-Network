@@ -211,7 +211,7 @@ namespace detail {
          _websocket_server = std::make_shared<fc::http::websocket_server>(enable_deflate_compression);
 
          if (_options->count("server-allowed-domains") != 0) {
-            _websocket_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
+            _websocket_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<std::string>() );
          }
 
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
@@ -251,7 +251,7 @@ namespace detail {
                                                                                    enable_deflate_compression );
 
          if (_options->count("server-allowed-domains") != 0) {
-            _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<fc::string>() );
+            _websocket_tls_server->add_headers("Access-Control-Allow-Origin", _options->at("server-allowed-domains").as<std::string>() );
          }
 
          _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c, bool& is_tls){
