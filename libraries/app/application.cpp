@@ -116,7 +116,7 @@ namespace detail {
          }
          else if( _chain_db->get_chain_id() == graphene::egenesis::get_egenesis_chain_id() )
          {
-             vector<string> base_seeds_list = {
+             seeds = {
                "seed1.decentgo.com:40000",
                "seed2.decentgo.com:40000", 
                "seed3.decentgo.com:40000",
@@ -125,24 +125,21 @@ namespace detail {
                "173.212.202.233:40000",            // fahdminer1
                "seed.decent.dgazek.tk:40000",      // dgazek
                "decent.rondonson.com:40000"        // rondonson
-
             };
-
-            seeds = base_seeds_list;
          }
 
-         for( const string& endpoint_string : seeds ) {
-             std::vector<fc::ip::endpoint> endpoints;
-             try {
-               for (const fc::ip::endpoint& endpoint : fc::ip::endpoint::resolve_string(endpoint_string)) {
-                  ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+         for( const string& seed : seeds ) {
+            try {
+               ilog("Adding seed node ${seed}", ("seed", seed));
+               for (const fc::ip::endpoint& endpoint : fc::ip::endpoint::resolve_string(seed)) {
+                  dlog("Resolved seed node endpoint ${endpoint}", ("endpoint", endpoint));
                   _p2p_network->add_node(endpoint);
                   _p2p_network->connect_to_endpoint(endpoint);
                }
-             }
-             catch(const fc::exception& e) {
+            }
+            catch(const fc::exception& e) {
                elog(e.to_detail_string());
-             }
+            }
          }
 
          if( _options->count("p2p-endpoint") )
