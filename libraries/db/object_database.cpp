@@ -31,12 +31,9 @@
 namespace graphene { namespace db {
 
 
-object_database::object_database(uint8_t space_id_count, uint8_t local_type_id_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count)
+object_database::object_database(const std::vector< uint8_t >& object_type_count)
 : _undo_db(*this)
-, _space_id_count(space_id_count)
-, _local_object_type_count(local_type_id_count)
-, _proto_type_id_count(proto_type_id_count)
-, _impl_type_id_count(impl_type_id_count)
+, _object_type_count(object_type_count)
 {
    reset_indexes();
 
