@@ -123,8 +123,7 @@ namespace detail {
                "45.76.205.241:40000",              // liberosist (JP)
                "dctapi.spacemx.tech:40000",        // decentspace
                "173.212.202.233:40000",            // fahdminer1
-               "seed.decent.dgazek.tk:40000",      // dgazek
-               "decent.rondonson.com:40000"        // rondonson
+               "seed.decent.dgazek.tk:40000"       // dgazek
             };
          }
 
