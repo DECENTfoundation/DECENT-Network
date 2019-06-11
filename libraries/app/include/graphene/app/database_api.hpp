@@ -286,6 +286,13 @@ namespace graphene { namespace app {
          std::string info()const;
 
          /**
+          * @brief Retrieve the information about the daemon process.
+          * @return about values
+          * @ingroup DatabaseAPI_Globals
+          */
+         decent::about_info_daemon about()const;
+
+         /**
           * @brief Retrieve the \c chain_property_object associated with the chain.
           * @return chain id and immutable chain parameters
           * @ingroup DatabaseAPI_Globals
@@ -330,18 +337,19 @@ namespace graphene { namespace app {
           * @return a vector of operation_info struct instances containing operation ids, names and fee parameters
           * @ingroup DatabaseAPI_Globals
           */
-         vector<operation_info> list_operations( )const;
+         vector<operation_info> list_operations()const;
 
          /**
-          * @brief Retrieve the information about the daemon process.
-          * @return about values
+          * @brief Get remaining time to next maintenance interval from given time.
+          * @param block_time reference time
+          * @return remaining time to next maintenance interval along with some additional data
           * @ingroup DatabaseAPI_Globals
           */
-         decent::about_info_daemon about()const;
+         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
-         //////////////
-         // Accounts //
-         //////////////
+         //////////
+         // Keys //
+         //////////
 
          /**
           * @brief Get all accounts that refer to the key in their owner or active authorities.
@@ -350,6 +358,10 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Account
           */
          vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
+
+         //////////////
+         // Accounts //
+         //////////////
 
          /**
           * @brief Get the total number of accounts registered on the blockchain.
@@ -508,28 +520,19 @@ namespace graphene { namespace app {
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
 
          /**
-          * @brief Returns a reward for a miner from the most recent block.
-          * @return amount of newly generated DCT
-          * @ingroup DatabaseAPI_Mining
-          */
-         share_type get_new_asset_per_block() const;
-
-         /**
-          * @brief Returns a reward for a miner from a specified block.
-          * @note A reward from transaction fees is not included.
-          * @param block_num the block number
-          * @return amount of newly generated DCT
-          * @ingroup DatabaseAPI_Mining
-          */
-         share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
-
-         /**
           * @brief Converts asset into DCT, using actual price feed.
           * @param price asset in DCT, monitored asset or user issued asset
           * @return price in DCT
           * @ingroup DatabaseAPI_Asset
           */
          asset price_to_dct( asset price )const;
+
+         /**
+          * @brief Return current core asset supply.
+          * @return current supply
+          * @ingroup DatabaseAPI_Asset
+          */
+         real_supply get_real_supply()const;
 
          /////////////////////////
          // Non Fungible Tokens //
@@ -658,6 +661,30 @@ namespace graphene { namespace app {
          multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
                                                                   const uint32_t count)const;
 
+         /**
+          * @brief Get miner pay from accumulated fees from given time.
+          * @param block_time reference time
+          * @return miner pay from accumulated fees
+          * @ingroup DatabaseAPI_Mining
+          */
+         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
+
+         /**
+          * @brief Returns a reward for a miner from the most recent block.
+          * @return amount of newly generated DCT
+          * @ingroup DatabaseAPI_Mining
+          */
+         share_type get_new_asset_per_block() const;
+
+         /**
+          * @brief Returns a reward for a miner from a specified block.
+          * @note A reward from transaction fees is not included.
+          * @param block_num the block number
+          * @return amount of newly generated DCT
+          * @ingroup DatabaseAPI_Mining
+          */
+         share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
+
          ///////////
          // Votes //
          ///////////
@@ -671,6 +698,31 @@ namespace graphene { namespace app {
           */
          vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
 
+
+         /**
+          * @brief Get the number of votes each miner actually has.
+          * @return a list mapping account names to the number of votes
+          * @ingroup DatabaseAPI_Mining
+          */
+         vector<database::votes_gained> get_actual_votes() const;
+
+         /**
+          * @brief Get miner voting info list by account that match search term.
+          * @param account_id account name or empty when search without account
+          * @param term search term - miner name
+          * @param only_my_votes when \c true it selects only votes given by account
+          * @param order order field. Available options are 'name|link|votes'
+          * @param id the id of the miner to start searching from, or empty when start from beginning
+          * @param count maximum number of miners info to fetch (must not exceed 1000)
+          * @return the list of miner voting info found
+          * @ingroup DatabaseAPI_Mining
+          */
+         vector<miner_voting_info> search_miner_voting(const string& account_id,
+                                                       const string& term,
+                                                       bool only_my_votes,
+                                                       const string& order,
+                                                       const string& id,
+                                                       uint32_t count ) const;
          ////////////////////////////
          // Authority / validation //
          ////////////////////////////
@@ -750,13 +802,6 @@ namespace graphene { namespace app {
          // Decent //
          ////////////
 
-
-         /**
-          * @brief Return current core asset supply.
-          * @return current supply
-          * @ingroup DatabaseAPI_Asset
-          */
-         real_supply get_real_supply()const;
 
          /**
           * @brief Get a list of accounts holding publishing manager status.
@@ -884,14 +929,6 @@ namespace graphene { namespace app {
                                                 uint32_t count )const;
 
          /**
-          * @brief Get a list of seeders by price, in increasing order.
-          * @param count maximum number of seeders to retrieve
-          * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
-          */
-         vector<seeder_object> list_seeders_by_price( uint32_t count )const;
-
-         /**
           * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
@@ -900,12 +937,12 @@ namespace graphene { namespace app {
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
          /**
-          * @brief Get a seeder by ID.
-          * @param aid ID of the seeder to retrieve
-          * @return the seeder corresponding to the provided ID, or \c null if no matching content was found
+          * @brief Get a list of seeders by price, in increasing order.
+          * @param count maximum number of seeders to retrieve
+          * @return the seeders found
           * @ingroup DatabaseAPI_Decent
           */
-         optional<seeder_object> get_seeder(account_id_type aid) const;
+         vector<seeder_object> list_seeders_by_price( uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by total upload, in decreasing order.
@@ -930,6 +967,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Decent
           */
          vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
+
+         /**
+          * @brief Get a seeder by ID.
+          * @param aid ID of the seeder to retrieve
+          * @return the seeder corresponding to the provided ID, or \c null if no matching content was found
+          * @ingroup DatabaseAPI_Decent
+          */
+         optional<seeder_object> get_seeder(account_id_type aid) const;
 
          /**
           * @brief Get a subscription object by ID.
@@ -975,46 +1020,6 @@ namespace graphene { namespace app {
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
-         /**
-          * @brief Get remaining time to next maintenance interval from given time.
-          * @param block_time reference time
-          * @return remaining time to next maintenance interval along with some additional data
-          * @ingroup DatabaseAPI_Globals
-          */
-         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
-
-         /**
-          * @brief Get miner pay from accumulated fees from given time.
-          * @param block_time reference time
-          * @return miner pay from accumulated fees
-          * @ingroup DatabaseAPI_Globals
-          */
-         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
-
-         /**
-          * @brief Get the number of votes each miner actually has.
-          * @return a list mapping account names to the number of votes
-          * @ingroup DatabaseAPI_Mining
-          */
-         vector<database::votes_gained> get_actual_votes() const;
-
-         /**
-          * @brief Get miner voting info list by account that match search term.
-          * @param account_id account name or empty when search without account
-          * @param term search term - miner name
-          * @param only_my_votes when \c true it selects only votes given by account
-          * @param order order field. Available options are 'name|link|votes'
-          * @param id the id of the miner to start searching from, or empty when start from beginning
-          * @param count maximum number of miners info to fetch (must not exceed 1000)
-          * @return the contents found
-          * @ingroup DatabaseAPI_Mining
-          */
-         vector<miner_voting_info> search_miner_voting(const string& account_id,
-                                                       const string& term,
-                                                       bool only_my_votes,
-                                                       const string& order,
-                                                       const string& id,
-                                                       uint32_t count ) const;
 
       private:
          std::shared_ptr< database_api_impl > my;
@@ -1038,8 +1043,8 @@ FC_API(graphene::app::database_api,
           (set_subscribe_callback)
           (set_pending_transaction_callback)
           (set_block_applied_callback)
-          (cancel_all_subscriptions)
           (set_content_update_callback)
+          (cancel_all_subscriptions)
 
           // Blocks and transactions
           (get_block_header)
@@ -1049,26 +1054,25 @@ FC_API(graphene::app::database_api,
           (get_transaction)
           (head_block_time)
           (get_recent_transaction_by_id)
-          (get_new_asset_per_block)
-          (get_asset_per_block_by_block_num)
-          (get_time_to_maint_by_block_time)
           (get_transaction_by_id)
           (get_transaction_id)
 
           // Globals
           (info)
+          (about)
           (get_chain_properties)
           (get_global_properties)
           (get_config)
           (get_chain_id)
           (get_dynamic_global_properties)
           (list_operations)
-          (about)
+          (get_time_to_maint_by_block_time)
 
           // Keys
           (get_key_references)
 
           // Accounts
+          (get_account_count)
           (get_accounts)
           (get_full_accounts)
           (get_account_by_name)
@@ -1076,7 +1080,6 @@ FC_API(graphene::app::database_api,
           (lookup_account_names)
           (lookup_accounts)
           (search_accounts)
-          (get_account_count)
           (search_account_history)
 
           // Balances
@@ -1090,6 +1093,7 @@ FC_API(graphene::app::database_api,
           (list_assets)
           (lookup_asset_symbols)
           (price_to_dct)
+          (get_real_supply)
 
           // Non Fungible Tokens
           (get_non_fungible_token_count)
@@ -1109,9 +1113,12 @@ FC_API(graphene::app::database_api,
           (get_miner_count)
           (get_feeds_by_miner)
           (get_miner_pay_from_fees_by_block_time)
+          (get_new_asset_per_block)
+          (get_asset_per_block_by_block_num)
 
           // Votes
           (lookup_vote_ids)
+          (get_actual_votes)
           (search_miner_voting)
 
           // Authority / validation
@@ -1131,9 +1138,9 @@ FC_API(graphene::app::database_api,
           (get_open_buyings)
           (get_open_buyings_by_URI)
           (get_open_buyings_by_consumer)
-          (get_buying_by_consumer_URI)
           (get_buying_history_objects_by_consumer)
           (get_buying_objects_by_consumer)
+          (get_buying_by_consumer_URI)
           (search_feedback)
           (get_content)
           (generate_content_keys)
@@ -1145,12 +1152,10 @@ FC_API(graphene::app::database_api,
           (list_seeders_by_region)
           (list_seeders_by_rating)
           (get_seeder)
-          (get_real_supply)
           (get_subscription)
           (list_active_subscriptions_by_consumer)
           (list_subscriptions_by_consumer)
           (list_active_subscriptions_by_author)
           (list_subscriptions_by_author)
-          (get_actual_votes)
 
 )
