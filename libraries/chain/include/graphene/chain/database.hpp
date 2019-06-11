@@ -66,7 +66,15 @@ namespace graphene { namespace chain {
    {
       public:
          //////////////////// db_management.cpp ////////////////////
-         database(uint8_t space_id_count, uint8_t local_id_type_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count);
+         /**
+          * @brief Constructor
+          *
+          * Opens a database in the specified directory. If no initialized database is found, genesis_loader is called
+          * and its return value is used as the genesis state when initializing the new database
+          *
+          * @param object_type_count Counts of second level of two-dimensional array of database indexes
+          */
+         database(const std::vector< uint8_t >& object_type_count);
          ~database();
          bool is_undo_enabled(){ return _undo_db.enabled(); };
 

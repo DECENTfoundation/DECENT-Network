@@ -39,17 +39,16 @@ namespace graphene { namespace db {
    class object_database
    {
       public:
-         object_database(uint8_t space_id_count, uint8_t local_type_id_count, uint8_t proto_type_id_count, uint8_t impl_type_id_count);
-
+         object_database(const std::vector< uint8_t >& object_type_count);
          ~object_database();
 
          void reset_indexes() 
          {
             _index.clear(); 
-            _index.resize(_space_id_count);
-            _index[0].resize(_local_object_type_count);
-            _index[1].resize(_proto_type_id_count); 
-            _index[2].resize(_impl_type_id_count);
+            _index.resize(_object_type_count.size());
+            for(uint8_t i = 0; i < _object_type_count.size(); i++) {
+               _index[i].resize(_object_type_count[i]);
+            }
          }
 
          void open(const fc::path& data_dir );
@@ -173,11 +172,8 @@ namespace graphene { namespace db {
 
          fc::path                                                  _data_dir;
          vector< vector< unique_ptr<index> > >                     _index;
-         uint8_t                                                    _space_id_count;
-         uint8_t                                                    _local_object_type_count;
-         uint8_t                                                    _proto_type_id_count;
-         uint8_t                                                    _impl_type_id_count;
-   };
+         std::vector< uint8_t >                                    _object_type_count;   // second level of two-dimensional array of indexes, 
+   };                                                                                    // first level is size of this vector
 
 } } // graphene::db
 
