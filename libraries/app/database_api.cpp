@@ -150,7 +150,7 @@ namespace graphene { namespace app {
       multimap< time_point_sec, price_feed> get_feeds_by_miner( const account_id_type account_id, uint32_t count)const;
 
       // Votes
-      vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
+      vector<optional<miner_object>> lookup_vote_ids( const vector<vote_id_type>& votes )const;
       vector<miner_voting_info> search_miner_voting(const string& account_id,
                                                     const string& term,
                                                     bool only_my_votes,
@@ -1464,18 +1464,18 @@ namespace graphene { namespace app {
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
    
-   vector<variant> database_api::lookup_vote_ids( const vector<vote_id_type>& votes )const
+   vector<optional<miner_object>> database_api::lookup_vote_ids( const vector<vote_id_type>& votes )const
    {
       return my->lookup_vote_ids( votes );
    }
    
-   vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& votes )const
+   vector<optional<miner_object>> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& votes )const
    {
       FC_ASSERT( votes.size() < 1000, "Only 1000 votes can be queried at a time" );
       
       const auto& miner_idx = _db.get_index_type<miner_index>().indices().get<by_vote_id>();
       
-      vector<variant> result;
+      vector<optional<miner_object>> result;
       result.reserve( votes.size() );
       for( auto id : votes )
       {
@@ -1485,9 +1485,9 @@ namespace graphene { namespace app {
             {
                auto itr = miner_idx.find( id );
                if( itr != miner_idx.end() )
-                  result.emplace_back( variant( *itr ) );
+                  result.emplace_back( *itr );
                else
-                  result.emplace_back( variant() );
+                  result.emplace_back( );
                break;
             }
                

@@ -35,7 +35,7 @@ namespace graphene { namespace app {
       account_object                   account;
       account_statistics_object        statistics;
       string                           registrar_name;
-      vector<variant>                  votes;
+      vector<optional<miner_object>>   votes;
       optional<vesting_balance_object> cashback_balance;
       vector<account_balance_object>   balances;
       vector<vesting_balance_object>   vesting_balances;

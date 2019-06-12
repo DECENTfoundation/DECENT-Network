@@ -696,7 +696,7 @@ namespace graphene { namespace app {
           * @param votes set of votes
           * @ingroup DatabaseAPI_Mining
           */
-         vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
+         vector<optional<miner_object>> lookup_vote_ids( const vector<vote_id_type>& votes )const;
 
 
          /**
