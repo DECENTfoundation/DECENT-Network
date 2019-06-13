@@ -347,9 +347,9 @@ namespace graphene { namespace app {
           */
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
-         //////////
-         // Keys //
-         //////////
+         //////////////
+         // Accounts //
+         //////////////
 
          /**
           * @brief Get all accounts that refer to the key in their owner or active authorities.
@@ -358,10 +358,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Account
           */
          vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
-
-         //////////////
-         // Accounts //
-         //////////////
 
          /**
           * @brief Get the total number of accounts registered on the blockchain.
@@ -446,10 +442,10 @@ namespace graphene { namespace app {
           * @return a list of transaction detail objects
           * @ingroup DatabaseAPI_Account
           */
-         vector<class transaction_detail_object> search_account_history(account_id_type const& account,
-                                                                        string const& order,
-                                                                        object_id_type const& id,
-                                                                        int limit) const;
+         vector<transaction_detail_object> search_account_history(account_id_type const& account,
+                                                                  string const& order,
+                                                                  object_id_type const& id,
+                                                                  int limit) const;
 
          //////////////
          // Balances //
@@ -480,6 +476,16 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Balance
           */
          vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+
+         /**
+          * @brief Get account's balances in various non fungible tokens.
+          * @param account_id account ID to retrieve balances for
+          * @param ids set of non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
+          * @return a list of non fungible token data objects
+          * @ingroup DatabaseAPI_Balance
+          */
+         vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id,
+                                                                                const set<non_fungible_token_id_type>& ids)const;
 
          ////////////
          // Assets //
@@ -597,16 +603,6 @@ namespace graphene { namespace app {
          vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
 
          /**
-          * @brief Get account's balances in various non fungible tokens.
-          * @param account_id account ID to retrieve balances for
-          * @param ids set of non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
-          * @return a list of non fungible token data objects
-          * @ingroup DatabaseAPI_NonFungibleToken
-          */
-         vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id,
-                                                                                const set<non_fungible_token_id_type>& ids)const;
-
-         /**
           * @brief Get non fungible token data object transfer history.
           * @param nft_data_id the non fungible token data object id to search history for
           * @return a list of transaction detail objects
@@ -684,10 +680,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Mining
           */
          share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
-
-         ///////////
-         // Votes //
-         ///////////
 
          /**
           * @brief Given a set of votes, return the objects they are voting for.

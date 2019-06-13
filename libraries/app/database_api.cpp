@@ -120,6 +120,7 @@ namespace graphene { namespace app {
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id, const set<non_fungible_token_id_type>& ids)const;
       
       // Assets
       uint64_t get_asset_count()const;
@@ -139,7 +140,6 @@ namespace graphene { namespace app {
       vector<optional<non_fungible_token_data_object>> get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const;
       vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
       void_t burn_non_fungible_token_data(non_fungible_token_data_id_type nft_data_id)const;
-      vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id, const set<non_fungible_token_id_type>& ids)const;
       vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const;
 
       // Miners
@@ -1098,7 +1098,27 @@ namespace graphene { namespace app {
       }
       FC_CAPTURE_AND_RETHROW( (account_id) );
    }
-   
+
+   vector<non_fungible_token_data_object> database_api::get_non_fungible_token_balances(account_id_type account_id,
+                                                                                        const set<non_fungible_token_id_type>& ids)const
+   {
+      return my->get_non_fungible_token_balances(account_id, ids);
+   }
+
+   vector<non_fungible_token_data_object> database_api_impl::get_non_fungible_token_balances(account_id_type account_id,
+                                                                                             const set<non_fungible_token_id_type>& ids)const
+   {
+      const auto& nft_data_index = _db.get_index_type<non_fungible_token_data_index>();
+      auto nft_data_range = nft_data_index.indices().get<by_account>().equal_range(account_id);
+
+      vector<non_fungible_token_data_object> result;
+      std::for_each(nft_data_range.first, nft_data_range.second, [&](const non_fungible_token_data_object& nft_data) {
+         if(ids.empty() || ids.count(nft_data.nft_id))
+            result.emplace_back(nft_data);
+      });
+      return result;
+   }
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Assets                                                           //
@@ -1316,26 +1336,6 @@ namespace graphene { namespace app {
             result.emplace_back(nft_data);
       });
 
-      return result;
-   }
-
-   vector<non_fungible_token_data_object> database_api::get_non_fungible_token_balances(account_id_type account_id,
-                                                                                        const set<non_fungible_token_id_type>& ids)const
-   {
-      return my->get_non_fungible_token_balances(account_id, ids);
-   }
-
-   vector<non_fungible_token_data_object> database_api_impl::get_non_fungible_token_balances(account_id_type account_id,
-                                                                                             const set<non_fungible_token_id_type>& ids)const
-   {
-      const auto& nft_data_index = _db.get_index_type<non_fungible_token_data_index>();
-      auto nft_data_range = nft_data_index.indices().get<by_account>().equal_range(account_id);
-
-      vector<non_fungible_token_data_object> result;
-      std::for_each(nft_data_range.first, nft_data_range.second, [&](const non_fungible_token_data_object& nft_data) {
-         if(ids.empty() || ids.count(nft_data.nft_id))
-            result.emplace_back(nft_data);
-      });
       return result;
    }
 
