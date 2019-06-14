@@ -35,7 +35,8 @@
 
 #include <graphene/net/peer_database.hpp>
 
-
+#include <boost/filesystem.hpp>
+#include <fc/filesystem.hpp>
 
 namespace graphene { namespace net {
   namespace detail
@@ -60,10 +61,10 @@ namespace graphene { namespace net {
 
     private:
       potential_peer_set     _potential_peer_set;
-      fc::path _peer_database_filename;
+      boost::filesystem::path _peer_database_filename;
 
     public:
-      void open(const fc::path& databaseFilename);
+      void open(const boost::filesystem::path& databaseFilename);
       void close();
       void clear();
       void erase(const fc::ip::endpoint& endpointToErase);
@@ -88,10 +89,10 @@ namespace graphene { namespace net {
     peer_database_iterator::peer_database_iterator( const peer_database_iterator& c ) :
       boost::iterator_facade<peer_database_iterator, const potential_peer_record, boost::forward_traversal_tag>(c){}
 
-    void peer_database_impl::open(const fc::path& peer_database_filename)
+    void peer_database_impl::open(const boost::filesystem::path& peer_database_filename)
     {
       _peer_database_filename = peer_database_filename;
-      if (fc::exists(_peer_database_filename))
+      if (exists(_peer_database_filename))
       {
         try
         {
@@ -122,9 +123,9 @@ namespace graphene { namespace net {
 
       try
       {
-        fc::path peer_database_filename_dir = _peer_database_filename.parent_path();
-        if (!fc::exists(peer_database_filename_dir))
-          fc::create_directories(peer_database_filename_dir);
+        boost::filesystem::path peer_database_filename_dir = _peer_database_filename.parent_path();
+        if (!exists(peer_database_filename_dir))
+          create_directories(peer_database_filename_dir);
         fc::json::save_to_file(peer_records, _peer_database_filename);
       }
       catch (const fc::exception&)
@@ -225,7 +226,7 @@ namespace graphene { namespace net {
   peer_database::~peer_database()
   {}
 
-  void peer_database::open(const fc::path& databaseFilename)
+  void peer_database::open(const boost::filesystem::path& databaseFilename)
   {
     my->open(databaseFilename);
   }

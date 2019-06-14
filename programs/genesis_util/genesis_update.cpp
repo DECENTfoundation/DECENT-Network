@@ -102,8 +102,8 @@ int main( int argc, char** argv )
       genesis_state_type genesis;
       if( options.count("genesis-json") )
       {
-         fc::path genesis_json_filename = options["genesis-json"].as<boost::filesystem::path>();
-         std::cerr << "update_genesis:  Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
+         boost::filesystem::path genesis_json_filename = options["genesis-json"].as<boost::filesystem::path>();
+         std::cerr << "update_genesis:  Reading genesis from file " << genesis_json_filename.make_preferred().string() << "\n";
          std::string genesis_json;
          read_file_contents( genesis_json_filename, genesis_json );
          genesis = fc::json::from_string( genesis_json ).as< genesis_state_type >();
@@ -152,7 +152,7 @@ int main( int argc, char** argv )
          wit_acct.active_key = get_dev_key( "wit-active-", i );
       }
 
-      fc::path output_filename = options["out"].as<boost::filesystem::path>();
+      boost::filesystem::path output_filename = options["out"].as<boost::filesystem::path>();
       fc::json::save_to_file( genesis, output_filename );
    }
    catch ( const fc::exception& e )

@@ -33,7 +33,7 @@ namespace wallet_utility
    class WalletAPI
    {
    public:
-      WalletAPI(const fc::path &wallet_file, const graphene::wallet::server_data &ws);
+      WalletAPI(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
       ~WalletAPI();
 
       void Connect(std::atomic_bool& cancellation_token);
@@ -50,7 +50,7 @@ namespace wallet_utility
       string RunTask(string const& str_command);
 
    private:
-      fc::path m_wallet_file;
+      boost::filesystem::path m_wallet_file;
       graphene::wallet::server_data m_ws;
       // wallet_api does not like to be accessed from several threads
       // so all the access is encapsulated inside m_pthread :(

@@ -103,7 +103,7 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      WalletOperator(const fc::path &wallet_file, const graphene::wallet::server_data &ws);
+      WalletOperator(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
       ~WalletOperator() override;
 
       void cancel();

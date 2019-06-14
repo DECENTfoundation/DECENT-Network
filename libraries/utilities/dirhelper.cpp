@@ -1,6 +1,8 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #include <graphene/utilities/dirhelper.hpp>
+#include <boost/filesystem.hpp>
+
 #if defined( _MSC_VER )
 #include <ShlObj.h>
 #else

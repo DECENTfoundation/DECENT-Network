@@ -232,7 +232,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
    try {
       decent_plugins::types plugins = decent_plugins::create(*node);
 
-      fc::path logs_dir, data_dir, config_filename;
+      boost::filesystem::path logs_dir, data_dir, config_filename;
       auto& path_finder = graphene::utilities::decent_path_finder::instance();
 	  
       if( run_as_daemon ) {
@@ -266,7 +266,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
          {
             data_dir = options["data-dir"].as<boost::filesystem::path>();
             if( data_dir.is_relative() )
-               data_dir = fc::current_path() / data_dir;
+               data_dir = boost::filesystem::current_path() / data_dir;
          }
          else
          {
@@ -277,13 +277,12 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
          logs_dir = data_dir;
       }
 
-      if( fc::exists(config_filename) )
+      if( exists(config_filename) )
       {
          // get the basic options
          try {
-            bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+            bpo::store(bpo::parse_config_file<char>(config_filename.make_preferred().string().c_str(), cfg_options, true), options);
          }
-         
          catch (std::exception& e) {
             elog(e.what());
             return EXIT_FAILURE;
@@ -296,10 +295,9 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       else //NOTE: We should not write a config when we run as daemon, but for now we leave it as is.
       {
          ilog("Writing new config file at ${path}", ("path", config_filename));
-		 if (!fc::exists(data_dir)) {
-			 std::string data_dir_str = data_dir.string();
-			 fc::create_directories(data_dir);
-		 }
+         if( !exists(data_dir) ) {
+            create_directories(data_dir);
+         }
 
          decent::write_default_config_file(config_filename, cfg_options, run_as_daemon);
       }
@@ -317,7 +315,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       }
       catch (const fc::exception& e)
       {
-         elog("Error parsing logging options from config file ${cfg}. str: ${str}", ("cfg", config_filename.preferred_string())("str", e.to_string()));
+         elog("Error parsing logging options from config file ${cfg}. str: ${str}", ("cfg", config_filename)("str", e.to_string()));
          return EXIT_FAILURE;
       }
 

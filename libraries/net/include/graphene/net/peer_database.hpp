@@ -98,7 +98,7 @@ namespace graphene { namespace net {
     peer_database();
     ~peer_database();
 
-    void open(const fc::path& databaseFilename);
+    void open(const boost::filesystem::path& databaseFilename);
     void close();
     void clear();
 

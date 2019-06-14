@@ -25,9 +25,7 @@
 #include <iostream>
 #include <thread>
 #include <boost/test/included/unit_test.hpp>
-#include <fc/filesystem.hpp>
-
-
+#include <boost/filesystem.hpp>
 #include <decent/package/package.hpp>
 
 using namespace decent::package;
@@ -115,9 +113,9 @@ public:
 
 void create_fake_content(boost::filesystem::path& content_path, boost::filesystem::path& samples_path)
 {
-   fc::path temp_dir = fc::temp_directory_path() / "decent_fake_content";
+   boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path() / "decent_fake_content";
 
-   boost::filesystem::create_directories(boost::filesystem::path(temp_dir.string()) );
+   create_directories(temp_dir);
 
    content_path = temp_dir / "content";
    samples_path = temp_dir / "samples";
@@ -142,7 +140,7 @@ bool check_fake_content(const boost::filesystem::path& base_dir)
 
 void create_unpack_folder(boost::filesystem::path& content_path)
 {
-   fc::path temp_dir = fc::temp_directory_path() / "decent_fake_content";
+   boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path() / "decent_fake_content";
 
    boost::filesystem::create_directories(boost::filesystem::path(temp_dir.string()) );
 

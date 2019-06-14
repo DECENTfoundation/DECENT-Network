@@ -111,24 +111,24 @@ int main(int argc, char* argv[])
 
    app.setFont(gui_wallet::MainFont());
 
-   fc::path data_dir = options.count("data-dir") ?
-      fc::path(options["data-dir"].as<boost::filesystem::path>()) :
+   boost::filesystem::path data_dir = options.count("data-dir") ?
+      boost::filesystem::path(options["data-dir"].as<boost::filesystem::path>()) :
       graphene::utilities::decent_path_finder::instance().get_decent_data();
 
    if(data_dir.is_relative())
-      data_dir = fc::current_path() / data_dir;
+      data_dir = boost::filesystem::current_path() / data_dir;
 
-   fc::path config_filename = data_dir / "config.ini";
-   if( fc::exists(config_filename) )
+   boost::filesystem::path config_filename = data_dir / "config.ini";
+   if( exists(config_filename) )
    {
       // get the basic options
-      bpo::store(bpo::parse_config_file<char>(config_filename.preferred_string().c_str(), cfg_options, true), options);
+      bpo::store(bpo::parse_config_file<char>(config_filename.make_preferred().string().c_str(), cfg_options, true), options);
    }
    else
    {
       ilog("Writing new config file at ${path}", ("path", config_filename));
-      if( !fc::exists(data_dir) )
-         fc::create_directories(data_dir);
+      if( !exists(data_dir) )
+         create_directories(data_dir);
 
       decent::write_default_config_file(config_filename, cfg_options, false);
    }
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
    }
    catch (const fc::exception&)
    {
-      wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.preferred_string()));
+      wlog("Error parsing logging config from config file ${cfg}, using default config", ("cfg", config_filename.string()));
    }
 
    graphene::wallet::server_data ws{ "ws://" + options["rpc-endpoint"].as<std::string>() };

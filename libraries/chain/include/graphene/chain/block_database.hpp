@@ -29,7 +29,7 @@ namespace graphene { namespace chain {
    class block_database 
    {
       public:
-         void open( const fc::path& dbdir );
+         void open( const boost::filesystem::path& dbdir );
          bool is_open()const;
          void flush();
          void close();

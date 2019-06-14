@@ -25,7 +25,7 @@ struct seeding_plugin_startup_options
    uint64_t free_space;
    std::string seeding_price;
    std::string seeding_symbol;
-   fc::path packages_path;
+   boost::filesystem::path packages_path;
    std::string region_code;
 };
 
@@ -721,7 +721,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
                   ("path_string", options["packages-path"].as<std::string>()));
       }
    } else {
-      my->seeding_options.packages_path = fc::path( "" );
+      my->seeding_options.packages_path = boost::filesystem::path( );
    }
 
    const auto region_code_itr = graphene::chain::RegionCodes::s_mapNameToCode.find( options.count("region-code") ? options["region-code"].as<std::string>() : "" );
@@ -745,7 +745,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    database().add_index<graphene::db::primary_index<graphene::chain::seeding_index>>();
 
    auto& dir_helper = graphene::utilities::decent_path_finder::instance();
-   if( my->seeding_options.packages_path != fc::path( ) )
+   if( my->seeding_options.packages_path != boost::filesystem::path( ) )
       dir_helper.set_packages_path( my->seeding_options.packages_path );
    else
       dir_helper.set_packages_path( dir_helper.get_decent_packages() / "seeding" );

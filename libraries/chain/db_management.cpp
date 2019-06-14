@@ -49,7 +49,7 @@ database::~database()
    clear_pending();
 }
 
-void database::reindex(fc::path data_dir, const genesis_state_type& initial_allocation)
+void database::reindex(boost::filesystem::path data_dir, const genesis_state_type& initial_allocation)
 { try {
    try {
       dlog("reindexing blockchain");
@@ -116,17 +116,17 @@ void database::reindex(fc::path data_dir, const genesis_state_type& initial_allo
    }
 } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
 
-void database::wipe(const fc::path& data_dir, bool include_blocks)
+void database::wipe(const boost::filesystem::path& data_dir, bool include_blocks)
 {
    ilog("Wiping database (including blocks: ${blocks})", ("blocks", include_blocks));
    close();
    object_database::wipe(data_dir);
    if( include_blocks )
-      fc::remove_all( data_dir / "database" );
+      remove_all( data_dir / "database" );
 }
 
 void database::open(
-   const fc::path& data_dir,
+   const boost::filesystem::path& data_dir,
    std::function<genesis_state_type()> genesis_loader)
 {
    try

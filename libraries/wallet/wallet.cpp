@@ -985,7 +985,7 @@ public:
          //
          // http://en.wikipedia.org/wiki/Most_vexing_parse
          //
-         fc::ofstream outfile{ fc::path( wallet_filename ) };
+         fc::ofstream outfile{ boost::filesystem::path( wallet_filename ) };
          outfile.write( data.c_str(), data.length() );
          outfile.flush();
          outfile.close();

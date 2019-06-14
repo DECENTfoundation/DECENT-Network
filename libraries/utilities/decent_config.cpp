@@ -10,6 +10,7 @@
 #include <fc/exception/exception.hpp>
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
+#include <fc/filesystem.hpp>
 #include <fc/reflect/variant.hpp>
 
 namespace decent {
@@ -170,14 +171,14 @@ namespace decent {
        }
     }
 
-    fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename, const fc::path& logs_dir)
+    fc::optional<fc::logging_config> load_logging_config_from_ini_file(boost::filesystem::path config_ini_filename, const boost::filesystem::path& logs_dir)
     {
        try {
           fc::logging_config logging_config;
           bool found_logging_config = false;
 
           boost::property_tree::ptree config_ini_tree;
-          read_log_ini(config_ini_filename.preferred_string().c_str(), config_ini_tree);
+          read_log_ini(config_ini_filename.make_preferred().string().c_str(), config_ini_tree);
           for (const auto &section : config_ini_tree) {
              const std::string &section_name = section.first;
              const boost::property_tree::ptree &section_tree = section.second;
@@ -209,7 +210,7 @@ namespace decent {
              }
              else if (boost::starts_with(section_name, file_appender_section_prefix)) {
                 std::string file_appender_name = section_name.substr(file_appender_section_prefix.length());
-                fc::path file_name = section_tree.get<std::string>("filename");
+                boost::filesystem::path file_name = section_tree.get<std::string>("filename");
                 if (file_name.is_relative())
                    file_name = logs_dir / file_name;
 
@@ -265,9 +266,9 @@ namespace decent {
        FC_RETHROW_EXCEPTIONS(error, "")
    }
 
-    void write_default_config_file(const fc::path& config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
+    void write_default_config_file(boost::filesystem::path config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
     {
-       std::ofstream out_cfg(config_ini_filename.preferred_string());
+       std::ofstream out_cfg(config_ini_filename.make_preferred().string());
        for( const auto &od : cfg_options.options() )
        {
           if( !od->description().empty() )

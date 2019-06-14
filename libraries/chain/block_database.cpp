@@ -39,13 +39,13 @@ FC_REFLECT( graphene::chain::index_entry, (block_pos)(block_size)(block_id) );
 
 namespace graphene { namespace chain {
 
-void block_database::open( const fc::path& dbdir )
+void block_database::open( const boost::filesystem::path& dbdir )
 { try {
-   fc::create_directories(dbdir);
+   create_directories(dbdir);
    _block_num_to_pos.exceptions(std::ios_base::failbit | std::ios_base::badbit);
    _blocks.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
-   if( !fc::exists( dbdir/"index" ) )
+   if( !exists( dbdir/"index" ) )
    {
      _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
      _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);

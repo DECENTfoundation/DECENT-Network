@@ -25,11 +25,15 @@
 
 #include <boost/program_options.hpp>
 
-#include <fc/filesystem.hpp>
-
 #include <graphene/chain/database.hpp>
 #include <graphene/net/node.hpp>
 #include <graphene/app/api_access.hpp>
+
+namespace boost {
+  namespace filesystem {
+    class path;
+  }
+}
 
 namespace graphene { namespace app {
    namespace detail { class application_impl; }
@@ -45,7 +49,7 @@ namespace graphene { namespace app {
          static void set_program_options(boost::program_options::options_description& command_line_options,
                                          boost::program_options::options_description& configuration_file_options);
 
-         void initialize(const fc::path& data_dir, const boost::program_options::variables_map&options);
+         void initialize(const boost::filesystem::path& data_dir, const boost::program_options::variables_map&options);
          void initialize_plugins( const boost::program_options::variables_map& options );
          void startup();
          void shutdown();

@@ -87,18 +87,18 @@ int main( int argc, char** argv )
          return 0;
       }
 
-      fc::path data_dir;
+      boost::filesystem::path data_dir;
       if( options.count("data-dir") )
       {
          data_dir = options["data-dir"].as<boost::filesystem::path>();
          if( data_dir.is_relative() )
-            data_dir = fc::current_path() / data_dir;
+            data_dir = boost::filesystem::current_path() / data_dir;
       }
 
       genesis_state_type genesis;
       if( options.count("genesis-json") )
       {
-         fc::path genesis_json_filename = options["genesis-json"].as<boost::filesystem::path>();
+         boost::filesystem::path genesis_json_filename = options["genesis-json"].as<boost::filesystem::path>();
          std::cerr << "embed_genesis:  Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
          std::string genesis_json;
          read_file_contents( genesis_json_filename, genesis_json );
@@ -123,7 +123,7 @@ int main( int argc, char** argv )
       fc::ecc::private_key nathan_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
 
       database db;
-      fc::path db_path = data_dir / "db";
+      boost::filesystem::path db_path = data_dir / "db";
       db.open(db_path, [&]() { return genesis; } );
 
       uint32_t slot = 1;

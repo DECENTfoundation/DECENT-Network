@@ -61,12 +61,12 @@ namespace wallet_utility
       class WalletAPIHelper
       {
       public:
-         WalletAPIHelper(const fc::path &wallet_file, graphene::wallet::server_data ws)
+         WalletAPIHelper(const boost::filesystem::path &wallet_file, graphene::wallet::server_data ws)
          : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
          {
             wallet_data wdata;
-            bool has_wallet_file = fc::exists(wallet_file);
+            bool has_wallet_file = exists(wallet_file);
             if (has_wallet_file)
                wdata = fc::json::from_file(wallet_file).as<wallet_data>();
 
@@ -137,7 +137,7 @@ namespace wallet_utility
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI(const fc::path &wallet_file, const graphene::wallet::server_data &ws)
+   WalletAPI::WalletAPI(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
    : m_wallet_file(wallet_file)
    , m_ws(ws)
    , m_pthread(nullptr)
@@ -287,7 +287,7 @@ namespace wallet_utility
       if (!IsConnected())
          throw wallet_exception("not yet connected");
 
-      string str_file = m_wallet_file.to_native_ansi_path();
+      string str_file = fc::to_native_ansi_path(m_wallet_file);
 
       std::lock_guard<std::mutex> lock(m_mutex);
 

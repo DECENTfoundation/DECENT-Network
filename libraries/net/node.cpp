@@ -443,7 +443,7 @@ namespace graphene { namespace net { namespace detail {
 
 #define NODE_CONFIGURATION_FILENAME      "node_config.json"
 #define POTENTIAL_PEER_DATABASE_FILENAME "peers.json"
-      fc::path             _node_configuration_directory;
+      boost::filesystem::path _node_configuration_directory;
       node_configuration   _node_configuration;
 
       /// stores the endpoint we're listening on.  This will be the same as
@@ -748,7 +748,7 @@ namespace graphene { namespace net { namespace detail {
 
       // methods implementing node's public interface
       void set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls, uint32_t block_size);
-      void load_configuration( const fc::path& configuration_directory );
+      void load_configuration( const boost::filesystem::path& configuration_directory );
       void listen_to_p2p_network();
       void connect_to_p2p_network();
       void add_node( const fc::ip::endpoint& ep );
@@ -896,9 +896,9 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::save_node_configuration()
     {
       VERIFY_CORRECT_THREAD();
-      if( fc::exists(_node_configuration_directory ) )
+      if( exists(_node_configuration_directory ) )
       {
-        fc::path configuration_file_name( _node_configuration_directory / NODE_CONFIGURATION_FILENAME );
+        boost::filesystem::path configuration_file_name( _node_configuration_directory / NODE_CONFIGURATION_FILENAME );
         try
         {
           fc::json::save_to_file( _node_configuration, configuration_file_name );
@@ -4436,13 +4436,13 @@ namespace graphene { namespace net { namespace detail {
       set_block_size(block_size);
     }
 
-    void node_impl::load_configuration( const fc::path& configuration_directory )
+    void node_impl::load_configuration( const boost::filesystem::path& configuration_directory )
     {
       VERIFY_CORRECT_THREAD();
       _node_configuration_directory = configuration_directory;
-      fc::path configuration_file_name( _node_configuration_directory / NODE_CONFIGURATION_FILENAME );
+      boost::filesystem::path configuration_file_name( _node_configuration_directory / NODE_CONFIGURATION_FILENAME );
       bool node_configuration_loaded = false;
-      if( fc::exists(configuration_file_name ) )
+      if( exists(configuration_file_name ) )
       {
         try
         {
@@ -4485,7 +4485,7 @@ namespace graphene { namespace net { namespace detail {
 
       _node_public_key = _node_configuration.private_key.get_public_key().serialize();
 
-      fc::path potential_peer_database_file_name(_node_configuration_directory / POTENTIAL_PEER_DATABASE_FILENAME);
+      boost::filesystem::path potential_peer_database_file_name(_node_configuration_directory / POTENTIAL_PEER_DATABASE_FILENAME);
       try
       {
         _potential_peer_db.open(potential_peer_database_file_name);
@@ -5184,7 +5184,7 @@ namespace graphene { namespace net { namespace detail {
     INVOKE_IN_IMPL(set_node_delegate, del, delegate_thread, block_size);
   }
 
-  void node::load_configuration( const fc::path& configuration_directory )
+  void node::load_configuration( const boost::filesystem::path& configuration_directory )
   {
     INVOKE_IN_IMPL(load_configuration, configuration_directory);
   }

@@ -67,13 +67,13 @@ namespace graphene { namespace app { namespace detail {
 genesis_state_type create_example_genesis();
 } } } // graphene::app::detail
 
-fc::path get_path(
+boost::filesystem::path get_path(
    const boost::program_options::variables_map& options,
    const std::string& name )
 {
-   fc::path result = options[name].as<boost::filesystem::path>();
+   boost::filesystem::path result = options[name].as<boost::filesystem::path>();
    if( result.is_relative() )
-      result = fc::current_path() / result;
+      result = boost::filesystem::current_path() / result;
    return result;
 }
 
@@ -201,8 +201,8 @@ void load_genesis(
 {
    if( options.count("genesis-json") )
    {
-      fc::path genesis_json_filename = get_path( options, "genesis-json" );
-      std::cerr << "embed_genesis:  Reading genesis from file " << genesis_json_filename.preferred_string() << "\n";
+      boost::filesystem::path genesis_json_filename = get_path( options, "genesis-json" );
+      std::cerr << "embed_genesis:  Reading genesis from file " << genesis_json_filename.make_preferred().string() << "\n";
       info.genesis_json = std::string();
       read_file_contents( genesis_json_filename, *info.genesis_json );
    }
@@ -278,9 +278,9 @@ int main( int argc, char** argv )
       std::string dest = src_dest.substr( pos+3 );
 
       std::string tmpl;
-      read_file_contents( fc::path( src ), tmpl );
+      read_file_contents( boost::filesystem::path( src ), tmpl );
       std::string out_str = fc::format_string( tmpl, template_context );
-      fc::path dest_filename = fc::path( dest );
+      boost::filesystem::path dest_filename( dest );
       fc::ofstream outfile( dest_filename );
       outfile.write( out_str.c_str(), out_str.size() );
       outfile.close();

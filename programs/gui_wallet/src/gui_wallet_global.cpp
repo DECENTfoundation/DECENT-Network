@@ -474,7 +474,7 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator(const fc::path &wallet_file, const graphene::wallet::server_data &ws)
+WalletOperator::WalletOperator(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
 : m_wallet_api(wallet_file, ws)
 , m_cancellation_token(false)
 {
@@ -1367,13 +1367,13 @@ QString get_ipfs_path(QObject* parent, const QString& app_dir)
    QString ipfs_path_next_to_bin_exe = app_dir + QDir::separator() + ".."  + QDir::separator() + "bin"  + QDir::separator() + "ipfs";
 
 
-   if (utilities::decent_path_finder::instance().get_ipfs_bin() != fc::path()) {
+   if (utilities::decent_path_finder::instance().get_ipfs_bin() != boost::filesystem::path()) {
       if (check_for_ipfs(parent, ipfs_bin)) {
          return ipfs_bin;
       }
    }
 
-   if (utilities::decent_path_finder::instance().get_ipfs_path() != fc::path()) {
+   if (utilities::decent_path_finder::instance().get_ipfs_path() != boost::filesystem::path()) {
       if (check_for_ipfs(parent, ipfs_path_bin)) {
          return ipfs_path_bin;
       }
@@ -1451,19 +1451,19 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
    try {
       gui_wallet::Globals::Plugins::types plugins = gui_wallet::Globals::Plugins::create(*node);
 
-      fc::path data_dir;
+      boost::filesystem::path data_dir;
       if( options.count("data-dir") )
       {
          data_dir = options["data-dir"].as<boost::filesystem::path>();
          if( data_dir.is_relative() )
-            data_dir = fc::current_path() / data_dir;
+            data_dir = boost::filesystem::current_path() / data_dir;
       }
 
-      fc::path config_ini_path = data_dir / "config.ini";
-      if( fc::exists(config_ini_path) )
+      boost::filesystem::path config_ini_path = data_dir / "config.ini";
+      if( exists(config_ini_path) )
       {
          // get the basic options
-         bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+         bpo::store(bpo::parse_config_file<char>(config_ini_path.make_preferred().string().c_str(), cfg_options, true), options);
       }
 
       bpo::notify(options);

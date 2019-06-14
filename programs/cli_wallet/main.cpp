@@ -144,7 +144,7 @@ int main( int argc, char** argv )
             return EXIT_FAILURE;
       }
 
-      const fc::path log_dir = pf.get_decent_logs();
+      const boost::filesystem::path log_dir = pf.get_decent_logs();
 
       fc::file_appender::config ac_default;
       ac_default.filename             = log_dir / "cli_wallet.log";
@@ -160,7 +160,7 @@ int main( int argc, char** argv )
       fc::logging_config cfg;
       cfg.appenders.push_back(fc::appender_config( "default", "file", fc::variant(ac_default)));
       cfg.loggers.push_back(lc_default);
-      std::clog << "Logging to file: " << ac_default.filename.preferred_string() << std::endl;
+      std::clog << "Logging to file: " << ac_default.filename.string() << std::endl;
 
       fc::configure_logging( cfg );
 
@@ -171,8 +171,8 @@ int main( int argc, char** argv )
       //    designed.
       //
       graphene::wallet::wallet_data wdata;
-      fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : pf.get_decent_home() / "wallet.json");
-      bool has_wallet_file = fc::exists( wallet_file );
+      boost::filesystem::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : pf.get_decent_home() / "wallet.json");
+      bool has_wallet_file = exists( wallet_file );
       if( has_wallet_file )
       {
          wdata = fc::json::from_file( wallet_file ).as<graphene::wallet::wallet_data>();

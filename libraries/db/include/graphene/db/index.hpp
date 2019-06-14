@@ -24,7 +24,9 @@
  */
 #pragma once
 #include <graphene/db/object.hpp>
-#include <fc/interprocess/file_mapping.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/io/json.hpp>
 #include <fc/crypto/sha256.hpp>
@@ -32,7 +34,6 @@
 
 namespace graphene { namespace db {
    class object_database;
-   using fc::path;
 
    /**
     * @class index_observer
@@ -94,10 +95,8 @@ namespace graphene { namespace db {
          /**
           *  Opens the index loading objects from a file
           */
-         virtual void open( const fc::path& db ) = 0;
-         virtual void save( const fc::path& db ) = 0;
-
-
+         virtual void open( const boost::filesystem::path& db ) = 0;
+         virtual void save( const boost::filesystem::path& db ) = 0;
 
          /** @return the object with id or nullptr if not found */
          virtual const object*      find( object_id_type id )const = 0;
@@ -223,11 +222,11 @@ namespace graphene { namespace db {
             return fc::sha256::hash(desc);
          }
 
-         virtual void open( const path& db )override
+         virtual void open( const boost::filesystem::path& db )override
          { try{
-            if( !fc::exists( db ) ) return;
-            fc::file_mapping fm( db.generic_string().c_str(), fc::read_only );
-            fc::mapped_region mr( fm, fc::read_only, 0, fc::file_size(db) );
+            if( !exists( db ) ) return;
+            boost::interprocess::file_mapping fm( db.generic_string().c_str(), boost::interprocess::read_only );
+            boost::interprocess::mapped_region mr( fm, boost::interprocess::read_only, 0, file_size(db) );
             fc::datastream<const char*> ds( (const char*)mr.get_address(), mr.get_size() );
             fc::sha256 open_ver;
 
@@ -244,7 +243,7 @@ namespace graphene { namespace db {
             } catch ( const fc::exception&  ){}
          }FC_CAPTURE_AND_RETHROW((db))}
 
-         virtual void save( const path& db ) override 
+         virtual void save( const boost::filesystem::path& db )override
          {
             std::ofstream out( db.generic_string(), 
                                std::ofstream::binary | std::ofstream::out | std::ofstream::trunc );

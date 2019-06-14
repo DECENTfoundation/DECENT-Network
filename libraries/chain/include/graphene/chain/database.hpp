@@ -107,7 +107,7 @@ namespace graphene { namespace chain {
           * @param genesis_loader A callable object which returns the genesis state to initialize new databases on
           */
           void open(
-             const fc::path& data_dir,
+             const boost::filesystem::path& data_dir,
              std::function<genesis_state_type()> genesis_loader );
 
          /**
@@ -116,7 +116,7 @@ namespace graphene { namespace chain {
           * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
           * replaying blockchain history. When this method exits successfully, the database will be open.
           */
-         void reindex(fc::path data_dir, const genesis_state_type& initial_allocation = genesis_state_type());
+         void reindex(boost::filesystem::path data_dir, const genesis_state_type& initial_allocation = genesis_state_type());
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -125,7 +125,7 @@ namespace graphene { namespace chain {
           *
           * Will close the database before wiping. Database will be closed when this function returns.
           */
-         void wipe(const fc::path& data_dir, bool include_blocks);
+         void wipe(const boost::filesystem::path& data_dir, bool include_blocks);
          void close(bool rewind = true);
 
          //////////////////// db_block.cpp ////////////////////

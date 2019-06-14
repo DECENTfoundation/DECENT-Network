@@ -56,7 +56,7 @@ using namespace graphene;
 namespace bpo = boost::program_options;
 
 void write_default_logging_config_to_stream(std::ostream& out);
-fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename);
+fc::optional<fc::logging_config> load_logging_config_from_ini_file(const boost::filesystem::path& config_ini_filename);
 
 int main(int argc, char** argv) {
    try {
@@ -94,23 +94,23 @@ int main(int argc, char** argv) {
          return 0;
       }
 
-      fc::path data_dir;
+      boost::filesystem::path data_dir;
       if( options.count("data-dir") )
       {
          data_dir = options["data-dir"].as<boost::filesystem::path>();
          if( data_dir.is_relative() )
-            data_dir = fc::current_path() / data_dir;
+            data_dir = boost::filesystem::current_path() / data_dir;
       }
 
-      fc::path config_ini_path = data_dir / "config.ini";
+      boost::filesystem::path config_ini_path = data_dir / "config.ini";
       // Create config file if not already present
-      if( !fc::exists(config_ini_path) )
+      if( !exists(config_ini_path) )
       {
          ilog("Writing new config file at ${path}", ("path", config_ini_path));
-         if( !fc::exists(data_dir) )
-            fc::create_directories(data_dir);
+         if( !exists(data_dir) )
+            create_directories(data_dir);
 
-         std::ofstream out_cfg(config_ini_path.preferred_string());
+         std::ofstream out_cfg(config_ini_path.make_preferred().string());
          for( const boost::shared_ptr<bpo::option_description> od : cfg_options.options() )
          {
             if( !od->description().empty() )
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
 
       // Parse configuration file
       try {
-         bpo::store(bpo::parse_config_file<char>(config_ini_path.preferred_string().c_str(), cfg_options, true), options);
+         bpo::store(bpo::parse_config_file<char>(config_ini_path.make_preferred().string().c_str(), cfg_options, true), options);
          // try to get logging options from the config file.
          try
          {
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
          }
          catch (const fc::exception&)
          {
-            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.preferred_string()));
+            wlog("Error parsing logging config from config file ${config}, using default config", ("config", config_ini_path.string()));
          }
 
          bpo::notify(options);
@@ -211,7 +211,7 @@ void write_default_logging_config_to_stream(std::ostream& out)
           "appenders=p2p\n\n";
 }
 
-fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::path& config_ini_filename)
+fc::optional<fc::logging_config> load_logging_config_from_ini_file(const boost::filesystem::path& config_ini_filename)
 {
    try
    {
@@ -219,7 +219,7 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
       bool found_logging_config = false;
 
       boost::property_tree::ptree config_ini_tree;
-      boost::property_tree::ini_parser::read_ini(config_ini_filename.preferred_string().c_str(), config_ini_tree);
+      boost::property_tree::ini_parser::read_ini(config_ini_filename.string().c_str(), config_ini_tree);
       for (const auto& section : config_ini_tree)
       {
          const std::string& section_name = section.first;
@@ -253,9 +253,9 @@ fc::optional<fc::logging_config> load_logging_config_from_ini_file(const fc::pat
          else if (boost::starts_with(section_name, file_appender_section_prefix))
          {
             std::string file_appender_name = section_name.substr(file_appender_section_prefix.length());
-            fc::path file_name = section_tree.get<std::string>("filename");
+            boost::filesystem::path file_name = section_tree.get<std::string>("filename");
             if (file_name.is_relative())
-               file_name = fc::absolute(config_ini_filename).parent_path() / file_name;
+               file_name = absolute(config_ini_filename).parent_path() / file_name;
 
 
             // construct a default file appender config here

@@ -28,6 +28,7 @@
 #include <fc/io/raw.hpp>
 #include <fc/container/flat.hpp>
 #include <fc/uint128.hpp>
+#include <fc/filesystem.hpp>
 
 namespace graphene { namespace db {
 
@@ -86,7 +87,7 @@ void object_database::flush()
       return;
    for( uint32_t space = 0; space < _index.size(); ++space )
    {
-      fc::create_directories( _data_dir / "object_database" / fc::to_string(space) );
+      create_directories( _data_dir / "object_database" / fc::to_string(space) );
       const auto types = _index[space].size();
       for( uint32_t type = 0; type  <  types; ++type )
          if( _index[space][type] )
@@ -94,16 +95,16 @@ void object_database::flush()
    }
 }
 
-void object_database::wipe(const fc::path& data_dir)
+void object_database::wipe(const boost::filesystem::path& data_dir)
 {
    close();
    ilog("Wiping object database...");
-   fc::remove_all(data_dir / "object_database");
+   remove_all(data_dir / "object_database");
    ilog("Done wiping object databse.");
 }
 
 
-void object_database::open(const fc::path& data_dir)
+void object_database::open(const boost::filesystem::path& data_dir)
 { try {
    ilog("Opening object database from ${d} ...", ("d", data_dir));
    _data_dir = data_dir;

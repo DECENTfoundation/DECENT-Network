@@ -32,7 +32,7 @@
 #include <fc/thread/thread.hpp>
 #include <fc/smart_ref_impl.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE Test Application
 #include <boost/test/included/unit_test.hpp>
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
 
       fc::temp_directory app_dir( graphene::utilities::temp_directory_path() );
       fc::temp_directory app2_dir( graphene::utilities::temp_directory_path() );
-      fc::temp_file genesis_json;
+      fc::temp_file genesis_json( graphene::utilities::temp_directory_path() );
 
       BOOST_TEST_MESSAGE( "Creating and initializing app1" );
 

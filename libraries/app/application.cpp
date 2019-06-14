@@ -95,7 +95,7 @@ namespace detail {
       bool _force_validate = false;
       uint64_t _processed_transactions = 0;
 
-      void reset_p2p_node(const fc::path& data_dir)
+      void reset_p2p_node(const boost::filesystem::path& data_dir)
       { try {
          _p2p_network = std::make_shared<net::node>("Graphene Reference Implementation");
 
@@ -299,9 +299,9 @@ namespace detail {
 
       void startup()
       { try {
-         bool clean = !fc::exists(_data_dir / "blockchain/dblock");
+         bool clean = !exists(_data_dir / "blockchain/dblock");
   
-         fc::create_directories(_data_dir / "blockchain/dblock");
+         create_directories(_data_dir / "blockchain/dblock");
          FC_ASSERT(!_db_lock, "Database is already opened");
          _db_lock.reset(new fc::simple_lock_file(_data_dir / "blockchain/dblock/decentd"));
          if( !_db_lock->try_lock() )
@@ -374,7 +374,7 @@ namespace detail {
 
          _chain_db->add_checkpoints( loaded_checkpoints );
 
-         bool objdb = fc::exists(_data_dir / "blockchain/object_database");
+         bool objdb = exists(_data_dir / "blockchain/object_database");
          if( !objdb || _options->count("replay-blockchain") )
          {
             if( objdb )
@@ -388,15 +388,15 @@ namespace detail {
             auto is_new = [&]() -> bool
             {
                // directory doesn't exist
-               if( !fc::exists( _data_dir ) )
+               if( !exists( _data_dir ) )
                   return true;
                // if directory exists but is empty, return true; else false.
-               return ( fc::directory_iterator( _data_dir ) == fc::directory_iterator() );
+               return ( boost::filesystem::directory_iterator( _data_dir ) == boost::filesystem::directory_iterator() );
             };
 
             auto is_outdated = [&]() -> bool
             {
-               if( !fc::exists( _data_dir / "db_version" ) )
+               if( !exists( _data_dir / "db_version" ) )
                   return true;
                std::string version_str;
                fc::read_file_contents( _data_dir / "db_version", version_str );
@@ -500,7 +500,7 @@ namespace detail {
             ilog("Release database lock");
             _db_lock->unlock();
             _db_lock.reset();
-            fc::remove_all(_data_dir / "blockchain/dblock");
+            remove_all(_data_dir / "blockchain/dblock");
          }
       } FC_LOG_AND_RETHROW() }
 
@@ -950,7 +950,7 @@ namespace detail {
 
       application* _self;
 
-      fc::path _data_dir;
+      boost::filesystem::path _data_dir;
       const bpo::variables_map* _options = nullptr;
       api_access _apiaccess;
 
@@ -1102,16 +1102,16 @@ void application::set_program_options(boost::program_options::options_descriptio
    command_line_options.add(configuration_file_options);
 }
 
-void application::initialize(const fc::path& data_dir, const boost::program_options::variables_map& options)
+void application::initialize(const boost::filesystem::path& data_dir, const boost::program_options::variables_map& options)
 {
    my->_data_dir = data_dir;
    my->_options = &options;
 
    if( options.count("create-genesis-json") )
    {
-      fc::path genesis_out = options.at("create-genesis-json").as<boost::filesystem::path>();
+      boost::filesystem::path genesis_out = options.at("create-genesis-json").as<boost::filesystem::path>();
       genesis_state_type genesis_state = detail::create_example_genesis();
-      if( fc::exists(genesis_out) )
+      if( exists(genesis_out) )
       {
          try {
             genesis_state = fc::json::from_file(genesis_out).as<genesis_state_type>();
