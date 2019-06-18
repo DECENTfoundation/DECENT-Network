@@ -52,7 +52,7 @@
  * @defgroup DatabaseAPI_Mining Mining
  * @defgroup DatabaseAPI_AuthValidation Authority and Validation
  * @defgroup DatabaseAPI_Proposals Proposals
- * @defgroup DatabaseAPI_Decent Decent
+ * @defgroup DatabaseAPI_Content Content
  * @}
  */
 namespace graphene { namespace app {
@@ -801,14 +801,14 @@ namespace graphene { namespace app {
           * the list will start at the account that comes after \c lowerbound
           * @param limit the maximum number of accounts to return (max: 100)
           * @return a list of publishing managers
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const;
 
          /**
           * @brief Get a list of open buyings.
           * @return a list of buying objects
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> get_open_buyings()const;
 
@@ -816,7 +816,7 @@ namespace graphene { namespace app {
           * @brief Get a list of open buyings by URI.
           * @param URI URI of the buyings to retrieve
           * @return a list of buyings corresponding to the provided URI
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
 
@@ -824,7 +824,7 @@ namespace graphene { namespace app {
           * @brief Get a list of open buyings by consumer.
           * @param consumer consumer of the buyings to retrieve
           * @return a list of buyings corresponding to the provided consumer
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
 
@@ -832,7 +832,7 @@ namespace graphene { namespace app {
           * @brief Get history buying objects by consumer.
           * @param consumer consumer of the history buyings to retrieve
           * @return history buying objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
 
@@ -844,7 +844,7 @@ namespace graphene { namespace app {
           * @param term search term
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return buying objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> get_buying_objects_by_consumer(const account_id_type& consumer,
                                                               const string& order,
@@ -857,7 +857,7 @@ namespace graphene { namespace app {
           * @param consumer consumer of the buying to retrieve
           * @param URI URI of the buying to retrieve
           * @return buying object corresponding to the provided consumer and URI
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
 
@@ -868,7 +868,7 @@ namespace graphene { namespace app {
           * @param id the id of feedback object to start searching from
           * @param count maximum number of feedbacks to fetch
           * @return the feedback found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<buying_object> search_feedback(const string& user,
                                                const string& URI,
@@ -879,7 +879,7 @@ namespace graphene { namespace app {
           * @brief Get a content by URI.
           * @param URI URI of the content to retrieve
           * @return the content corresponding to the provided URI, or \c null if no matching content was found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          optional<content_object> get_content( const string& URI )const;
          
@@ -887,7 +887,7 @@ namespace graphene { namespace app {
           * @brief Generate keys for new content submission.
           * @param seeders list of seeder account IDs
           * @return generated key, key parts and quorum
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
          
@@ -896,7 +896,7 @@ namespace graphene { namespace app {
           * @param el_gamal_priv_key_string the private El Gamal key
           * @param buying the buying object
           * @return AES encryption key
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
 
@@ -910,7 +910,7 @@ namespace graphene { namespace app {
           * @param type the application and content type to be filtered
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return the contents found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<content_summary> search_content(const string& term,
                                                 const string& order,
@@ -924,7 +924,7 @@ namespace graphene { namespace app {
           * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
@@ -932,7 +932,7 @@ namespace graphene { namespace app {
           * @brief Get a list of seeders by price, in increasing order.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<seeder_object> list_seeders_by_price( uint32_t count )const;
 
@@ -940,15 +940,15 @@ namespace graphene { namespace app {
           * @brief Get a list of seeders by total upload, in decreasing order.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
-         optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+         vector<seeder_object> list_seeders_by_upload( const uint32_t count )const;
 
          /**
           * @brief Get a list of seeders by region code.
           * @param region_code region code of seeders to retrieve
           * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<seeder_object> list_seeders_by_region( const string region_code )const;
 
@@ -956,23 +956,23 @@ namespace graphene { namespace app {
           * @brief Get a list of seeders by rating, in decreasing order.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
 
          /**
           * @brief Get a seeder by ID.
-          * @param aid ID of the seeder to retrieve
-          * @return the seeder corresponding to the provided ID, or \c null if no matching content was found
-          * @ingroup DatabaseAPI_Decent
+          * @param account ID of the seeder to retrieve
+          * @return the seeder corresponding to the provided ID or \c null if no matching content was found
+          * @ingroup DatabaseAPI_Content
           */
-         optional<seeder_object> get_seeder(account_id_type aid) const;
+         optional<seeder_object> get_seeder( const account_id_type& account ) const;
 
          /**
           * @brief Get a subscription object by ID.
           * @param sid ID of the subscription to retrieve
-          * @return the subscription object corresponding to the provided ID, or null if no matching subscription was found
-          * @ingroup DatabaseAPI_Decent
+          * @return the subscription object corresponding to the provided ID or null if no matching subscription was found
+          * @ingroup DatabaseAPI_Content
           */
          optional<subscription_object> get_subscription( const subscription_id_type& sid)const;
 
@@ -981,7 +981,7 @@ namespace graphene { namespace app {
           * @param account ID of the account to get subscriptions for
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
           * @return a list of subscription objects corresponding to the provided consumer
-          * @ingroup DatabaseAPI_Decent
+          * @ingroup DatabaseAPI_Content
           */
          vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
@@ -989,8 +989,8 @@ namespace graphene { namespace app {
           * @brief Get a list of subscriptions subscribed by account (consumer).
           * @param account ID of the account to get subscriptions for
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
-          * @return the contents found
-          * @ingroup DatabaseAPI_Decent
+          * @return a list of subscription objects corresponding to the provided consumer
+          * @ingroup DatabaseAPI_Content
           */
          vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
@@ -998,8 +998,8 @@ namespace graphene { namespace app {
           * @brief Get a list of active (not expired) subscriptions to account (author).
           * @param account ID of the account to get subscriptions for
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
-          * @return the contents found
-          * @ingroup DatabaseAPI_Decent
+          * @return a list of subscription objects corresponding to the provided author
+          * @ingroup DatabaseAPI_Content
           */
          vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
@@ -1007,11 +1007,10 @@ namespace graphene { namespace app {
           * @brief Get a list of  subscriptions subscribed to account (author).
           * @param account ID of the account to get subscriptions for
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
-          * @return the contents found
-          * @ingroup DatabaseAPI_Decent
+          * @return a list of subscription objects corresponding to the provided author
+          * @ingroup DatabaseAPI_Content
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
-
 
       private:
          std::shared_ptr< database_api_impl > my;

@@ -211,6 +211,7 @@ namespace graphene { namespace app {
           */
          void broadcast_block( const signed_block& block );
 
+      private:
          /**
           * @brief Not reflected, thus not accessible to API clients.
           * This function is registered to receive the applied_block
@@ -221,7 +222,7 @@ namespace graphene { namespace app {
           * @ingroup Network_broadcastAPI
           */
          void on_applied_block( const signed_block& b );
-      private:
+
          boost::signals2::scoped_connection             _applied_block_connection;
          map<transaction_id_type,confirmation_callback> _callbacks;
          application&                                   _app;
@@ -416,11 +417,6 @@ namespace graphene { namespace app {
       */
       std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;
    };
-
-
-
-
-
 
    /**
     * @brief The login_api class implements the bottom layer of the RPC API

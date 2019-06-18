@@ -191,8 +191,8 @@ namespace graphene { namespace app {
                                              const string& type,
                                              uint32_t count)const;
       vector<seeder_object> list_seeders_by_price( const uint32_t count )const;
-      optional<seeder_object> get_seeder(account_id_type) const;
-      optional<vector<seeder_object>> list_seeders_by_upload( const uint32_t count )const;
+      optional<seeder_object> get_seeder( const account_id_type& account )const;
+      vector<seeder_object> list_seeders_by_upload( const uint32_t count )const;
       vector<seeder_object> list_seeders_by_region( const string region_code )const;
       vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
       vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
@@ -2206,9 +2206,9 @@ namespace
          return keys;
    }
    
-   optional<seeder_object> database_api::get_seeder(account_id_type aid) const
+   optional<seeder_object> database_api::get_seeder( const account_id_type& account ) const
    {
-      return my->get_seeder(aid);
+      return my->get_seeder(account);
    }
    
    optional<content_object> database_api_impl::get_content( const string& URI )const
@@ -2307,10 +2307,10 @@ namespace
       }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
    }
    
-   optional<seeder_object> database_api_impl::get_seeder(account_id_type aid) const
+   optional<seeder_object> database_api_impl::get_seeder( const account_id_type& account )const
    {
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
-      auto itr = idx.find(aid);
+      auto itr = idx.find(account);
       if (itr != idx.end())
          return *itr;
       return optional<seeder_object>();
@@ -2620,12 +2620,12 @@ namespace
       return result;
    }
 
-   optional<vector<seeder_object>> database_api::list_seeders_by_upload( uint32_t count )const
+   vector<seeder_object> database_api::list_seeders_by_upload( uint32_t count )const
    {
       return my->list_seeders_by_upload( count );
    }
    
-   optional<vector<seeder_object>> database_api_impl::list_seeders_by_upload( uint32_t count )const
+   vector<seeder_object> database_api_impl::list_seeders_by_upload( uint32_t count )const
    {
       FC_ASSERT( count <= 100 );
       const auto& idx = _db.get_index_type<seeding_statistics_index>().indices().get<by_upload>();
