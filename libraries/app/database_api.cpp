@@ -90,15 +90,16 @@ namespace graphene { namespace app {
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
       share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
       optional<signed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
-      
-      // Globals
+      vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
+      // Globals
       chain_property_object get_chain_properties()const;
       global_property_object get_global_properties()const;
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
-      
+      vector<operation_info> list_operations()const;
+
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
       
@@ -167,13 +168,7 @@ namespace graphene { namespace app {
       processed_transaction validate_transaction( const signed_transaction& trx )const;
       fc::variants get_required_fees( vector<operation> ops, asset_id_type id )const;
       
-      // Proposed transactions
-      vector<proposal_object> get_proposed_transactions( account_id_type id )const;
-      vector<operation_info> list_operations()const;
-      
-      // Blinded balances
-      
-      // Decent
+      // Content
       vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit )const;
       vector<buying_object> get_open_buyings()const;
       vector<buying_object> get_open_buyings_by_URI(const string& URI)const;

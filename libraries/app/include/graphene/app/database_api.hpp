@@ -51,7 +51,6 @@
  * @defgroup DatabaseAPI_NonFungibleToken Non Fungible Token
  * @defgroup DatabaseAPI_Mining Mining
  * @defgroup DatabaseAPI_AuthValidation Authority and Validation
- * @defgroup DatabaseAPI_Proposals Proposals
  * @defgroup DatabaseAPI_Content Content
  * @}
  */
@@ -273,6 +272,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_BlockTx
           */
          transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
+
+         /**
+          * @brief Get the set of proposed transactions relevant to the specified account id.
+          * @param id the account ID
+          * @return a set of proposed transactions
+          * @ingroup DatabaseAPI_BlockTx
+          */
+         vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
          /////////////
          // Globals //
@@ -778,22 +785,9 @@ namespace graphene { namespace app {
           */
          fc::variants get_required_fees( const vector<operation>& ops, asset_id_type id )const;
 
-         ///////////////////////////
-         // Proposed transactions //
-         ///////////////////////////
-
-         /**
-          * @brief Get the set of proposed transactions relevant to the specified account id.
-          * @param id the account ID
-          * @return a set of proposed transactions
-          * @ingroup DatabaseAPI_Proposals
-          */
-         vector<proposal_object> get_proposed_transactions( account_id_type id )const;
-
-         ////////////
-         // Decent //
-         ////////////
-
+         /////////////
+         // Content //
+         /////////////
 
          /**
           * @brief Get a list of accounts holding publishing manager status.
