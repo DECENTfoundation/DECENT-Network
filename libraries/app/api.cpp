@@ -201,10 +201,15 @@ namespace graphene { namespace app {
    {
    }
 
-   fc::variant_object network_node_api::get_info() const
+   network_node_info network_node_api::get_info() const
    {
-      fc::mutable_variant_object result = _app.p2p_node()->network_get_info();
-      result["connection_count"] = _app.p2p_node()->get_connection_count();
+      network_node_info result;
+      fc::variant_object info = _app.p2p_node()->network_get_info();
+      result.connection_count = _app.p2p_node()->get_connection_count();
+      result.node_id = info["node_id"].as<graphene::net::node_id_t>();
+      result.firewalled = info["firewalled"].as<graphene::net::firewalled_state>();
+      result.listening_on = info["listening_on"].as<fc::ip::endpoint>();
+      result.node_public_key = info["node_public_key"].as<graphene::net::node_id_t>();
       return result;
    }
 

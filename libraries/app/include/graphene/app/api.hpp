@@ -34,6 +34,7 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/net/node.hpp>
+#include <graphene/net/core_messages.hpp>
 #include <graphene/app/database_api.hpp>
 
 /**
@@ -66,6 +67,15 @@ namespace graphene { namespace app {
        asset fee;
        fc::time_point_sec timestamp;
        transaction_id_type transaction_id;
+    };
+
+    struct network_node_info
+    {
+       fc::ip::endpoint listening_on;
+       graphene::net::node_id_t node_public_key;
+       graphene::net::node_id_t node_id;
+       graphene::net::firewalled_state firewalled;
+       uint32_t connection_count;
     };
 
    /**
@@ -248,7 +258,7 @@ namespace graphene { namespace app {
           * @return general network information
           * @ingroup Network_NodeAPI
           */
-         fc::variant_object get_info() const;
+         network_node_info get_info() const;
 
          /**
           * @brief Connects to a new peer.
@@ -509,6 +519,7 @@ FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
 //FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee)(timestamp)(transaction_id) )
+FC_REFLECT( graphene::app::network_node_info, (listening_on)(node_public_key)(node_id)(firewalled)(connection_count) )
 
 
 FC_API(graphene::app::history_api,
