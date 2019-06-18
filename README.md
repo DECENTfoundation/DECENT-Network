@@ -102,7 +102,7 @@ Then, execute in console:
 * Install CMake tools (https://cmake.org/download)
 * Install Visual Studio 2017 Community (https://visualstudio.microsoft.com/downloads)
 * Install Boost 1.68 MSVC 14.1 (https://sourceforge.net/projects/boost/files/boost-binaries) (choose *C:\Projects\boost_1_68_0* as installation prefix)
-* Install Qt 5.12.3 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
+* Install Qt 5.12.4 (https://www.qt.io) for MSVC 14.1 x64 (choose *C:\Projects\Qt* as installation prefix)
 * Install Doxygen (http://www.doxygen.org) (choose *C:\Doxygen* as installation prefix)
 * Install Perl (http://strawberryperl.com) (choose *C:\Strawberry* as installation prefix)
 
@@ -156,7 +156,7 @@ You can use CMake generator to create a Visual Studio 2017 project files and per
 
     cd \Projects\DECENT-Network
     set BOOST=C:\Projects\boost_1_68_0
-    set QT_CMAKE=C:\Projects\Qt\5.12.3\msvc2017_64\lib\cmake
+    set QT_CMAKE=C:\Projects\Qt\5.12.4\msvc2017_64\lib\cmake
     set DOXYGEN=C:\Doxygen
     set PERL=C:\Strawberry\perl
     set VCPKG=C:\Projects\vcpkg
