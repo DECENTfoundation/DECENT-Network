@@ -228,14 +228,29 @@ namespace graphene { namespace app {
       return _app.p2p_node()->get_potential_peers();
    }
 
-   fc::variant_object network_node_api::get_advanced_node_parameters() const
+   advanced_node_parameters network_node_api::get_advanced_node_parameters() const
    {
-      return _app.p2p_node()->get_advanced_node_parameters();
+      fc::variant_object result_variant = _app.p2p_node()->get_advanced_node_parameters();
+      advanced_node_parameters result;
+      result.peer_connection_retry_timeout = result_variant["peer_connection_retry_timeout"].as<uint32_t>();
+      result.desired_number_of_connections = result_variant["desired_number_of_connections"].as<uint32_t>();
+      result.maximum_number_of_connections = result_variant["maximum_number_of_connections"].as<uint32_t>();
+      result.maximum_number_of_blocks_to_handle_at_one_time = result_variant["maximum_number_of_blocks_to_handle_at_one_time"].as<unsigned>();
+      result.maximum_number_of_sync_blocks_to_prefetch = result_variant["maximum_number_of_sync_blocks_to_prefetch"].as<unsigned>();
+      result.maximum_blocks_per_peer_during_syncing = result_variant["maximum_blocks_per_peer_during_syncing"].as<unsigned>();
+      return result;
    }
 
-   void network_node_api::set_advanced_node_parameters(const fc::variant_object& params)
+   void network_node_api::set_advanced_node_parameters(const advanced_node_parameters& params)
    {
-      return _app.p2p_node()->set_advanced_node_parameters(params);
+      fc::mutable_variant_object params_variant;
+      params_variant["peer_connection_retry_timeout"] = params.peer_connection_retry_timeout;
+      params_variant["desired_number_of_connections"] = params.desired_number_of_connections;
+      params_variant["maximum_number_of_connections"] = params.maximum_number_of_connections;
+      params_variant["maximum_number_of_blocks_to_handle_at_one_time"] = params.maximum_number_of_blocks_to_handle_at_one_time;
+      params_variant["maximum_number_of_sync_blocks_to_prefetch"] = params.maximum_number_of_sync_blocks_to_prefetch;
+      params_variant["maximum_blocks_per_peer_during_syncing"] = params.maximum_blocks_per_peer_during_syncing;
+      return _app.p2p_node()->set_advanced_node_parameters(params_variant);
    }
 
    vector<operation_history_object> history_api::get_account_history( account_id_type account,

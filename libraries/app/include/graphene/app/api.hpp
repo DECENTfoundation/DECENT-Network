@@ -78,6 +78,16 @@ namespace graphene { namespace app {
        uint32_t connection_count;
     };
 
+    struct advanced_node_parameters
+    {
+       uint32_t peer_connection_retry_timeout;
+       uint32_t desired_number_of_connections;
+       uint32_t maximum_number_of_connections;
+       unsigned maximum_number_of_blocks_to_handle_at_one_time;
+       unsigned maximum_number_of_sync_blocks_to_prefetch;
+       unsigned maximum_blocks_per_peer_during_syncing;
+    };
+
    /**
     * @brief The history_api class implements the RPC API for account history
     *
@@ -279,14 +289,14 @@ namespace graphene { namespace app {
           * @return advanced node parameters
           * @ingroup Network_NodeAPI
           */
-         fc::variant_object get_advanced_node_parameters() const;
+         advanced_node_parameters get_advanced_node_parameters() const;
 
          /**
           * @brief Set advanced node parameters, such as desired and max number of connections.
           * @param params a JSON object containing the name/value pairs for the parameters to set
           * @ingroup Network_NodeAPI
           */
-         void set_advanced_node_parameters(const fc::variant_object& params);
+         void set_advanced_node_parameters(const advanced_node_parameters& params);
 
          /**
           * @brief Get a list of potential peers we can connect to.
@@ -529,6 +539,7 @@ FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee)(timestamp)(transaction_id) )
 FC_REFLECT( graphene::app::network_node_info, (listening_on)(node_public_key)(node_id)(firewalled)(connection_count) )
+FC_REFLECT( graphene::app::advanced_node_parameters, (peer_connection_retry_timeout)(desired_number_of_connections)(maximum_number_of_connections)(maximum_number_of_blocks_to_handle_at_one_time)(maximum_number_of_sync_blocks_to_prefetch)(maximum_blocks_per_peer_during_syncing) )
 
 
 FC_API(graphene::app::history_api,
