@@ -898,7 +898,6 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get a list of seeders by price, in increasing order.
-          * @deprecated use list_seeders_by_price instead
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Decent
@@ -907,6 +906,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
+          * @deprecated use list_seeders_by_price instead
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Decent

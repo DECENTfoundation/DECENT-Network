@@ -38,12 +38,12 @@
 
 /**
  * @defgroup HistoryAPI History API
- * @defgroup Network_broadcastAPI Network broadcastAPI
- * @defgroup Network_NodeAPI Network NodeAPI
+ * @defgroup Network_broadcastAPI Network broadcast API
+ * @defgroup Network_NodeAPI Network Node API
  * @defgroup CryptoAPI Crypto API
  * @defgroup MessagingAPI Messaging API
  * @defgroup MonitoringAPI Monitoring API
- * @defgroup LoginAPI LoginAPI
+ * @defgroup LoginAPI Login API
  */
 namespace graphene { namespace app {
    using namespace graphene::chain;
@@ -102,7 +102,7 @@ namespace graphene { namespace app {
           * @brief Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
           * for the account can be found in the account statistics (or use 0 for start).
-          *.@note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
+          * @note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
           * from the oldest operation to the most recent.
           * @param account The account whose history should be queried
           * @param stop Sequence number of earliest operation. 0 is default and will
