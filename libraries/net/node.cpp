@@ -4886,24 +4886,24 @@ namespace graphene { namespace net { namespace detail {
         fc::optional<fc::ip::endpoint> endpoint = peer->get_remote_endpoint();
         if (endpoint)
           this_peer_status.host = *endpoint;
-        fc::mutable_variant_object peer_details;
-        peer_details["addr"] = endpoint ? (std::string)*endpoint : std::string();
-        peer_details["addrlocal"] = (std::string)peer->get_local_endpoint();
-        peer_details["services"] = "00000001";
-        peer_details["lastsend"] = peer->get_last_message_sent_time().sec_since_epoch();
-        peer_details["lastrecv"] = peer->get_last_message_received_time().sec_since_epoch();
-        peer_details["bytessent"] = peer->get_total_bytes_sent();
-        peer_details["bytesrecv"] = peer->get_total_bytes_received();
-        peer_details["conntime"] = peer->get_connection_time();
-        peer_details["pingtime"] = "";
-        peer_details["pingwait"] = "";
-        peer_details["version"] = "";
-        peer_details["subver"] = peer->user_agent;
-        peer_details["inbound"] = peer->direction == peer_connection_direction::inbound;
-        peer_details["firewall_status"] = peer->is_firewalled;
-        peer_details["startingheight"] = "";
-        peer_details["banscore"] = "";
-        peer_details["syncnode"] = "";
+        peer_status_info peer_details;
+        peer_details.addr = endpoint ? (std::string)*endpoint : std::string();
+        peer_details.addrlocal = (std::string)peer->get_local_endpoint();
+        peer_details.services = "00000001";
+        peer_details.lastsend = peer->get_last_message_sent_time().sec_since_epoch();
+        peer_details.lastrecv = peer->get_last_message_received_time().sec_since_epoch();
+        peer_details.bytessent = peer->get_total_bytes_sent();
+        peer_details.bytesrecv = peer->get_total_bytes_received();
+        peer_details.conntime = peer->get_connection_time();
+        peer_details.pingtime = "";
+        peer_details.pingwait = "";
+        peer_details.version = "";
+        peer_details.subver = peer->user_agent;
+        peer_details.inbound = peer->direction == peer_connection_direction::inbound;
+        peer_details.firewall_status = peer->is_firewalled;
+        peer_details.startingheight = "";
+        peer_details.banscore = "";
+        peer_details.syncnode = "";
 
         if (peer->fc_git_revision_sha)
         {
@@ -4912,12 +4912,12 @@ namespace graphene { namespace net { namespace detail {
             revision_string += " (same as ours)";
           else
             revision_string += " (different from ours)";
-          peer_details["fc_git_revision_sha"] = revision_string;
+          peer_details.fc_git_revision_sha = revision_string;
 
         }
         if (peer->fc_git_revision_unix_timestamp)
         {
-          peer_details["fc_git_revision_unix_timestamp"] = *peer->fc_git_revision_unix_timestamp;
+          peer_details.fc_git_revision_unix_timestamp = *peer->fc_git_revision_unix_timestamp;
           std::string age_string = fc::get_approximate_relative_time_string( *peer->fc_git_revision_unix_timestamp);
           if (*peer->fc_git_revision_unix_timestamp == fc::time_point_sec(fc::git_revision_unix_timestamp))
             age_string += " (same as ours)";
@@ -4925,18 +4925,18 @@ namespace graphene { namespace net { namespace detail {
             age_string += " (newer than ours)";
           else
             age_string += " (older than ours)";
-          peer_details["fc_git_revision_age"] = age_string;
+          peer_details.fc_git_revision_age = age_string;
         }
 
         if (peer->platform)
-          peer_details["platform"] = *peer->platform;
+          peer_details.platform = *peer->platform;
 
         // provide these for debugging
         // warning: these are just approximations, if the peer is "downstream" of us, they may
         // have received blocks from other peers that we are unaware of
-        peer_details["current_head_block"] = peer->last_block_delegate_has_seen;
-        peer_details["current_head_block_number"] = _delegate->get_block_number(peer->last_block_delegate_has_seen);
-        peer_details["current_head_block_time"] = peer->last_block_time_delegate_has_seen;
+        peer_details.current_head_block = peer->last_block_delegate_has_seen;
+        peer_details.current_head_block_number = _delegate->get_block_number(peer->last_block_delegate_has_seen);
+        peer_details.current_head_block_time = peer->last_block_time_delegate_has_seen;
 
         this_peer_status.info = peer_details;
         statuses.push_back(this_peer_status);

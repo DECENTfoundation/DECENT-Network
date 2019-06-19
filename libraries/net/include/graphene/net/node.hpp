@@ -175,13 +175,40 @@ namespace graphene { namespace net {
     *  Information about connected peers that the client may want to make
     *  available to the user.
     */
+   struct peer_status_info
+   {
+      std::string addr;
+      std::string addrlocal;
+      std::string services;
+      uint32_t lastsend;
+      uint32_t lastrecv;
+      uint64_t bytessent;
+      uint64_t bytesrecv;
+      fc::time_point conntime;
+      std::string pingtime;
+      std::string pingwait;
+      std::string version;
+      std::string subver;
+      bool inbound;
+      graphene::net::firewalled_state firewall_status;
+      std::string startingheight;
+      std::string banscore;
+      std::string syncnode;
+      std::string fc_git_revision_sha;
+      fc::optional<fc::time_point_sec> fc_git_revision_unix_timestamp;
+      std::string fc_git_revision_age;
+      fc::optional<std::string> platform;
+      graphene::net::item_hash_t current_head_block;
+      uint32_t current_head_block_number;
+      fc::time_point_sec current_head_block_time;
+   };
    struct peer_status
    {
       uint32_t         version;
       fc::ip::endpoint host;
       /** info contains the fields required by bitcoin-rpc's getpeerinfo call, we will likely
           extend it with our own fields. */
-      fc::variant_object info;
+      peer_status_info info;
    };
 
    /**
@@ -331,4 +358,30 @@ namespace graphene { namespace net {
 } } // graphene::net
 
 FC_REFLECT(graphene::net::message_propagation_data, (received_time)(validated_time)(originating_peer));
+FC_REFLECT(graphene::net::peer_status_info,
+   (addr)
+   (addrlocal)
+   (services)
+   (lastsend)
+   (lastrecv)
+   (bytessent)
+   (bytesrecv)
+   (conntime)
+   (pingtime)
+   (pingwait)
+   (version)
+   (subver)
+   (inbound)
+   (firewall_status)
+   (startingheight)
+   (banscore)
+   (syncnode)
+   (fc_git_revision_sha)
+   (fc_git_revision_unix_timestamp)
+   (fc_git_revision_age)
+   (platform)
+   (current_head_block)
+   (current_head_block_number)
+   (current_head_block_time)
+);
 FC_REFLECT( graphene::net::peer_status, (version)(host)(info) );
