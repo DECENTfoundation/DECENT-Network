@@ -39,12 +39,12 @@
 
 /**
  * @defgroup HistoryAPI History API
- * @defgroup Network_broadcastAPI Network broadcastAPI
- * @defgroup Network_NodeAPI Network NodeAPI
+ * @defgroup Network_broadcastAPI Network broadcast API
+ * @defgroup Network_NodeAPI Network Node API
  * @defgroup CryptoAPI Crypto API
  * @defgroup MessagingAPI Messaging API
  * @defgroup MonitoringAPI Monitoring API
- * @defgroup LoginAPI LoginAPI
+ * @defgroup LoginAPI Login API
  */
 namespace graphene { namespace app {
    using namespace graphene::chain;
@@ -112,7 +112,7 @@ namespace graphene { namespace app {
           * @brief Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
           * for the account can be found in the account statistics (or use 0 for start).
-          *.@note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
+          * @note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
           * from the oldest operation to the most recent.
           * @param account The account whose history should be queried
           * @param stop Sequence number of earliest operation. 0 is default and will
@@ -316,11 +316,20 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get public key from private key.
+          * @deprecated use wif_to_public_key instead
           * @param wif_priv_key the wif private key
           * @return corresponding public key
           * @ingroup CryptoAPI
           */
          public_key_type get_public_key(const string& wif_priv_key );
+
+         /**
+          * @brief Convert wif key to public key.
+          * @param wif the wif key to convert
+          * @return corresponding public key
+          * @ingroup CryptoAPI
+          */
+         public_key_type wif_to_public_key(const string &wif);
 
          /**
           * @brief Convert wif key to private key.
@@ -547,6 +556,7 @@ FC_API(graphene::app::network_node_api,
 FC_API(graphene::app::crypto_api,
        (info)
        (get_public_key)
+       (wif_to_public_key)
        (wif_to_private_key)
        (sign_transaction)
        (encrypt_message)

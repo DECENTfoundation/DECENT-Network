@@ -36,6 +36,7 @@
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/non_fungible_token_object.hpp>
+#include <graphene/chain/get_config.hpp>
 #include <graphene/app/full_account.hpp>
 #include <decent/about.hpp>
 
@@ -317,10 +318,18 @@ namespace graphene { namespace app {
 
          /**
           * @brief Retrieve compile-time constants.
+          * @deprecated use get_configuration instead
           * @return configured constants
           * @ingroup DatabaseAPI_Globals
           */
          fc::variant_object get_config()const;
+
+         /**
+          * @brief Retrieve compile-time constants.
+          * @return configured constants
+          * @ingroup DatabaseAPI_Globals
+          */
+         configuration get_configuration()const;
 
          /**
           * @brief Get the chain ID
@@ -916,6 +925,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
+          * @deprecated use list_seeders_by_price instead
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
@@ -1048,6 +1058,7 @@ FC_API(graphene::app::database_api,
           (get_chain_properties)
           (get_global_properties)
           (get_config)
+          (get_configuration)
           (get_chain_id)
           (get_dynamic_global_properties)
           (list_operations)
