@@ -184,9 +184,8 @@ struct sign_state
       }
 
       sign_state( const flat_set<public_key_type>& sigs,
-                  const std::function<const authority*(account_id_type)>& a,
-                  const flat_set<public_key_type>& keys = flat_set<public_key_type>() )
-      :get_active(a),available_keys(keys)
+                  const std::function<const authority*(account_id_type)>& a )
+      :get_active(a)
       {
          for( const auto& key : sigs )
             provided_signatures[ key ] = false;
@@ -194,8 +193,8 @@ struct sign_state
       }
 
       const std::function<const authority*(account_id_type)>& get_active;
-      const flat_set<public_key_type>&                        available_keys;
 
+      flat_set<public_key_type>        available_keys;
       flat_map<public_key_type,bool>   provided_signatures;
       flat_set<account_id_type>        approved_by;
       uint32_t                         max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH;
@@ -400,8 +399,8 @@ set<public_key_type> signed_transaction::get_required_signatures(
    vector<authority> other;
    get_required_authorities( required_active, required_owner, other );
 
-
-   sign_state s(get_signature_keys( chain_id ),get_active,available_keys);
+   sign_state s(get_signature_keys( chain_id ),get_active);
+   s.available_keys = available_keys;
    s.max_recursion = max_recursion_depth;
 
    for( const auto& auth : other )
