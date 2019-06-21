@@ -716,7 +716,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get miner voting info list by account that match search term.
-          * @param account_id account name or empty when search without account
+          * @param account_id account name or id or empty when search without account
           * @param term search term - miner name
           * @param only_my_votes when \c true it selects only votes given by account
           * @param order order field. Available options are 'name|link|votes'

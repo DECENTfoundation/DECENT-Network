@@ -1574,19 +1574,26 @@ namespace graphene { namespace app {
    }
 
    vector<miner_voting_info> database_api_impl::search_miner_voting(const string& account_id,
-                                                      const string& filter,
+                                                      const string& term,
                                                       bool only_my_votes,
                                                       const string& order,
                                                       const string& id,
                                                       uint32_t count ) const
    {
-
       flat_set<vote_id_type> acc_votes;
-      if (!account_id.empty()) {
-         optional<account_object> acc_obj = this->get_account_by_name(account_id);
-         if (!acc_obj) {
-            FC_THROW("unknown account or invalid account name");
+      if (! account_id.empty())
+      {
+         const account_object* acc_obj = nullptr;
+         if (std::isdigit(account_id[0]))
+            acc_obj = _db.find(fc::variant(account_id).as<account_id_type>());
+         else
+         {
+            const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
+            auto itr = idx.find(account_id);
+            if (itr != idx.end())
+               acc_obj = &*itr;
          }
+         FC_ASSERT( acc_obj, "unknown account or invalid account name" );
 
          acc_votes = acc_obj->options.votes;
       }
@@ -1601,7 +1608,7 @@ namespace graphene { namespace app {
          info.id = item.second;
          info.name = item.first;
 
-         if (!filter.empty() && item.first.find(filter) == std::string::npos ) {
+         if (!term.empty() && item.first.find(term) == std::string::npos ) {
             continue;
          }
 

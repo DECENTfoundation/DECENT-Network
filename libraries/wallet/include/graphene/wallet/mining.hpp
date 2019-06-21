@@ -172,7 +172,7 @@ signed_transaction_info set_desired_miner_count(const string& account_to_modify,
  * @param order order field. Available options are 'name,link,votes'
  * @param id the id of the miner to start searching from, or empty when start from beginning
  * @param count maximum number of miners info to fetch (must not exceed 1000)
- * @return the contents found
+ * @return the list of miner voting info found
  * @ingroup WalletAPI_Mining
  */
 vector<miner_voting_info> search_miner_voting(const string& account_id,
