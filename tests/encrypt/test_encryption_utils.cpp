@@ -23,28 +23,6 @@ using namespace std;
 
 decent::encrypt::CustodyUtils c;
 
-namespace {
-
-std::string bytes_to_string(unsigned char *data, int len) {
-   std::stringstream ss;
-   ss << std::hex << std::setfill('0');;
-   for( int i=0; i < len; ++i )
-      ss << std::setw(2) << (int) data[i];
-   return ss.str();
-}
-
-void string_to_bytes(std::string& in, unsigned char *data, int len){
-   std::istringstream hex_chars_stream(in);
-   unsigned int c;
-   int i = 0;
-   while (hex_chars_stream >> std::hex >> c && i < len)
-   {
-      data[i] = static_cast<unsigned char>(c);
-      ++i;
-   }
-}
-}
-
 using decent::encrypt::DInteger;
 void test_aes(decent::encrypt::AesKey k)
 

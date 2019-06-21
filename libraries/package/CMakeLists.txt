@@ -11,11 +11,6 @@ add_library( package_manager
 target_link_libraries( package_manager PUBLIC graphene_utilities decent_encrypt PRIVATE ipfs-api )
 target_include_directories( package_manager PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
-# A test/sanbox dev-only executable.
-add_executable( package_manager_sandbox sandbox.cpp )
-
-target_link_libraries( package_manager_sandbox PRIVATE package_manager )
-
 #install( TARGETS
 #   package_manager
 #
