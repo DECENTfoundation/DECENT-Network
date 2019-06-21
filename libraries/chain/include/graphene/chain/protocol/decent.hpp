@@ -14,8 +14,6 @@
 #include <vector>
 #include <utility>
 
-#include <decent/encrypt/crypto_types.hpp>
-
 namespace graphene { namespace chain {
 
    /**

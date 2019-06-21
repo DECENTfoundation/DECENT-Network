@@ -26,7 +26,6 @@
 #include <fc/array.hpp>
 #include <fc/io/varint.hpp>
 #include <fc/network/ip.hpp>
-#include <decent/encrypt/crypto_types.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/reflect/variant.hpp>

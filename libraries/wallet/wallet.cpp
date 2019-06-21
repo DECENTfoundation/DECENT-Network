@@ -86,6 +86,7 @@
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 
+#include <decent/encrypt/encryptionutils.hpp>
 #include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
 #include <decent/ipfs_check.hpp>

@@ -1,13 +1,9 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 #include <graphene/chain/evaluator.hpp>
-#include <decent/encrypt/custodyutils.hpp>
 #include <graphene/chain/asset_object.hpp>
-// return type?
 
 namespace graphene { namespace chain {
-
-   static decent::encrypt::CustodyUtils _custody_utils;
 
    class set_publishing_manager_evaluator : public evaluator<set_publishing_manager_evaluator>
    {

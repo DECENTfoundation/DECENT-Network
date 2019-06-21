@@ -26,7 +26,6 @@
 
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
-#include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <fc/api.hpp>
 

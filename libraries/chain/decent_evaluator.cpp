@@ -15,6 +15,7 @@
 #include <graphene/chain/seeding_statistics_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 
+#include <decent/encrypt/custodyutils.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -22,6 +23,8 @@
 namespace graphene { namespace chain {
 
 namespace {
+
+static decent::encrypt::CustodyUtils _custody_utils;
 
 void content_payout(database& db, asset paid_price_after_exchange, const content_object& content){
    if( content.co_authors.empty() )

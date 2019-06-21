@@ -5,17 +5,13 @@
 #include <graphene/chain/database.hpp>
 
 #include <graphene/db/generic_index.hpp>
-#include <decent/encrypt/crypto_types.hpp>
 
 #include <fc/time.hpp>
 #include <fc/reflect/reflect.hpp>
 #include <fc/io/json.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
-
 namespace graphene { namespace chain {
-
-using decent::encrypt::DInteger;
 
    class buying_object : public graphene::db::abstract_object<buying_object>
    {
@@ -33,8 +29,8 @@ using decent::encrypt::DInteger;
       asset paid_price_after_exchange;
       std::string synopsis;   //< initialized by content.synopsis
       vector<account_id_type> seeders_answered;
-      vector<decent::encrypt::CiphertextString> key_particles;
-      decent::encrypt::DIntegerString pubKey;
+      vector<ciphertext_type> key_particles;
+      bigint_type pubKey;
       time_point_sec expiration_time;
       bool expired = false;
       bool delivered = false;
