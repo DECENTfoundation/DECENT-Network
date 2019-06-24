@@ -26,7 +26,6 @@
 
 #include <boost/container/flat_set.hpp>
 
-#include <fc/crypto/elliptic.hpp>
 #include <fc/monitoring.hpp>
 
 #include <graphene/chain/protocol/asset.hpp>

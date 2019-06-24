@@ -25,7 +25,6 @@
 #include <graphene/chain/pts_address.hpp>
 
 #include <fc/crypto/base58.hpp>
-#include <fc/crypto/elliptic.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <algorithm>
 

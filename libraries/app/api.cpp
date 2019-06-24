@@ -28,8 +28,8 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/balance.hpp>
 #include <graphene/app/impacted.hpp>
+#include <fc/crypto/base64.hpp>
 
-using namespace monitoring;
 namespace graphene { namespace app {
 
    login_api::login_api(application& a)
@@ -552,13 +552,14 @@ namespace graphene { namespace app {
 
    void monitoring_api::reset_counters(const std::vector<std::string>& names)
    {
-      monitoring_counters_base::reset_counters(names);
+      monitoring::monitoring_counters_base::reset_counters(names);
    }
 
-   std::vector<counter_item> monitoring_api::get_counters(const std::vector<std::string>& names) const
+   std::vector<monitoring::counter_item> monitoring_api::get_counters(const std::vector<std::string>& names) const
    {
-      std::vector<counter_item> result;
-      monitoring_counters_base::get_counters(names, result);
+      std::vector<monitoring::counter_item> result;
+      monitoring::monitoring_counters_base::get_counters(names, result);
       return result;
    }
+
 } } // graphene::app

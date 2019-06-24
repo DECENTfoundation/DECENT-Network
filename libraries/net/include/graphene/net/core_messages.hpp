@@ -28,7 +28,6 @@
 #include <graphene/chain/protocol/block.hpp>
 
 #include <fc/crypto/ripemd160.hpp>
-#include <fc/crypto/elliptic.hpp>
 #include <fc/crypto/sha256.hpp>
 #include <fc/network/ip.hpp>
 #include <fc/reflect/reflect.hpp>
