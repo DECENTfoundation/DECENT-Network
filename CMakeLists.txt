@@ -149,7 +149,7 @@ if( WIN32 )
 
     message( STATUS "Configuring DCore on WIN32" )
 
-    add_compile_options( /D_WIN32_WINNT=0x0601 )
+    add_compile_options( /D_WIN32_WINNT=0x0601 /D_CRT_SECURE_NO_WARNINGS )
 
     if( "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static" )
         foreach( flag_var FLAGS FLAGS_DEBUG FLAGS_RELEASE FLAGS_MINSIZEREL FLAGS_RELWITHDEBINFO )
