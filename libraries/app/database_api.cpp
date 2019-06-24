@@ -1612,8 +1612,11 @@ namespace graphene { namespace app {
             continue;
          }
 
-         auto ob = this->get_objects({ item.second }).front();
-         miner_object obj = ob.as<miner_object>();
+         optional<miner_object> ob = this->get_miners({ item.second }).front();
+         if (! ob) {
+            continue;
+         }
+         miner_object obj = *ob;
 
          info.url = obj.url;
          info.total_votes = obj.total_votes;
