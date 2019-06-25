@@ -30,7 +30,6 @@
 
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/message_object.hpp>
-#include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/net/node.hpp>
 #include <graphene/net/core_messages.hpp>

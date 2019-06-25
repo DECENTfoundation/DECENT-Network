@@ -27,7 +27,6 @@
 #include <graphene/chain/protocol/transaction.hpp>
 #include <graphene/db/index.hpp>
 #include <graphene/db/generic_index.hpp>
-#include <fc/uint128.hpp>
 
 #include <boost/multi_index/hashed_index.hpp>
 
@@ -48,8 +47,6 @@ namespace graphene { namespace chain {
 
          time_point_sec get_expiration()const { return trx.expiration; }
    };
-
-   using namespace boost::multi_index;
 
    struct by_expiration;
    struct by_trx_id;
