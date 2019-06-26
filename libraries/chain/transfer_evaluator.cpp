@@ -43,8 +43,8 @@ void_result transfer_obsolete_evaluator::do_evaluate( const operation_type& op )
 
    try {
 
-      bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
-      FC_ASSERT( insufficient_balance,
+      bool sufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
+      FC_ASSERT( sufficient_balance,
                  "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'", 
                  ("a",from_account.name)("t",to_account.name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
 
@@ -91,23 +91,24 @@ void_result transfer_evaluator::do_evaluate( const operation_type& op )
          FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
          to_account_name = content_itr->author(d).name;
       }
-      else if (db().head_block_time() > HARDFORK_3_TIME)
+      else if (db().head_block_time() > fc::time_point_sec( 1561543200 ))
       {
+         // check only after block 12437308 because it contains transfer to non existing account
          const account_object& to_account = op.to.as<account_id_type>()(d);
          to_account_name = to_account.name;
       }
 
       try {
-         bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
-         if (db().head_block_time() > HARDFORK_3_TIME)
+         bool sufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
+         if (db().head_block_time() > fc::time_point_sec( 1561543200 ))
          {
-            FC_ASSERT( insufficient_balance,
+            FC_ASSERT( sufficient_balance,
                        "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                        ("a",from_account.name)("t",to_account_name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
          }
          else
          {
-            FC_ASSERT( insufficient_balance,
+            FC_ASSERT( sufficient_balance,
                        "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                        ("a",from_account.name)("t",op.to)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
          }
