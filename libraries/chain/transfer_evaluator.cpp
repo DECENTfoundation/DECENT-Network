@@ -91,7 +91,7 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
          FC_ASSERT( content_itr != content_idx.end(), "Content does not exist." );
          to_account_name = content_itr->author(d).name;
       }
-      else
+      else if (db().head_block_time() > fc::time_point_sec( 1561543200 ))
       {
          const account_object& to_account = op.to.as<account_id_type>()(d);
          to_account_name = to_account.name;
@@ -99,9 +99,18 @@ void_result transfer2_evaluator::do_evaluate( const transfer2_operation& op )
 
       try {
          bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
-         FC_ASSERT( insufficient_balance,
-                    "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-                    ("a",from_account.name)("t",to_account_name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
+         if (db().head_block_time() > fc::time_point_sec( 1561543200 ))
+         {
+            FC_ASSERT( insufficient_balance,
+                       "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+                       ("a",from_account.name)("t",to_account_name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
+         }
+         else
+         {
+            FC_ASSERT( insufficient_balance,
+                       "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+                       ("a",from_account.name)("t",op.to)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
+         }
 
          return void_result();
       } FC_RETHROW_EXCEPTIONS( error, "Unable to transfer ${a} from ${f} to ${t}", ("a",d.to_pretty_string(op.amount))("f",op.from(d).name)("t",op.to) );
