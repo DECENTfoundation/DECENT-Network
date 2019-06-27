@@ -528,35 +528,39 @@ public:
 
    optional<account_object> find_account(account_id_type account_id) const
    {
-      //if( _wallet.my_accounts.get<by_id>().count(id) )
-      //   return *_wallet.my_accounts.get<by_id>().find(id);
-      return _remote_db->get_accounts({account_id}).front();
-   }
+      auto rec = _remote_db->get_accounts({account_id}).front();
+      
+      if(!rec)
+         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
+      return *rec;
+   }
+ 
    optional<account_object> find_account(const string& account_name_or_id) const
    {
-      FC_ASSERT( account_name_or_id.size() > 0 );
+      if(account_name_or_id.size() == 0)
+         FC_THROW_EXCEPTION(fc::account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
 
       if( auto id = maybe_id<account_id_type>(account_name_or_id) )
       {
          // It's an ID
          return find_account(*id);
       } else {
-         // It's a name
-         auto rec = _remote_db->lookup_account_names({account_name_or_id}).front();
-         if( _wallet.my_accounts.get<by_name>().count(account_name_or_id) )
+         auto rec = _remote_db->lookup_account_names({ account_name_or_id }).front();
+         if(_wallet.my_accounts.get<by_name>().count(account_name_or_id))
          {
             auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-            FC_ASSERT( rec, "Account ${acc} is present in the wallet but does not exist on the blockchain", ("acc", account_name_or_id));
-            if (local_account.id != rec->id)
+            if(!rec)
+               FC_THROW_EXCEPTION(fc::account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
+            if(local_account.id != rec->id)
                elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", rec->id));
-            if (local_account.name != rec->name)
+            if(local_account.name != rec->name)
                elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", rec->name));
 
             //return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
             return rec;
          }
-         if( rec && rec->name != account_name_or_id )
+         if(rec && rec->name != account_name_or_id)
             return optional<account_object>();
          return rec;
       }
@@ -565,14 +569,16 @@ public:
    account_object get_account(account_id_type account_id) const
    {
       auto rec = find_account(account_id);
-      FC_ASSERT(rec, "Account ${acc} does not exist", ("acc", account_id));
+      if(!rec)
+         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
       return *rec;
    }
 
    account_object get_account(const string& account_name_or_id) const
    {
       auto rec = find_account(account_name_or_id);
-      FC_ASSERT(rec, "Account ${acc} does not exist", ("acc", account_name_or_id));
+      if(!rec)
+         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
       return *rec;
    }
 
@@ -2610,7 +2616,8 @@ public:
          for( int i =0; i < (int)seeders.size(); i++ )
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
-            FC_ASSERT( s, "seeder not found" );
+            if(!s)
+               FC_THROW_EXCEPTION(fc::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
             Ciphertext cp;
             point p = ss.split[i];
 
