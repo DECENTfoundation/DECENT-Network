@@ -1291,7 +1291,7 @@ namespace graphene { namespace net { namespace detail {
             // or anything it has advertised to us
             // group the items we need to send by type, because we'll need to send one inventory message per type
             unsigned total_items_to_send_to_this_peer = 0;
-            wdump((inventory_to_advertise));
+            //wdump((inventory_to_advertise));
             for (const item_id& item_to_advertise : inventory_to_advertise)
             {
               if (peer->inventory_advertised_to_peer.find(item_to_advertise) != peer->inventory_advertised_to_peer.end() )
