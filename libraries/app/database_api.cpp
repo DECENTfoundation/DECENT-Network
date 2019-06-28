@@ -1590,7 +1590,40 @@ namespace graphene { namespace app {
                                                       const string& id,
                                                       uint32_t count ) const
    {
+      // miner sorting helper struct
+      struct miner_sorter
+      {
+         string sort_;
+
+         miner_sorter(const string& sort) : sort_(sort) {}
+
+         bool operator()(const miner_voting_info& lhs, const miner_voting_info& rhs) const
+         {
+            if (sort_ == "+name") return lhs.name.compare(rhs.name) < 0;
+            else if (sort_ == "-name") return rhs.name.compare(lhs.name) < 0;
+            else if (sort_ == "+link") return lhs.url.compare(rhs.url) < 0;
+            else if (sort_ == "-link") return rhs.url.compare(lhs.url) < 0;
+            else if (sort_ == "+votes") return lhs.total_votes < rhs.total_votes;
+            else if (sort_ == "-votes") return rhs.total_votes < lhs.total_votes;
+            return false;
+         }
+      };
+
+      // miner searching helper struct
+      struct miner_search
+      {
+         object_id_type search_id_;
+
+         miner_search(const string& search_id) : search_id_(search_id) {}
+
+         bool operator()(const miner_voting_info& info) const
+         {
+            return info.id == search_id_;
+         }
+      };
+
       flat_set<vote_id_type> acc_votes;
+
       if (! account_id.empty())
       {
          const account_object* acc_obj = nullptr;
@@ -1603,7 +1636,8 @@ namespace graphene { namespace app {
             if (itr != idx.end())
                acc_obj = &*itr;
          }
-         if(!acc_obj) 
+
+         if (!acc_obj)
             FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
          acc_votes = acc_obj->options.votes;
@@ -1613,80 +1647,45 @@ namespace graphene { namespace app {
 
       vector<miner_voting_info> miners_info;
       miners_info.reserve(miners.size());
-      for(auto item : miners) {
 
+      for (auto item : miners)
+      {
          miner_voting_info info;
          info.id = item.second;
          info.name = item.first;
 
-         if (!term.empty() && item.first.find(term) == std::string::npos ) {
-            continue;
+         if (term.empty() || item.first.find(term) != std::string::npos )
+         {
+            optional<miner_object> ob = this->get_miners({ item.second }).front();
+            if (ob)
+            {
+               miner_object obj = *ob;
+
+               info.url = obj.url;
+               info.total_votes = obj.total_votes;
+               info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
+
+               if (! only_my_votes || info.voted)
+                  miners_info.push_back(info);
+            }
          }
-
-         optional<miner_object> ob = this->get_miners({ item.second }).front();
-         if (! ob) {
-            continue;
-         }
-         miner_object obj = *ob;
-
-         info.url = obj.url;
-         info.total_votes = obj.total_votes;
-         info.voted = acc_votes.find(obj.vote_id) != acc_votes.end();
-
-         if (only_my_votes && !info.voted)
-            continue;
-
-         miners_info.push_back(info);
       }
 
-      struct miner_sorter {
-         miner_sorter(const string& sort) : sort_(sort) {}
-
-         bool operator()(const miner_voting_info& lhs, const miner_voting_info& rhs) const {
-            if (sort_ == "+name")
-               return lhs.name.compare(rhs.name) < 0;
-            else if (sort_ == "-name")
-               return rhs.name.compare(lhs.name) < 0;
-            else if (sort_ == "+link")
-               return lhs.url.compare(rhs.url) < 0;
-            else if (sort_ == "-link")
-               return rhs.url.compare(lhs.url) < 0;
-            else if (sort_ == "+votes")
-               return lhs.total_votes < rhs.total_votes;
-            else if (sort_ == "-votes")
-               return rhs.total_votes < lhs.total_votes;
-
-            return false;
-         }
-
-         string sort_;
-      };
-
-      if (!order.empty()) {
+      if (!order.empty())
          std::sort(miners_info.begin(), miners_info.end(), miner_sorter(order));
-      }
-
-      struct miner_search {
-         miner_search(const string& search_id) : search_id_(search_id) {}
-
-         bool operator()(const miner_voting_info& info) const {
-            return info.id == search_id_;
-         }
-
-         object_id_type search_id_;
-      };
 
       vector<miner_voting_info> result;
       result.reserve(count);
 
       auto it = miners_info.begin();
-      if (!id.empty()) {
+      if (!id.empty())
          it = std::find_if(miners_info.begin(), miners_info.end(), miner_search(id));
-      }
 
-      while(count && it != miners_info.end()) {
+      while (count && it != miners_info.end())
+      {
+         result.push_back(*it);
          count--;
-         result.push_back(*it); ++it;
+         it++;
       }
 
       return result;
