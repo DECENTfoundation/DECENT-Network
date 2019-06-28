@@ -101,15 +101,17 @@ void non_fungible_token_update_data_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( !data.empty() );
 
-   std::for_each(data.begin(), data.end(), [&](const std::unordered_map<std::string, fc::variant>::value_type &v) {
+   std::set<std::string> names;
+   std::for_each(data.begin(), data.end(), [&](const std::pair<std::string, fc::variant> &v) {
       FC_ASSERT( !v.first.empty(), "Data name can not be empty" );
+      FC_ASSERT( names.insert(v.first).second, "Duplicate data name not allowed" );
    });
 }
 
 share_type non_fungible_token_update_data_operation::calculate_fee(const fee_parameters_type& param) const
 {
    share_type fee = param.fee;
-   std::for_each(data.begin(), data.end(), [&](const std::unordered_map<std::string, fc::variant>::value_type &v) {
+   std::for_each(data.begin(), data.end(), [&](const std::pair<std::string, fc::variant> &v) {
       fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte);
    });
 
