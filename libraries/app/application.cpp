@@ -117,12 +117,12 @@ namespace detail {
          else if( _chain_db->get_chain_id() == graphene::egenesis::get_egenesis_chain_id() )
          {
              seeds = {
-               "seed1.decentgo.com:40000",
-               "seed2.decentgo.com:40000", 
-               "seed3.decentgo.com:40000",
+               "mainnet-eu1.dcore.io:40000",
+               "mainnet-cn1.dcore.io:40000",
+               "mainnet-sg1.dcore.io:40000",
+               "mainnet-us1.dcore.io:40000",
                "45.76.205.241:40000",              // liberosist (JP)
                "dctapi.spacemx.tech:40000",        // decentspace
-               "173.212.202.233:40000",            // fahdminer1
                "seed.decent.dgazek.tk:40000"       // dgazek
             };
          }

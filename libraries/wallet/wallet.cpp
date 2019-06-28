@@ -1712,7 +1712,7 @@ public:
 
    signed_transaction update_non_fungible_token_data(const string& modifier,
                                                      const non_fungible_token_data_id_type nft_data_id,
-                                                     const std::unordered_map<string, fc::variant>& data,
+                                                     const vector<pair<string, fc::variant>>& data,
                                                      bool broadcast /* = false */)
    {
       non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
@@ -3865,7 +3865,7 @@ signed_transaction content_cancellation(const string& author,
 
    signed_transaction_info wallet_api::update_non_fungible_token_data(const string& modifier,
                                                                       const non_fungible_token_data_id_type nft_data_id,
-                                                                      const std::unordered_map<string, fc::variant>& data,
+                                                                      const vector<pair<string, fc::variant>>& data,
                                                                       bool broadcast /* = false */)
    {
       return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
