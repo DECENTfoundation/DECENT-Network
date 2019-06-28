@@ -457,7 +457,7 @@ namespace graphene { namespace wallet {
           */
          signed_transaction_info update_non_fungible_token_data(const string& modifier,
                                                                 const non_fungible_token_data_id_type nft_data_id,
-                                                                const std::unordered_map<string, fc::variant>& data,
+                                                                const vector<pair<string, fc::variant>>& data,
                                                                 bool broadcast = false);
 
          std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;

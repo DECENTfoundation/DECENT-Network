@@ -187,7 +187,7 @@ namespace graphene { namespace chain {
       /// The non fungible token instance to transfer
       non_fungible_token_data_id_type nft_data_id;
       /// Name to value pairs to be updated
-      std::unordered_map<std::string, fc::variant> data;
+      std::vector<std::pair<std::string, fc::variant>> data;
       /// Future operation extensions
       extensions_type extensions;
 
