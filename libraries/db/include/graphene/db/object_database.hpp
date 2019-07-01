@@ -139,7 +139,7 @@ namespace graphene { namespace db {
          {
             typedef typename IndexType::object_type ObjectType;
             if(_index[ObjectType::space_id].size() <= ObjectType::type_id)
-               FC_ASSERT(false, "Index for type ${t} is not allocated", ("t", ObjectType::type_id));
+               FC_ASSERT(false, "Index for type ${t} is not allocated", ("t", static_cast<uint8_t>(ObjectType::type_id)));
             unique_ptr<index> indexptr( new IndexType(*this) );
             _index[ObjectType::space_id][ObjectType::type_id] = std::move(indexptr);
             return static_cast<IndexType*>(_index[ObjectType::space_id][ObjectType::type_id].get());

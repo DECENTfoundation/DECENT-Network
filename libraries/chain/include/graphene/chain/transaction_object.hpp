@@ -36,12 +36,9 @@ namespace graphene { namespace chain {
     * in a block a transaction_object is added. At the end of block processing all transaction_objects that have
     * expired can be removed from the index.
     */
-   class transaction_object : public graphene::db::abstract_object<transaction_object>
+   class transaction_object : public graphene::db::abstract_object<implementation_ids, impl_transaction_object_type, transaction_object>
    {
       public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_transaction_object_type;
-
          signed_transaction  trx;
          transaction_id_type trx_id;
 

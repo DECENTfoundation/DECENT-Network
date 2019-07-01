@@ -38,12 +38,9 @@ namespace graphene { namespace chain {
     * @note By default these objects are not tracked, the transaction_history_plugin must
     * be loaded for these objects to be maintained.
     */
-   class transaction_history_object : public graphene::db::abstract_object<transaction_history_object>
+   class transaction_history_object : public graphene::db::abstract_object<implementation_ids, impl_transaction_history_object_type, transaction_history_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_transaction_history_object_type;
-
       transaction_id_type tx_id;
       uint32_t          block_num = 0;
       /** the transaction in the block */

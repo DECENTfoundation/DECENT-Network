@@ -44,12 +44,9 @@ namespace graphene { namespace chain {
     *  This object exists as an implementation detail and its ID should never be referenced by
     *  a blockchain operation.
     */
-   class asset_dynamic_data_object : public graphene::db::abstract_object<asset_dynamic_data_object>
+   class asset_dynamic_data_object : public graphene::db::abstract_object<implementation_ids, impl_asset_dynamic_data_type, asset_dynamic_data_object>
    {
       public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_asset_dynamic_data_type;
-
          /// The number of shares currently in existence
          share_type current_supply = 0;
          share_type asset_pool = 0; ///< pool for this asset
@@ -63,12 +60,9 @@ namespace graphene { namespace chain {
     *  All assets have a globally unique symbol name that controls how they are traded and an issuer who
     *  has authority over the parameters of the asset.
     */
-   class asset_object : public graphene::db::abstract_object<asset_object>
+   class asset_object : public graphene::db::abstract_object<protocol_ids, asset_object_type, asset_object>
    {
       public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = asset_object_type;
-
          /// This function does not check if any registered asset has this symbol or not; it simply checks whether the
          /// symbol would be valid.
          /// @return true if symbol is a valid ticker symbol; false otherwise.
@@ -112,8 +106,6 @@ namespace graphene { namespace chain {
 
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
          asset_dynamic_data_id_type  dynamic_asset_data_id;
-
-         asset_id_type get_id()const { return id; }
 
          void validate()const {}
 

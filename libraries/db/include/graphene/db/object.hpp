@@ -64,13 +64,8 @@ namespace graphene { namespace db {
          object(){}
          virtual ~object(){}
 
-         static const uint8_t space_id = 0;
-         static const uint8_t type_id  = 0;
-
-
          // serialized
          object_id_type          id;
-         
 
          /// these methods are implemented for derived classes by inheriting abstract_object<DerivedClass>
          virtual unique_ptr<object> clone()const = 0;
@@ -87,10 +82,17 @@ namespace graphene { namespace db {
     *
     *  http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
     */
-   template<typename DerivedClass>
+   template<uint8_t SpaceID, uint8_t TypeID, typename DerivedClass>
    class abstract_object : public object
    {
       public:
+         enum : uint8_t {
+            space_id = SpaceID,
+            type_id  = TypeID
+         };
+
+         object_id<SpaceID, TypeID, DerivedClass> get_id() const { return id; }
+
          virtual unique_ptr<object> clone()const
          {
             return unique_ptr<object>(new DerivedClass( *static_cast<const DerivedClass*>(this) ));
@@ -110,35 +112,7 @@ namespace graphene { namespace db {
 
    typedef flat_map<uint8_t, object_id_type> annotation_map;
 
-   /**
-    *  @class annotated_object
-    *  @brief An object that is easily extended by providing pointers to other objects, one for each space.
-    */
-   template<typename DerivedClass>
-   class annotated_object : public abstract_object<DerivedClass>
-   {
-      public:
-         /** return object_id_type() if no anotation is found for id_space */
-         object_id_type          get_annotation( uint8_t annotation_id_space )const
-         {
-            auto itr = annotations.find(annotation_id_space);
-            if( itr != annotations.end() ) return itr->second;
-            return object_id_type();
-         }
-         void                    set_annotation( object_id_type id )
-         {
-            annotations[id.space()] = id;
-         }
-
-         /**
-          *  Annotations should be accessed via get_annotation and set_annotation so
-          *  that they can be maintained in sorted order.
-          */
-         annotation_map annotations;
-   };
-
 } } // graphene::db
 
 FC_REFLECT_TYPENAME( graphene::db::annotation_map )
 FC_REFLECT( graphene::db::object, (id) )
-FC_REFLECT_DERIVED_TEMPLATE( (typename Derived), graphene::db::annotated_object<Derived>, (graphene::db::object), (annotations) )

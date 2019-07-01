@@ -8,12 +8,9 @@
 
 namespace graphene { namespace chain {
 
-   class transaction_detail_object : public graphene::db::abstract_object<transaction_detail_object>
+   class transaction_detail_object : public graphene::db::abstract_object<implementation_ids, impl_transaction_detail_object_type, transaction_detail_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_transaction_detail_object_type;
-
       enum eOperationType
       {
          transfer,

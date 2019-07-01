@@ -12,12 +12,9 @@ namespace graphene { namespace chain {
     *  All non fungible tokens have a globally unique symbol name that controls how they are traded and an issuer who
     *  has authority over the parameters of the token.
     */
-   class non_fungible_token_object : public graphene::db::abstract_object<non_fungible_token_object>
+   class non_fungible_token_object : public graphene::db::abstract_object<protocol_ids, non_fungible_token_object_type, non_fungible_token_object>
    {
       public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = non_fungible_token_object_type;
-
          /// Symbol for this token
          string symbol;
          /// Options for this token
@@ -29,25 +26,18 @@ namespace graphene { namespace chain {
          /// The number of tokens currently in existence
          uint32_t current_supply = 0;
 
-         non_fungible_token_id_type get_id() const { return id; }
-
          static account_id_type get_issuer(const non_fungible_token_object& nft_obj) { return nft_obj.options.issuer; }
    };
 
-   class non_fungible_token_data_object : public graphene::db::abstract_object<non_fungible_token_data_object>
+   class non_fungible_token_data_object : public graphene::db::abstract_object<protocol_ids, non_fungible_token_data_object_type, non_fungible_token_data_object>
    {
       public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = non_fungible_token_data_object_type;
-
          /// ID of token which issued this token data
          non_fungible_token_id_type nft_id;
          /// ID of the account this token data belongs to
          account_id_type owner;
          /// The token instance data
          fc::variants data;
-
-         non_fungible_token_data_id_type get_id() const { return id; }
    };
 
    using namespace boost::multi_index;

@@ -13,12 +13,9 @@
 
 namespace graphene { namespace chain {
 
-   class buying_object : public graphene::db::abstract_object<buying_object>
+   class buying_object : public graphene::db::abstract_object<implementation_ids, impl_buying_object_type, buying_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_buying_object_type;
-
       account_id_type consumer;
       string URI;
       uint64_t size = uint64_t(-1); //< initialized by content.size

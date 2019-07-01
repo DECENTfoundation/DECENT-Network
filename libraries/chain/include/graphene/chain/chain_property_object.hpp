@@ -32,12 +32,9 @@ class chain_property_object;
 /**
  * Contains invariants which are set at genesis and never changed.
  */
-class chain_property_object : public graphene::db::abstract_object<chain_property_object>
+class chain_property_object : public graphene::db::abstract_object<implementation_ids, impl_chain_property_object_type, chain_property_object>
 {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_chain_property_object_type;
-
       chain_id_type chain_id;
       immutable_chain_parameters immutable_parameters;
 };

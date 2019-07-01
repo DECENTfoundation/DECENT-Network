@@ -13,12 +13,9 @@
 namespace graphene { namespace chain {
 
    /// Tracks subscription rom consumer to author
-   class subscription_object : public graphene::db::abstract_object< subscription_object >
+   class subscription_object : public graphene::db::abstract_object<implementation_ids, impl_subscription_object_type, subscription_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_subscription_object_type;
-
       account_id_type from;
       account_id_type to;
       time_point_sec expiration;

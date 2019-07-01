@@ -10,12 +10,9 @@
 
 namespace graphene { namespace chain {
 
-      class seeding_statistics_object : public graphene::db::abstract_object<seeding_statistics_object>
+      class seeding_statistics_object : public graphene::db::abstract_object<implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object>
       {
       public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_seeding_statistics_object_type;
-
          account_id_type seeder;
          // total bytes uploaded to consumers through ipfs
          uint64_t total_upload = 0;

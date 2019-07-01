@@ -12,12 +12,9 @@
 
 namespace graphene { namespace chain {
    
-   class seeder_object : public graphene::db::abstract_object<seeder_object>
+   class seeder_object : public graphene::db::abstract_object<implementation_ids, impl_publisher_object_type, seeder_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_publisher_object_type;
-      
       account_id_type seeder;
       uint64_t free_space;
       asset price;

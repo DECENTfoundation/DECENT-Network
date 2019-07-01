@@ -8,12 +8,9 @@
 
 namespace graphene { namespace chain {
 
-class seeding_object : public graphene::db::abstract_object<seeding_object>
+class seeding_object : public graphene::db::abstract_object<local_ids, local_seeding_object_type, seeding_object>
 {
 public:
-   static const uint8_t space_id = local_ids;
-   static const uint8_t type_id  = local_seeding_object_type;
-
    string URI; //<Content address
    fc::ripemd160 _hash; //<Content hash
    fc::time_point_sec expiration; //<Content expiration

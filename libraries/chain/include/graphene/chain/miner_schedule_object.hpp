@@ -30,12 +30,9 @@ namespace graphene { namespace chain {
 
 class miner_schedule_object;
 
-class miner_schedule_object : public graphene::db::abstract_object<miner_schedule_object>
+class miner_schedule_object : public graphene::db::abstract_object<implementation_ids, impl_miner_schedule_object_type, miner_schedule_object>
 {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id = impl_miner_schedule_object_type;
-
       vector< miner_id_type > current_shuffled_miners;
 };
 

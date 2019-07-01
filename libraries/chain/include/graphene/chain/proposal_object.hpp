@@ -36,12 +36,9 @@ namespace graphene { namespace chain {
  *  @ingroup object
  *  @ingroup protocol
  */
-class proposal_object : public graphene::db::abstract_object<proposal_object>
+class proposal_object : public graphene::db::abstract_object<protocol_ids, proposal_object_type, proposal_object>
 {
    public:
-      static const uint8_t space_id = protocol_ids;
-      static const uint8_t type_id = proposal_object_type;
-
       time_point_sec                expiration_time;
       optional<time_point_sec>      review_period_time;
       transaction                   proposed_transaction;

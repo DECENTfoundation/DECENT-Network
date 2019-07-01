@@ -427,12 +427,9 @@ using namespace decent::encrypt;
        uint32_t                   quorum = 2;
    };
 
-   class content_object : public graphene::db::abstract_object<content_object>
+   class content_object : public graphene::db::abstract_object<implementation_ids, impl_content_object_type, content_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_content_object_type;
-      
       account_id_type author;
       // If co_authors map is not empty, payout will be splitted.
       // Maps co-authors to split based on basis points.

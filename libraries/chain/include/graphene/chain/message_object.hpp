@@ -48,12 +48,9 @@ namespace graphene {
       std::vector<char> data;
    };
 
-   class message_object : public graphene::db::abstract_object<message_object>
+   class message_object : public graphene::db::abstract_object<implementation_ids, impl_messaging_object_type, message_object>
    {
    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id = impl_messaging_object_type;
-
       fc::time_point_sec created;
       account_id_type sender;
       public_key_type sender_pubkey;

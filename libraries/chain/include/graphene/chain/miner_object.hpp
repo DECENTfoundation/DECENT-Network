@@ -28,12 +28,9 @@
 
 namespace graphene { namespace chain {
 
-   class miner_object : public graphene::db::abstract_object<miner_object>
+   class miner_object : public graphene::db::abstract_object<protocol_ids, miner_object_type, miner_object>
    {
       public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id = miner_object_type;
-
          account_id_type  miner_account;
          uint64_t         last_aslot = 0;
          public_key_type  signing_key;

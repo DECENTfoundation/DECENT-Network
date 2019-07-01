@@ -39,12 +39,9 @@ namespace graphene { namespace chain {
     * separating the account data that changes frequently from the account data that is mostly static, which will
     * minimize the amount of data that must be backed up as part of the undo history everytime a transfer is made.
     */
-   class account_statistics_object : public graphene::db::abstract_object<account_statistics_object>
+   class account_statistics_object : public graphene::db::abstract_object<implementation_ids, impl_account_statistics_object_type, account_statistics_object>
    {
       public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_account_statistics_object_type;
-
          account_id_type  owner;
 
          /**
@@ -84,12 +81,9 @@ namespace graphene { namespace chain {
     * This object is indexed on owner and asset_type so that black swan
     * events in asset_type can be processed quickly.
     */
-   class account_balance_object : public graphene::db::abstract_object<account_balance_object>
+   class account_balance_object : public graphene::db::abstract_object<implementation_ids, impl_account_balance_object_type, account_balance_object>
    {
       public:
-         static const uint8_t space_id = implementation_ids;
-         static const uint8_t type_id  = impl_account_balance_object_type;
-
          account_id_type   owner;
          asset_id_type     asset_type;
          share_type        balance;
@@ -107,12 +101,9 @@ namespace graphene { namespace chain {
     * Accounts are the primary unit of authority on the graphene system. Users must have an account in order to use
     * assets, trade in the markets, vote for committee_members, etc.
     */
-   class account_object : public graphene::db::abstract_object<account_object>
+   class account_object : public graphene::db::abstract_object<protocol_ids, account_object_type, account_object>
    {
       public:
-         static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = account_object_type;
-
          ///The account that paid the fee to register this account. Receives a percentage of referral rewards.
          account_id_type registrar;
 
@@ -156,7 +147,6 @@ namespace graphene { namespace chain {
             FC_ASSERT(cashback_vb);
             return db.get(*cashback_vb);
          }
-         account_id_type get_id()const { return id; }
          bool is_publishing_manager() const { return rights_to_publish.is_publishing_manager; }
 
    };
