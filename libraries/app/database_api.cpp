@@ -217,7 +217,6 @@ namespace graphene { namespace app {
          if( !_subscribe_callback )
             return false;
          return true;
-         return _subscribe_filter.contains( i );
       }
       
       void broadcast_updates( const vector<variant>& updates );
