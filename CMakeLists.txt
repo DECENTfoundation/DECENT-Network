@@ -12,17 +12,21 @@ cmake_minimum_required( VERSION 3.10.2 FATAL_ERROR )
 project( DCore VERSION 1.4.1 LANGUAGES CXX )
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2 )
-        message( FATAL_ERROR "GCC version must be at least 4.9.2!" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1 )
+        message( FATAL_ERROR "GCC version must be at least 5.1" )
     endif()
 elseif( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5 )
-        message( FATAL_ERROR "Clang version must be at least 3.5!" )
+        message( FATAL_ERROR "Clang version must be at least 3.5" )
+    endif()
+elseif( CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10 )
+        message( FATAL_ERROR "MSVC version must be at least 19.10" )
     endif()
 endif()
 
-# Compile in C++11 mode
-set( CMAKE_CXX_STANDARD 11 )
+# Compile in C++14 mode
+set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 

@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include <algorithm>
+#include <utility>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -59,34 +60,40 @@ namespace graphene { namespace chain {
       return result;
    }
 
-   struct is_virtual_operation_visitor
+   struct non_virtual_operation_fees
    {
-      typedef void result_type;
+      fee_schedule result;
 
-      shared_ptr<bool> is_virtual_ptr;
-      is_virtual_operation_visitor(shared_ptr<bool> _is_virtual_ptr) : is_virtual_ptr(_is_virtual_ptr) { }
-      template<typename Type>
-      result_type operator()( const Type& op )const
+      non_virtual_operation_fees()
       {
-         *is_virtual_ptr = Type::is_virtual();
+         (*this)(std::make_index_sequence<std::tuple_size<fee_parameters::types>::value>());
+      }
+
+      template<std::size_t i, typename std::enable_if_t<operation::type<i>::value, int> = 0>
+      bool insert_fee()
+      {
+         return false;
+      }
+
+      template<std::size_t i, typename = std::enable_if_t<!operation::type<i>::value>>
+      bool insert_fee()
+      {
+         result.parameters.insert(fee_parameters::type<i>());
+         return true;
+      }
+
+      template<std::size_t ...Idx>
+      void operator()(std::index_sequence<Idx...>)
+      {
+         auto dummy = { (insert_fee<Idx>())... };
+         (void)dummy;
       }
    };
 
    fee_schedule fee_schedule::get_non_virtual_default()
    {
-      fee_schedule result;
-      shared_ptr<bool> is_virtual_ptr = std::make_shared<bool>();
-      for( int i = 0; i < fee_parameters().count(); ++i )
-      {
-         operation o; o.set_which(i);
-         o.visit(is_virtual_operation_visitor(is_virtual_ptr));
-         if (! (*is_virtual_ptr))
-         {
-            fee_parameters x; x.set_which(i);
-            result.parameters.insert(x);
-         }
-      }
-      return result;
+      non_virtual_operation_fees v;
+      return v.result;
    }
 
    struct fee_schedule_validate_visitor

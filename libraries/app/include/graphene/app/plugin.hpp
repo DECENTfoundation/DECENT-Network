@@ -127,26 +127,26 @@ struct plugin_set
                                    boost::program_options::options_description& configuration_file_options)
    {
       set_plugins_program_options(command_line_options, configuration_file_options,
-                                  graphene::chain::detail::gen_seq<std::tuple_size<types>::value>());
+                                  std::make_index_sequence<std::tuple_size<types>::value>());
    }
 
    static types create(application &app)
    {
-      return create_plugins(app, graphene::chain::detail::gen_seq<std::tuple_size<types>::value>());
+      return create_plugins(app, std::make_index_sequence<std::tuple_size<types>::value>());
    }
 
 private:
-   template<int ...Idx>
+   template<std::size_t ...Idx>
    static void set_plugins_program_options(boost::program_options::options_description& command_line_options,
                                            boost::program_options::options_description& configuration_file_options,
-                                           graphene::chain::detail::seq<Idx...>)
+                                           std::index_sequence<Idx...>)
    {
       auto x = {(set_plugin_program_options<type<Idx>>(command_line_options, configuration_file_options), 0)...};
       (void)x;
    }
 
-   template<int ...Idx>
-   static types create_plugins(application &app, graphene::chain::detail::seq<Idx...>)
+   template<std::size_t ...Idx>
+   static types create_plugins(application &app, std::index_sequence<Idx...>)
    {
       return std::make_tuple((app.create_plugin<type<Idx>>())...);
    }

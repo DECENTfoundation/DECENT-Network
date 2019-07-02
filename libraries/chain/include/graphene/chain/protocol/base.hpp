@@ -85,7 +85,7 @@ namespace graphene { namespace chain {
    typedef fc::static_variant<void_result,graphene::db::object_id_type,asset> operation_result;
 
    template<bool VIRTUAL = false>
-   struct base_operation
+   struct base_operation : public std::integral_constant<bool, VIRTUAL>
    {
       template<typename T>
       share_type calculate_fee(const T& params)const
@@ -96,7 +96,6 @@ namespace graphene { namespace chain {
       void get_required_active_authorities( flat_set<account_id_type>& )const{}
       void get_required_owner_authorities( flat_set<account_id_type>& )const{}
       void validate()const{}
-      static bool is_virtual() { return VIRTUAL; }
 
       bool is_partner_account_id(account_id_type acc_id) const { return false; }
 
