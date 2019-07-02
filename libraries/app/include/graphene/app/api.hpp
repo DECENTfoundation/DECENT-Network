@@ -405,6 +405,15 @@ namespace graphene { namespace app {
        * @ingroup MessagingAPI
        */
       vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const;
+
+      /**
+       * @brief Get a list of messages by ID.
+       * @note This function has semantics identical to \c get_objects().
+       * @param message_ids IDs of the messages to retrieve
+       * @return the messages corresponding to the provided IDs
+       * @ingroup MessagingAPI
+       */
+      vector<optional<message_object>> get_messages(const vector<message_id_type>& message_ids)const;
    private:
       application& _app;
    };
@@ -566,6 +575,7 @@ FC_API(graphene::app::crypto_api,
 FC_API(graphene::app::messaging_api,
        (info)
        (get_message_objects)
+       (get_messages)
      )
 FC_API(graphene::app::monitoring_api,
    (info)

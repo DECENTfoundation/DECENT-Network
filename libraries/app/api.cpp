@@ -541,6 +541,27 @@ namespace graphene { namespace app {
       return result;
    }
 
+   vector<optional<message_object>> messaging_api::get_messages( const vector<message_id_type>& message_ids )const
+   {
+      FC_ASSERT( _app.chain_database() );
+      const auto& db = *_app.chain_database();
+      const auto& idx = db.get_index_type<message_index>();
+      const auto& ids = idx.indices().get<graphene::db::by_id>();
+
+      vector<optional<message_object>> result; result.reserve(message_ids.size());
+      std::transform(message_ids.begin(), message_ids.end(), std::back_inserter(result),
+                     [&](message_id_type id) -> optional<message_object> {
+                        auto o = ids.find(id);
+                        if (o != ids.end())
+                        {
+                           return *o;
+                        }
+                        return {};
+                     });
+
+      return result;
+   }
+
    monitoring_api::monitoring_api()
    {
    }

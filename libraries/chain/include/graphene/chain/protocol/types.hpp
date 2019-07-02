@@ -205,6 +205,7 @@ namespace graphene { namespace chain {
    class subscription_object;
    class seeding_statistics_object;
    class transaction_detail_object;
+   class message_object;
    class transaction_history_object;
 
    typedef graphene::db::object_id<implementation_ids, impl_global_property_object_type, global_property_object>                   global_property_id_type;
@@ -224,6 +225,7 @@ namespace graphene { namespace chain {
    typedef graphene::db::object_id<implementation_ids, impl_subscription_object_type, subscription_object>                         subscription_id_type;
    typedef graphene::db::object_id<implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object>             seeding_statistics_id_type;
    typedef graphene::db::object_id<implementation_ids, impl_transaction_detail_object_type, transaction_detail_object>             transaction_detail_id_type;
+   typedef graphene::db::object_id<implementation_ids, impl_messaging_object_type, message_object>                                 message_id_type;
    typedef graphene::db::object_id<implementation_ids, impl_transaction_history_object_type, transaction_history_object>           transaction_history_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
@@ -360,6 +362,7 @@ FC_REFLECT_TYPENAME( graphene::chain::publisher_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::subscription_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::seeding_statistics_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::transaction_detail_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::message_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::transaction_history_id_type )
 
 FC_REFLECT_EMPTY( graphene::chain::void_t )
