@@ -67,11 +67,11 @@ void_result messaging_plugin::do_evaluate(const custom_operation& o)
    } FC_CAPTURE_AND_RETHROW((o))
 };
 
-void_result messaging_plugin::do_apply(const custom_operation& o) 
+graphene::db::object_id_type messaging_plugin::do_apply(const custom_operation& o) 
 { 
    auto & d = database();
 
-   database().create<message_object>([&o, &d](message_object& obj)
+   return database().create<message_object>([&o, &d](message_object& obj)
    {
       message_payload pl;
 
@@ -92,6 +92,5 @@ void_result messaging_plugin::do_apply(const custom_operation& o)
       obj.created = d.head_block_time();
       obj.sender_pubkey = pl.pub_from;
       
-   });
-   return void_result(); 
+   }).id;
 };

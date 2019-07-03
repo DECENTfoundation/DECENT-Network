@@ -23,14 +23,13 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/chain/account_object.hpp>
-#include <graphene/chain/database.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-void_result vesting_balance_create_evaluator::do_evaluate( const vesting_balance_create_operation& op )
+void_result vesting_balance_create_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
 
@@ -78,7 +77,7 @@ struct init_policy_visitor
    }
 };
 
-graphene::db::object_id_type vesting_balance_create_evaluator::do_apply( const vesting_balance_create_operation& op )
+graphene::db::object_id_type vesting_balance_create_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    const time_point_sec now = d.head_block_time();
@@ -99,7 +98,7 @@ graphene::db::object_id_type vesting_balance_create_evaluator::do_apply( const v
    return vbo.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result vesting_balance_withdraw_evaluator::do_evaluate( const vesting_balance_withdraw_operation& op )
+void_result vesting_balance_withdraw_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    const time_point_sec now = d.head_block_time();
@@ -114,7 +113,7 @@ void_result vesting_balance_withdraw_evaluator::do_evaluate( const vesting_balan
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result vesting_balance_withdraw_evaluator::do_apply( const vesting_balance_withdraw_operation& op )
+void_result vesting_balance_withdraw_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    const time_point_sec now = d.head_block_time();

@@ -24,19 +24,17 @@
  */
 #include <graphene/chain/miner_evaluator.hpp>
 #include <graphene/chain/miner_object.hpp>
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/vote.hpp>
-#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
 
-void_result miner_create_evaluator::do_evaluate( const miner_create_operation& op )
+void_result miner_create_evaluator::do_evaluate( const operation_type& op )
 {
    return void_result();
 }
 
-graphene::db::object_id_type miner_create_evaluator::do_apply( const miner_create_operation& op )
+graphene::db::object_id_type miner_create_evaluator::do_apply( const operation_type& op )
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
@@ -52,13 +50,13 @@ graphene::db::object_id_type miner_create_evaluator::do_apply( const miner_creat
    return new_miner_object.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_evaluator::do_evaluate( const miner_update_operation& op )
+void_result miner_update_evaluator::do_evaluate( const operation_type& op )
 { try {
    FC_ASSERT(db().get(op.miner).miner_account == op.miner_account);
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_evaluator::do_apply( const miner_update_operation& op )
+void_result miner_update_evaluator::do_apply( const operation_type& op )
 { try {
    database& _db = db();
    _db.modify(
@@ -73,14 +71,14 @@ void_result miner_update_evaluator::do_apply( const miner_update_operation& op )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_global_parameters_evaluator::do_evaluate(const miner_update_global_parameters_operation& o)
+void_result miner_update_global_parameters_evaluator::do_evaluate(const operation_type& o)
 { try {
       FC_ASSERT(trx_state->_is_proposed_trx);
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result miner_update_global_parameters_evaluator::do_apply(const miner_update_global_parameters_operation& o)
+void_result miner_update_global_parameters_evaluator::do_apply(const operation_type& o)
 { try {
       db().modify(db().get_global_properties(), [&o](global_property_object& p) {
          p.pending_parameters = o.new_parameters;

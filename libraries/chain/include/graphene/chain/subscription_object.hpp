@@ -22,6 +22,8 @@ namespace graphene { namespace chain {
       bool automatic_renewal;
    };
 
+   using namespace boost::multi_index;
+
    struct by_from;
    struct by_to;
    struct by_expiration;

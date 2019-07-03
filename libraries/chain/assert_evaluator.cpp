@@ -26,8 +26,6 @@
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/database.hpp>
 
-#include <sstream>
-
 namespace graphene { namespace chain {
 
 struct predicate_evaluator
@@ -51,7 +49,7 @@ struct predicate_evaluator
    }
 };
 
-void_result assert_evaluator::do_evaluate( const assert_operation& o )
+void_result assert_evaluator::do_evaluate( const operation_type& o )
 { try {
    const database& _db = db();
 
@@ -73,7 +71,7 @@ void_result assert_evaluator::do_evaluate( const assert_operation& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result assert_evaluator::do_apply( const assert_operation& o )
+void_result assert_evaluator::do_apply( const operation_type& o )
 { try {
    // assert_operation is always a no-op
    return void_result();

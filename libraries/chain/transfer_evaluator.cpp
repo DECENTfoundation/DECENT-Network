@@ -24,10 +24,10 @@
  */
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/content_object.hpp>
+#include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/database.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <boost/multiprecision/cpp_int.hpp>
 

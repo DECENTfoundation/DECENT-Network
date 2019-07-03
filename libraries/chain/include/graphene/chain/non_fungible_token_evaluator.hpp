@@ -1,25 +1,20 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
-#include <graphene/chain/protocol/non_fungible_token.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
+#include <graphene/chain/protocol/non_fungible_token.hpp>
 
 namespace graphene { namespace chain {
 
-   class non_fungible_token_create_definition_evaluator : public evaluator<non_fungible_token_create_definition_evaluator>
+   class non_fungible_token_create_definition_evaluator : public evaluator<non_fungible_token_create_definition_operation, non_fungible_token_create_definition_evaluator>
    {
       public:
-         typedef non_fungible_token_create_definition_operation operation_type;
-
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );
    };
 
-   class non_fungible_token_update_definition_evaluator : public evaluator<non_fungible_token_update_definition_evaluator>
+   class non_fungible_token_update_definition_evaluator : public evaluator<non_fungible_token_update_definition_operation, non_fungible_token_update_definition_evaluator>
    {
       public:
-         typedef non_fungible_token_update_definition_operation operation_type;
-
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );
 
@@ -27,11 +22,9 @@ namespace graphene { namespace chain {
          const non_fungible_token_object* nft_to_update = nullptr;
    };
 
-   class non_fungible_token_issue_evaluator : public evaluator<non_fungible_token_issue_evaluator>
+   class non_fungible_token_issue_evaluator : public evaluator<non_fungible_token_issue_operation, non_fungible_token_issue_evaluator>
    {
       public:
-         typedef non_fungible_token_issue_operation operation_type;
-
          void_result do_evaluate( const operation_type& op );
          graphene::db::object_id_type do_apply( const operation_type& op );
 
@@ -39,25 +32,21 @@ namespace graphene { namespace chain {
          const non_fungible_token_object* nft_to_update = nullptr;
    };
 
-   class non_fungible_token_transfer_evaluator : public evaluator<non_fungible_token_transfer_evaluator>
+   class non_fungible_token_transfer_evaluator : public evaluator<non_fungible_token_transfer_operation, non_fungible_token_transfer_evaluator>
    {
       public:
-         typedef non_fungible_token_transfer_operation operation_type;
-
          void_result do_evaluate( const operation_type& op );
-         graphene::db::object_id_type do_apply( const operation_type& op );
+         void_result do_apply( const operation_type& op );
 
       private:
          const non_fungible_token_data_object* nft_data_to_update = nullptr;
    };
 
-   class non_fungible_token_update_data_evaluator : public evaluator<non_fungible_token_update_data_evaluator>
+   class non_fungible_token_update_data_evaluator : public evaluator<non_fungible_token_update_data_operation, non_fungible_token_update_data_evaluator>
    {
       public:
-         typedef non_fungible_token_update_data_operation operation_type;
-
          void_result do_evaluate( const operation_type& op );
-         graphene::db::object_id_type do_apply( const operation_type& op );
+         void_result do_apply( const operation_type& op );
 
       private:
          const non_fungible_token_data_object* nft_data_to_update = nullptr;

@@ -23,103 +23,94 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-   class asset_create_evaluator : public evaluator<asset_create_evaluator>
+   class asset_create_evaluator : public evaluator<asset_create_operation, asset_create_evaluator>
    {
       public:
-         typedef asset_create_operation operation_type;
-
-         void_result do_evaluate( const asset_create_operation& o );
-         graphene::db::object_id_type do_apply( const asset_create_operation& o );
+         void_result do_evaluate( const operation_type& o );
+         graphene::db::object_id_type do_apply( const operation_type& o );
    };
 
-   class asset_issue_evaluator : public evaluator<asset_issue_evaluator>
+   class asset_issue_evaluator : public evaluator<asset_issue_operation, asset_issue_evaluator>
    {
    public:
-      typedef asset_issue_operation operation_type;
-      void_result do_evaluate( const asset_issue_operation& o );
-      void_result do_apply( const asset_issue_operation& o );
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
+   private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
 
-   class monitored_asset_update_evaluator : public evaluator<monitored_asset_update_evaluator>
+   class monitored_asset_update_evaluator : public evaluator<update_monitored_asset_operation, monitored_asset_update_evaluator>
    {
       public:
-         typedef update_monitored_asset_operation operation_type;
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
 
-         void_result do_evaluate( const update_monitored_asset_operation& o );
-         void_result do_apply( const update_monitored_asset_operation& o );
-
+      private:
          const asset_object* asset_to_update = nullptr;
    };
 
-   class user_issued_asset_update_evaluator : public evaluator<user_issued_asset_update_evaluator>
+   class user_issued_asset_update_evaluator : public evaluator<update_user_issued_asset_operation, user_issued_asset_update_evaluator>
    {
    public:
-      typedef update_user_issued_asset_operation operation_type;
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
-      void_result do_evaluate( const update_user_issued_asset_operation& o );
-      void_result do_apply( const update_user_issued_asset_operation& o );
-
+   private:
       const asset_object* asset_to_update = nullptr;
    };
 
-   class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_evaluator>
+   class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_operation, asset_fund_pools_evaluator>
    {
    public:
-      typedef asset_fund_pools_operation operation_type;
+      void_result do_evaluate(const operation_type& op);
+      void_result do_apply(const operation_type& op);
 
-      void_result do_evaluate(const asset_fund_pools_operation& op);
-      void_result do_apply(const asset_fund_pools_operation& op);
-
+   private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
 
-   class asset_reserve_evaluator : public evaluator<asset_reserve_evaluator>
+   class asset_reserve_evaluator : public evaluator<asset_reserve_operation, asset_reserve_evaluator>
    {
    public:
-      typedef asset_reserve_operation operation_type;
-      void_result do_evaluate( const asset_reserve_operation& o );
-      void_result do_apply( const asset_reserve_operation& o );
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
+   private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
 
-   class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_evaluator>
+   class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_operation, asset_claim_fees_evaluator>
    {
    public:
-      typedef asset_claim_fees_operation operation_type;
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
-      void_result do_evaluate( const asset_claim_fees_operation& o );
-      void_result do_apply( const asset_claim_fees_operation& o );
+   private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
    };
 
-   class asset_publish_feeds_evaluator : public evaluator<asset_publish_feeds_evaluator>
+   class asset_publish_feeds_evaluator : public evaluator<asset_publish_feed_operation, asset_publish_feeds_evaluator>
    {
    public:
-      typedef asset_publish_feed_operation operation_type;
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
-      void_result do_evaluate( const asset_publish_feed_operation& o );
-      void_result do_apply( const asset_publish_feed_operation& o );
-
+   private:
       std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
    };
 
-   class update_user_issued_asset_advanced_evaluator : public evaluator<update_user_issued_asset_advanced_evaluator>
+   class update_user_issued_asset_advanced_evaluator : public evaluator<update_user_issued_asset_advanced_operation, update_user_issued_asset_advanced_evaluator>
    {
    public:
-      typedef update_user_issued_asset_advanced_operation operation_type;
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
 
-      void_result do_evaluate( const update_user_issued_asset_advanced_operation& o );
-      void_result do_apply( const update_user_issued_asset_advanced_operation& o );
-
+   private:
       const asset_object* asset_to_update = nullptr;
       bool count_fixed_max_supply_ext = false;
       bool set_precision = false;

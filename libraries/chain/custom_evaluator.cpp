@@ -1,9 +1,7 @@
 #include <graphene/chain/custom_evaluator.hpp>
-
-#include <iostream>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
-
 
 custom_evaluator_register& custom_evaluator_register::instance()
 {
@@ -39,10 +37,9 @@ custom_operation_interpreter* custom_evaluator_register::find(custom_operation_s
    return iter->second;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 
-void_result custom_evaluator::do_evaluate(const custom_operation& o)
+void_result custom_evaluator::do_evaluate(const operation_type& o)
 {
    try
    {
@@ -58,14 +55,12 @@ void_result custom_evaluator::do_evaluate(const custom_operation& o)
          return void_result();
       }
 
-      evaluator->do_evaluate(o);
+      return evaluator->do_evaluate(o);
 
    } FC_CAPTURE_AND_RETHROW((o))
-
-   return void_result();
 }
 
-void_result custom_evaluator::do_apply(const custom_operation& o)
+graphene::db::object_id_type custom_evaluator::do_apply(const operation_type& o)
 { 
    try
    {
@@ -74,15 +69,12 @@ void_result custom_evaluator::do_apply(const custom_operation& o)
       custom_operation_interpreter* evaluator = instance.find(static_cast<custom_operation_subtype>(o.id));
       if (!evaluator) {
          // leave it unprocessed
-         return void_result();
+         return graphene::db::object_id_type();
       }
 
-      evaluator->do_apply(o);
+      return evaluator->do_apply(o);
 
    } FC_CAPTURE_AND_RETHROW((o))
-
-   return void_result();
 }
-
 
 } } // graphene::chain

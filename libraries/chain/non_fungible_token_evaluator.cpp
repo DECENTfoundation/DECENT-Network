@@ -182,7 +182,7 @@ void_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_transfer_evaluator::do_apply( const operation_type& op )
+void_result non_fungible_token_transfer_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    account_id_type owner = nft_data_to_update->owner;
@@ -206,7 +206,7 @@ graphene::db::object_id_type non_fungible_token_transfer_evaluator::do_apply( co
       obj.m_timestamp = d.head_block_time();
    });
 
-   return op.nft_data_id;
+   return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result non_fungible_token_update_data_evaluator::do_evaluate( const operation_type& op )
@@ -246,7 +246,7 @@ void_result non_fungible_token_update_data_evaluator::do_evaluate( const operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_update_data_evaluator::do_apply( const operation_type& op )
+void_result non_fungible_token_update_data_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    d.modify( *nft_data_to_update, [&]( non_fungible_token_data_object& nft_data ) {
@@ -262,7 +262,7 @@ graphene::db::object_id_type non_fungible_token_update_data_evaluator::do_apply(
       }
    });
 
-   return op.nft_data_id;
+   return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 } } // graphene::chain

@@ -1,13 +1,12 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include <graphene/chain/database.hpp>
 #include <graphene/chain/subscription_evaluator.hpp>
 #include <graphene/chain/subscription_object.hpp>
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
+void_result subscribe_evaluator::do_evaluate( const operation_type& op )
 {
    try {
       auto& idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -38,7 +37,7 @@ void_result subscribe_evaluator::do_evaluate( const subscribe_operation& op )
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
+graphene::db::object_id_type subscribe_evaluator::do_apply( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -49,6 +48,7 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
       time_point_sec now = db().head_block_time();
 
+      graphene::db::object_id_type obj_id;
       if (subscription != idx2.end())
       {
          db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
@@ -61,13 +61,13 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
       }
       else
       {
-         db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
+         obj_id = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
             so.expiration = now + subscription_period_in_secs;
             so.automatic_renewal = false;
-         });
+         }).id;
       }
 
       db().adjust_balance( op.from, -op.price );
@@ -88,11 +88,11 @@ void_result subscribe_evaluator::do_apply( const subscribe_operation& op )
                                                 obj.m_timestamp = d.head_block_time();
                                              });
 
-      return void_result();
+      return obj_id;
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result subscribe_by_author_evaluator::do_evaluate( const subscribe_by_author_operation& op )
+void_result subscribe_by_author_evaluator::do_evaluate( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -107,7 +107,7 @@ void_result subscribe_by_author_evaluator::do_evaluate( const subscribe_by_autho
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_operation& op )
+graphene::db::object_id_type subscribe_by_author_evaluator::do_apply( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -118,6 +118,7 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
       time_point_sec now = db().head_block_time();
 
+      graphene::db::object_id_type obj_id;
       if (subscription != idx2.end())
       {
          db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
@@ -130,13 +131,13 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
       }
       else
       {
-         db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
+         obj_id = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
             so.expiration = now + subscription_period_in_secs;
             so.automatic_renewal = false;
-         });
+         }).id;
       }
 
       database& d = db();
@@ -154,11 +155,11 @@ void_result subscribe_by_author_evaluator::do_apply( const subscribe_by_author_o
                                                 obj.m_timestamp = d.head_block_time();
                                              });
 
-      return void_result();
+      return obj_id;
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const automatic_renewal_of_subscription_operation& op )
+void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -179,7 +180,7 @@ void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const autom
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result automatic_renewal_of_subscription_evaluator::do_apply(const automatic_renewal_of_subscription_operation& op )
+void_result automatic_renewal_of_subscription_evaluator::do_apply(const operation_type& op )
 {
    try {
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<graphene::db::by_id>();
@@ -192,30 +193,6 @@ void_result automatic_renewal_of_subscription_evaluator::do_apply(const automati
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (op) )
-}
-
-void_result disallow_automatic_renewal_of_subscription_evaluator::do_evaluate(const disallow_automatic_renewal_of_subscription_operation& op )
-{
-   void_result result;
-   return result;
-}
-
-void_result disallow_automatic_renewal_of_subscription_evaluator::do_apply(const disallow_automatic_renewal_of_subscription_operation& op )
-{
-   void_result result;
-   return result;
-}
-
-void_result renewal_of_subscription_evaluator::do_evaluate(const renewal_of_subscription_operation& op )
-{
-   void_result result;
-   return result;
-}
-
-void_result renewal_of_subscription_evaluator::do_apply(const renewal_of_subscription_operation& op )
-{
-   void_result result;
-   return result;
 }
 
 } } // graphene::chain

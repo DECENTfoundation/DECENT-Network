@@ -23,26 +23,21 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
+#include <graphene/chain/protocol/transfer.hpp>
 
 namespace graphene { namespace chain {
 
-   class transfer_obsolete_evaluator : public evaluator<transfer_obsolete_evaluator>
+   class transfer_obsolete_evaluator : public evaluator<transfer_obsolete_operation, transfer_obsolete_evaluator>
    {
       public:
-         typedef transfer_obsolete_operation operation_type;
-
          void_result do_evaluate( const operation_type& o );
          void_result do_apply( const operation_type& o );
    };
 
-   class transfer_evaluator : public evaluator<transfer_evaluator>
+   class transfer_evaluator : public evaluator<transfer_operation, transfer_evaluator>
    {
    public:
-      typedef transfer_operation operation_type;
-
       void_result do_evaluate( const operation_type& o );
       void_result do_apply( const operation_type& o );
    };

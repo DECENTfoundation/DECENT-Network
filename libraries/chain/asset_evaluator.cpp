@@ -33,7 +33,7 @@
 
 namespace graphene { namespace chain {
 
-void_result asset_create_evaluator::do_evaluate( const asset_create_operation& op )
+void_result asset_create_evaluator::do_evaluate( const operation_type& op )
 { try {
    database& d = db();
 
@@ -74,7 +74,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type asset_create_evaluator::do_apply( const asset_create_operation& op )
+graphene::db::object_id_type asset_create_evaluator::do_apply( const operation_type& op )
 { try {
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
@@ -105,7 +105,7 @@ graphene::db::object_id_type asset_create_evaluator::do_apply( const asset_creat
    return new_asset.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
+void_result asset_issue_evaluator::do_evaluate( const operation_type& o )
 { try {
       const database& d = db();
 
@@ -121,7 +121,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
+void_result asset_issue_evaluator::do_apply( const operation_type& o )
 { try {
       db().adjust_balance( o.issue_to_account, o.asset_to_issue );
 
@@ -132,7 +132,7 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result monitored_asset_update_evaluator::do_evaluate(const update_monitored_asset_operation& o)
+void_result monitored_asset_update_evaluator::do_evaluate(const operation_type& o)
 { try {
    const asset_object& a = o.asset_to_update(db());
    FC_ASSERT( a.is_monitored_asset() );
@@ -142,7 +142,7 @@ void_result monitored_asset_update_evaluator::do_evaluate(const update_monitored
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
-void_result monitored_asset_update_evaluator::do_apply(const update_monitored_asset_operation& o)
+void_result monitored_asset_update_evaluator::do_apply(const operation_type& o)
 { try {
    db().modify(*asset_to_update, [&](asset_object& a) {
       if( o.new_description != "" )
@@ -156,7 +156,7 @@ void_result monitored_asset_update_evaluator::do_apply(const update_monitored_as
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_issued_asset_operation& o)
+void_result user_issued_asset_update_evaluator::do_evaluate(const operation_type& o)
 { try {
       database& d = db();
 
@@ -180,7 +180,7 @@ void_result user_issued_asset_update_evaluator::do_evaluate(const update_user_is
       return void_result();
    } FC_CAPTURE_AND_RETHROW((o)) }
 
-void_result user_issued_asset_update_evaluator::do_apply(const update_user_issued_asset_operation& o)
+void_result user_issued_asset_update_evaluator::do_apply(const operation_type& o)
 { try {
       database& d = db();
 
@@ -197,7 +197,7 @@ void_result user_issued_asset_update_evaluator::do_apply(const update_user_issue
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation& o )
+void_result asset_reserve_evaluator::do_evaluate( const operation_type& o )
 { try {
       const database& d = db();
 
@@ -215,7 +215,7 @@ void_result asset_reserve_evaluator::do_evaluate( const asset_reserve_operation&
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o )
+void_result asset_reserve_evaluator::do_apply( const operation_type& o )
 { try {
       db().adjust_balance( o.payer, -o.amount_to_reserve );
 
@@ -226,7 +226,7 @@ void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_operation& o)
+void_result asset_fund_pools_evaluator::do_evaluate(const operation_type& o)
 { try {
       database& d = db();
 
@@ -240,7 +240,7 @@ void_result asset_fund_pools_evaluator::do_evaluate(const asset_fund_pools_opera
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_fund_pools_evaluator::do_apply(const asset_fund_pools_operation& o)
+void_result asset_fund_pools_evaluator::do_apply(const operation_type& o)
 { try {
       database& d = db();
       if( o.uia_asset.amount > 0)
@@ -262,7 +262,7 @@ void_result asset_fund_pools_evaluator::do_apply(const asset_fund_pools_operatio
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_operation& o )
+void_result asset_claim_fees_evaluator::do_evaluate( const operation_type& o )
 { try {
       database& d = db();
       const asset_object& uia_ao = o.uia_asset.asset_id(d);
@@ -277,7 +277,7 @@ void_result asset_claim_fees_evaluator::do_evaluate( const asset_claim_fees_oper
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 
-void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operation& o )
+void_result asset_claim_fees_evaluator::do_apply( const operation_type& o )
 { try {
       database& d = db();
 
@@ -300,7 +300,7 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_operation& o)
+void_result asset_publish_feeds_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
 
@@ -314,7 +314,7 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
-void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_operation& o)
+void_result asset_publish_feeds_evaluator::do_apply(const operation_type& o)
 { try {
 
    database& d = db();
@@ -330,7 +330,7 @@ void_result asset_publish_feeds_evaluator::do_apply(const asset_publish_feed_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
-void_result update_user_issued_asset_advanced_evaluator::do_evaluate(const update_user_issued_asset_advanced_operation& o)
+void_result update_user_issued_asset_advanced_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
    asset_to_update = &o.asset_to_update(d);
@@ -369,7 +369,7 @@ void_result update_user_issued_asset_advanced_evaluator::do_evaluate(const updat
    return void_result();
 } FC_CAPTURE_AND_RETHROW((o)) }
 
-void_result update_user_issued_asset_advanced_evaluator::do_apply(const update_user_issued_asset_advanced_operation& o)
+void_result update_user_issued_asset_advanced_evaluator::do_apply(const operation_type& o)
 { try {
    db().modify(*asset_to_update, [&](asset_object& a) {
       if( set_precision )

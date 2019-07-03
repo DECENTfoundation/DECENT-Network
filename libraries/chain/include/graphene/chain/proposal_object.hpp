@@ -24,8 +24,6 @@
 #pragma once
 
 #include <graphene/chain/protocol/transaction.hpp>
-#include <graphene/chain/transaction_evaluation_state.hpp>
-
 #include <graphene/db/generic_index.hpp>
 
 namespace graphene { namespace chain {
@@ -74,6 +72,8 @@ class required_approval_index : public graphene::db::secondary_index
 
       map<account_id_type, set<proposal_id_type> > _account_to_proposals;
 };
+
+using namespace boost::multi_index;
 
 struct by_expiration;
 typedef multi_index_container<

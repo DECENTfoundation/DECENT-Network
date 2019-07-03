@@ -24,15 +24,11 @@
  */
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/proposal_object.hpp>
-#include <graphene/chain/account_object.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/exceptions.hpp>
-
-#include <fc/smart_ref_impl.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-void_result proposal_create_evaluator::do_evaluate(const proposal_create_operation& o)
+void_result proposal_create_evaluator::do_evaluate(const operation_type& o)
 { try {
    const database& d = db();
    const auto& global_parameters = d.get_global_properties().parameters;
@@ -79,7 +75,7 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-graphene::db::object_id_type proposal_create_evaluator::do_apply(const proposal_create_operation& o)
+graphene::db::object_id_type proposal_create_evaluator::do_apply(const operation_type& o)
 { try {
    database& d = db();
 
@@ -108,7 +104,7 @@ graphene::db::object_id_type proposal_create_evaluator::do_apply(const proposal_
    return proposal.id;
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_update_evaluator::do_evaluate(const proposal_update_operation& o)
+void_result proposal_update_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
 
@@ -146,7 +142,7 @@ void_result proposal_update_evaluator::do_evaluate(const proposal_update_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_update_evaluator::do_apply(const proposal_update_operation& o)
+void_result proposal_update_evaluator::do_apply(const operation_type& o)
 { try {
    database& d = db();
 
@@ -187,7 +183,7 @@ void_result proposal_update_evaluator::do_apply(const proposal_update_operation&
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_delete_evaluator::do_evaluate(const proposal_delete_operation& o)
+void_result proposal_delete_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
 
@@ -202,7 +198,7 @@ void_result proposal_delete_evaluator::do_evaluate(const proposal_delete_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_delete_evaluator::do_apply(const proposal_delete_operation& o)
+void_result proposal_delete_evaluator::do_apply(const operation_type& o)
 { try {
    db().remove(*_proposal);
 

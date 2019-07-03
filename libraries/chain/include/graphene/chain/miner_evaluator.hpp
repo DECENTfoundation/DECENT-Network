@@ -24,35 +24,29 @@
  */
 #pragma once
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/miner_object.hpp>
+#include <graphene/chain/protocol/miner.hpp>
 
 namespace graphene { namespace chain {
 
-   class miner_create_evaluator : public evaluator<miner_create_evaluator>
+   class miner_create_evaluator : public evaluator<miner_create_operation, miner_create_evaluator>
    {
       public:
-         typedef miner_create_operation operation_type;
-
-         void_result do_evaluate( const miner_create_operation& o );
-         graphene::db::object_id_type do_apply( const miner_create_operation& o );
+         void_result do_evaluate( const operation_type& o );
+         graphene::db::object_id_type do_apply( const operation_type& o );
    };
 
-   class miner_update_evaluator : public evaluator<miner_update_evaluator>
+   class miner_update_evaluator : public evaluator<miner_update_operation, miner_update_evaluator>
    {
       public:
-         typedef miner_update_operation operation_type;
-
-         void_result do_evaluate( const miner_update_operation& o );
-         void_result do_apply( const miner_update_operation& o );
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
    };
 
-   class miner_update_global_parameters_evaluator : public evaluator<miner_update_global_parameters_evaluator>
+   class miner_update_global_parameters_evaluator : public evaluator<miner_update_global_parameters_operation, miner_update_global_parameters_evaluator>
    {
    public:
-      typedef miner_update_global_parameters_operation operation_type;
-
-      void_result do_evaluate( const miner_update_global_parameters_operation& o );
-      void_result do_apply( const miner_update_global_parameters_operation& o );
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
    };
 
 } } // graphene::chain

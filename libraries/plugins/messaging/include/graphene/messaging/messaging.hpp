@@ -3,12 +3,9 @@
 
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
-#include <graphene/chain/database.hpp>
-
 
 namespace decent {
    namespace messaging {
-
 
       class messaging_plugin : public graphene::app::plugin, graphene::chain::custom_operation_interpreter {
       public:
@@ -27,7 +24,7 @@ namespace decent {
          virtual void plugin_shutdown() override;
 
          graphene::chain::void_result do_evaluate(const graphene::chain::custom_operation& o) override;
-         graphene::chain::void_result do_apply(const graphene::chain::custom_operation& o) override;
+         graphene::db::object_id_type do_apply(const graphene::chain::custom_operation& o) override;
 
       private:
          boost::program_options::variables_map _options;

@@ -25,21 +25,14 @@
 #pragma once
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
-#include <graphene/chain/protocol/operations.hpp>
 
 namespace graphene { namespace chain {
-
-   class database;
-   struct signed_transaction;
-   class generic_evaluator;
-   class transaction_evaluation_state;
 
    class generic_evaluator
    {
    public:
-      virtual ~generic_evaluator(){}
+      virtual ~generic_evaluator() = default;
 
-      virtual int get_type()const = 0;
       virtual operation_result start_evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply);
 
       /**
@@ -113,7 +106,7 @@ namespace graphene { namespace chain {
    class op_evaluator
    {
    public:
-      virtual ~op_evaluator(){}
+      virtual ~op_evaluator() = default;
       virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply) = 0;
    };
 
@@ -121,23 +114,24 @@ namespace graphene { namespace chain {
    class op_evaluator_impl : public op_evaluator
    {
    public:
-      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply = true) override
+      virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply) override
       {
          T eval;
          return eval.start_evaluate(eval_state, op, apply);
       }
    };
 
-   template<typename DerivedEvaluator>
+   template<typename Operation, typename Evaluator, bool Virtual = false>
    class evaluator : public generic_evaluator
    {
    public:
-      virtual int get_type()const override { return operation::tag<typename DerivedEvaluator::operation_type>::value; }
+      typedef Operation operation_type;
+      typedef Evaluator evaluator_type;
 
       virtual operation_result evaluate(const operation& o) final override
       {
-         auto* eval = static_cast<DerivedEvaluator*>(this);
-         const auto& op = o.get<typename DerivedEvaluator::operation_type>();
+         auto* eval = static_cast<evaluator_type*>(this);
+         const auto& op = o.get<operation_type>();
 
          prepare_fee(op.fee_payer(), op.fee);
          if( !trx_state->skip_fee_schedule_check )
@@ -154,8 +148,8 @@ namespace graphene { namespace chain {
 
       virtual operation_result apply(const operation& o) final override
       {
-         auto* eval = static_cast<DerivedEvaluator*>(this);
-         const auto& op = o.get<typename DerivedEvaluator::operation_type>();
+         auto* eval = static_cast<evaluator_type*>(this);
+         const auto& op = o.get<operation_type>();
 
          convert_fee();
          pay_fee();
@@ -167,4 +161,25 @@ namespace graphene { namespace chain {
          return result;
       }
    };
+
+   template<typename Operation>
+   class evaluator<Operation, void, true> : public generic_evaluator
+   {
+   public:
+      typedef Operation operation_type;
+
+      virtual operation_result evaluate(const operation& o) final override
+      {
+         return void_result();
+      }
+
+      virtual operation_result apply(const operation& o) final override
+      {
+         return void_result();
+      }
+   };
+
+   template<typename Operation>
+   using virtual_evaluator_t = evaluator<Operation, void, true>;
+
 } }
