@@ -264,7 +264,7 @@ namespace graphene { namespace app {
           * @param id ID of the transaction to retrieve
           * @ingroup DatabaseAPI_BlockTx
           */
-         optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
+         optional<processed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
 
          /**
           * @brief This method is used to convert a JSON transaction to its transaction ID.

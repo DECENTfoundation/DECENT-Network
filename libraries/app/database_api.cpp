@@ -90,7 +90,7 @@ namespace graphene { namespace app {
       fc::time_point_sec head_block_time()const;
       miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
       share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
-      optional<signed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
+      optional<processed_transaction> get_transaction_by_id(const transaction_id_type& id) const;
       vector<proposal_object> get_proposed_transactions( account_id_type id )const;
 
       // Globals
@@ -518,22 +518,21 @@ namespace graphene { namespace app {
       return _db.head_block_time();
    }
 
-   optional<signed_transaction> database_api::get_transaction_by_id( const transaction_id_type& id )const
+   optional<processed_transaction> database_api::get_transaction_by_id( const transaction_id_type& id )const
    {
       return my->get_transaction_by_id( id );
    }
 
-   optional<signed_transaction> database_api_impl::get_transaction_by_id( const transaction_id_type& id )const
+   optional<processed_transaction> database_api_impl::get_transaction_by_id( const transaction_id_type& id )const
    {
       const auto& idx = _db.get_index_type<transaction_history_index>().indices().get<by_tx_id>();
       auto itr = idx.find(id);
       if (itr != idx.end())
       {
-         signed_transaction tx = get_transaction( itr->block_num, itr->trx_in_block );
-         return tx;
+         return get_transaction( itr->block_num, itr->trx_in_block );
       }
 
-      return optional<signed_transaction>();
+      return optional<processed_transaction>();
    }
 
    transaction_id_type database_api::get_transaction_id( const signed_transaction& trx )const
