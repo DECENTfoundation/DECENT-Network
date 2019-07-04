@@ -284,13 +284,14 @@ namespace graphene { namespace app {
    
    fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
    {
-      if( _subscribe_callback )  {
+      if( _subscribe_callback )
+      {
          for( auto id : ids )
          {
-            if( id.type() == operation_history_object_type && id.space() == protocol_ids ) continue;
-            if( id.type() == impl_account_transaction_history_object_type && id.space() == implementation_ids ) continue;
-
-            this->subscribe_to_item( id );
+            if( (id.type() != operation_history_object_type || id.space() != protocol_ids) && (id.type() != impl_account_transaction_history_object_type || id.space() != implementation_ids) )
+            {
+               this->subscribe_to_item( id );
+            }
          }
       }
       else
@@ -770,61 +771,62 @@ namespace graphene { namespace app {
             if (itr != idx.end())
                account = &*itr;
          }
-         if (account == nullptr)
-            continue;
-         
-         if( subscribe )
+         if (account != nullptr)
          {
-            ilog( "subscribe to ${id}", ("id",account->name) );
-            subscribe_to_item( account->id );
+            if( subscribe )
+            {
+               ilog( "subscribe to ${id}", ("id",account->name) );
+               subscribe_to_item( account->id );
+            }
+
+            // fc::mutable_variant_object full_account;
+            full_account acnt;
+            acnt.account = *account;
+            acnt.statistics = account->statistics(_db);
+            acnt.registrar_name = account->registrar(_db).name;
+            acnt.votes = lookup_vote_ids( vector<vote_id_type>(account->options.votes.begin(),account->options.votes.end()) );
+
+            // Add the account itself, its statistics object, cashback balance, and referral account names
+            /*
+             full_account("account", *account)("statistics", account->statistics(_db))
+             ("registrar_name", account->registrar(_db).name)("referrer_name", account->referrer(_db).name)
+             ("lifetime_referrer_name", account->lifetime_referrer(_db).name);
+             */
+            if (account->cashback_vb)
+            {
+               acnt.cashback_balance = account->cashback_balance(_db);
+            }
+            // Add the account's proposals
+            const auto& proposal_idx = _db.get_index_type<proposal_index>();
+            const auto& pidx = dynamic_cast<const graphene::db::primary_index<proposal_index>&>(proposal_idx);
+            const auto& proposals_by_account = pidx.get_secondary_index<graphene::chain::required_approval_index>();
+            auto  required_approvals_itr = proposals_by_account._account_to_proposals.find( account->id );
+            if( required_approvals_itr != proposals_by_account._account_to_proposals.end() )
+            {
+               acnt.proposals.reserve( required_approvals_itr->second.size() );
+               for( auto proposal_id : required_approvals_itr->second )
+                  acnt.proposals.push_back( proposal_id(_db) );
+            }
+
+
+            // Add the account's balances
+            auto balance_range = _db.get_index_type<account_balance_index>().indices().get<by_account_asset>().equal_range(boost::make_tuple(account->id));
+            //vector<account_balance_object> balances;
+            std::for_each(balance_range.first, balance_range.second,
+                          [&acnt](const account_balance_object& balance) {
+                             acnt.balances.emplace_back(balance);
+                          });
+
+            // Add the account's vesting balances
+            auto vesting_range = _db.get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(account->id);
+            std::for_each(vesting_range.first, vesting_range.second,
+                          [&acnt](const vesting_balance_object& balance) {
+                             acnt.vesting_balances.emplace_back(balance);
+                          });
+
+            results[account_name_or_id] = acnt;
+
          }
-         
-         // fc::mutable_variant_object full_account;
-         full_account acnt;
-         acnt.account = *account;
-         acnt.statistics = account->statistics(_db);
-         acnt.registrar_name = account->registrar(_db).name;
-         acnt.votes = lookup_vote_ids( vector<vote_id_type>(account->options.votes.begin(),account->options.votes.end()) );
-         
-         // Add the account itself, its statistics object, cashback balance, and referral account names
-         /*
-          full_account("account", *account)("statistics", account->statistics(_db))
-          ("registrar_name", account->registrar(_db).name)("referrer_name", account->referrer(_db).name)
-          ("lifetime_referrer_name", account->lifetime_referrer(_db).name);
-          */
-         if (account->cashback_vb)
-         {
-            acnt.cashback_balance = account->cashback_balance(_db);
-         }
-         // Add the account's proposals
-         const auto& proposal_idx = _db.get_index_type<proposal_index>();
-         const auto& pidx = dynamic_cast<const graphene::db::primary_index<proposal_index>&>(proposal_idx);
-         const auto& proposals_by_account = pidx.get_secondary_index<graphene::chain::required_approval_index>();
-         auto  required_approvals_itr = proposals_by_account._account_to_proposals.find( account->id );
-         if( required_approvals_itr != proposals_by_account._account_to_proposals.end() )
-         {
-            acnt.proposals.reserve( required_approvals_itr->second.size() );
-            for( auto proposal_id : required_approvals_itr->second )
-               acnt.proposals.push_back( proposal_id(_db) );
-         }
-         
-         
-         // Add the account's balances
-         auto balance_range = _db.get_index_type<account_balance_index>().indices().get<by_account_asset>().equal_range(boost::make_tuple(account->id));
-         //vector<account_balance_object> balances;
-         std::for_each(balance_range.first, balance_range.second,
-                       [&acnt](const account_balance_object& balance) {
-                          acnt.balances.emplace_back(balance);
-                       });
-         
-         // Add the account's vesting balances
-         auto vesting_range = _db.get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(account->id);
-         std::for_each(vesting_range.first, vesting_range.second,
-                       [&acnt](const vesting_balance_object& balance) {
-                          acnt.vesting_balances.emplace_back(balance);
-                       });
-         
-         results[account_name_or_id] = acnt;
       }
       return results;
    }
@@ -2565,78 +2567,49 @@ namespace
          while(count && itr_begin != itr_end)
          {
             const auto account_itr = idx_account.find(itr_begin->author);
-            if ( !user.empty() )
+            if ( (user.empty() || account_itr->name == user) &&
+                 // this is going to be possible if a content object does not have
+                 // a price defined for this region
+                 // we allow such objects be placed in db index anyway, but simply skip those
+                 // during enumeration
+                 (itr_begin->price.Valid(region_code)) &&
+                 ( !user.empty() || ( itr_begin->seeder_price.empty() || itr_begin->recent_proof(60*60*24) ) ) &&
+                 // Content can be cancelled by an author. In such a case content is not available to purchase.
+                 ( ! itr_begin->is_blocked )
+               )
             {
-               if ( account_itr->name != user )
+               content.set( *itr_begin , *account_itr, region_code );
+               if (content.expiration > fc::time_point::now())
                {
-                  ++itr_begin;
-                  continue;
+                  std::string term = search_term;
+                  std::string title = content.synopsis;
+                  std::string desc;
+                  std::string author = content.author;
+                  ContentObjectTypeValue content_type;
+
+
+                  try {
+                     ContentObjectPropertyManager synopsis_parser(content.synopsis);
+                     title = synopsis_parser.get<ContentObjectTitle>();
+                     desc = synopsis_parser.get<ContentObjectDescription>();
+                     content_type = synopsis_parser.get<ContentObjectType>();
+                  } catch (...) {}
+
+                  boost::algorithm::to_lower(term);
+                  boost::algorithm::to_lower(title);
+                  boost::algorithm::to_lower(desc);
+                  boost::algorithm::to_lower(author);
+
+                  if ( (term.empty() || author.find(term) != std::string::npos || title.find(term) != std::string::npos || desc.find(term) != std::string::npos) &&
+                       (content_type.filter(filter_type))
+                     )
+                  {
+                     count--;
+                     result.push_back( content );
+                  }
                }
             }
 
-            if (! itr_begin->price.Valid(region_code))
-            {
-               // this is going to be possible if a content object does not have
-               // a price defined for this region
-               // we allow such objects be placed in db index anyway, but simply skip those
-               // during enumeration
-               ++itr_begin;
-               continue;
-            }
-
-            if ( user.empty() && ( !itr_begin->seeder_price.empty() && ! itr_begin->recent_proof(60*60*24) ) )
-            {
-               ++itr_begin;
-               continue;
-            }
-
-            if ( itr_begin->is_blocked ) // Content can be cancelled by an author. In such a case content is not available to purchase.
-            {
-               ++itr_begin;
-               continue;
-            }
-
-            content.set( *itr_begin , *account_itr, region_code );
-            if (content.expiration > fc::time_point::now())
-            {
-               std::string term = search_term;
-               std::string title = content.synopsis;
-               std::string desc;
-               std::string author = content.author;
-               ContentObjectTypeValue content_type;
-
-
-               try {
-                  ContentObjectPropertyManager synopsis_parser(content.synopsis);
-                  title = synopsis_parser.get<ContentObjectTitle>();
-                  desc = synopsis_parser.get<ContentObjectDescription>();
-                  content_type = synopsis_parser.get<ContentObjectType>();
-               } catch (...) {}
-               
-               boost::algorithm::to_lower(term);
-               boost::algorithm::to_lower(title);
-               boost::algorithm::to_lower(desc);
-               boost::algorithm::to_lower(author);
-
-               if ( !term.empty() &&
-                   author.find(term) == std::string::npos &&
-                   title.find(term) == std::string::npos &&
-                   desc.find(term) == std::string::npos)
-               {
-                  ++itr_begin;
-                  continue;
-               }
-
-               if (!content_type.filter(filter_type))
-               {
-                  ++itr_begin;
-                  continue;
-               }
-
-               count--;
-               result.push_back( content );
-            }
-            
             ++itr_begin;
          }
          
