@@ -55,9 +55,16 @@ digest_type transaction::sig_digest( const chain_id_type& chain_id )const
 
 void transaction::validate() const
 {
-   FC_ASSERT( operations.size() > 0, "A transaction must have at least one operation", ("trx",*this) );
-   for( const auto& op : operations )
-      operation_validate(op); 
+   if(operations.size() == 0)
+      FC_THROW_EXCEPTION(trx_must_have_at_least_one_op, "Trx: ${trx}", ("trx", *this));
+  
+   int index = 0;
+   try {
+      for(const auto& op : operations) {
+         operation_validate(op);
+         index++;
+      }
+   } FC_REWRAP_EXCEPTIONS(operation_validate_exception, error, "Zero based index of operation ${index}", ("index", index))
 }
 
 graphene::chain::transaction_id_type graphene::chain::transaction::id() const

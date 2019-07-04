@@ -35,6 +35,7 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/net/exceptions.hpp>
+#include <graphene/app/exceptions.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
@@ -309,7 +310,7 @@ namespace detail {
          if( !_db_lock->try_lock() )
          {
             _db_lock.reset();
-            FC_THROW_EXCEPTION(fc::invalid_operation_exception, "Database is already used by another process");
+            FC_THROW_EXCEPTION(database_already_used_exception, "");
          }
 
          auto initial_state = [&] {

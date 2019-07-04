@@ -31,6 +31,8 @@
 #include <graphene/chain/transaction_history_object.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/app/database_api.hpp>
+#include <graphene/db/exceptions.hpp>
+
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -508,9 +510,9 @@ namespace graphene { namespace app {
    {
       auto opt_block = _db.fetch_block_by_number(block_num);
       if(!opt_block)
-         FC_THROW_EXCEPTION(fc::block_not_found_exception, "Block number: ${bn}", ("bn", block_num));
+         FC_THROW_EXCEPTION(db::block_not_found_exception, "Block number: ${bn}", ("bn", block_num));
       if(opt_block->transactions.size() <= trx_num)
-         FC_THROW_EXCEPTION(fc::block_does_not_contain_requested_trx_exception, "Block number: ${bn} transaction index: ${ti}", ("bn", block_num)("ti", trx_num));
+         FC_THROW_EXCEPTION(db::block_does_not_contain_requested_trx_exception, "Block number: ${bn} transaction index: ${ti}", ("bn", block_num)("ti", trx_num));
       return opt_block->transactions[trx_num];
    }
 
@@ -984,7 +986,7 @@ namespace graphene { namespace app {
    vector<account_object> database_api_impl::search_accounts(const string& term, const string order, const object_id_type& id, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       vector<account_object> result;
 
       if (order == "+id")
@@ -1077,7 +1079,7 @@ namespace graphene { namespace app {
    map<string,account_id_type> database_api_impl::lookup_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
       map<string,account_id_type> result;
       
@@ -1233,7 +1235,7 @@ namespace graphene { namespace app {
    vector<asset_object> database_api_impl::list_assets(const string& lower_bound_symbol, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
       const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
       vector<asset_object> result;
       result.reserve(limit);
@@ -1327,7 +1329,7 @@ namespace graphene { namespace app {
    vector<non_fungible_token_object> database_api_impl::list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
       const auto& nfts_by_symbol = _db.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
       vector<non_fungible_token_object> result;
       result.reserve(limit);
@@ -1473,7 +1475,7 @@ namespace graphene { namespace app {
    map<string, miner_id_type> database_api_impl::lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       const auto& miners_by_id = _db.get_index_type<miner_index>().indices().get<graphene::db::by_id>();
       
       // we want to order miners by account name, but that name is in the account object
@@ -1512,7 +1514,7 @@ namespace graphene { namespace app {
    multimap< time_point_sec, price_feed> database_api_impl::get_feeds_by_miner(const account_id_type account_id, uint32_t count)const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
       auto& asset_idx = _db.get_index_type<asset_index>().indices().get<by_type>();
       auto mia_itr = asset_idx.lower_bound(true);
 
@@ -1546,7 +1548,7 @@ namespace graphene { namespace app {
    vector<optional<miner_object>> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& votes )const
    {
       if(votes.size() >= CURRENT_OUTPUT_LIMIT_1000)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Only ${l} votes can be queried at a time", ("l", CURRENT_OUTPUT_LIMIT_1000));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Only ${l} votes can be queried at a time", ("l", CURRENT_OUTPUT_LIMIT_1000));
       
       const auto& miner_idx = _db.get_index_type<miner_index>().indices().get<by_vote_id>();
       
@@ -1637,7 +1639,7 @@ namespace graphene { namespace app {
          }
 
          if (!acc_obj)
-            FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
+            FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
          acc_votes = acc_obj->options.votes;
       }
@@ -1801,7 +1803,7 @@ namespace graphene { namespace app {
       }
      
       if(!account)
-         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", name_or_id));
+         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${account}", ("account", name_or_id));
 
       try
       {
@@ -2035,7 +2037,7 @@ namespace graphene { namespace app {
    vector<account_id_type> database_api_impl::list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
       const auto& idx = _db.get_index_type<account_index>().indices().get<by_publishing_manager_and_name>();
       vector<account_id_type> result;
 
@@ -2227,13 +2229,13 @@ namespace
    fc::sha256 database_api::restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const {
       auto objects = get_objects({buying});
       if(objects.size() == 0)
-         FC_THROW_EXCEPTION(fc::buying_object_does_not_exist_exception, "Buying: ${buying}", ("buying", buying));
+         FC_THROW_EXCEPTION(db::buying_object_does_not_exist_exception, "Buying: ${buying}", ("buying", buying));
       
       const buying_object bo = objects.front().template as<buying_object>();
       auto content = get_content(bo.URI);
       
       if(!content)
-         FC_THROW_EXCEPTION(fc::content_object_does_not_exist_exception, "URI: ${uri}", ("uri", bo.URI));
+         FC_THROW_EXCEPTION(db::content_object_does_not_exist_exception, "URI: ${uri}", ("uri", bo.URI));
       
       const content_object co = *content;
       
@@ -2246,7 +2248,7 @@ namespace
       {
          auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key, message );
          if(result != decent::encrypt::ok)
-            FC_THROW_EXCEPTION(fc::decryption_of_key_particle_failed_exception, "");
+            FC_THROW_EXCEPTION(db::decryption_of_key_particle_failed_exception, "");
          ss.add_point( message );
       }
       
@@ -2290,7 +2292,7 @@ namespace
             const auto& s = my->get_seeder( seeders[i] );
 
             if(!s)
-              FC_THROW_EXCEPTION(fc::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
+              FC_THROW_EXCEPTION(db::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
             Ciphertext cp;
             point p = ss.split[i];
             decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
@@ -2433,7 +2435,7 @@ namespace
    {
       try{
          if(count > CURRENT_OUTPUT_LIMIT_100)
-            FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+            FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
          auto range = _db.get_index_type<subscription_index>().indices().get<by_from_expiration>().equal_range(account);
          vector<subscription_object> result;
          result.reserve(distance(range.first, range.second));
@@ -2456,7 +2458,7 @@ namespace
    {
       try{
          if(count > CURRENT_OUTPUT_LIMIT_100)
-            FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+            FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
          uint32_t i = count;
          const auto& range = _db.get_index_type<subscription_index>().indices().get<by_from>().equal_range(account);
          vector<subscription_object> result;
@@ -2483,7 +2485,7 @@ namespace
    {
       try{
          if(count > CURRENT_OUTPUT_LIMIT_100)
-            FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+            FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
          auto range = _db.get_index_type<subscription_index>().indices().get<by_to_expiration>().equal_range(account);
          vector<subscription_object> result;
          result.reserve(distance(range.first, range.second));
@@ -2508,7 +2510,7 @@ namespace
    {
       try{
          if(count > CURRENT_OUTPUT_LIMIT_100)
-            FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+            FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
          uint32_t i = count;
          const auto& range = _db.get_index_type<subscription_index>().indices().get<by_to>().equal_range(account);
          vector<subscription_object> result;
@@ -2625,7 +2627,7 @@ namespace
                                                              uint32_t count)const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
       
       vector<content_summary> result;
       result.reserve( count );
@@ -2671,7 +2673,7 @@ namespace
    vector<seeder_object> database_api_impl::list_seeders_by_price( uint32_t count )const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_price>();
       time_point_sec now = _db.head_block_time();
@@ -2700,7 +2702,7 @@ namespace
    vector<seeder_object> database_api_impl::list_seeders_by_upload( uint32_t count )const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       const auto& idx = _db.get_index_type<seeding_statistics_index>().indices().get<by_upload>();
       const auto& idx2 = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -2750,7 +2752,7 @@ namespace
    vector<seeder_object> database_api_impl::list_seeders_by_rating( uint32_t count )const
    {
      if(count > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_rating>();
       time_point_sec now = _db.head_block_time();

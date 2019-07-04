@@ -69,15 +69,15 @@
 namespace graphene { namespace chain {
 
    FC_DECLARE_EXCEPTION( chain_exception, 3000000, "blockchain exception" )
-   FC_DECLARE_DERIVED_EXCEPTION( database_query_exception,          graphene::chain::chain_exception, 3010000, "database query exception" )
-   FC_DECLARE_DERIVED_EXCEPTION( block_validate_exception,          graphene::chain::chain_exception, 3020000, "block validation exception" )
+   //FC_DECLARE_DERIVED_EXCEPTION( database_query_exception,          graphene::chain::chain_exception, 3010000, "database query exception" )
+   //FC_DECLARE_DERIVED_EXCEPTION( block_validate_exception,          graphene::chain::chain_exception, 3020000, "block validation exception" )
    FC_DECLARE_DERIVED_EXCEPTION( transaction_exception,             graphene::chain::chain_exception, 3030000, "transaction validation exception" )
    FC_DECLARE_DERIVED_EXCEPTION( operation_validate_exception,      graphene::chain::chain_exception, 3040000, "operation validation exception" )
    FC_DECLARE_DERIVED_EXCEPTION( operation_evaluate_exception,      graphene::chain::chain_exception, 3050000, "operation evaluation exception" )
    FC_DECLARE_DERIVED_EXCEPTION( utility_exception,                 graphene::chain::chain_exception, 3060000, "utility method exception" )
    FC_DECLARE_DERIVED_EXCEPTION( undo_database_exception,           graphene::chain::chain_exception, 3070000, "undo database exception" )
    FC_DECLARE_DERIVED_EXCEPTION( unlinkable_block_exception,        graphene::chain::chain_exception, 3080000, "unlinkable block" )
-   FC_DECLARE_DERIVED_EXCEPTION( black_swan_exception,              graphene::chain::chain_exception, 3090000, "black swan" )
+   //FC_DECLARE_DERIVED_EXCEPTION( black_swan_exception,              graphene::chain::chain_exception, 3090000, "black swan" )
 
    FC_DECLARE_DERIVED_EXCEPTION( tx_missing_active_auth,            graphene::chain::transaction_exception, 3030001, "missing required active authority" )
    FC_DECLARE_DERIVED_EXCEPTION( tx_missing_owner_auth,             graphene::chain::transaction_exception, 3030002, "missing required owner authority" )
@@ -86,10 +86,12 @@ namespace graphene { namespace chain {
    FC_DECLARE_DERIVED_EXCEPTION( tx_duplicate_sig,                  graphene::chain::transaction_exception, 3030005, "duplicate signature included" )
    FC_DECLARE_DERIVED_EXCEPTION( invalid_committee_approval,        graphene::chain::transaction_exception, 3030006, "committee account cannot directly approve transaction" )
    FC_DECLARE_DERIVED_EXCEPTION( insufficient_fee,                  graphene::chain::transaction_exception, 3030007, "insufficient fee" )
+   
+   FC_DECLARE_DERIVED_EXCEPTION( trx_must_have_at_least_one_op,     graphene::chain::transaction_exception, 3030008, "Transaction must have at least one operation.")     
 
    FC_DECLARE_DERIVED_EXCEPTION( invalid_pts_address,               graphene::chain::utility_exception, 3060001, "invalid pts address" )
-
    FC_DECLARE_DERIVED_EXCEPTION( pop_empty_chain,                   graphene::chain::undo_database_exception, 3070001, "there are no blocks to pop" )
+      
 
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( transfer );
    //GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( from_account_not_whitelisted, transfer, 1, "owner mismatch" )

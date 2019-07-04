@@ -84,7 +84,9 @@
 #include <graphene/wallet/wallet_utility.hpp>
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
+#include <graphene/wallet/exceptions.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/db/exceptions.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
 #include <decent/package/package.hpp>
@@ -531,7 +533,7 @@ public:
       auto rec = _remote_db->get_accounts({account_id}).front();
       
       if(!rec)
-         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
+         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
       return *rec;
    }
@@ -539,7 +541,7 @@ public:
    optional<account_object> find_account(const string& account_name_or_id) const
    {
       if(account_name_or_id.size() == 0)
-         FC_THROW_EXCEPTION(fc::account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
+         FC_THROW_EXCEPTION(account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
 
       if( auto id = maybe_id<account_id_type>(account_name_or_id) )
       {
@@ -551,7 +553,7 @@ public:
          {
             auto local_account = *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
             if(!rec)
-               FC_THROW_EXCEPTION(fc::account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
+               FC_THROW_EXCEPTION(account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
             if(local_account.id != rec->id)
                elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", rec->id));
             if(local_account.name != rec->name)
@@ -570,7 +572,7 @@ public:
    {
       auto rec = find_account(account_id);
       if(!rec)
-         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
+         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
       return *rec;
    }
 
@@ -578,7 +580,7 @@ public:
    {
       auto rec = find_account(account_name_or_id);
       if(!rec)
-         FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
+         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
       return *rec;
    }
 
@@ -2617,7 +2619,7 @@ public:
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             if(!s)
-               FC_THROW_EXCEPTION(fc::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
+               FC_THROW_EXCEPTION(db::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
             Ciphertext cp;
             point p = ss.split[i];
 
