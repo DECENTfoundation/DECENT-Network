@@ -33,7 +33,7 @@
 #include <tuple>
 #include <boost/tuple/tuple.hpp>
 #include <boost/circular_buffer.hpp>
-
+#include <boost/filesystem.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/mem_fun.hpp>

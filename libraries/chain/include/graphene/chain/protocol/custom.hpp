@@ -25,6 +25,7 @@
 
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/chain/protocol/asset.hpp>
 #include <fc/io/json.hpp>
 
 namespace graphene { namespace chain { 

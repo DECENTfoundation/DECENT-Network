@@ -24,8 +24,6 @@
  */
 #pragma once
 
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/authority.hpp>
 
 namespace graphene { namespace chain {
@@ -82,7 +80,7 @@ namespace graphene { namespace chain {
     */
 
    struct void_result{};
-   typedef fc::static_variant<void_result,graphene::db::object_id_type,asset> operation_result;
+   typedef fc::static_variant<void_result,graphene::db::object_id_type> operation_result;
 
    template<bool VIRTUAL = false>
    struct base_operation : public std::integral_constant<bool, VIRTUAL>

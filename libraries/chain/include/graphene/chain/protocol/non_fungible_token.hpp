@@ -1,7 +1,7 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
-#include <graphene/db/generic_index.hpp>
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/memo.hpp>
 
 namespace graphene { namespace chain {

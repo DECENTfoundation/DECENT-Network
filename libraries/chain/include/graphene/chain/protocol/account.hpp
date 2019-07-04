@@ -25,7 +25,7 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/ext.hpp>
-#include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/vote.hpp>
 #include <set>
 
@@ -182,4 +182,3 @@ FC_REFLECT( graphene::chain::account_update_operation,
 
 FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type, (basic_fee) )
 FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee) )
-
