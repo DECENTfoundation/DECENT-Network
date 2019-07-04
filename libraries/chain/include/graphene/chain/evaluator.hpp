@@ -121,12 +121,13 @@ namespace graphene { namespace chain {
       }
    };
 
-   template<typename Operation, typename Evaluator, bool Virtual = false>
+   template<typename Operation, typename Evaluator>
    class evaluator : public generic_evaluator
    {
    public:
       typedef Operation operation_type;
       typedef Evaluator evaluator_type;
+      static_assert(!operation_type::value, "Operation is virtual");
 
       virtual operation_result evaluate(const operation& o) final override
       {
@@ -163,10 +164,11 @@ namespace graphene { namespace chain {
    };
 
    template<typename Operation>
-   class evaluator<Operation, void, true> : public generic_evaluator
+   class evaluator<Operation, void> : public generic_evaluator
    {
    public:
       typedef Operation operation_type;
+      static_assert(operation_type::value, "Operation is not virtual");
 
       virtual operation_result evaluate(const operation& o) final override
       {
@@ -180,6 +182,6 @@ namespace graphene { namespace chain {
    };
 
    template<typename Operation>
-   using virtual_evaluator_t = evaluator<Operation, void, true>;
+   using virtual_evaluator_t = evaluator<Operation, void>;
 
 } }
