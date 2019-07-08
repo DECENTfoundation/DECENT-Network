@@ -970,13 +970,13 @@ namespace graphene { namespace app {
             boost::algorithm::to_lower(account_name);
             boost::algorithm::to_lower(search_term);
 
-            if (false == search_term.empty() &&
-                account_name.find(search_term) == std::string::npos &&
-                account_id_str.find(search_term) == std::string::npos)
-               continue;
-            
-            result.emplace_back(element);
-            --count;
+            if (search_term.empty() ||
+                account_name.find(search_term) != std::string::npos ||
+                account_id_str.find(search_term) != std::string::npos)
+            {
+               result.emplace_back(element);
+               --count;
+            }
          }
       }
    }
@@ -1022,12 +1022,11 @@ namespace graphene { namespace app {
             transaction_detail_object const& element = *itr_begin;
             ++itr_begin;
 
-            if (account != element.m_from_account &&
-                account != element.m_to_account)
-               continue;
-
-            result.emplace_back(element);
-            --count;
+            if (account == element.m_from_account || account == element.m_to_account)
+            {
+               result.emplace_back(element);
+               --count;
+            }
          }
       }
    }
@@ -2164,28 +2163,28 @@ namespace
          buying_object const& element = *itr_begin;
          ++itr_begin;
 
-         if (element.consumer != consumer)
-            continue;
+         if (element.consumer == consumer)
+         {
+            std::string title;
+            std::string description;
 
-         std::string title;
-         std::string description;
+            ContentObjectPropertyManager synopsis_parser(element.synopsis);
+            title = synopsis_parser.get<ContentObjectTitle>();
+            description = synopsis_parser.get<ContentObjectDescription>();
 
-         ContentObjectPropertyManager synopsis_parser(element.synopsis);
-         title = synopsis_parser.get<ContentObjectTitle>();
-         description = synopsis_parser.get<ContentObjectDescription>();
+            std::string search_term = term;
+            boost::algorithm::to_lower(search_term);
+            boost::algorithm::to_lower(title);
+            boost::algorithm::to_lower(description);
 
-         std::string search_term = term;
-         boost::algorithm::to_lower(search_term);
-         boost::algorithm::to_lower(title);
-         boost::algorithm::to_lower(description);
-
-         if (false == search_term.empty() &&
-             std::string::npos == title.find(search_term) &&
-             std::string::npos == description.find(search_term))
-            continue;
-
-         result.emplace_back(element);
-         --count;
+            if (search_term.empty() ||
+                std::string::npos != title.find(search_term) ||
+                std::string::npos != description.find(search_term))
+            {
+               result.emplace_back(element);
+               --count;
+            }
+         }
       }
    }
 }
