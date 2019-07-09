@@ -24,6 +24,9 @@
  */
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {

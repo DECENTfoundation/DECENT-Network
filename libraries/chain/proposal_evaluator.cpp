@@ -24,6 +24,7 @@
  */
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {

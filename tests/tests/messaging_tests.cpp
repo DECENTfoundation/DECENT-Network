@@ -32,7 +32,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
-
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/miner_object.hpp>
 
 #include <graphene/chain/custom_evaluator.hpp> //added

@@ -24,6 +24,7 @@
  */
 #include <graphene/chain/miner_evaluator.hpp>
 #include <graphene/chain/miner_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/vote.hpp>
 

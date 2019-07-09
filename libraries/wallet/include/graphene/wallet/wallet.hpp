@@ -26,6 +26,9 @@
 
 #include <graphene/app/api.hpp>
 #include <graphene/utilities/key_conversion.hpp>
+#include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <fc/api.hpp>
 

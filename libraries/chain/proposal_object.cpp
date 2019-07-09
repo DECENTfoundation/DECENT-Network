@@ -21,9 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/chain/database.hpp>
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 

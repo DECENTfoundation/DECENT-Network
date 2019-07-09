@@ -61,6 +61,7 @@
 #include <graphene/chain/non_fungible_token_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/db/simple_index.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>

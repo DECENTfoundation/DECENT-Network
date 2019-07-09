@@ -1,6 +1,7 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/non_fungible_token_evaluator.hpp>
 #include <graphene/chain/non_fungible_token_object.hpp>
+#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/hardfork.hpp>

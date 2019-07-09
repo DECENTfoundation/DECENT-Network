@@ -28,6 +28,7 @@
 
 namespace graphene { namespace chain {
 
+class database;
 
 /**
  *  @brief tracks the approval of a partially approved transaction 

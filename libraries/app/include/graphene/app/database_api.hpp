@@ -27,6 +27,9 @@
 #include <fc/api.hpp>
 
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>

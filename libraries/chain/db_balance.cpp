@@ -27,6 +27,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/miner_object.hpp>
 

@@ -32,6 +32,8 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/budget_record_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/miner_object.hpp>

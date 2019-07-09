@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/transfer_evaluator.hpp>
+#include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>

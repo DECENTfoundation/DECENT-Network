@@ -26,7 +26,10 @@
 #include <fc/smart_ref_impl.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
-
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
@@ -34,7 +37,6 @@
 #include <graphene/chain/transaction_detail_object.hpp>
 
 #include <algorithm>
-#include <graphene/chain/subscription_object.hpp>
 
 namespace graphene { namespace chain {
 

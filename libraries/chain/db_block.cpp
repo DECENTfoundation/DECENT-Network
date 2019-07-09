@@ -27,6 +27,7 @@
 #include <graphene/chain/db_with.hpp>
 #include <graphene/chain/hardfork.hpp>
 
+#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -35,7 +36,6 @@
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/exceptions.hpp>
-#include <graphene/chain/evaluator.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 

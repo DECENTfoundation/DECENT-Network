@@ -26,8 +26,7 @@
 #include <fc/uint128.hpp>
 
 #include <graphene/chain/protocol/chain_parameters.hpp>
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/database.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/db/object.hpp>
 
 namespace graphene { namespace chain {

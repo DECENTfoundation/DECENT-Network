@@ -25,6 +25,7 @@
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
