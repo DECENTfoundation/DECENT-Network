@@ -452,6 +452,15 @@ namespace graphene { namespace app {
          vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
 
          /**
+          * @brief Get a list of account statistics by ID.
+          * @note This function has semantics identical to \c get_objects().
+          * @param account_statistics_ids IDs of the account statistics to retrieve
+          * @return the account statistics corresponding to the provided IDs
+          * @ingroup DatabaseAPI_Account
+          */
+         vector<optional<account_statistics_object>> get_account_statistics(const vector<account_statistics_id_type>& account_statistics_ids)const;
+
+         /**
           * @brief Returns the operations on the named account.
           * @note This returns a list of transaction detail objects, which describe activity on the account.
           * @param account the account to search
@@ -543,6 +552,15 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Asset
           */
          vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+
+        /**
+         * @brief Get a list of asset dynamic data objects by ID.
+         * @note This function has semantics identical to \c get_objects().
+         * @param asset_dynamic_data_ids IDs of the asset dynamic data objects to retrieve
+         * @return the asset dynamic data objects corresponding to the provided IDs
+         * @ingroup DatabaseAPI_Asset
+         */
+        vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
 
          /**
           * @brief Converts asset into DCT, using actual price feed.
@@ -1079,6 +1097,7 @@ FC_API(graphene::app::database_api,
           (lookup_account_names)
           (lookup_accounts)
           (search_accounts)
+          (get_account_statistics)
           (search_account_history)
 
           // Balances
@@ -1091,6 +1110,7 @@ FC_API(graphene::app::database_api,
           (get_assets)
           (list_assets)
           (lookup_asset_symbols)
+          (get_asset_dynamic_data_objects)
           (price_to_dct)
           (get_real_supply)
 

@@ -111,6 +111,7 @@ namespace graphene { namespace app {
       vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
       map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
       vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit)const;
+      vector<optional<account_statistics_object>> get_account_statistics(const vector<account_statistics_id_type>& account_statistics_ids)const;
       vector<transaction_detail_object> search_account_history(account_id_type const& account,
                                                                string const& order,
                                                                object_id_type const& id,
@@ -130,6 +131,7 @@ namespace graphene { namespace app {
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
       share_type get_new_asset_per_block() const;
       share_type get_asset_per_block_by_block_num(uint32_t block_num)const;
+      vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
       asset price_to_dct( asset price )const;
 
       // Non Fungible Tokens
@@ -1031,6 +1033,25 @@ namespace graphene { namespace app {
       }
    }
 
+   vector<optional<account_statistics_object>> database_api::get_account_statistics(const vector<account_statistics_id_type>& account_statistics_ids)const
+   {
+      return my->get_account_statistics( account_statistics_ids );
+   }
+
+   vector<optional<account_statistics_object>> database_api_impl::get_account_statistics(const vector<account_statistics_id_type>& account_statistics_ids)const
+   {
+      vector<optional<account_statistics_object>> result; result.reserve(account_statistics_ids.size());
+      std::transform(account_statistics_ids.begin(), account_statistics_ids.end(), std::back_inserter(result),
+                     [this](account_statistics_id_type id) -> optional<account_statistics_object> {
+                        if(auto o = _db.find(id))
+                        {
+                           return *o;
+                        }
+                        return {};
+                     });
+      return result;
+   }
+
    vector<transaction_detail_object> database_api_impl::search_account_history(account_id_type const& account,
                                                                                string const& order,
                                                                                object_id_type const& id,
@@ -1268,6 +1289,25 @@ namespace graphene { namespace app {
                         }
                         auto itr = assets_by_symbol.find(symbol_or_id);
                         return itr == assets_by_symbol.end()? optional<asset_object>() : *itr;
+                     });
+      return result;
+   }
+
+   vector<optional<asset_dynamic_data_object>> database_api::get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
+   {
+      return my->get_asset_dynamic_data_objects( asset_dynamic_data_ids );
+   }
+
+   vector<optional<asset_dynamic_data_object>> database_api_impl::get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
+   {
+      vector<optional<asset_dynamic_data_object>> result; result.reserve(asset_dynamic_data_ids.size());
+      std::transform(asset_dynamic_data_ids.begin(), asset_dynamic_data_ids.end(), std::back_inserter(result),
+                     [this](asset_dynamic_data_id_type id) -> optional<asset_dynamic_data_object> {
+                        if(auto o = _db.find(id))
+                        {
+                           return *o;
+                        }
+                        return {};
                      });
       return result;
    }
