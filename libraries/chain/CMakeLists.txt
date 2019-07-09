@@ -14,6 +14,7 @@ add_library( graphene_chain
              fork_database.cpp
              genesis_state.cpp
              get_config.cpp
+             hardfork.cpp
              pts_address.cpp
              protocol/types.cpp
              protocol/authority.cpp

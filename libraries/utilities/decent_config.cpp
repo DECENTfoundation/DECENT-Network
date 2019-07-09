@@ -271,6 +271,8 @@ namespace decent {
        std::ofstream out_cfg(config_ini_filename.make_preferred().string());
        for( const auto &od : cfg_options.options() )
        {
+          if( od->description().find("INTERNAL:") == 0 ) // skip internal settings
+             continue;
           if( !od->description().empty() )
              out_cfg << "# " << od->description() << "\n";
           boost::any store;

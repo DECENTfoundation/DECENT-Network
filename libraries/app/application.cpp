@@ -28,6 +28,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/reverse.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <fc/io/fstream.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <graphene/utilities/time.hpp>
@@ -37,6 +38,7 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 namespace graphene { namespace app {
 using net::item_hash_t;
@@ -1066,7 +1068,7 @@ void application::set_program_options(boost::program_options::options_descriptio
       ("help,h", "Print this help message and exit.")
       ("version,v", "Print version information and exit.")
       ;
-   //param_validator pv("p2p-endpoint");
+
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
          ("seed-node,s", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
@@ -1100,6 +1102,19 @@ void application::set_program_options(boost::program_options::options_descriptio
          ;
    command_line_options.add(common_options);
    command_line_options.add(configuration_file_options);
+
+   // hidden settings only in config file
+   configuration_file_options.add_options()
+         ("fork-times", bpo::value<string>()->notifier([](const string& args) {
+               std::size_t fork = 0;
+               for(std::size_t i = 0, j = 0; i != std::string::npos; i = j) {
+                  FC_ASSERT(fork < graphene::chain::fork_times.size(), "Too many fork times, should be ${n}", ("n", graphene::chain::fork_times.size()));
+                  j = args.find(',', i ? ++i : i);
+                  graphene::chain::fork_times[fork++] = fc::time_point_sec::from_iso_string(boost::trim_copy(args.substr(i, j - i)));
+               }
+               FC_ASSERT(fork == graphene::chain::fork_times.size(), "Too few fork times, should be ${n}", ("n", graphene::chain::fork_times.size()));
+            }), "INTERNAL: List of comma separated fork times in ISO format")
+         ;
 }
 
 void application::initialize(const boost::filesystem::path& data_dir, const boost::program_options::variables_map& options)
