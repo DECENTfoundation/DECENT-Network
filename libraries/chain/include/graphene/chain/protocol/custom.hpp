@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
       void get_messaging_payload(message_payload& pl) const
       {
          FC_ASSERT(data.size());
-         variant tmp = fc::json::from_string(&data[0]);
+         variant tmp = fc::json::from_string(std::string(data.begin(), data.end()));
          fc::from_variant(tmp, pl);
       }
 
