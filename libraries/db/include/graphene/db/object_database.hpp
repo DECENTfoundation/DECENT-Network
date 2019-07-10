@@ -27,6 +27,7 @@
 #include <graphene/db/undo_database.hpp>
 
 #include <fc/log/logger.hpp>
+#include <fc/optional.hpp>
 
 #include <map>
 
@@ -127,6 +128,21 @@ namespace graphene { namespace db {
             assert(  !obj || nullptr != dynamic_cast<const T*>(obj) );
             return static_cast<const T*>(obj);
          }
+
+         template<typename ObjectType>
+         vector<fc::optional<ObjectType>> get_objects(const vector<object_id<ObjectType::space_id,ObjectType::type_id,ObjectType>>& ids)const
+         {
+               vector<fc::optional<ObjectType>> result; result.reserve(ids.size());
+               std::transform(ids.begin(), ids.end(), std::back_inserter(result),
+                              [this](object_id<ObjectType::space_id,ObjectType::type_id,ObjectType> id) -> fc::optional<ObjectType> {
+                                 if(auto o = find(id))
+                                 {
+                                    return *o;
+                                 }
+                                 return {};
+                              });
+               return result;
+            }
 
          template<uint8_t SpaceID, uint8_t TypeID, typename T>
          const T* find( object_id<SpaceID,TypeID,T> id )const { return find<T>(id); }
