@@ -2,7 +2,6 @@
 
 #ifndef STDAFX_H
 #include <QBoxLayout>
-#include <QSignalMapper>
 #endif
 
 #include "overview_tab.hpp"
@@ -17,7 +16,6 @@ namespace gui_wallet
 Overview_tab::Overview_tab(QWidget* pParent,
                            DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
-, m_pAccountSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
 {
    m_pTableWidget->set_columns({
@@ -60,21 +58,15 @@ void Overview_tab::timeToUpdate(const std::string& result) {
    
    m_pTableWidget->setRowCount(static_cast<int>(iSize));
 
-   if (m_pAccountSignalMapper)
-      delete m_pAccountSignalMapper;
-   m_pAccountSignalMapper = new QSignalMapper(this);  // the last one will be deleted thanks to it's parent
-   QObject::connect(m_pAccountSignalMapper, (void (QSignalMapper::*)(QString const&))&QSignalMapper::mapped,
-                    this, &Overview_tab::slot_AccountChanged);
-   
    for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto const& content = contents[iIndex];
       
-      std::string name = content["name"].get<std::string>();
-      std::string id = content["id"].get<std::string>();
+      QString name = QString::fromStdString(content["name"].get<std::string>());
+      QString id = QString::fromStdString(content["id"].get<std::string>());
       
-      m_pTableWidget->setItem(static_cast<int>(iIndex), 1, new QTableWidgetItem(QString::fromStdString(name)));
-      m_pTableWidget->setItem(static_cast<int>(iIndex), 0, new QTableWidgetItem(QString::fromStdString(id)));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 1, new QTableWidgetItem(name));
+      m_pTableWidget->setItem(static_cast<int>(iIndex), 0, new QTableWidgetItem(id));
 
       // Transaction Button
       //
@@ -82,12 +74,10 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       pTransactionButton->setToolTip(tr("Transactions"));
       pTransactionButton->setEnabled(false);
       
-      QObject::connect(pTransactionButton, &DecentButton::clicked,
-                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pTransactionButton, &DecentButton::clicked, [=]() { slot_AccountChanged(name); });
       QObject::connect(pTransactionButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transactions);
-      
-      m_pAccountSignalMapper->setMapping(pTransactionButton, QString::fromStdString(name));
+
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 2, pTransactionButton);
 
       // Details Button
@@ -97,9 +87,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       pDetailsButton->setEnabled(false);
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 4, pDetailsButton);
 
-      m_pAccountSignalMapper->setMapping(pDetailsButton, QString::fromStdString(name));
-      QObject::connect(pDetailsButton, &DecentButton::clicked,
-                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pDetailsButton, &DecentButton::clicked, [=]() { slot_AccountChanged(name); });
       QObject::connect(pDetailsButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Details);
 
@@ -111,9 +99,7 @@ void Overview_tab::timeToUpdate(const std::string& result) {
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 3, pTransferButton);
             
 
-      m_pAccountSignalMapper->setMapping(pTransferButton, QString::fromStdString(name));
-      QObject::connect(pTransferButton, &DecentButton::clicked,
-                       m_pAccountSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
+      QObject::connect(pTransferButton, &DecentButton::clicked, [=]() { slot_AccountChanged(name); });
       QObject::connect(pTransferButton, &DecentButton::clicked,
                        this, &Overview_tab::slot_Transfer);
 

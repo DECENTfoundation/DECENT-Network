@@ -3,10 +3,6 @@
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
-#ifndef STDAFX_H
-class QSignalMapper;
-#endif
-
 namespace gui_wallet
 {
    class DecentTable;
@@ -39,8 +35,6 @@ namespace gui_wallet
 
    protected:
       DecentTable* m_pTableWidget;
-      QSignalMapper* m_pDetailsSignalMapper;
-      QSignalMapper* m_pResubmitSignalMapper;
       QString m_strSearchTerm;
       std::vector<SDigitalContent> _digital_contents;
    };

@@ -5,7 +5,6 @@
 #include <QCheckBox>
 #include <QDateEdit>
 #include <QFileDialog>
-#include <QSignalMapper>
 #include <QStyleFactory>
 #include <QTimer>
 
@@ -328,12 +327,6 @@ void Upload_popup::slot_ChooseSeeders()
 
    enum {eCheckBox, eName, ePrice, eSpace};
 
-   QSignalMapper* pSeederCheckSignalMapper = new QSignalMapper(pDialog);
-   QObject::connect(pSeederCheckSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &Upload_popup::slot_SeederChanged);
-   QObject::connect(pSeederCheckSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &Upload_popup::slot_UpdateStatus);
-
    pSeedersTable->setRowCount(static_cast<int>(m_arrPublishers.size()));
    for (size_t iIndex = 0; iIndex < m_arrPublishers.size(); ++iIndex)
    {
@@ -361,9 +354,7 @@ void Upload_popup::slot_ChooseSeeders()
       if (seederItem.second)
          pCheckBox->setCheckState(Qt::Checked);
 
-      QObject::connect(pCheckBox, &QCheckBox::stateChanged,
-                       pSeederCheckSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      pSeederCheckSignalMapper->setMapping(pCheckBox, static_cast<int>(iIndex));
+      QObject::connect(pCheckBox, &QCheckBox::stateChanged, [=]() { slot_SeederChanged(static_cast<int>(iIndex)); slot_UpdateStatus(); });
    }
 
    QObject::connect(pOKButton, &QPushButton::clicked,

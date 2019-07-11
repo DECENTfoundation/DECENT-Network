@@ -3,7 +3,6 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QDateTime>
-#include <QSignalMapper>
 #endif
 
 #include "upload_tab.hpp"
@@ -20,8 +19,6 @@ Upload_tab::Upload_tab(QWidget* pParent,
                        DecentButton* pUploadButton)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
-, m_pDetailsSignalMapper(nullptr)
-, m_pResubmitSignalMapper(nullptr)
 {
    m_pTableWidget->set_columns({
       {tr("Title"), 20},
@@ -146,18 +143,6 @@ void Upload_tab::ShowDigitalContentsGUI()
 
    enum {eTitle, eRating, eSize, ePrice, eCreated, eRemaining, eStatus, eIcon, eResubmit};
 
-   if (m_pDetailsSignalMapper)
-      delete m_pDetailsSignalMapper;
-   m_pDetailsSignalMapper = new QSignalMapper(this);
-   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &Upload_tab::slot_ShowContentPopup);
-
-   if (m_pResubmitSignalMapper)
-      delete m_pResubmitSignalMapper;
-   m_pResubmitSignalMapper = new QSignalMapper(this);
-   QObject::connect(m_pResubmitSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &Upload_tab::slot_UploadPopupResubmit);
-
    for (size_t iIndex = 0; iIndex < _digital_contents.size(); ++iIndex)
    {
       SDigitalContent const& content = _digital_contents[iIndex];
@@ -225,13 +210,8 @@ void Upload_tab::ShowDigitalContentsGUI()
 //      resubmit_button->setText("res");
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 8, resubmit_button);
 
-      QObject::connect(info_icon, &DecentButton::clicked,
-                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pDetailsSignalMapper->setMapping(info_icon, static_cast<int>(iIndex));
-      
-      QObject::connect(resubmit_button, &DecentButton::clicked,
-                       m_pResubmitSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pResubmitSignalMapper->setMapping(resubmit_button, static_cast<int>(iIndex));
+      QObject::connect(info_icon, &DecentButton::clicked, [=]() { slot_ShowContentPopup(static_cast<int>(iIndex)); });
+      QObject::connect(resubmit_button, &DecentButton::clicked, [=]() { slot_UploadPopupResubmit(static_cast<int>(iIndex)); });
    }
 }
 

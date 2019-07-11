@@ -3,10 +3,6 @@
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
-#ifndef STDAFX_H
-class QSignalMapper;
-#endif
-
 namespace gui_wallet
 {
 class DecentTable;
@@ -40,8 +36,6 @@ public slots:
    void slot_SearchTermChanged(QString const& strSearchTerm);
    
 protected:
-   QSignalMapper*          m_pExtractSignalMapper;
-   QSignalMapper*          m_pDetailsSignalMapper;
    DecentTable*            m_pTableWidget;
    int                     m_iActiveItemIndex;
    QString                 m_strSearchTerm;

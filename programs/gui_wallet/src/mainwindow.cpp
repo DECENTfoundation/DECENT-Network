@@ -654,7 +654,11 @@ void MainWindow::slot_updateAccountBalance(QAction *pAsset)
 void MainWindow::updateBalance(const QString& balance)
 {
    QFontMetrics fm(m_pBalance->font());
+#if (QT_VERSION < QT_VERSION_CHECK(5, 11, 0))
    int pxWidth = fm.width(balance);
+#else
+   int pxWidth = fm.horizontalAdvance(balance);
+#endif
 
    m_pBalance->setMinimumWidth(pxWidth + 10);  //10 is border..
    m_pBalance->setText(balance);

@@ -1,10 +1,6 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 
-#ifndef STDAFX_H
-class QSignalMapper;
-#endif
-
 #include "gui_wallet_tabcontentmanager.hpp"
 
 namespace gui_wallet
@@ -36,7 +32,6 @@ namespace gui_wallet
       
    protected:
       DecentTable*   m_pTableWidget;
-      QSignalMapper* m_pDetailsSignalMapper;
       QString        m_strSearchTerm;
       
       std::vector<SDigitalContent>  _digital_contents;

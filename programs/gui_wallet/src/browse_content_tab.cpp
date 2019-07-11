@@ -3,7 +3,6 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QDateTime>
-#include <QSignalMapper>
 #endif
 
 #include "browse_content_tab.hpp"
@@ -18,7 +17,6 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
                                    DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
 , m_pTableWidget(new DecentTable(this))
-, m_pDetailsSignalMapper(nullptr)
 {
    m_pTableWidget->set_columns({
       {tr("Title"), 20},
@@ -161,12 +159,6 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
    
    m_pTableWidget->setRowCount(static_cast<int>(_digital_contents.size()));
 
-   if (m_pDetailsSignalMapper)
-      delete m_pDetailsSignalMapper;
-   m_pDetailsSignalMapper = new QSignalMapper(this);
-   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &BrowseContentTab::slot_Details);
-   
    int index = 0;
    for(SDigitalContent& item: _digital_contents)
    {
@@ -239,9 +231,7 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       info_icon->setEnabled(false);
       info_icon->setToolTip(tr("Details"));
 
-      QObject::connect(info_icon, &DecentButton::clicked,
-                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pDetailsSignalMapper->setMapping(info_icon, index);
+      QObject::connect(info_icon, &DecentButton::clicked, [=]() { slot_Details(index); });
 
       //info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(index, colIndex, info_icon);

@@ -1275,7 +1275,7 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
          QWidget* cell_widget = this->cellWidget(_current_highlighted_row, i);
 
          if(cell != nullptr) {
-            cell->setBackgroundColor(QColor(255,255,255));
+            cell->setBackground(QColor(255,255,255));
             cell->setForeground(QColor::fromRgb(0,0,0));
          }
 
@@ -1297,7 +1297,7 @@ void DecentTable::mouseMoveEvent(QMouseEvent * event)
       QWidget* cell_widget = this->cellWidget(row, i);
 
       if (cell != nullptr) {
-         cell->setBackgroundColor(QColor(27,176,104));
+         cell->setBackground(QColor(27,176,104));
          cell->setForeground(QColor::fromRgb(255,255,255));
       }
 

@@ -3,10 +3,6 @@
 
 #include "gui_wallet_tabcontentmanager.hpp"
 
-#ifndef STDAFX_H
-class QSignalMapper;
-#endif
-
 namespace gui_wallet
 {
    class DecentTable;
@@ -34,7 +30,6 @@ namespace gui_wallet
       void slot_SortingChanged(int index);
 
    public:
-      QSignalMapper* m_pAccountSignalMapper;
       DecentTable* m_pTableWidget;
       QString m_strSearchTerm;
       QString m_strSelectedAccount;      

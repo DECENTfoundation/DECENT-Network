@@ -3,7 +3,6 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QFileDialog>
-#include <QSignalMapper>
 #endif
 
 #include "purchased_tab.hpp"
@@ -26,8 +25,6 @@ struct SDigitalContentPurchase : public SDigitalContent
 PurchasedTab::PurchasedTab(QWidget* pParent,
                            DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
-, m_pExtractSignalMapper(nullptr)
-, m_pDetailsSignalMapper(nullptr)
 , m_pTableWidget(new DecentTable(this))
 , m_iActiveItemIndex(-1)
 {
@@ -152,18 +149,6 @@ void PurchasedTab::ShowDigitalContentsGUI()
 {
    m_pTableWidget->setRowCount(static_cast<int>(_current_content.size()));
 
-   if (m_pExtractSignalMapper)
-      delete m_pExtractSignalMapper;
-   m_pExtractSignalMapper = new QSignalMapper(this);  // the last one will be deleted thanks to it's parent
-   QObject::connect(m_pExtractSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &PurchasedTab::slot_ExtractPackage);
-
-   if (m_pDetailsSignalMapper)
-      delete m_pDetailsSignalMapper;
-   m_pDetailsSignalMapper = new QSignalMapper(this);  // similar to extract signal handler
-   QObject::connect(m_pDetailsSignalMapper, (void (QSignalMapper::*)(int))&QSignalMapper::mapped,
-                    this, &PurchasedTab::slot_Details);
-
    for (size_t iIndex = 0; iIndex < _current_content.size(); ++iIndex)
    {
       SDigitalContentPurchase& contentObject = _current_content[iIndex];
@@ -181,9 +166,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
       //info_icon->setAlignment(Qt::AlignCenter);
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 6, info_icon);
 
-      QObject::connect(info_icon, &DecentButton::clicked,
-                       m_pDetailsSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-      m_pDetailsSignalMapper->setMapping(info_icon, static_cast<int>(iIndex));
+      QObject::connect(info_icon, &DecentButton::clicked, [=]() { slot_Details(static_cast<int>(iIndex)); });
 
       m_pTableWidget->setItem(static_cast<int>(iIndex), 0, new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget->setItem(static_cast<int>(iIndex), 1, new QTableWidgetItem(QString::number(contentObject.size) + tr(" MB")));
@@ -225,9 +208,7 @@ void PurchasedTab::ShowDigitalContentsGUI()
          extract_icon->setEnabled(false);
          //extract_icon->setAlignment(Qt::AlignCenter);
 
-         QObject::connect(extract_icon, &DecentButton::clicked,
-                          m_pExtractSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-         m_pExtractSignalMapper->setMapping(extract_icon, static_cast<int>(iIndex));
+         QObject::connect(extract_icon, &DecentButton::clicked, [=]() { slot_ExtractPackage(static_cast<int>(iIndex)); });
 
          m_pTableWidget->setCellWidget(static_cast<int>(iIndex), 5, extract_icon);
       }
