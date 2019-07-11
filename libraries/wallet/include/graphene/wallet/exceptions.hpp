@@ -62,19 +62,18 @@ namespace graphene { namespace wallet {
       voting_proxy_is_already_set_to_voter_code = 25,
       account_was_already_voting_for_itself_code = 26,
       account_was_already_voting_for_miners_code = 27,
-      no_account_or_miner_with_that_name_code    = 28,
 
-      cannot_find_package_code                  = 29,
-      package_is_not_in_valid_state_code        = 30,
-      no_such_content_at_this_url_code          = 31,
-      duplicity_at_the_list_of_coauthors_not_allowed_code = 32,
-      the_prices_of_the_content_per_region_cannot_be_empty_code = 33,
-      invalid_content_expiration_code           = 34,
-      invalid_content_uri_code                  = 35,
-      content_not_available_for_this_region_code = 36,
-      cannot_find_download_object_code          = 37,
+      cannot_find_package_code                  = 28,
+      package_is_not_in_valid_state_code        = 29,
+      no_such_content_at_this_url_code          = 30,
+      duplicity_at_the_list_of_coauthors_not_allowed_code = 31,
+      the_prices_of_the_content_per_region_cannot_be_empty_code = 32,
+      invalid_content_expiration_code           = 33,
+      invalid_content_uri_code                  = 34,
+      content_not_available_for_this_region_code = 35,
+      cannot_find_download_object_code          = 36,
 
-      could_not_find_matching_subscription_code = 38,
+      could_not_find_matching_subscription_code = 37,
 
    };
 
@@ -113,8 +112,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_DERIVED_EXCEPTION(account_is_already_not_voting_miner_exception, wallet_exception, wallet_exception_base_code + account_is_already_not_voting_for_miner_code, "Account is already not voting for miner.");
    FC_DECLARE_DERIVED_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, wallet_exception, wallet_exception_base_code + voting_proxy_is_already_set_to_voter_code, "Voting proxy is already set to voter.");
    FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_itself_exception, wallet_exception, wallet_exception_base_code + account_was_already_voting_for_itself_code, "Account was already voting for itself.");
-   FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_miners_exception, wallet_exception, wallet_exception_base_code + account_was_already_voting_for_miners_code, "Account was already voting for miners.");
-   FC_DECLARE_DERIVED_EXCEPTION(no_account_or_miner_with_that_name_exception, wallet_exception, wallet_exception_base_code + no_account_or_miner_with_that_name_code, "No account or miner with that name.");
+   FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_miners_exception, wallet_exception, wallet_exception_base_code + account_was_already_voting_for_miners_code, "Account was already voting for miners.");   
    // content
    FC_DECLARE_DERIVED_EXCEPTION(cannot_find_package_exception, wallet_exception, wallet_exception_base_code + cannot_find_package_code, "Cannot find package.");
    FC_DECLARE_DERIVED_EXCEPTION(package_is_not_in_valid_state_exception, wallet_exception, wallet_exception_base_code + package_is_not_in_valid_state_code, "Package is not in valid state.");

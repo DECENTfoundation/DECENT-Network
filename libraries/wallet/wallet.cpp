@@ -1775,19 +1775,13 @@ public:
          else
          {
             // then maybe it's the owner account
-            try
-            {
-               account_id_type owner_account_id = get_account(owner_account).get_id();
-               fc::optional<miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
-               if (miner)
-                  return *miner;
-               else
-                  FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
-            }
-            catch (const fc::exception&)
-            {
-               FC_THROW_EXCEPTION(no_account_or_miner_with_that_name_exception, "Account: ${id}", ("id", owner_account));
-            }
+            
+            account_id_type owner_account_id = get_account(owner_account).get_id();
+            fc::optional<miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
+            if (miner)
+               return *miner;
+            else
+               FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
          }
       }
       FC_CAPTURE_AND_RETHROW( (owner_account) )
