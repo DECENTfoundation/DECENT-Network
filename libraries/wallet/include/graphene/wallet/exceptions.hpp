@@ -62,7 +62,7 @@ namespace graphene { namespace wallet {
       voting_proxy_is_already_set_to_voter_code = 25,
       account_was_already_voting_for_itself_code = 26,
       account_was_already_voting_for_miners_code = 27,
-      no_account_or_miner_with_that_name         = 28,
+      no_account_or_miner_with_that_name_code    = 28,
 
       cannot_find_package_code                  = 29,
       package_is_not_in_valid_state_code        = 30,
