@@ -72,6 +72,7 @@
 #include <fc/rpc/api_connection.hpp>
 
 #include <graphene/app/api.hpp>
+#include <graphene/app/exceptions.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
@@ -680,7 +681,9 @@ public:
 
    void set_wallet_filename(const string &wallet_filename)
    {
-      FC_ASSERT( !wallet_filename.empty() );
+      if(wallet_filename.empty())
+         FC_THROW_EXCEPTION(wallet_filename_cannot_be_empty_exception, "");
+
       _wallet_filename = wallet_filename;
    }
 
@@ -1018,22 +1021,29 @@ public:
    }
    void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const operation& op)
    {
-      FC_ASSERT(_builder_transactions.count(transaction_handle));
+      if(!_builder_transactions.count(transaction_handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+      
       _builder_transactions[transaction_handle].operations.emplace_back(op);
    }
    void replace_operation_in_builder_transaction(transaction_handle_type handle,
                                                  uint32_t operation_index,
                                                  const operation& new_op)
    {
-      FC_ASSERT(_builder_transactions.count(handle));
+      if(!_builder_transactions.count(handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+      
       signed_transaction& trx = _builder_transactions[handle];
       FC_ASSERT( operation_index < trx.operations.size());
       trx.operations[operation_index] = new_op;
    }
    asset set_fees_on_builder_transaction(transaction_handle_type handle, const string& fee_asset = string(GRAPHENE_SYMBOL))
    {
-      FC_ASSERT(_builder_transactions.count(handle));
-      FC_ASSERT( fee_asset == GRAPHENE_SYMBOL, "fees can be paid in core asset");
+      if(!_builder_transactions.count(handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+      
+      if(fee_asset != GRAPHENE_SYMBOL)
+         FC_THROW_EXCEPTION(fees_can_be_paid_in_core_asset_exception, "");      
 
       auto fee_asset_obj = get_asset(fee_asset);
       asset total_fee = fee_asset_obj.amount(0);
@@ -1046,12 +1056,14 @@ public:
    }
    transaction preview_builder_transaction(transaction_handle_type handle)
    {
-      FC_ASSERT(_builder_transactions.count(handle));
+      if(!_builder_transactions.count(handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
       return _builder_transactions[handle];
    }
    signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true)
    {
-      FC_ASSERT(_builder_transactions.count(transaction_handle));
+      if(!_builder_transactions.count(transaction_handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
 
       return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
    }
@@ -1060,7 +1072,9 @@ public:
       time_point_sec expiration = time_point::now() + fc::minutes(1),
       uint32_t review_period_seconds = 0, bool broadcast = true)
    {
-      FC_ASSERT(_builder_transactions.count(handle));
+      if(!_builder_transactions.count(handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+
       proposal_create_operation op;
       op.expiration_time = expiration;
       signed_transaction& trx = _builder_transactions[handle];
@@ -1080,7 +1094,9 @@ public:
       time_point_sec expiration = time_point::now() + fc::minutes(1),
       uint32_t review_period_seconds = 0, bool broadcast = true)
    {
-      FC_ASSERT(_builder_transactions.count(handle));
+      if(!_builder_transactions.count(handle))
+         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+
       proposal_create_operation op;
       op.fee_paying_account = get_account(account_name_or_id).get_id();
       op.expiration_time = expiration;
@@ -1108,7 +1124,9 @@ public:
                                        const string&  registrar_account,
                                        bool broadcast = false)
    { try {
-      FC_ASSERT(!find_account(name).valid(), "Account with that name already exists!");
+      if(find_account(name).valid())
+         FC_THROW_EXCEPTION(account_already_exist_exception, "");
+
       account_create_operation account_create_op;
 
       // TODO:  process when pay_from_account is ID
@@ -1144,7 +1162,7 @@ public:
             fc::optional< fc::ecc::private_key > privkey = wif_to_key( it->second );
             if( !privkey.valid() )
             {
-               FC_ASSERT( false, "Malformed private key in _keys" );
+               FC_THROW_EXCEPTION(malformed_private_key_exception, "");
             }
             tx.sign( *privkey, _chain_id );
          }
@@ -1164,7 +1182,9 @@ public:
    {
       try
       {
-         FC_ASSERT(!find_account(name).valid(), "Account with that name already exists!");
+         if(find_account(name).valid())
+            FC_THROW_EXCEPTION(account_already_exist_exception, "");
+
          account_create_operation account_create_op;
          account_object acc = get_account( registrar_account );
 
@@ -1225,8 +1245,8 @@ public:
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
-
-         FC_ASSERT(!find_account(account_name).valid(), "Account with that name already exists!");
+         if(find_account(account_name).valid())
+            FC_THROW_EXCEPTION(account_already_exist_exception, "");
 
          int active_key_index = find_first_unused_derived_key_index(owner_privkey);
          fc::ecc::private_key active_privkey = derive_private_key( key_to_wif(owner_privkey), active_key_index);
@@ -1357,7 +1377,9 @@ public:
                                                bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
-      FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
+      
+      if(find_asset(symbol).valid())
+         FC_THROW_EXCEPTION(asset_already_exists_exception, "");
 
       asset_create_operation create_op;
       create_op.issuer = issuer_account.id;
@@ -1521,7 +1543,9 @@ public:
                                              bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
-      FC_ASSERT(!find_asset(symbol).valid(), "Asset with that symbol already exists!");
+
+      if(find_asset(symbol).valid())
+         FC_THROW_EXCEPTION(asset_already_exists_exception, "");
 
       asset_create_operation create_op;
       create_op.issuer = issuer_account.id;
@@ -1604,7 +1628,8 @@ public:
                                                 bool transferable,
                                                 bool broadcast /* = false */)
    {
-      FC_ASSERT(!find_non_fungible_token(symbol).valid(), "Non fungible token with that symbol already exists!");
+      if(find_non_fungible_token(symbol).valid())
+         FC_THROW_EXCEPTION(nft_already_exist_exception, "");
 
       non_fungible_token_create_definition_operation create_op;
       create_op.symbol = symbol;
@@ -1745,7 +1770,7 @@ public:
             std::vector<fc::optional<miner_object>> miner_objects = _remote_db->get_miners(ids_to_get);
             if (miner_objects.front())
                return *miner_objects.front();
-            FC_THROW("No miner is registered for id ${id}", ("id", owner_account));
+            FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));            
          }
          else
          {
@@ -1757,11 +1782,11 @@ public:
                if (miner)
                   return *miner;
                else
-                  FC_THROW("No miner is registered for account ${account}", ("account", owner_account));
+                  FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
             }
             catch (const fc::exception&)
             {
-               FC_THROW("No account or miner named ${account}", ("account", owner_account));
+               FC_THROW_EXCEPTION(no_account_or_miner_with_that_name_exception, "Account: ${id}", ("id", owner_account));
             }
          }
       }
@@ -1887,19 +1912,20 @@ public:
       account_object voting_account_object = get_account(voting_account);
       account_id_type miner_owner_account_id = get_account(miner).get_id();
       fc::optional<miner_object> miner_obj = _remote_db->get_miner_by_account(miner_owner_account_id);
-      if (!miner_obj)
-         FC_THROW("Account ${miner} is not registered as a miner", ("miner", miner));
+      if(!miner_obj)
+         FC_THROW_EXCEPTION(account_is_not_registered_as_miner_exception, "Account: ${miner}", ("miner", miner));
+       
       if (approve)
       {
          auto insert_result = voting_account_object.options.votes.insert(miner_obj->vote_id);
          if (!insert_result.second)
-            FC_THROW("Account ${account} was already voting for miner ${miner}", ("account", voting_account)("miner", miner));
+            FC_THROW_EXCEPTION(account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));            
       }
       else
       {
          auto votes_removed = voting_account_object.options.votes.erase(miner_obj->vote_id);
          if (!votes_removed)
-            FC_THROW("Account ${account} is already not voting for miner ${miner}", ("account", voting_account)("miner", miner));
+            FC_THROW_EXCEPTION(account_is_already_not_voting_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
       }
       account_update_operation account_update_op;
       account_update_op.account = voting_account_object.id;
@@ -1921,14 +1947,16 @@ public:
       if (voting_account)
       {
          account_id_type new_voting_account_id = get_account(*voting_account).get_id();
-         if (account_object_to_modify.options.voting_account == new_voting_account_id)
-            FC_THROW("Voting proxy for ${account} is already set to ${voter}", ("account", account_to_modify)("voter", *voting_account));
+         if(account_object_to_modify.options.voting_account == new_voting_account_id)
+            FC_THROW_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, "For: ${account} voter: ${voter}", ("account", account_to_modify)("voter", *voting_account));
+            
          account_object_to_modify.options.voting_account = new_voting_account_id;
       }
       else
       {
-         if (account_object_to_modify.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT)
-            FC_THROW("Account ${account} is already voting for itself", ("account", account_to_modify));
+         if(account_object_to_modify.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT)
+            FC_THROW_EXCEPTION(account_was_already_voting_for_itself_exception, "Account: ${account}", ("account", account_to_modify));
+            
          account_object_to_modify.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
       }
 
@@ -1950,9 +1978,9 @@ public:
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
 
-      if (account_object_to_modify.options.num_miner == desired_number_of_miners)
-         FC_THROW("Account ${account} is already voting for ${miners} miners",
-                  ("account", account_to_modify)("miners", desired_number_of_miners));
+      if(account_object_to_modify.options.num_miner == desired_number_of_miners)
+         FC_THROW_EXCEPTION(account_was_already_voting_for_miners_exception, "Account: ${account} number of miners: ${miners} ", ("account", account_to_modify)("miners", desired_number_of_miners));
+         
       account_object_to_modify.options.num_miner = desired_number_of_miners;
 
       account_update_operation account_update_op;
@@ -2592,11 +2620,14 @@ public:
             }
          }
 
-         // checking for duplicates
-         FC_ASSERT( co_authors.size() == co_authors_id_to_split.size(), "Duplicity in the list of co-authors is not allowed." );
+         // checking for duplicates         
+         if(co_authors.size() != co_authors_id_to_split.size())
+            FC_THROW_EXCEPTION(duplicity_at_the_list_of_coauthors_not_allowed_exception, "");
 
-         FC_ASSERT(false == price_amounts.empty());
-         FC_ASSERT(time_point_sec(fc::time_point::now()) <= expiration);
+         if(price_amounts.empty())
+            FC_THROW_EXCEPTION(the_prices_of_the_content_per_region_cannot_be_empty_exception, "");
+         if(time_point_sec(fc::time_point::now()) > expiration)
+            FC_THROW_EXCEPTION(invalid_content_expiration_exception, "");
 
          CryptoPP::Integer secret(randomGenerator, 256);
          while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
@@ -2626,7 +2657,7 @@ public:
             decent::encrypt::DIntegerString a(p.first);
             decent::encrypt::DIntegerString b(p.second);
 
-            elog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
+            ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
 
             decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
             keys.parts.push_back(cp);
@@ -2682,7 +2713,7 @@ signed_transaction content_cancellation(const string& author,
          account_id_type acc = get_account(consumer).id;
          optional<buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
          if (!bobj) {
-            FC_THROW("Can not find download object");
+            FC_THROW_EXCEPTION(cannot_find_download_object_exception, "");
          }
 
          optional<content_object> content = _remote_db->get_content( URI );
@@ -2746,7 +2777,7 @@ signed_transaction content_cancellation(const string& author,
 
            if (! cf_in.good())
            {
-               FC_THROW("File not found or an I/O error");
+               FC_THROW_EXCEPTION(fc::file_not_found_exception, "File: ${f}", ("f", command_file_name));
            }
 
            my_api.Connect(cancel_token, { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
@@ -2807,7 +2838,7 @@ signed_transaction content_cancellation(const string& author,
 
          if (!content)
          {
-            FC_THROW("Invalid content URI");
+            FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
          }
 
          uint32_t region_code_from = RegionCodes::OO_none;
@@ -2822,7 +2853,7 @@ signed_transaction content_cancellation(const string& author,
 
          optional<asset> op_price = content->price.GetPrice(region_code_from);
          if (!op_price)
-            FC_THROW("content not available for this region");
+            FC_THROW_EXCEPTION(content_not_available_for_this_region_exception, "");
 
 
          request_to_buy_operation request_op;
@@ -2991,7 +3022,9 @@ signed_transaction content_cancellation(const string& author,
 
          account_id_type account = get_account( account_id_or_name ).get_id();
          fc::optional<subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
-         FC_ASSERT(subscription_obj, "Could not find subscription matching ${subscription}", ("subscription", subscription_id));
+         
+         if(!subscription_obj)
+            FC_THROW_EXCEPTION(could_not_find_matching_subcription_exception, "Subscription: ${subscription}", ("subscription", subscription_id));
 
          automatic_renewal_of_subscription_operation aros_op;
          aros_op.consumer = account;
@@ -3027,7 +3060,7 @@ signed_transaction content_cancellation(const string& author,
          decent::encrypt::DIntegerString a(message.first);
          decent::encrypt::DIntegerString b(message.second);
 
-         elog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
+         ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
          i++;
          ss.add_point( message );
       }
@@ -3039,8 +3072,9 @@ signed_transaction content_cancellation(const string& author,
 
    pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
    {
-      fc::optional<content_object> co = _remote_db->get_content( URI );
-      FC_ASSERT( co.valid(), "Content does not exist.");
+      fc::optional<content_object> co = _remote_db->get_content( URI );      
+      if(!co.valid())
+         FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
       pair<account_id_type, vector<account_id_type>> result;
       result.first = co->author;
       for( auto const& co_author : co->co_authors )
@@ -3326,8 +3360,9 @@ signed_transaction content_cancellation(const string& author,
    operation get_prototype_operation( const string& operation_name )
    {
       auto it = _prototype_ops.find( operation_name );
-      if( it == _prototype_ops.end() )
-         FC_THROW("Unsupported operation: \"${operation_name}\"", ("operation_name", operation_name));
+      if(it == _prototype_ops.end())
+         FC_THROW_EXCEPTION(unsupported_operation_exception, "Operation name: ${operation_name}", ("operation_name", operation_name));
+         
       return it->second;
    }
 

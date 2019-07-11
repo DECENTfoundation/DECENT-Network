@@ -13,7 +13,8 @@ signed_transaction_info wallet_api::propose_transfer(const string& proposer,
                                                      const string& memo,
                                                      time_point_sec expiration)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->propose_transfer(proposer, from, to, amount, asset_symbol, memo, expiration);
 }
 
@@ -22,7 +23,8 @@ signed_transaction_info wallet_api::propose_parameter_change(const string& propo
                                                              const variant_object& changed_values,
                                                              bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->propose_parameter_change( proposing_account, expiration_time, changed_values, broadcast );
 }
 
@@ -31,7 +33,8 @@ signed_transaction_info wallet_api::propose_fee_change(const string& proposing_a
                                                        const variant_object& changed_fees,
                                                        bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
 }
 
@@ -40,6 +43,7 @@ signed_transaction_info wallet_api::approve_proposal(const string& fee_paying_ac
                                                      const approval_delta& delta,
                                                      bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
 }
