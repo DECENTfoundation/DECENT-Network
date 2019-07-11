@@ -518,25 +518,6 @@ namespace graphene { namespace chain {
          double                            _reindexing_percent = 0;
    };
 
-   namespace detail
-   {
-       template<int... Is>
-       struct seq { };
-
-       template<int N, int... Is>
-       struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
-
-       template<int... Is>
-       struct gen_seq<0, Is...> : seq<Is...> { };
-
-       template<typename T, int... Is>
-       void for_each(T&& t, const account_object& a, seq<Is...>)
-       {
-           auto l = { (std::get<Is>(t)(a), 0)... };
-           (void)l;
-       }
-   }
-
 } }
 
 FC_REFLECT(graphene::chain::database::votes_gained, (account_name)(votes))

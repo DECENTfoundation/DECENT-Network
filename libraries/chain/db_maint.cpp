@@ -63,13 +63,21 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
    return refs;
 }
 
+template<typename T, std::size_t... Is>
+void for_each_helper(T&& t, const account_object& a, std::index_sequence<Is...>)
+{
+   auto l = { (std::get<Is>(t)(a), 0)... };
+   (void)l;
+}
+
 template<class... Types>
 void database::perform_account_maintenance(std::tuple<Types...> helpers)
 {
    const auto& idx = get_index_type<account_index>().indices().get<by_name>();
    for( const account_object& a : idx )
-      detail::for_each(helpers, a, detail::gen_seq<sizeof...(Types)>());
+      for_each_helper(helpers, a, std::make_index_sequence<sizeof...(Types)>());
 }
+
 void database::update_active_miners()
 { try {
    assert( _miner_count_histogram_buffer.size() > 0 );
