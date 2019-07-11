@@ -10,7 +10,7 @@ Building DCore
 
 For Ubuntu 18.04 LTS or later, execute in console:
 
-    sudo apt-get install apt-transport-https curl lsb-release
+    sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
     sudo apt-get update
@@ -19,7 +19,7 @@ For Ubuntu 18.04 LTS or later, execute in console:
 
 For Ubuntu 16.04 LTS, execute in console:
 
-    sudo apt-get install apt-transport-https curl lsb-release
+    sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
     sudo apt-get update
@@ -28,7 +28,7 @@ For Ubuntu 16.04 LTS, execute in console:
 
 For Debian 9, execute in console:
 
-    sudo apt-get install apt-transport-https curl lsb-release
+    sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/debian $(lsb_release -cs) libpbc"
     sudo apt-get update
@@ -37,6 +37,7 @@ For Debian 9, execute in console:
 
 For Fedora 29 or later, execute in console:
 
+    sudo dnf install curl
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
     sudo curl https://docs.decent.ch/assets/bintray-decentfoundation.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
     sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
