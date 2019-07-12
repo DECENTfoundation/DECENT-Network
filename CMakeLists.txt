@@ -52,11 +52,7 @@ if( APPLE )
 
         list( APPEND CMAKE_PREFIX_PATH
               "${HOMEBREW_PREFIX}/opt/openssl"
-              "${HOMEBREW_PREFIX}/opt/boost"
-              "${HOMEBREW_PREFIX}/opt/pbc"
-              "${HOMEBREW_PREFIX}/opt/gmp"
-              "${HOMEBREW_PREFIX}/opt/cryptopp"
-              "${HOMEBREW_PREFIX}/opt/qt5"
+              "${HOMEBREW_PREFIX}/opt/qt"
             )
     endif()
 endif()
