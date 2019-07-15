@@ -6,6 +6,8 @@
 #ifndef STDAFX_H
 #include <QMainWindow>
 
+#include <graphene/wallet/wallet.hpp>
+
 class QStackedWidget;
 class QComboBox;
 class QCheckBox;

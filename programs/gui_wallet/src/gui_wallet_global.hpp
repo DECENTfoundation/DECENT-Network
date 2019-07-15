@@ -103,13 +103,12 @@ namespace gui_wallet
    {
       Q_OBJECT
    public:
-      WalletOperator(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
-      ~WalletOperator() override;
+      WalletOperator(const boost::filesystem::path &wallet_file);
+      ~WalletOperator();
 
       void cancel();
+      void connect(const graphene::wallet::server_data &ws);
 
-   public slots:
-      void slot_connect();
    signals:
       void signal_connected(std::string const& str_error);
    public:

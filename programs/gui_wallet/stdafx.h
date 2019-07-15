@@ -28,6 +28,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
 #include <graphene/wallet/wallet_utility.hpp>
+#include <graphene/wallet/wallet.hpp>
 
 #include <decent/about.hpp>
 #include <decent/decent_config.hpp>

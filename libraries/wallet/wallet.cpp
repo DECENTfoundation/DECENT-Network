@@ -2734,7 +2734,7 @@ signed_transaction content_cancellation(const string& author,
    {
        string result = "";
        std::atomic_bool cancel_token(false);
-       decent::wallet_utility::WalletAPI my_api(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
+       decent::wallet_utility::WalletAPI my_api(get_wallet_filename());
        bool contains_submit_content_async = false;
 
        try
@@ -2747,7 +2747,7 @@ signed_transaction content_cancellation(const string& author,
                FC_THROW("File not found or an I/O error");
            }
 
-           my_api.Connect(cancel_token);
+           my_api.Connect(cancel_token, { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
 
            while (std::getline(cf_in, current_line))
            {

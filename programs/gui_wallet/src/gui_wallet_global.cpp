@@ -14,6 +14,8 @@
 #include <boost/filesystem.hpp>
 
 #include <fc/interprocess/signals.hpp>
+
+#include <graphene/wallet/wallet.hpp>
 #endif
 
 #include "gui_wallet_global.hpp"
@@ -474,8 +476,8 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
-: m_wallet_api(wallet_file, ws)
+WalletOperator::WalletOperator(const boost::filesystem::path &wallet_file)
+: m_wallet_api(wallet_file)
 , m_cancellation_token(false)
 {
 }
@@ -487,12 +489,12 @@ void WalletOperator::cancel()
    m_cancellation_token = true;
 }
 
-void WalletOperator::slot_connect()
+void WalletOperator::connect(const graphene::wallet::server_data &ws)
 {
    std::string str_error;
    try
    {
-      m_wallet_api.Connect(m_cancellation_token);
+      m_wallet_api.Connect(m_cancellation_token, ws);
    }
    catch(const std::exception& ex)
    {
@@ -634,10 +636,10 @@ void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_f
 
 
       bNeedNewConnection = true;
-      m_p_wallet_operator = new WalletOperator(wallet_file, ws);
+      m_p_wallet_operator = new WalletOperator(wallet_file);
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
       QObject::connect(this, &Globals::signal_connect,
-                       m_p_wallet_operator, &WalletOperator::slot_connect);
+                       m_p_wallet_operator, [=]() { m_p_wallet_operator->connect(ws); });
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
 

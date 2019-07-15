@@ -1,5 +1,6 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/wallet/wallet_utility.hpp>
+#include <graphene/wallet/wallet.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/network/http/websocket.hpp>
@@ -137,12 +138,8 @@ namespace wallet_utility
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
+   WalletAPI::WalletAPI(const boost::filesystem::path &wallet_file)
    : m_wallet_file(wallet_file)
-   , m_ws(ws)
-   , m_pthread(nullptr)
-   , m_pimpl(nullptr)
-   , m_mutex()
    {
    }
 
@@ -150,24 +147,23 @@ namespace wallet_utility
    {
    }
 
-   void WalletAPI::Connect(std::atomic_bool& cancellation_token)
+   void WalletAPI::Connect(std::atomic_bool& cancellation_token, const graphene::wallet::server_data &ws)
    {
       if (IsConnected())
          throw wallet_exception("already connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
-
       m_pthread.reset(new fc::thread("wallet_api_service"));
 
       fc::future<string> future_connect =
-      m_pthread->async([this, &cancellation_token] () -> string
+      m_pthread->async([this, &cancellation_token, &ws] () -> string
                        {
                           std::string error;
                           while (! cancellation_token)
                           {
                              try
                              {
-                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file, m_ws));
+                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file, ws));
                                 break;
                              }
                              catch(wallet_exception const& ex)
