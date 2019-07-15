@@ -56,7 +56,7 @@ digest_type transaction::sig_digest( const chain_id_type& chain_id )const
 void transaction::validate() const
 {
    if(operations.size() == 0)
-      FC_THROW_EXCEPTION(trx_must_have_at_least_one_op, "Trx: ${trx}", ("trx", *this));
+      FC_THROW_EXCEPTION(trx_must_have_at_least_one_op_exception, "Trx: ${trx}", ("trx", *this));
   
    int index = 0;
    try {
@@ -306,7 +306,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
 
    if( !allow_committee )
       GRAPHENE_ASSERT( required_active.find(GRAPHENE_MINER_ACCOUNT) == required_active.end(),
-                       invalid_committee_approval, "Committee account may only propose transactions" );
+                       invalid_committee_approval_exception, "Committee account may only propose transactions" );
 
    sign_state s(sigs,get_active);
    s.max_recursion = max_recursion_depth;
@@ -317,7 +317,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
 
    for( const auto& auth : other )
    {
-      GRAPHENE_ASSERT( s.check_authority(&auth), tx_missing_other_auth, "Missing Authority ${auth}", ("auth",auth) );
+      GRAPHENE_ASSERT( s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority ${auth}", ("auth",auth) );
    }
 
    // fetch all of the top level authorities
@@ -325,19 +325,19 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
    {
       GRAPHENE_ASSERT( s.check_authority(id) ||
                        s.check_authority(get_owner(id)),
-                       tx_missing_active_auth, "Missing Active Authority ${id}", ("id",id) );
+                       tx_missing_active_auth_exception, "Missing Active Authority ${id}", ("id",id) );
    }
 
    for( auto id : required_owner )
    {
       GRAPHENE_ASSERT( owner_approvals.find(id) != owner_approvals.end() ||
                        s.check_authority(get_owner(id)), 
-                       tx_missing_owner_auth, "Missing Owner Authority ${id}", ("id",id) );
+                       tx_missing_owner_auth_exception, "Missing Owner Authority ${id}", ("id",id) );
    }
 
    GRAPHENE_ASSERT(
       !s.remove_unused_signatures(),
-      tx_irrelevant_sig,
+      tx_irrelevant_sig_exception,
       "Unnecessary signature(s) detected"
       );
 } FC_CAPTURE_AND_RETHROW( (ops)(sigs) ) }
@@ -360,7 +360,7 @@ void verify_authority1(const vector<operation>& ops, const public_key_type& sigs
       
       for (const auto& auth : other)
       {
-         GRAPHENE_ASSERT(s.check_authority(&auth), tx_missing_other_auth, "Missing Authority", ("auth", auth));
+         GRAPHENE_ASSERT(s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority", ("auth", auth));
       }
       
       // fetch all of the top level authorities
@@ -368,14 +368,14 @@ void verify_authority1(const vector<operation>& ops, const public_key_type& sigs
       {
          GRAPHENE_ASSERT(s.check_authority(id) ||
             s.check_authority(get_owner(id)),
-            tx_missing_active_auth, "Missing Active Authority ${id}", ("id", id));
+            tx_missing_active_auth_exception, "Missing Active Authority ${id}", ("id", id));
       }
       
       for (auto id : required_owner)
       {
          GRAPHENE_ASSERT(
             s.check_authority(get_owner(id)),
-            tx_missing_owner_auth, "Missing Owner Authority ${id}", ("id", id));
+            tx_missing_owner_auth_exception, "Missing Owner Authority ${id}", ("id", id));
       }
    } FC_CAPTURE_AND_RETHROW((ops)(sigs))
 }
@@ -388,7 +388,7 @@ flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id
    {
       GRAPHENE_ASSERT(
          result.insert( fc::ecc::public_key(sig,d) ).second,
-         tx_duplicate_sig,
+         tx_duplicate_sig_exception,
          "Duplicate Signature detected" );
    }
    return result;
@@ -447,9 +447,9 @@ set<public_key_type> signed_transaction::minimize_required_signatures(
          graphene::chain::verify_authority( operations, result, get_active, get_owner, max_recursion );
          continue;  // element stays erased if verify_authority is ok
       }
-      catch( const tx_missing_owner_auth& ) {}
-      catch( const tx_missing_active_auth& ) {}
-      catch( const tx_missing_other_auth& ) {}
+      catch( const tx_missing_owner_auth_exception& ) {}
+      catch( const tx_missing_active_auth_exception& ) {}
+      catch( const tx_missing_other_auth_exception& ) {}
       result.insert( k );
    }
    return set<public_key_type>( result.begin(), result.end() );

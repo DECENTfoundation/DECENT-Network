@@ -2291,7 +2291,7 @@ namespace graphene { namespace net { namespace detail {
         reply_message.item_hashes_available = _delegate->get_block_ids(fetch_blockchain_item_ids_message_received.blockchain_synopsis,
                                                                        reply_message.total_remaining_item_count);
       }
-      catch (const peer_is_on_an_unreachable_fork&)
+      catch (const peer_is_on_an_unreachable_fork_exception&)
       {
         dlog("Peer is on a fork and there's no set of blocks we can provide to switch them to our fork");
         // we reply with an empty list as if we had an empty blockchain; 
@@ -2419,7 +2419,7 @@ namespace graphene { namespace net { namespace detail {
       // in the second case, we should mark this peer as one we're unable to sync with and
       // disconnect them.
       if (reference_point != item_hash_t() && synopsis.empty())
-        FC_THROW_EXCEPTION(block_older_than_undo_history, "You are on a fork I'm unable to switch to");
+        FC_THROW_EXCEPTION(block_older_than_undo_history_exception, "You are on a fork I'm unable to switch to");
 #endif
 
       if( number_of_blocks_after_reference_point )
@@ -2466,7 +2466,7 @@ namespace graphene { namespace net { namespace detail {
         peer->item_ids_requested_from_peer = boost::make_tuple( blockchain_synopsis, fc::time_point::now() );
         peer->send_message( fetch_blockchain_item_ids_message(_sync_item_type, blockchain_synopsis ) );
       }
-      catch (const block_older_than_undo_history& e)
+      catch (const block_older_than_undo_history_exception& e)
       {
         synopsis_exception = e;
       }
@@ -3097,7 +3097,7 @@ namespace graphene { namespace net { namespace detail {
 
         client_accepted_block = true;
       }
-      catch (const block_older_than_undo_history& e)
+      catch (const block_older_than_undo_history_exception& e)
       {
         wlog("Failed to push sync block ${num} (id:${id}): block is on a fork older than our undo history would "
              "allow us to switch to: ${e}",
@@ -3495,7 +3495,7 @@ namespace graphene { namespace net { namespace detail {
       {
         throw;
       }
-      catch (const unlinkable_block_exception& e) 
+      catch (const unlinkable_block_resync_peer_exception& e)
       {
         restart_sync_exception = e;
       }
@@ -4670,7 +4670,7 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       if (is_connection_to_endpoint_in_progress(remote_endpoint))
-        FC_THROW_EXCEPTION(already_connected_to_requested_peer, "already connected to requested endpoint ${endpoint}",
+        FC_THROW_EXCEPTION(already_connected_to_requested_peer_exception, "already connected to requested endpoint ${endpoint}",
                            ("endpoint", remote_endpoint));
 
       dlog("node_impl::connect_to_endpoint(${endpoint})", ("endpoint", remote_endpoint));

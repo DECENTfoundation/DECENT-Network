@@ -26,13 +26,25 @@
 
 namespace graphene { namespace net {
    // registered in node.cpp 
+
+   enum net_exception_code
+   {
+      already_connected_to_requested_peer_code  = 1,
+      block_older_than_undo_history_code        = 2,
+      peer_is_on_an_unreachable_fork_code       = 3,
+      unlinkable_block_resync_peer_code         = 4,
+      //send_queue_overflow_code = 
+      //insufficient_relay_fee_code = 
+   };
    
-   FC_DECLARE_EXCEPTION( net_exception, 90000, "P2P Networking Exception" ); 
-   FC_DECLARE_DERIVED_EXCEPTION( send_queue_overflow,                   graphene::net::net_exception, 90001, "send queue for this peer exceeded maximum size" ); 
-   FC_DECLARE_DERIVED_EXCEPTION( insufficient_relay_fee,                graphene::net::net_exception, 90002, "insufficient relay fee" );
-   FC_DECLARE_DERIVED_EXCEPTION( already_connected_to_requested_peer,   graphene::net::net_exception, 90003, "already connected to requested peer" );
-   FC_DECLARE_DERIVED_EXCEPTION( block_older_than_undo_history,         graphene::net::net_exception, 90004, "block is older than our undo history allows us to process" );
-   FC_DECLARE_DERIVED_EXCEPTION( peer_is_on_an_unreachable_fork,        graphene::net::net_exception, 90005, "peer is on another fork" );
-   FC_DECLARE_DERIVED_EXCEPTION( unlinkable_block_exception,            graphene::net::net_exception, 90006, "unlinkable block" )
+   FC_DECLARE_EXCEPTION( net_exception, fc::net_exception_base_code, "P2P Networking Exception" );
+
+   FC_DECLARE_DERIVED_EXCEPTION( already_connected_to_requested_peer_exception,   net_exception, fc::net_exception_base_code + already_connected_to_requested_peer_code, "Already connected to requested peer." );
+   FC_DECLARE_DERIVED_EXCEPTION( block_older_than_undo_history_exception,         net_exception, fc::net_exception_base_code + block_older_than_undo_history_code, "Block is older than our undo history allows us to process." );
+   FC_DECLARE_DERIVED_EXCEPTION( peer_is_on_an_unreachable_fork_exception,        net_exception, fc::net_exception_base_code + peer_is_on_an_unreachable_fork_code, "Peer is on another fork." );
+   FC_DECLARE_DERIVED_EXCEPTION( unlinkable_block_resync_peer_exception,          net_exception, fc::net_exception_base_code + unlinkable_block_resync_peer_code, "Need of resync with peer due to unlinkable block.");
+   //FC_DECLARE_DERIVED_EXCEPTION( send_queue_overflow_exception,                   net_exception, fc::net_exception_base_code + send_queue_overflow_code, "Send queue for this peer exceeded maximum size." );
+   //FC_DECLARE_DERIVED_EXCEPTION( insufficient_relay_fee_exception,                net_exception, fc::net_exception_base_code + insufficient_relay_fee_code, "Insufficient relay fee." );
+   //
 
 } }

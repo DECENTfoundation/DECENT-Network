@@ -43,7 +43,7 @@ namespace graphene { namespace chain {
 
       if( !is_valid() )
       {
-         FC_THROW_EXCEPTION( invalid_pts_address, "invalid pts_address ${a}", ("a", base58str) );
+         FC_THROW_EXCEPTION( invalid_pts_address_exception, "invalid pts_address ${a}", ("a", base58str) );
       }
    }
 

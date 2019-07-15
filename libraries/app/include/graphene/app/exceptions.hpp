@@ -29,7 +29,6 @@
 namespace graphene {
    namespace app {
 
-#define app_exception_base_code 200
       enum app_exception_code {
          database_not_available_code                     = 1,
          at_least_one_account_needs_to_be_specified_code = 2,
@@ -39,13 +38,13 @@ namespace graphene {
       };
 
       
-      FC_DECLARE_EXCEPTION(app_exception, app_exception_base_code, "app exception")
+      FC_DECLARE_EXCEPTION(app_exception, fc::app_exception_base_code, "App exception")
 
-      FC_DECLARE_DERIVED_EXCEPTION(database_not_available_exception, app_exception, app_exception_base_code + database_not_available_code, "Database not available.")
-      FC_DECLARE_DERIVED_EXCEPTION(at_least_one_account_needs_to_be_specified_exception, app_exception, app_exception_base_code + at_least_one_account_needs_to_be_specified_code, "At leas one account needs to be specified.")
-      FC_DECLARE_DERIVED_EXCEPTION(malformed_private_key_exception, app_exception, app_exception_base_code + malformed_private_key_code, "Malformed private_key.")
-      FC_DECLARE_DERIVED_EXCEPTION(api_not_available_exception, app_exception, app_exception_base_code + api_not_available_code, "API not available.")
-      FC_DECLARE_DERIVED_EXCEPTION(database_already_used_exception, app_exception, app_exception_base_code + database_already_used_code, "Database is already used by another process.")
+      FC_DECLARE_DERIVED_EXCEPTION(database_not_available_exception, app_exception, fc::app_exception_base_code + database_not_available_code, "Database not available.")
+      FC_DECLARE_DERIVED_EXCEPTION(at_least_one_account_needs_to_be_specified_exception, app_exception, fc::app_exception_base_code + at_least_one_account_needs_to_be_specified_code, "At leas one account needs to be specified.")
+      FC_DECLARE_DERIVED_EXCEPTION(malformed_private_key_exception, app_exception, fc::app_exception_base_code + malformed_private_key_code, "Malformed private_key.")
+      FC_DECLARE_DERIVED_EXCEPTION(api_not_available_exception, app_exception, fc::app_exception_base_code + api_not_available_code, "API not available.")
+      FC_DECLARE_DERIVED_EXCEPTION(database_already_used_exception, app_exception, fc::app_exception_base_code + database_already_used_code, "Database is already used by another process.")
          
    }
 }

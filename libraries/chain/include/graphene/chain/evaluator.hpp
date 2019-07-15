@@ -139,7 +139,7 @@ namespace graphene { namespace chain {
          {
             share_type required_fee = calculate_fee_for_operation(op);
             GRAPHENE_ASSERT( core_fee_paid >= required_fee,
-                       insufficient_fee,
+                       insufficient_fee_exception,
                        "Insufficient Fee Paid",
                        ("core_fee_paid",core_fee_paid)("required", required_fee) );
          }
