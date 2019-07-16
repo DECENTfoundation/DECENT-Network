@@ -39,15 +39,15 @@ namespace decent {
       return cryptopp_version_text;
    }
 
-   about_info_daemon get_about_daemon()
+   about_info get_about_daemon()
    {
-      std::string daemon_version( graphene::utilities::git_revision_description );
-      const size_t pos = daemon_version.find( '/' );
-      if( pos != std::string::npos && daemon_version.size() > pos )
-         daemon_version = daemon_version.substr( pos + 1 );
+      std::string version( graphene::utilities::git_revision_description );
+      const size_t pos = version.find( '/' );
+      if( pos != std::string::npos && version.size() > pos )
+         version = version.substr( pos + 1 );
 
       return {
-         daemon_version,
+         version,
          graphene::utilities::git_revision_sha,
          fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) ),
          fc::git_revision_sha,
@@ -69,15 +69,15 @@ namespace decent {
       };
    }
 
-   about_info_wallet get_about_wallet()
+   about_info get_about_wallet()
    {
-      std::string client_version( graphene::utilities::git_revision_description );
-      const size_t pos = client_version.find( '/' );
-      if( pos != std::string::npos && client_version.size() > pos )
-         client_version = client_version.substr( pos + 1 );
+      std::string version( graphene::utilities::git_revision_description );
+      const size_t pos = version.find( '/' );
+      if( pos != std::string::npos && version.size() > pos )
+         version = version.substr( pos + 1 );
 
       return {
-         client_version,
+         version,
          graphene::utilities::git_revision_sha,
          fc::get_approximate_relative_time_string( fc::time_point_sec( graphene::utilities::git_revision_unix_timestamp ) ),
          fc::git_revision_sha,

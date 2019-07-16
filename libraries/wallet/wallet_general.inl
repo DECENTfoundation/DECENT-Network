@@ -1,6 +1,6 @@
 
 
-variant_object wallet_api::about() const
+decent::about_info_wallet wallet_api::about() const
 {
     return my->about();
 }

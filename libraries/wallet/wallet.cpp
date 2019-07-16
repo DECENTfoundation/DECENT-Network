@@ -503,11 +503,11 @@ public:
       return result;
    }
 
-   variant_object about() const
+   decent::about_info_wallet about() const
    {
-      fc::mutable_variant_object result;
-      result["about_cli_wallet"] = decent::get_about_wallet();
-      result["about_decentd"] = _remote_db->about();
+      decent::about_info_wallet result;
+      result.daemon_info = _remote_db->about();
+      result.wallet_info = decent::get_about_wallet();
       return result;
    }
 

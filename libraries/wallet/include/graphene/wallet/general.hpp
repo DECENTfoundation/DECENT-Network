@@ -31,7 +31,7 @@
  * @return compile time info and client and dependencies versions
  * @ingroup WalletAPI_General
  */
-variant_object                    about() const;
+decent::about_info_wallet                    about() const;
 
 /**
  * @brief Retrieve a full, signed block with info.
