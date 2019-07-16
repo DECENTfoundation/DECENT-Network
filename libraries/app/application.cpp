@@ -981,6 +981,11 @@ public:
       "(([^:]+):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))" // dnsname:port. it is problem to test dnsname. in this case dnsname can be anything without character :
       "$"; 
 
+   const std::string REG_EXPR_CHECKPOINT =
+      "^"
+      "\\x5B[0-9]{1,19},\"([0-9a-fA-F]){40}\"\\x5D"      
+      "$";
+
    void check_reg_expr(const std::regex& rx, const std::string& val)
    {
       bool matches_reg_expr = std::regex_match(val, rx);
@@ -1038,6 +1043,13 @@ public:
                FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val[i]));
             }
          }
+      } else
+      if(_name == "checkpoint")
+      {
+         const std::regex rx(REG_EXPR_CHECKPOINT);
+         for(size_t i = 0; i < val.size(); i++) {
+            check_reg_expr(rx, val);            
+         }
       }
    }
    void operator()(const boost::filesystem::path& p)
@@ -1072,7 +1084,7 @@ void application::set_program_options(boost::program_options::options_descriptio
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
          ("seed-node,s", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
-         ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+         ("checkpoint,c", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("checkpoint")), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090")->notifier(param_validator_app("rpc-endpoint")), "Endpoint for websocket RPC to listen on")
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
