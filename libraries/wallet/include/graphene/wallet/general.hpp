@@ -87,7 +87,7 @@ fc::time_point_sec head_block_time() const;
  * @return information about current state of the blockchain
  * @ingroup WalletAPI_General
  */
-variant                           info();
+wallet_info                           info();
 
 /**
  * @brief Returns a list of all commands supported by the wallet API.

@@ -25,7 +25,7 @@ variant wallet_api::get_object( object_id_type id ) const
    return my->_remote_db->get_objects({id});
 }
 
-variant wallet_api::info()
+wallet_info wallet_api::info()
 {
    return my->info();
 }

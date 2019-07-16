@@ -485,21 +485,21 @@ public:
          s.set_fee(op);
    }
 
-   variant info() const
+   wallet_info info() const
    {
       auto chain_props = get_chain_properties();
       auto global_props = get_global_properties();
       auto dynamic_props = get_dynamic_global_properties();
-      fc::mutable_variant_object result;
-      result["head_block_num"] = dynamic_props.head_block_number;
-      result["head_block_id"] = dynamic_props.head_block_id;
-      result["head_block_age"] = fc::get_approximate_relative_time_string(dynamic_props.time,
-                                                                          time_point_sec(time_point::now()),
-                                                                          " old");
-      result["next_maintenance_time"] = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
-      result["chain_id"] = chain_props.chain_id;
-      result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
-      result["active_miners"] = global_props.active_miners;
+      wallet_info result;
+      result.head_block_num = dynamic_props.head_block_number;
+      result.head_block_id = dynamic_props.head_block_id;
+      result.head_block_age = fc::get_approximate_relative_time_string(dynamic_props.time,
+                                                                       time_point_sec(time_point::now()),
+                                                                       " old");
+      result.next_maintenance_time = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
+      result.chain_id = chain_props.chain_id;
+      result.participation = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
+      result.active_miners = global_props.active_miners;
       return result;
    }
 

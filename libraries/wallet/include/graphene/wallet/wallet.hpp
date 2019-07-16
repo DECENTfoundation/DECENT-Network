@@ -112,6 +112,17 @@ namespace graphene { namespace wallet {
          string                    update_time;
       };
 
+      struct wallet_info
+      {
+         uint32_t head_block_num;
+         block_id_type head_block_id;
+         std::string head_block_age;
+         std::string next_maintenance_time;
+         chain_id_type chain_id;
+         double participation;
+         vector<miner_id_type> active_miners;
+      };
+
       struct el_gamal_key_pair
       {
          DInteger private_key;
@@ -478,6 +489,16 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_server)
             (ws_user)
             (ws_password)
+          )
+
+FC_REFLECT( graphene::wallet::wallet_info,
+            (head_block_num)
+            (head_block_id)
+            (head_block_age)
+            (next_maintenance_time)
+            (chain_id)
+            (participation)
+            (active_miners)
           )
 
 FC_REFLECT( graphene::wallet::el_gamal_key_pair, (private_key)(public_key) )
