@@ -112,6 +112,12 @@ namespace graphene { namespace wallet {
          string                    update_time;
       };
 
+      struct wallet_about
+      {
+         decent::about_info daemon_info;
+         decent::about_info wallet_info;
+      };
+
       struct wallet_info
       {
          uint32_t head_block_num;
@@ -222,7 +228,7 @@ namespace graphene { namespace wallet {
             price = paid_price_before_exchange;
             this->id = std::string(obj.id);
          }
-         
+
          std::string         id;
          std::string         author_account;
          uint32_t            times_bought;
@@ -287,7 +293,7 @@ namespace graphene { namespace wallet {
          class wallet_api_impl;
       }
 
-   
+
 /**
  * This wallet assumes it is connected to the database server with a high-bandwidth, low-latency connection and
  * performs minimal caching. This API could be provided locally to be used by a web interface.
@@ -489,6 +495,11 @@ FC_REFLECT( graphene::wallet::wallet_data,
             (ws_server)
             (ws_user)
             (ws_password)
+          )
+
+FC_REFLECT( graphene::wallet::wallet_about,
+            (daemon_info)
+            (wallet_info)
           )
 
 FC_REFLECT( graphene::wallet::wallet_info,

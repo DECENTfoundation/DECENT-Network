@@ -141,18 +141,18 @@ private:
 };
 
 struct submit_transfer_listener : public EventListenerInterface {
-   
+
    submit_transfer_listener(wallet_api_impl& wallet, shared_ptr<PackageInfo> info, const content_submit_operation& op, const std::string& protocol)
       : _wallet(wallet), _info(info), _op(op), _protocol(protocol), _is_finished(false) {
    }
-   
+
    virtual void package_seed_complete();
    virtual void package_creation_complete();
-   
+
    fc::ripemd160 get_hash() const { return _info->get_hash(); }
    const content_submit_operation& op() const { return _op; }
    bool is_finished() { return _is_finished; }
-   
+
 private:
    wallet_api_impl&          _wallet;
    shared_ptr<PackageInfo>   _info;
@@ -503,12 +503,9 @@ public:
       return result;
    }
 
-   decent::about_info_wallet about() const
+   wallet_about about() const
    {
-      decent::about_info_wallet result;
-      result.daemon_info = _remote_db->about();
-      result.wallet_info = decent::get_about_wallet();
-      return result;
+      return { _remote_db->about(), decent::get_about_wallet() };
    }
 
    chain_property_object get_chain_properties() const
@@ -529,13 +526,13 @@ public:
    optional<account_object> find_account(account_id_type account_id) const
    {
       auto rec = _remote_db->get_accounts({account_id}).front();
-      
+
       if(!rec)
          FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
       return *rec;
    }
- 
+
    optional<account_object> find_account(const string& account_name_or_id) const
    {
       if(account_name_or_id.size() == 0)
@@ -2645,7 +2642,7 @@ public:
          auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key);
          shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
          _package_manager_listeners.push_back(listener_ptr);
-         
+
          package_handle->add_event_listener(listener_ptr);
          package_handle->create(false);
 
@@ -2705,11 +2702,11 @@ signed_transaction content_cancellation(const string& author,
                 status.total_download_bytes = static_cast<int>(pack->get_size());
                 status.received_download_bytes = static_cast<int>(pack->get_size());
                 status.status_text = "Downloaded";
-                
+
             } else {
                 status.total_download_bytes = static_cast<int>(pack->get_total_size());
                 status.received_download_bytes = static_cast<int>(pack->get_downloaded_size());
-                status.status_text = "Downloading...";                
+                status.status_text = "Downloading...";
             }
          }
 
@@ -2843,7 +2840,7 @@ signed_transaction content_cancellation(const string& author,
          shared_ptr<ipfs_stats_listener> listener_ptr = std::make_shared<ipfs_stats_listener>( URI, *this, consumer_account.id );
          package->add_event_listener( listener_ptr );
          package->download();
-         
+
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
    }
 
@@ -3065,7 +3062,7 @@ signed_transaction content_cancellation(const string& author,
       try {
          const auto& mapi = _remote_api->messaging();
          vector<message_object> objects = mapi->get_message_objects(sender, receiver, max_count);
-         
+
          for (message_object& obj : objects) {
 
             for (const auto& receivers_data_item : obj.receivers_data) {
@@ -3119,16 +3116,16 @@ signed_transaction content_cancellation(const string& author,
    {
          const auto& receiver_id = get_account(receiver).get_id();
          auto itr = _wallet.my_accounts.get<graphene::db::by_id>().find(receiver_id);
-         if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end()) 
+         if (itr == _wallet.my_accounts.get<graphene::db::by_id>().end())
             return vector<text_message>();
-         
+
          optional<account_id_type> sender_id;
          vector<message_object> objects = get_message_objects(sender_id, optional<account_id_type>(receiver_id), max_count);
          vector<text_message> messages;
 
          for (message_object& obj : objects) {
             graphene::chain::text_message msg;
-            
+
             msg.created = obj.created;
             account_object account_sender = get_account(obj.sender);
             msg.from = account_sender.name;
@@ -3153,7 +3150,7 @@ signed_transaction content_cancellation(const string& author,
       optional<account_id_type> receiver_id;
       vector<message_object> objects = get_message_objects(optional<account_id_type>(sender_id), receiver_id, max_count);
       vector<text_message> messages;
-      
+
       for (message_object& obj : objects) {
          graphene::chain::text_message msg;
 
@@ -3261,7 +3258,7 @@ signed_transaction content_cancellation(const string& author,
    std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names)
    {
       const auto& monapi = _remote_api->monitoring();
-      std::vector<monitoring::counter_item_cli> cli_result;  
+      std::vector<monitoring::counter_item_cli> cli_result;
       std::vector<monitoring::counter_item> result;
       result = monapi->get_counters(names);
       std::for_each(result.begin(), result.end(), [&](monitoring::counter_item& item) {
@@ -3270,12 +3267,12 @@ signed_transaction content_cancellation(const string& author,
          item_cli.value = item.value;
          item_cli.last_reset = fc::time_point_sec(item.last_reset);
          item_cli.persistent = item.persistent;
-         
+
          cli_result.push_back(item_cli);
       });
 
       std::sort(cli_result.begin(), cli_result.end(), [&](monitoring::counter_item_cli& item1, monitoring::counter_item_cli& item2) {return item1.name < item2.name; });
-      
+
       return cli_result;
    }
 
@@ -3543,9 +3540,9 @@ signed_transaction content_cancellation(const string& author,
             receivers += to_account.name;
             receivers += " ";
          }
-         
+
          out << "Send message from " << from_account.name << " to " << receivers;
-         
+
          std::string memo;
          if (wallet.is_locked())
          {
@@ -3607,7 +3604,7 @@ signed_transaction content_cancellation(const string& author,
                }
             }
          }
-         
+
          fee(op.fee);
          return memo;
       }

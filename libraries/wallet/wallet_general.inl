@@ -1,6 +1,5 @@
 
-
-decent::about_info_wallet wallet_api::about() const
+wallet_about wallet_api::about() const
 {
     return my->about();
 }
@@ -29,7 +28,6 @@ wallet_info wallet_api::info()
 {
    return my->info();
 }
-
 
 string wallet_api::help() const
 {

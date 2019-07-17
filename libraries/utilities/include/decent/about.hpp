@@ -11,7 +11,7 @@ namespace decent {
    std::string get_cryptopp_version();
 
    struct about_info {
-      std::string version;
+      std::string version = "1.4.0";
       std::string graphene_revision;
       std::string graphene_revision_age;
       std::string fc_revision;
@@ -21,11 +21,6 @@ namespace decent {
       std::string openssl_version;
       std::string cryptopp_version;
       std::string build;
-   };
-
-   struct about_info_wallet {
-      about_info daemon_info;
-      about_info wallet_info;
    };
 
    about_info get_about_daemon();
@@ -46,9 +41,4 @@ FC_REFLECT( decent::about_info,
             (openssl_version)
             (cryptopp_version)
             (build)
-          )
-
-FC_REFLECT( decent::about_info_wallet,
-            (daemon_info)
-            (wallet_info)
           )
