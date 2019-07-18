@@ -3833,6 +3833,11 @@ signed_transaction content_cancellation(const string& author,
       return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(nft_symbol_or_id).get_id());
    }
 
+   map<non_fungible_token_id_type,uint32_t> wallet_api::get_non_fungible_token_summary(const string& account) const
+   {
+      return my->_remote_db->get_non_fungible_token_summary(get_account(account).get_id());
+   }
+
    vector<non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const string& account,
                                                                                       const set<string>& symbols_or_ids) const
    {

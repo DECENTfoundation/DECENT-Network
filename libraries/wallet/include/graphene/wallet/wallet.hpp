@@ -425,6 +425,14 @@ namespace graphene { namespace wallet {
          vector<non_fungible_token_data_object> list_non_fungible_token_data(const string& nft_symbol_or_id) const;
 
          /**
+          * @brief Get account's summary of various non fungible tokens.
+          * @param account the name or id of the account
+          * @return a summary of non fungible token ids
+          * @ingroup DatabaseAPI_Balance
+          */
+         map<non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(const string& account) const;
+
+         /**
           * @brief Gets account's balances in various non fungible tokens.
           * @param account the name or id of the account
           * @param symbols_or_ids set of symbol names or non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
@@ -652,6 +660,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_non_fungible_token)
         (issue_non_fungible_token)
         (list_non_fungible_token_data)
+        (get_non_fungible_token_summary)
         (get_non_fungible_token_balances)
         (search_non_fungible_token_history)
         (transfer_non_fungible_token_data)

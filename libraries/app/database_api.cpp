@@ -39,19 +39,19 @@ namespace {
 }
 
 namespace {
-   
+
    template <bool is_ascending>
    struct return_one {
-      
+
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<is_ascending, T1, T2 >::type {
          return t1;
       }
    };
-   
+
    template <>
    struct return_one<false> {
-      
+
       template <class T1, class T2>
       static auto choose(const T1& t1, const T2& t2) -> typename std::conditional<false, T1, T2 >::type {
          return t2;
@@ -64,23 +64,23 @@ namespace graphene { namespace app {
    class database_api_impl;
    const int CURRENT_OUTPUT_LIMIT_1000 = 1000;
    const int CURRENT_OUTPUT_LIMIT_100 = 100;
-   
+
    class database_api_impl : public std::enable_shared_from_this<database_api_impl>
    {
    public:
       database_api_impl( graphene::chain::database& db );
       ~database_api_impl();
-      
+
       // Objects
       fc::variants get_objects(const vector<object_id_type>& ids)const;
-      
+
       // Subscriptions
       void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
       void set_content_update_callback( const string & URI, std::function<void()> cb );
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       void cancel_all_subscriptions();
-      
+
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
       vector<optional<block_header>> get_block_headers(uint32_t block_num, uint32_t count)const;
@@ -102,7 +102,7 @@ namespace graphene { namespace app {
 
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
-      
+
       // Accounts
       vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
       std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
@@ -117,13 +117,14 @@ namespace graphene { namespace app {
                                                                object_id_type const& id,
                                                                int limit) const;
       uint64_t get_account_count()const;
-      
+
       // Balances
       vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
       vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      map<non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(account_id_type account_id)const;
       vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id, const set<non_fungible_token_id_type>& ids)const;
-      
+
       // Assets
       uint64_t get_asset_count()const;
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
@@ -169,7 +170,7 @@ namespace graphene { namespace app {
       bool verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
       processed_transaction validate_transaction( const signed_transaction& trx )const;
       fc::variants get_required_fees( vector<operation> ops, asset_id_type id )const;
-      
+
       // Content
       vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit )const;
       vector<buying_object> get_open_buyings()const;
@@ -205,14 +206,14 @@ namespace graphene { namespace app {
          auto vec = fc::raw::pack(i);
          if( !_subscribe_callback )
             return;
-         
+
          if( !is_subscribed_to_item(i) )
          {
             idump((i));
             _subscribe_filter.insert( vec.data(), vec.size() );//(vecconst char*)&i, sizeof(i) );
          }
       }
-      
+
       template<typename T>
       bool is_subscribed_to_item( const T& i )const
       {
@@ -220,19 +221,19 @@ namespace graphene { namespace app {
             return false;
          return true;
       }
-      
+
       void broadcast_updates( const vector<variant>& updates );
-      
+
       /** called every time a block is applied to report the objects that were changed */
       void on_objects_changed(const vector<object_id_type>& ids);
       void on_objects_removed(const vector<const graphene::db::object*>& objs);
       void on_applied_block();
-      
+
       mutable fc::bloom_filter                               _subscribe_filter;
       std::function<void(const fc::variant&)> _subscribe_callback;
       std::function<void(const fc::variant&)> _pending_trx_callback;
       std::function<void(const fc::variant&)> _block_applied_callback;
-      
+
       boost::signals2::scoped_connection                                                                                           _change_connection;
       boost::signals2::scoped_connection                                                                                           _removed_connection;
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
@@ -240,18 +241,18 @@ namespace graphene { namespace app {
       map< string, std::function<void()> >                              _content_subscriptions;
       graphene::chain::database&                                                                                                   _db;
    };
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Constructors                                                     //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    database_api::database_api( graphene::chain::database& db )
    : my( new database_api_impl( db ) ) {}
-   
+
    database_api::~database_api() {}
-   
+
    database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
    {
       dlog("creating database api ${x}", ("x",int64_t(this)) );
@@ -262,28 +263,28 @@ namespace graphene { namespace app {
          on_objects_removed(objs);
       });
       _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
-      
+
       _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
          if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx) );
       });
    }
-   
+
    database_api_impl::~database_api_impl()
    {
       dlog("freeing database api ${x}", ("x",int64_t(this)) );
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Objects                                                          //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    fc::variants database_api::get_objects(const vector<object_id_type>& ids)const
    {
       return my->get_objects( ids );
    }
-   
+
    fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
    {
       if( _subscribe_callback )
@@ -300,31 +301,31 @@ namespace graphene { namespace app {
       {
          elog( "getObjects without subscribe callback??" );
       }
-      
+
       fc::variants result;
       result.reserve(ids.size());
-      
+
       std::transform(ids.begin(), ids.end(), std::back_inserter(result),
                      [this](object_id_type id) -> fc::variant {
                         if(auto obj = _db.find_object(id))
                            return obj->to_variant();
                         return {};
                      });
-      
+
       return result;
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Subscriptions                                                    //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    void database_api::set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter )
    {
       my->set_subscribe_callback( cb, clear_filter );
    }
-   
+
    void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter )
    {
       ddump((clear_filter));
@@ -355,32 +356,32 @@ namespace graphene { namespace app {
    {
       my->set_pending_transaction_callback( cb );
    }
-   
+
    void database_api_impl::set_pending_transaction_callback( std::function<void(const variant&)> cb )
    {
       _pending_trx_callback = cb;
    }
-   
+
    void database_api::set_block_applied_callback( std::function<void(const variant& block_id)> cb )
    {
       my->set_block_applied_callback( cb );
    }
-   
+
    void database_api_impl::set_block_applied_callback( std::function<void(const variant& block_id)> cb )
    {
       _block_applied_callback = cb;
    }
-   
+
    void database_api::cancel_all_subscriptions()
    {
       my->cancel_all_subscriptions();
    }
-   
+
    void database_api_impl::cancel_all_subscriptions()
    {
       set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Blocks and transactions                                          //
@@ -390,7 +391,7 @@ namespace graphene { namespace app {
    static signed_block_with_info signed_block_with_info_from_block(const signed_block& block, share_type miner_reward)
    {
       signed_block_with_info result;
-      reinterpret_cast<signed_block&>(result) = block; 
+      reinterpret_cast<signed_block&>(result) = block;
       result.block_id = block.id();
       result.signing_key = block.signee();
       result.transaction_ids.reserve( block.transactions.size() );
@@ -496,7 +497,7 @@ namespace graphene { namespace app {
    {
       return my->head_block_time();
    }
-   
+
    optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
    {
       try {
@@ -505,7 +506,7 @@ namespace graphene { namespace app {
          return optional<signed_transaction>();
       }
    }
-   
+
    processed_transaction database_api_impl::get_transaction(uint32_t block_num, uint32_t trx_num)const
    {
       auto opt_block = _db.fetch_block_by_number(block_num);
@@ -558,22 +559,22 @@ namespace graphene { namespace app {
    {
       return my->get_chain_properties();
    }
-   
+
    chain_property_object database_api_impl::get_chain_properties()const
    {
       return _db.get(chain_property_id_type());
    }
-   
+
    global_property_object database_api::get_global_properties()const
    {
       return my->get_global_properties();
    }
-   
+
    global_property_object database_api_impl::get_global_properties()const
    {
       return _db.get(global_property_id_type());
    }
-   
+
    fc::variant_object database_api::get_config()const
    {
       fc::mutable_variant_object result;
@@ -660,17 +661,17 @@ namespace graphene { namespace app {
    {
       return my->get_chain_id();
    }
-   
+
    chain_id_type database_api_impl::get_chain_id()const
    {
       return _db.get_chain_id();
    }
-   
+
    dynamic_global_property_object database_api::get_dynamic_global_properties()const
    {
       return my->get_dynamic_global_properties();
    }
-   
+
    dynamic_global_property_object database_api_impl::get_dynamic_global_properties()const
    {
       return _db.get(dynamic_global_property_id_type());
@@ -686,12 +687,12 @@ namespace graphene { namespace app {
    // Keys                                                             //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<vector<account_id_type>> database_api::get_key_references( vector<public_key_type> key )const
    {
       return my->get_key_references( key );
    }
-   
+
    /**
     *  @return all accounts that refer to the key or account id in their owner or active authorities.
     */
@@ -700,17 +701,17 @@ namespace graphene { namespace app {
       ddump( (keys) );
       vector< vector<account_id_type> > final_result;
       final_result.reserve(keys.size());
-      
+
       for( auto& key : keys )
       {
          subscribe_to_item( key );
-         
+
          const auto& idx = _db.get_index_type<account_index>();
          const auto& aidx = dynamic_cast<const graphene::db::primary_index<account_index>&>(idx);
          const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
          auto itr = refs.account_to_key_memberships.find(key);
          vector<account_id_type> result;
-         
+
          if( itr != refs.account_to_key_memberships.end() )
          {
             result.reserve( itr->second.size() );
@@ -718,24 +719,24 @@ namespace graphene { namespace app {
          }
          final_result.emplace_back( std::move(result) );
       }
-      
+
       for( auto i : final_result )
          subscribe_to_item(i);
-      
+
       return final_result;
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Accounts                                                         //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<optional<account_object>> database_api::get_accounts(const vector<account_id_type>& account_ids)const
    {
       return my->get_accounts( account_ids );
    }
-   
+
    vector<optional<account_object>> database_api_impl::get_accounts(const vector<account_id_type>& account_ids)const
    {
       // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
@@ -751,17 +752,17 @@ namespace graphene { namespace app {
                      });
       return result;
    }
-   
+
    std::map<string,full_account> database_api::get_full_accounts( const vector<string>& names_or_ids, bool subscribe )
    {
       return my->get_full_accounts( names_or_ids, subscribe );
    }
-   
+
    std::map<std::string, full_account> database_api_impl::get_full_accounts( const vector<std::string>& names_or_ids, bool subscribe)
    {
       idump((names_or_ids));
       std::map<std::string, full_account> results;
-      
+
       for (const std::string& account_name_or_id : names_or_ids)
       {
          const account_object* account = nullptr;
@@ -833,12 +834,12 @@ namespace graphene { namespace app {
       }
       return results;
    }
-   
+
    optional<account_object> database_api::get_account_by_name( string name )const
    {
       return my->get_account_by_name( name );
    }
-   
+
    optional<account_object> database_api_impl::get_account_by_name( string name )const
    {
       const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -847,12 +848,12 @@ namespace graphene { namespace app {
          return *itr;
       return optional<account_object>();
    }
-   
+
    vector<account_id_type> database_api::get_account_references( account_id_type account_id )const
    {
       return my->get_account_references( account_id );
    }
-   
+
    vector<account_id_type> database_api_impl::get_account_references( account_id_type account_id )const
    {
       const auto& idx = _db.get_index_type<account_index>();
@@ -860,7 +861,7 @@ namespace graphene { namespace app {
       const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
       auto itr = refs.account_to_account_memberships.find(account_id);
       vector<account_id_type> result;
-      
+
       if( itr != refs.account_to_account_memberships.end() )
       {
          result.reserve( itr->second.size() );
@@ -868,12 +869,12 @@ namespace graphene { namespace app {
       }
       return result;
    }
-   
+
    vector<optional<account_object>> database_api::lookup_account_names(const vector<string>& account_names)const
    {
       return my->lookup_account_names( account_names );
    }
-   
+
    vector<optional<account_object>> database_api_impl::lookup_account_names(const vector<string>& account_names)const
    {
       const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -886,8 +887,8 @@ namespace graphene { namespace app {
                      });
       return result;
    }
-   
-   
+
+
    vector<account_object> database_api::search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const {
       return my->search_accounts( search_term, order, id, limit );
    }
@@ -983,7 +984,7 @@ namespace graphene { namespace app {
          }
       }
    }
-   
+
    vector<account_object> database_api_impl::search_accounts(const string& term, const string order, const object_id_type& id, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
@@ -1093,7 +1094,7 @@ namespace graphene { namespace app {
          FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
       map<string,account_id_type> result;
-      
+
       for( auto itr = accounts_by_name.lower_bound(lower_bound_name);
           limit-- && itr != accounts_by_name.end();
           ++itr )
@@ -1102,31 +1103,31 @@ namespace graphene { namespace app {
          if( limit == 1 )
             subscribe_to_item( itr->get_id() );
       }
-      
+
       return result;
    }
-   
+
    uint64_t database_api::get_account_count()const
    {
       return my->get_account_count();
    }
-   
+
    uint64_t database_api_impl::get_account_count()const
    {
       return _db.get_index_type<account_index>().indices().size();
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Balances                                                         //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<asset> database_api::get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const
    {
       return my->get_account_balances( id, assets );
    }
-   
+
    vector<asset> database_api_impl::get_account_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
    {
       vector<asset> result;
@@ -1141,19 +1142,19 @@ namespace graphene { namespace app {
       else
       {
          result.reserve(assets.size());
-         
+
          std::transform(assets.begin(), assets.end(), std::back_inserter(result),
                         [this, acnt](asset_id_type id) { return _db.get_balance(acnt, id); });
       }
-      
+
       return result;
    }
-   
+
    vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
    {
       return my->get_named_account_balances( name, assets );
    }
-   
+
    vector<asset> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
    {
       const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
@@ -1161,12 +1162,12 @@ namespace graphene { namespace app {
       FC_ASSERT( itr != accounts_by_name.end() );
       return get_account_balances(itr->get_id(), assets);
    }
-   
+
    vector<vesting_balance_object> database_api::get_vesting_balances( account_id_type account_id )const
    {
       return my->get_vesting_balances( account_id );
    }
-   
+
    vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_id_type account_id )const
    {
       try
@@ -1180,6 +1181,25 @@ namespace graphene { namespace app {
          return result;
       }
       FC_CAPTURE_AND_RETHROW( (account_id) );
+   }
+
+   map<non_fungible_token_id_type,uint32_t> database_api::get_non_fungible_token_summary(account_id_type account_id)const
+   {
+      return my->get_non_fungible_token_summary(account_id);
+   }
+
+   map<non_fungible_token_id_type,uint32_t> database_api_impl::get_non_fungible_token_summary(account_id_type account_id)const
+   {
+      const auto& nft_data_index = _db.get_index_type<non_fungible_token_data_index>();
+      auto nft_data_range = nft_data_index.indices().get<by_account>().equal_range(account_id);
+
+      map<non_fungible_token_id_type,uint32_t> result;
+      std::for_each(nft_data_range.first, nft_data_range.second, [&](const non_fungible_token_data_object& nft_data) {
+         auto ret = result.insert(std::make_pair(nft_data.nft_id, 1u));
+         if(!ret.second)
+            ++ret.first->second;
+      });
+      return result;
    }
 
    vector<non_fungible_token_data_object> database_api::get_non_fungible_token_balances(account_id_type account_id,
@@ -1222,7 +1242,7 @@ namespace graphene { namespace app {
    {
       return my->get_assets( asset_ids );
    }
-   
+
    vector<optional<asset_object>> database_api_impl::get_assets(const vector<asset_id_type>& asset_ids)const
    {
       // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
@@ -1238,12 +1258,12 @@ namespace graphene { namespace app {
                      });
       return result;
    }
-   
+
    vector<asset_object> database_api::list_assets(const string& lower_bound_symbol, uint32_t limit)const
    {
       return my->list_assets( lower_bound_symbol, limit );
    }
-   
+
    vector<asset_object> database_api_impl::list_assets(const string& lower_bound_symbol, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_100)
@@ -1251,23 +1271,23 @@ namespace graphene { namespace app {
       const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
       vector<asset_object> result;
       result.reserve(limit);
-      
+
       auto itr = assets_by_symbol.lower_bound(lower_bound_symbol);
-      
+
       if( lower_bound_symbol == "" )
          itr = assets_by_symbol.begin();
-      
+
       while(limit-- && itr != assets_by_symbol.end())
          result.emplace_back(*itr++);
-      
+
       return result;
    }
-   
+
    vector<optional<asset_object>> database_api::lookup_asset_symbols(const vector<string>& symbols_or_ids)const
    {
       return my->lookup_asset_symbols( symbols_or_ids );
    }
-   
+
    vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vector<string>& symbols_or_ids)const
    {
       const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
@@ -1458,23 +1478,23 @@ namespace graphene { namespace app {
    // Miners                                                           //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<optional<miner_object>> database_api::get_miners(const vector<miner_id_type>& miner_ids)const
    {
       return my->get_miners( miner_ids );
    }
-   
-   
+
+
    vector<optional<miner_object>> database_api_impl::get_miners(const vector<miner_id_type>& miner_ids)const
    {
       return _db.get_objects(miner_ids);
    }
-   
+
    fc::optional<miner_object> database_api::get_miner_by_account(account_id_type account)const
    {
       return my->get_miner_by_account( account );
    }
-   
+
    fc::optional<miner_object> database_api_impl::get_miner_by_account(account_id_type account) const
    {
       const auto& idx = _db.get_index_type<miner_index>().indices().get<by_account>();
@@ -1483,18 +1503,18 @@ namespace graphene { namespace app {
          return *itr;
       return {};
    }
-   
+
    map<string, miner_id_type> database_api::lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       return my->lookup_miner_accounts( lower_bound_name, limit );
    }
-   
+
    map<string, miner_id_type> database_api_impl::lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
          FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       const auto& miners_by_id = _db.get_index_type<miner_index>().indices().get<graphene::db::by_id>();
-      
+
       // we want to order miners by account name, but that name is in the account object
       // so the miner_index doesn't have a quick way to access it.
       // get all the names and look them all up, sort them, then figure out what
@@ -1505,19 +1525,19 @@ namespace graphene { namespace app {
          if (auto account_iter = _db.find(miner.miner_account))
             if (account_iter->name >= lower_bound_name) // we can ignore anything below lower_bound_name
                miners_by_account_name.insert(std::make_pair(account_iter->name, miner.id));
-      
+
       auto end_iter = miners_by_account_name.begin();
       while (end_iter != miners_by_account_name.end() && limit--)
          ++end_iter;
       miners_by_account_name.erase(end_iter, miners_by_account_name.end());
       return miners_by_account_name;
    }
-   
+
    uint64_t database_api::get_miner_count()const
    {
       return my->get_miner_count();
    }
-   
+
    uint64_t database_api_impl::get_miner_count()const
    {
       return _db.get_index_type<miner_index>().indices().size();
@@ -1556,19 +1576,19 @@ namespace graphene { namespace app {
    // Votes                                                            //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<optional<miner_object>> database_api::lookup_vote_ids( const vector<vote_id_type>& votes )const
    {
       return my->lookup_vote_ids( votes );
    }
-   
+
    vector<optional<miner_object>> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& votes )const
    {
       if(votes.size() >= CURRENT_OUTPUT_LIMIT_1000)
          FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Only ${l} votes can be queried at a time", ("l", CURRENT_OUTPUT_LIMIT_1000));
-      
+
       const auto& miner_idx = _db.get_index_type<miner_index>().indices().get<by_vote_id>();
-      
+
       vector<optional<miner_object>> result;
       result.reserve( votes.size() );
       for( auto id : votes )
@@ -1584,7 +1604,7 @@ namespace graphene { namespace app {
                   result.emplace_back( );
                break;
             }
-               
+
             case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
          }
       }
@@ -1709,28 +1729,28 @@ namespace graphene { namespace app {
       return result;
    }
 
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Authority / validation                                           //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    std::string database_api::get_transaction_hex(const signed_transaction& trx)const
    {
       return my->get_transaction_hex( trx );
    }
-   
+
    std::string database_api_impl::get_transaction_hex(const signed_transaction& trx)const
    {
       return fc::to_hex(fc::raw::pack(trx));
    }
-   
+
    set<public_key_type> database_api::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const
    {
       return my->get_required_signatures( trx, available_keys );
    }
-   
+
    set<public_key_type> database_api_impl::get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const
    {
       ddump((trx)(available_keys));
@@ -1742,12 +1762,12 @@ namespace graphene { namespace app {
       ddump((result));
       return result;
    }
-   
+
    set<public_key_type> database_api::get_potential_signatures( const signed_transaction& trx )const
    {
       return my->get_potential_signatures( trx );
    }
-   
+
    set<public_key_type> database_api_impl::get_potential_signatures( const signed_transaction& trx )const
    {
       ddump((trx));
@@ -1771,16 +1791,16 @@ namespace graphene { namespace app {
                                   },
                                   _db.get_global_properties().parameters.max_authority_depth
                                   );
-      
+
       ddump((result));
       return result;
    }
-   
+
    bool database_api::verify_authority( const signed_transaction& trx )const
    {
       return my->verify_authority( trx );
    }
-   
+
    bool database_api_impl::verify_authority( const signed_transaction& trx )const
    {
       try
@@ -1798,12 +1818,12 @@ namespace graphene { namespace app {
 
       return false;
    }
-   
+
    bool database_api::verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const
    {
       return my->verify_account_authority( name_or_id, signers );
    }
-   
+
    bool database_api_impl::verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& keys )const
    {
       if(name_or_id.size() == 0)
@@ -1818,7 +1838,7 @@ namespace graphene { namespace app {
          if (itr != idx.end())
             account = &*itr;
       }
-     
+
       if(!account)
          FC_THROW_EXCEPTION(fc::account_does_not_exist_exception, "Account: ${account}", ("account", name_or_id));
 
@@ -1842,22 +1862,22 @@ namespace graphene { namespace app {
 
       return false;
    }
-   
+
    processed_transaction database_api::validate_transaction( const signed_transaction& trx )const
    {
       return my->validate_transaction( trx );
    }
-   
+
    processed_transaction database_api_impl::validate_transaction( const signed_transaction& trx )const
    {
       return _db.validate_transaction(trx);
    }
-   
+
    fc::variants database_api::get_required_fees( const vector<operation>& ops, asset_id_type id )const
    {
       return my->get_required_fees( ops, id );
    }
-   
+
    /**
     * Container method for mutually recursive functions used to
     * implement get_required_fees() with potentially nested proposals.
@@ -1873,7 +1893,7 @@ namespace graphene { namespace app {
       core_exchange_rate(_core_exchange_rate),
       max_recursion(_max_recursion)
       {}
-      
+
       fc::variant set_op_fees( operation& op )
       {
          if( op.which() == operation::tag<proposal_create_operation>::value )
@@ -1888,7 +1908,7 @@ namespace graphene { namespace app {
             return result;
          }
       }
-      
+
       fc::variant set_proposal_create_op_fees( operation& proposal_create_op )
       {
          proposal_create_operation& op = proposal_create_op.get<proposal_create_operation>();
@@ -1907,7 +1927,7 @@ namespace graphene { namespace app {
          fc::to_variant( result, vresult );
          return vresult;
       }
-      
+
       const fee_schedule& current_fee_schedule;
       const price& core_exchange_rate;
       uint32_t max_recursion;
@@ -1931,13 +1951,13 @@ namespace graphene { namespace app {
       std::transform(ops.begin(), ops.end(), result.begin(), [&](operation &op) { return helper.set_op_fees( op ); } );
       return result;
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Proposed transactions                                            //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    vector<proposal_object> database_api::get_proposed_transactions( account_id_type id )const
    {
       return my->get_proposed_transactions( id );
@@ -1953,7 +1973,7 @@ namespace graphene { namespace app {
    {
       const auto& idx = _db.get_index_type<proposal_index>();
       vector<proposal_object> result;
-      
+
       idx.inspect_all_objects( [&](const graphene::db::object& obj){
          const proposal_object& p = static_cast<const proposal_object&>(obj);
          if( p.required_active_approvals.find( id ) != p.required_active_approvals.end() )
@@ -2034,13 +2054,13 @@ namespace graphene { namespace app {
 
        return result;
    }
-   
+
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Decent                                                           //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    real_supply database_api::get_real_supply()const
    {
       return my->_db.get_real_supply();
@@ -2070,25 +2090,25 @@ namespace graphene { namespace app {
    {
       return my->get_open_buyings();
    }
-   
+
    vector<buying_object> database_api_impl::get_open_buyings()const
    {
       const auto& range = _db.get_index_type<buying_index>().indices().get<by_open_expiration>().equal_range( true );
       vector<buying_object> result;
       result.reserve(distance(range.first, range.second));
-      
+
       std::for_each(range.first, range.second, [&](const buying_object &element) {
          if( element.expiration_time >= _db.head_block_time() )
             result.emplace_back(element);
       });
       return result;
    }
-   
+
    vector<buying_object> database_api::get_open_buyings_by_URI( const string& URI )const
    {
       return my->get_open_buyings_by_URI( URI );
    }
-   
+
    vector<buying_object> database_api_impl::get_open_buyings_by_URI( const string& URI )const
    {
       try
@@ -2104,12 +2124,12 @@ namespace graphene { namespace app {
       }
       FC_CAPTURE_AND_RETHROW( (URI) );
    }
-   
+
    vector<buying_object> database_api::get_open_buyings_by_consumer( const account_id_type& consumer )const
    {
       return my->get_open_buyings_by_consumer( consumer );
    }
-   
+
    vector<buying_object> database_api_impl::get_open_buyings_by_consumer( const account_id_type& consumer )const
    {
       try
@@ -2117,7 +2137,7 @@ namespace graphene { namespace app {
          auto range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple( consumer, true ));
          vector<buying_object> result;
          result.reserve(distance(range.first, range.second));
-         
+
          std::for_each(range.first, range.second, [&](const buying_object& element) {
             if( element.expiration_time >= _db.head_block_time() )
                result.emplace_back(element);
@@ -2126,30 +2146,30 @@ namespace graphene { namespace app {
       }
       FC_CAPTURE_AND_RETHROW( (consumer) );
    }
-   
+
    vector<buying_object> database_api::get_buying_history_objects_by_consumer( const account_id_type& consumer )const
    {
       return my->get_buying_history_objects_by_consumer( consumer );
    }
-   
-   
+
+
    vector<buying_object> database_api_impl::get_buying_history_objects_by_consumer ( const account_id_type& consumer )const
    {
       try {
          const auto &range = _db.get_index_type<buying_index>().indices().get<by_consumer_open>().equal_range( std::make_tuple(consumer, false));
          vector<buying_object> result;
          result.reserve(distance(range.first, range.second));
-         
+
          std::for_each(range.first, range.second, [&](const buying_object &element) {
             result.emplace_back(element);
          });
-         
+
          return result;
       }
       FC_CAPTURE_AND_RETHROW( (consumer) );
    }
-   
-   
+
+
    vector<buying_object> database_api::get_buying_objects_by_consumer(const account_id_type& consumer,
                                                                       const string& order,
                                                                       const object_id_type& id,
@@ -2175,7 +2195,7 @@ namespace
       auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.end(), idx_by_sort_tag.rend());
 
       correct_iterator<buying_index, buying_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
-      
+
       while(count &&
             itr_begin != itr_end)
       {
@@ -2207,7 +2227,7 @@ namespace
       }
    }
 }
-   
+
    vector<buying_object> database_api_impl::get_buying_objects_by_consumer(const account_id_type& consumer,
                                                                            const string& order,
                                                                            const object_id_type& id,
@@ -2216,7 +2236,7 @@ namespace
    {
       try {
          vector<buying_object> result;
-         
+
          if(order == "+size")
             search_buying_template<true, by_size>(_db, consumer, term, id, count, result);
          else if(order == "-size")
@@ -2242,25 +2262,25 @@ namespace
    {
       return my->get_content( URI );
    }
-   
+
    fc::sha256 database_api::restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const {
       auto objects = get_objects({buying});
       if(objects.size() == 0)
          FC_THROW_EXCEPTION(fc::buying_object_does_not_exist_exception, "Buying: ${buying}", ("buying", buying));
-      
+
       const buying_object bo = objects.front().template as<buying_object>();
       auto content = get_content(bo.URI);
-      
+
       if(!content)
          FC_THROW_EXCEPTION(fc::content_object_does_not_exist_exception, "URI: ${uri}", ("uri", bo.URI));
-      
+
       const content_object co = *content;
-      
+
       decent::encrypt::ShamirSecret ss( static_cast<uint16_t>(co.quorum), static_cast<uint16_t>(co.key_parts.size()) );
       decent::encrypt::point message;
-      
+
       DInteger el_gamal_priv_key = el_gamal_priv_key_string;
-      
+
       for( const auto key_particle : bo.key_particles )
       {
          auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key, message );
@@ -2268,10 +2288,10 @@ namespace
             FC_THROW_EXCEPTION(fc::decryption_of_key_particle_failed_exception, "");
          ss.add_point( message );
       }
-      
+
       FC_ASSERT( ss.resolvable() );
       ss.calculate_secret();
-      
+
       fc::sha256 key;
 #if CRYPTOPP_VERSION >= 600
       ss.secret.Encode((CryptoPP::byte*)key._hash, 32);
@@ -2281,7 +2301,7 @@ namespace
 
       return key;
    }
-   
+
 
 
    content_keys database_api::generate_content_keys(vector<account_id_type> const& seeders) const {
@@ -2302,7 +2322,7 @@ namespace
          keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
          ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
          ss.calculate_split();
-         
+
 
          for( int i =0; i < (int)seeders.size(); i++ )
          {
@@ -2318,12 +2338,12 @@ namespace
 
          return keys;
    }
-   
+
    optional<seeder_object> database_api::get_seeder( const account_id_type& account ) const
    {
       return my->get_seeder(account);
    }
-   
+
    optional<content_object> database_api_impl::get_content( const string& URI )const
    {
       const auto& idx = _db.get_index_type<content_index>().indices().get<by_URI>();
@@ -2419,7 +2439,7 @@ namespace
 
       }FC_CAPTURE_AND_RETHROW( (consumer)(URI) );
    }
-   
+
    optional<seeder_object> database_api_impl::get_seeder( const account_id_type& account )const
    {
       const auto& idx = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
@@ -2515,9 +2535,9 @@ namespace
 
       }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
-   
-   
-   
+
+
+
    vector< subscription_object > database_api::list_subscriptions_by_author( const account_id_type& account, const uint32_t count)const
    {
       return my->list_subscriptions_by_author( account, count );
@@ -2544,7 +2564,7 @@ namespace
 
       }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
-   
+
    vector<content_summary> database_api::search_content(const string& term,
                                                         const string& order,
                                                         const string& user,
@@ -2555,10 +2575,10 @@ namespace
    {
       return my->search_content(term, order, user, region_code, id, type, count);
    }
-   
-   
+
+
    namespace {
-      
+
       template <bool is_ascending, class sort_tag>
       void search_content_template(graphene::chain::database& db,
                                    const string& search_term,
@@ -2570,7 +2590,7 @@ namespace
                                    vector<content_summary>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<content_index>().indices().get<sort_tag>();
-         
+
          auto itr_begin = return_one<is_ascending>::choose(idx_by_sort_tag.cbegin(), idx_by_sort_tag.crbegin());
          auto itr_end = return_one<is_ascending>::choose(idx_by_sort_tag.cend(), idx_by_sort_tag.crend());
 
@@ -2581,7 +2601,7 @@ namespace
 
          ContentObjectTypeValue filter_type;
          filter_type.from_string(type);
-         
+
          while(count && itr_begin != itr_end)
          {
             const auto account_itr = idx_account.find(itr_begin->author);
@@ -2630,11 +2650,11 @@ namespace
 
             ++itr_begin;
          }
-         
+
       }
    }
-   
-   
+
+
    vector<content_summary> database_api_impl::search_content(const string& search_term,
                                                              const string& order,
                                                              const string& user,
@@ -2645,10 +2665,10 @@ namespace
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
          FC_THROW_EXCEPTION(fc::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
-      
+
       vector<content_summary> result;
       result.reserve( count );
-      
+
       if (order == "+author")
          search_content_template<true, by_author>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+rating")
@@ -2661,7 +2681,7 @@ namespace
          search_content_template<true, by_created>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "+expiration")
          search_content_template<true, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
-      
+
       else if (order == "-author")
          search_content_template<false, by_author>(_db, search_term, count, user, region_code, id, type, result);
       else if (order == "-rating")
@@ -2674,10 +2694,10 @@ namespace
          search_content_template<false, by_expiration>(_db, search_term, count, user, region_code, id, type, result);
       else// if (order == "-created")
          search_content_template<false, by_created>(_db, search_term, count, user, region_code, id, type, result);
-      
+
       return result;
    }
-   
+
    vector<seeder_object> database_api::list_seeders_by_price( uint32_t count )const
    {
       return my->list_seeders_by_price( count );
@@ -2686,7 +2706,7 @@ namespace
    {
       return my->list_seeders_by_price( count );
    }
-    
+
    vector<seeder_object> database_api_impl::list_seeders_by_price( uint32_t count )const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
@@ -2696,9 +2716,9 @@ namespace
       time_point_sec now = _db.head_block_time();
       vector<seeder_object> result;
       result.reserve(count);
-      
+
       auto itr = idx.begin();
-      
+
       while(count-- && itr != idx.end())
       {
          if( itr->expiration >= now )
@@ -2707,7 +2727,7 @@ namespace
             ++count;
          ++itr;
       }
-      
+
       return result;
    }
 
@@ -2715,7 +2735,7 @@ namespace
    {
       return my->list_seeders_by_upload( count );
    }
-   
+
    vector<seeder_object> database_api_impl::list_seeders_by_upload( uint32_t count )const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
@@ -2725,16 +2745,16 @@ namespace
       const auto& idx2 = _db.get_index_type<seeder_index>().indices().get<by_seeder>();
       vector<seeder_object> result;
       result.reserve(count);
-      
+
       auto itr = idx.begin();
-      
+
       while(count-- && itr != idx.end())
       {
          const auto& so_itr = idx2.find(itr->seeder);
          result.emplace_back(*so_itr);
          ++itr;
       }
-      
+
       return result;
    }
 
@@ -2859,7 +2879,7 @@ namespace
    // Private methods                                                  //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-   
+
    void database_api_impl::broadcast_updates( const vector<variant>& updates )
    {
       if( updates.size() ) {
@@ -2869,7 +2889,7 @@ namespace
          });
       }
    }
-   
+
    void database_api_impl::on_objects_removed( const vector<const graphene::db::object*>& objs )
    {
       /// we need to ensure the database_api is not deleted for the life of the async operation
@@ -2877,19 +2897,19 @@ namespace
       {
          vector<variant>    updates;
          updates.reserve(objs.size());
-         
+
          for( auto obj : objs )
             updates.emplace_back( obj->id );
          broadcast_updates( updates );
       }
 
    }
-   
+
    void database_api_impl::on_objects_changed(const vector<object_id_type>& ids)
    {
       vector<variant>    updates;
       vector< string > content_update_queue;
-      
+
       for(auto id : ids)
       {
          const graphene::db::object* obj = nullptr;
@@ -2919,15 +2939,15 @@ namespace
 
          }
       }
-      
+
       auto capture_this = shared_from_this();
-      
+
       /// pushing the future back / popping the prior future if it is complete.
       /// if a connection hangs then this could get backed up and result in
       /// a failure to exit cleanly.
       fc::async([capture_this,this,updates, content_update_queue](){
          if( _subscribe_callback ) _subscribe_callback( updates );
-         
+
          for( const auto& item: content_update_queue )
          {
             _content_subscriptions[ item ]( );
@@ -2935,7 +2955,7 @@ namespace
          }
       });
    }
-   
+
    /** note: this method cannot yield because it is called in the middle of
     * apply a block.
     */

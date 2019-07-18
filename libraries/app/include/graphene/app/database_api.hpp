@@ -506,6 +506,14 @@ namespace graphene { namespace app {
          vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
          /**
+          * @brief Get account's summary of various non fungible tokens.
+          * @param account_id account ID to retrieve balances for
+          * @return a summary of non fungible token ids
+          * @ingroup DatabaseAPI_Balance
+          */
+         map<non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(account_id_type account_id)const;
+
+         /**
           * @brief Get account's balances in various non fungible tokens.
           * @param account_id account ID to retrieve balances for
           * @param ids set of non fungible token ids to filter retrieved tokens (to disable filtering pass empty set)
@@ -906,7 +914,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           */
          optional<content_object> get_content( const string& URI )const;
-         
+
          /**
           * @brief Generate keys for new content submission.
           * @param seeders list of seeder account IDs
@@ -914,7 +922,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
-         
+
          /**
           * @brief Restores encryption key from key parts stored in buying object.
           * @param el_gamal_priv_key_string the private El Gamal key
@@ -1104,6 +1112,8 @@ FC_API(graphene::app::database_api,
           (get_account_balances)
           (get_named_account_balances)
           (get_vesting_balances)
+          (get_non_fungible_token_summary)
+          (get_non_fungible_token_balances)
 
           // Assets
           (get_asset_count)
@@ -1122,7 +1132,6 @@ FC_API(graphene::app::database_api,
           (get_non_fungible_token_data_count)
           (get_non_fungible_token_data)
           (list_non_fungible_token_data)
-          (get_non_fungible_token_balances)
           (search_non_fungible_token_history)
 
           // Miners
