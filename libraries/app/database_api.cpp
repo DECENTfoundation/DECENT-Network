@@ -131,7 +131,7 @@ namespace graphene { namespace app {
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
       share_type get_new_asset_per_block() const;
       share_type get_asset_per_block_by_block_num(uint32_t block_num)const;
-      vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
+      vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
       asset price_to_dct( asset price )const;
 
       // Non Fungible Tokens
@@ -1286,12 +1286,12 @@ namespace graphene { namespace app {
       return result;
    }
 
-   vector<optional<asset_dynamic_data_object>> database_api::get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
+   vector<optional<asset_dynamic_data_object>> database_api::get_asset_dynamic_data(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
    {
-      return my->get_asset_dynamic_data_objects( asset_dynamic_data_ids );
+      return my->get_asset_dynamic_data( asset_dynamic_data_ids );
    }
 
-   vector<optional<asset_dynamic_data_object>> database_api_impl::get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
+   vector<optional<asset_dynamic_data_object>> database_api_impl::get_asset_dynamic_data(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const
    {
       return _db.get_objects(asset_dynamic_data_ids);
    }

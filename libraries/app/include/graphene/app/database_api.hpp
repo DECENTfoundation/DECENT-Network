@@ -560,7 +560,7 @@ namespace graphene { namespace app {
          * @return the asset dynamic data objects corresponding to the provided IDs
          * @ingroup DatabaseAPI_Asset
          */
-        vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data_objects(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
+        vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
 
          /**
           * @brief Converts asset into DCT, using actual price feed.
@@ -1110,7 +1110,7 @@ FC_API(graphene::app::database_api,
           (get_assets)
           (list_assets)
           (lookup_asset_symbols)
-          (get_asset_dynamic_data_objects)
+          (get_asset_dynamic_data)
           (price_to_dct)
           (get_real_supply)
 
