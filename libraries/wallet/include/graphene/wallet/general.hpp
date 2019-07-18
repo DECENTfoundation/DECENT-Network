@@ -159,7 +159,7 @@ transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
  * @return The transaction
  * @ingroup WalletAPI_General
  */
-optional<signed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
+optional<processed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
 
 /**
  * @brief Listing the operations available.

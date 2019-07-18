@@ -165,7 +165,7 @@ transaction_id_type wallet_api::get_transaction_id( const signed_transaction& tr
    return trx.id();
 }
 
-optional<signed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
+optional<processed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
 {
    return my->_remote_db->get_transaction_by_id( id );
 }
