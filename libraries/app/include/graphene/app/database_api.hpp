@@ -507,7 +507,7 @@ namespace graphene { namespace app {
 
          /**
           * @brief Get account's summary of various non fungible tokens.
-          * @param account_id account ID to retrieve balances for
+          * @param account_id account ID to retrieve summary for
           * @return a summary of non fungible token ids
           * @ingroup DatabaseAPI_Balance
           */
@@ -530,7 +530,7 @@ namespace graphene { namespace app {
          /**
           * @brief Get the total number of assets registered on the blockchain.
           * @return the total number of registered assets
-          * @ingroup DatabaseAPI_Account
+          * @ingroup DatabaseAPI_Asset
           */
          uint64_t get_asset_count()const;
 
