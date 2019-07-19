@@ -31,119 +31,17 @@ set( CMAKE_CXX_STANDARD_REQUIRED YES )
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
-
-if( MSVC )
-    option( USE_PCH "Use precompiled header" ON )
-else()
-    option( USE_PCH "Use precompiled header" OFF )
-endif()
-
-if( APPLE )
-    find_program( BREW_PROGRAM brew )
-    if( BREW_PROGRAM )
-        find_program( SED_PROGRAM sed )
-        find_program( BASH_PROGRAM bash )
-        if( BASH_PROGRAM AND SED_PROGRAM )
-            execute_process( COMMAND "${BASH_PROGRAM}" "-c" "${BREW_PROGRAM} config | ${SED_PROGRAM} -n -E 's/^HOMEBREW_PREFIX: (.+)$$/\\1/p'" OUTPUT_VARIABLE HOMEBREW_PREFIX )
-            string( STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX )
-        else()
-            set( HOMEBREW_PREFIX "/usr/local" )
-        endif()
-
-        list( APPEND CMAKE_PREFIX_PATH
-              "${HOMEBREW_PREFIX}/opt/openssl"
-              "${HOMEBREW_PREFIX}/opt/qt"
-            )
-    endif()
-endif()
-
 include( cotire )
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
 get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
 
-if( VCPKG_TARGET_TRIPLET )
-    message( STATUS "Using static Crypto++" )
-    find_package( CryptoPP REQUIRED )
-
-    # vcpkg has only Debug and Release
-    set( CRYPTOPP_NAME cryptopp-static )
-    get_target_property( _CRYPTOPP_LANGUAGES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE )
-    get_target_property( _CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE )
-    get_target_property( _CRYPTOPP_LOCATION ${CRYPTOPP_NAME} IMPORTED_LOCATION_RELEASE )
-
-    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO )
-    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "${_CRYPTOPP_LANGUAGES}"
-        IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO "${_CRYPTOPP_LIBRARIES}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${_CRYPTOPP_LOCATION}" )
-
-    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL )
-    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "${_CRYPTOPP_LANGUAGES}"
-        IMPORTED_LINK_INTERFACE_LIBRARIES_MINSIZEREL "${_CRYPTOPP_LIBRARIES}"
-        IMPORTED_LOCATION_MINSIZEREL "${_CRYPTOPP_LOCATION}" )
-
-    string( TOUPPER "IMPORTED_LOCATION_${CMAKE_BUILD_TYPE}" _CRYPTOPP_LOCATION )
-    get_target_property( CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} ${_CRYPTOPP_LOCATION} )
-    get_target_property( CRYPTOPP_INCLUDE_DIR ${CRYPTOPP_NAME} INTERFACE_INCLUDE_DIRECTORIES )
+if( MSVC )
+    option( USE_PCH "Use precompiled header" ON )
 else()
-    message( STATUS "Looking for Crypto++" )
-    find_path( CRYPTOPP_INCLUDE_DIR "cryptopp/integer.h" )
-    find_library( CRYPTOPP_LIBRARIES NAMES "cryptopp" )
-
-    if( NOT CRYPTOPP_INCLUDE_DIR )
-        message( FATAL_ERROR "Crypto++ includes not found")
-    endif()
-    if( NOT CRYPTOPP_LIBRARIES )
-        message( FATAL_ERROR "Crypto++ libraries not found")
-    endif()
-
-    set( CRYPTOPP_NAME cryptopp )
-    add_library( ${CRYPTOPP_NAME} STATIC IMPORTED )
-    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY IMPORTED_LOCATION "${CRYPTOPP_LIBRARIES}" )
-    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CRYPTOPP_INCLUDE_DIR}" )
+    option( USE_PCH "Use precompiled header" OFF )
 endif()
-
-mark_as_advanced( CRYPTOPP_LIBRARIES CRYPTOPP_INCLUDE_DIR )
-message( STATUS "Crypto++ found at ${CRYPTOPP_INCLUDE_DIR}, ${CRYPTOPP_LIBRARIES}" )
-
-message( STATUS "Looking for GMP" )
-find_path( GMP_INCLUDE_DIR "gmp.h" )
-find_library( GMP_LIBRARIES NAMES "gmp" "mpir.lib" )
-
-if( NOT GMP_INCLUDE_DIR )
-   message( FATAL_ERROR "GMP includes not found" )
-endif()
-if( NOT GMP_LIBRARIES )
-   message( FATAL_ERROR "GMP library not found" )
-endif()
-
-mark_as_advanced( GMP_LIBRARIES GMP_INCLUDE_DIR )
-message( STATUS "GMP found at ${GMP_INCLUDE_DIR}, ${GMP_LIBRARIES}" )
-
-add_library( gmp UNKNOWN IMPORTED )
-set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
-set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
-
-message( STATUS "Looking for PBC" )
-find_path( PBC_INCLUDE_DIR NAMES "pbc.h" "pbc/pbc.h" )
-find_library( PBC_LIBRARIES NAMES "pbc" "pbclib.lib" )
-
-if( NOT PBC_INCLUDE_DIR )
-   message( FATAL_ERROR "PBC includes not found" )
-endif()
-if( NOT PBC_LIBRARIES )
-   message( FATAL_ERROR "PBC library not found" )
-endif()
-
-mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
-message( STATUS "PBC found at ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
-
-add_library( pbc UNKNOWN IMPORTED )
-set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
-set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
 
 if( WIN32 )
 
@@ -171,6 +69,16 @@ else() # Apple and Linux
         # Apple Specific Options Here
         message( STATUS "Configuring DCore on OS X" )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall" )
+
+        find_program( BREW_PROGRAM brew )
+        if( BREW_PROGRAM )
+            execute_process( COMMAND "${BREW_PROGRAM}" "--prefix" OUTPUT_VARIABLE HOMEBREW_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE )
+            message( STATUS "Homebrew prefix: ${HOMEBREW_PREFIX}")
+            list( APPEND CMAKE_PREFIX_PATH
+                  "${HOMEBREW_PREFIX}/opt/openssl"
+                  "${HOMEBREW_PREFIX}/opt/qt"
+                )
+        endif()
     else()
         # Linux Specific Options Here
         message( STATUS "Configuring DCore on Linux" )
@@ -217,6 +125,85 @@ if(UNIX)
         set(CMAKE_INSTALL_RPATH "\$ORIGIN" CACHE INTERNAL "")
     endif()
 endif()
+
+if( VCPKG_TARGET_TRIPLET )
+    message( STATUS "Using static Crypto++" )
+    find_package( CryptoPP REQUIRED )
+
+    # vcpkg has only Debug and Release
+    set( CRYPTOPP_NAME cryptopp-static )
+    get_target_property( _CRYPTOPP_LANGUAGES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE )
+    get_target_property( _CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE )
+    get_target_property( _CRYPTOPP_LOCATION ${CRYPTOPP_NAME} IMPORTED_LOCATION_RELEASE )
+
+    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO )
+    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "${_CRYPTOPP_LANGUAGES}"
+        IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO "${_CRYPTOPP_LIBRARIES}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_CRYPTOPP_LOCATION}" )
+
+    set_property( TARGET ${CRYPTOPP_NAME} APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL )
+    set_target_properties( ${CRYPTOPP_NAME} PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "${_CRYPTOPP_LANGUAGES}"
+        IMPORTED_LINK_INTERFACE_LIBRARIES_MINSIZEREL "${_CRYPTOPP_LIBRARIES}"
+        IMPORTED_LOCATION_MINSIZEREL "${_CRYPTOPP_LOCATION}" )
+
+    string( TOUPPER "IMPORTED_LOCATION_${CMAKE_BUILD_TYPE}" _CRYPTOPP_LOCATION )
+    get_target_property( CRYPTOPP_LIBRARIES ${CRYPTOPP_NAME} ${_CRYPTOPP_LOCATION} )
+    get_target_property( CRYPTOPP_INCLUDE_DIR ${CRYPTOPP_NAME} INTERFACE_INCLUDE_DIRECTORIES )
+else()
+    find_path( CRYPTOPP_INCLUDE_DIR "cryptopp/integer.h" )
+    find_library( CRYPTOPP_LIBRARIES NAMES "cryptopp" )
+
+    if( NOT CRYPTOPP_INCLUDE_DIR )
+        message( FATAL_ERROR "Crypto++ includes not found")
+    endif()
+    if( NOT CRYPTOPP_LIBRARIES )
+        message( FATAL_ERROR "Crypto++ libraries not found")
+    endif()
+
+    set( CRYPTOPP_NAME cryptopp )
+    add_library( ${CRYPTOPP_NAME} STATIC IMPORTED )
+    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY IMPORTED_LOCATION "${CRYPTOPP_LIBRARIES}" )
+    set_property( TARGET ${CRYPTOPP_NAME} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CRYPTOPP_INCLUDE_DIR}" )
+endif()
+
+mark_as_advanced( CRYPTOPP_LIBRARIES CRYPTOPP_INCLUDE_DIR )
+message( STATUS "Found Crypto++: ${CRYPTOPP_INCLUDE_DIR}, ${CRYPTOPP_LIBRARIES}" )
+
+find_path( GMP_INCLUDE_DIR "gmp.h" )
+find_library( GMP_LIBRARIES NAMES "gmp" "mpir.lib" )
+
+if( NOT GMP_INCLUDE_DIR )
+   message( FATAL_ERROR "GMP includes not found" )
+endif()
+if( NOT GMP_LIBRARIES )
+   message( FATAL_ERROR "GMP library not found" )
+endif()
+
+mark_as_advanced( GMP_LIBRARIES GMP_INCLUDE_DIR )
+message( STATUS "Found GMP: ${GMP_INCLUDE_DIR}, ${GMP_LIBRARIES}" )
+
+add_library( gmp UNKNOWN IMPORTED )
+set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
+set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
+
+find_path( PBC_INCLUDE_DIR NAMES "pbc.h" "pbc/pbc.h" )
+find_library( PBC_LIBRARIES NAMES "pbc" "pbclib.lib" )
+
+if( NOT PBC_INCLUDE_DIR )
+   message( FATAL_ERROR "PBC includes not found" )
+endif()
+if( NOT PBC_LIBRARIES )
+   message( FATAL_ERROR "PBC library not found" )
+endif()
+
+mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
+message( STATUS "Found PBC: ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
+
+add_library( pbc UNKNOWN IMPORTED )
+set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
+set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
 
 set(BOOST_COMPONENTS thread filesystem program_options serialization unit_test_framework coroutine iostreams)
 set(Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF")
