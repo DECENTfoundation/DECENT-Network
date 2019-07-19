@@ -16,7 +16,7 @@ my $fileHeader = <<'END';
 #include <graphene/wallet/wallet.hpp>
 
 namespace graphene { namespace wallet {
-   namespace detail 
+   namespace detail
    {
       struct api_method_name_collector_visitor
       {
@@ -29,7 +29,7 @@ namespace graphene { namespace wallet {
          }
       };
    }
-  
+
    api_documentation::api_documentation()
    {
 END
@@ -81,6 +81,22 @@ my $fileFooter = <<'END';
           iter = method_descriptions.erase(iter);
         else
           ++iter;
+
+     {
+        method_description this_method;
+        this_method.method_name = "exit";
+        this_method.brief_description = "                                    void exit()\n";
+        this_method.detailed_description = "Exits the CLI Wallet\n";
+        method_descriptions.insert(this_method);
+     }
+
+     {
+        method_description this_method;
+        this_method.method_name = "quit";
+        this_method.brief_description = "                                    void quit()\n";
+        this_method.detailed_description = "Exits the CLI Wallet\n";
+        method_descriptions.insert(this_method);
+     }
    }
 
 } } // end namespace graphene::wallet
@@ -150,7 +166,7 @@ sub formatDocComment
   my $result = Text::Wrap::fill('', '', $bodyDocs);
   $result .= "\n\n" . $paramDocs if $paramDocs;
   $result .= "\n\n" . $returnDocs if $returnDocs;
-  
+
   return $result;
 }
 
@@ -174,5 +190,3 @@ sub escapeStringForC
   my($str) = @_;
   return join('', map { escapeCharForCString($_) } split('', $str));
 }
-
-
