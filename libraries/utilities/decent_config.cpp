@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <fc/exception/exception.hpp>
 #include <fc/log/console_appender.hpp>
@@ -153,21 +154,18 @@ namespace decent {
     }
 
     template<class Ptree>
-    void read_log_ini(const std::string &filename,
-                      Ptree &pt,
-                      const std::locale &loc = std::locale()) {
-       std::basic_ifstream<typename Ptree::key_type::value_type>
-             stream(filename.c_str());
+    void read_log_ini(const boost::filesystem::path &filename, Ptree &pt)
+    {
+       boost::filesystem::basic_ifstream<typename Ptree::key_type::value_type> stream(filename);
        if (!stream)
           BOOST_PROPERTY_TREE_THROW(boost::property_tree::ini_parser_error(
-                                          "cannot open file", filename, 0));
-       stream.imbue(loc);
+                                          "cannot open file", filename.string(), 0));
        try {
           read_log_ini(stream, pt);
        }
        catch (boost::property_tree::ini_parser_error &e) {
           BOOST_PROPERTY_TREE_THROW(boost::property_tree::ini_parser_error(
-                e.message(), filename, e.line()));
+                e.message(), filename.string(), e.line()));
        }
     }
 
@@ -178,7 +176,7 @@ namespace decent {
           bool found_logging_config = false;
 
           boost::property_tree::ptree config_ini_tree;
-          read_log_ini(config_ini_filename.make_preferred().string().c_str(), config_ini_tree);
+          read_log_ini(config_ini_filename, config_ini_tree);
           for (const auto &section : config_ini_tree) {
              const std::string &section_name = section.first;
              const boost::property_tree::ptree &section_tree = section.second;
@@ -268,7 +266,7 @@ namespace decent {
 
     void write_default_config_file(boost::filesystem::path config_ini_filename, const boost::program_options::options_description &cfg_options, bool is_daemon)
     {
-       std::ofstream out_cfg(config_ini_filename.make_preferred().string());
+       boost::filesystem::ofstream out_cfg(config_ini_filename);
        for( const auto &od : cfg_options.options() )
        {
           if( od->description().find("INTERNAL:") == 0 ) // skip internal settings

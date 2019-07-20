@@ -281,7 +281,8 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       {
          // get the basic options
          try {
-            bpo::store(bpo::parse_config_file<char>(config_filename.make_preferred().string().c_str(), cfg_options, true), options);
+            boost::filesystem::ifstream cfg_stream(config_filename);
+            bpo::store(bpo::parse_config_file<char>(cfg_stream, cfg_options, true), options);
          }
          catch (std::exception& e) {
             elog(e.what());

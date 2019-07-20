@@ -48,13 +48,13 @@ void block_database::open( const boost::filesystem::path& dbdir )
 
    if( !exists( dbdir/"index" ) )
    {
-     _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
-     _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+     _block_num_to_pos.open( (dbdir/"index"), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+     _blocks.open( (dbdir/"blocks"), std::fstream::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
    }
    else
    {
-     _block_num_to_pos.open( (dbdir/"index").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
-     _blocks.open( (dbdir/"blocks").generic_string().c_str(), std::fstream::binary | std::fstream::in | std::fstream::out );
+     _block_num_to_pos.open( (dbdir/"index"), std::fstream::binary | std::fstream::in | std::fstream::out );
+     _blocks.open( (dbdir/"blocks"), std::fstream::binary | std::fstream::in | std::fstream::out );
    }
 } FC_CAPTURE_AND_RETHROW( (dbdir) ) }
 

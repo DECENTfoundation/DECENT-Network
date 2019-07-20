@@ -64,11 +64,11 @@ int main( int argc, char** argv )
          ("help,h", "Print this help message and exit.")
          ("version,v", "Print version information and exit.")
          ("generate-keys,g", "Generate brain, wif private and public keys.")
-         ("wallet-file,w", bpo::value<std::string>()->implicit_value("wallet.json"), "Wallet to load.")
+         ("wallet-file,w", bpo::value<boost::filesystem::path>()->implicit_value("wallet.json"), "Wallet to load.")
          ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
          ("daemon", "Run the wallet in daemon mode.")
          ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
-         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages().generic_string()), "Directory to store submitted packages")
+         ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages()), "Directory to store submitted packages")
          ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<std::string>(), "Server Username")
@@ -171,7 +171,8 @@ int main( int argc, char** argv )
       //    designed.
       //
       graphene::wallet::wallet_data wdata;
-      boost::filesystem::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<std::string>() : pf.get_decent_home() / "wallet.json");
+      boost::filesystem::path wallet_file( options.count("wallet-file") ?
+         options.at("wallet-file").as<boost::filesystem::path>() : pf.get_decent_home() / "wallet.json");
       bool has_wallet_file = exists( wallet_file );
       if( has_wallet_file )
       {

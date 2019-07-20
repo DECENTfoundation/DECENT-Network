@@ -36,6 +36,7 @@
 using namespace graphene::app;
 using namespace graphene::chain;
 using namespace graphene::utilities;
+using namespace boost::filesystem;
 using namespace std;
 
 namespace fc

@@ -176,7 +176,7 @@ namespace gui_wallet
 
       static void setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options);
 
-      void startDaemons(BlockChainStartType type, const std::string &wallet_file, const graphene::wallet::server_data &ws);
+      void startDaemons(BlockChainStartType type, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
       void stopDaemons();
       fc::logger& guiLogger() { return m_logger; }
       std::string getCurrentUser() const;

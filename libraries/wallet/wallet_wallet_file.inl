@@ -4,12 +4,12 @@ vector<account_object> wallet_api::list_my_accounts()
    return vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
 }
 
-string wallet_api::get_wallet_filename() const
+path wallet_api::get_wallet_filename() const
 {
    return my->get_wallet_filename();
 }
 
-void wallet_api::set_wallet_filename( const string& wallet_filename )
+void wallet_api::set_wallet_filename( const path& wallet_filename )
 {
    return my->set_wallet_filename( wallet_filename );
 }
@@ -113,14 +113,14 @@ void wallet_api::set_password(const string& password )
    lock();
 }
 
-bool wallet_api::load_wallet_file(const string& wallet_filename )
+bool wallet_api::load_wallet_file(const path& wallet_filename )
 {
    if( !wallet_filename.empty() )
       my->set_wallet_filename(wallet_filename);
    return my->load_wallet_file( wallet_filename );
 }
 
-void wallet_api::save_wallet_file(const string& wallet_filename )
+void wallet_api::save_wallet_file(const path& wallet_filename )
 {
    FC_ASSERT( !my->is_locked(), "the wallet must be unlocked" );
    my->save_wallet_file( wallet_filename );

@@ -41,14 +41,14 @@ vector<account_object> list_my_accounts();
  * @return the wallet filename
  * @ingroup WalletAPI_Wallet
  */
-string get_wallet_filename() const;
+path get_wallet_filename() const;
 
 /**
  * @brief Sets the wallet filename used for future writes.
  * @param wallet_filename the wallet filename that will be used when automatically saving the wallet
  * @ingroup WalletAPI_Wallet
  */
-void set_wallet_filename( const string& wallet_filename );
+void set_wallet_filename( const path& wallet_filename );
 
 /**
  * @brief Get the WIF private key corresponding to a public key.  The
@@ -111,7 +111,7 @@ void set_password(const string& password);
  * @return \c true if the specified wallet is loaded
  * @ingroup WalletAPI_Wallet
  */
-bool load_wallet_file(const string& wallet_filename = string());
+bool load_wallet_file(const path& wallet_filename = path());
 
 /**
  * @brief Saves the current wallet to the given filename.
@@ -123,7 +123,7 @@ bool load_wallet_file(const string& wallet_filename = string());
  *                        save to the current filename.
  * @ingroup WalletAPI_Wallet
  */
-void save_wallet_file(const string& wallet_filename = string());
+void save_wallet_file(const path& wallet_filename = path());
 
 /**
  * @brief Imports the private key for an existing account.

@@ -668,12 +668,12 @@ public:
       return *opt;
    }
 
-   string get_wallet_filename() const
+   const path& get_wallet_filename() const
    {
       return _wallet_filename;
    }
 
-   void set_wallet_filename(const string &wallet_filename)
+   void set_wallet_filename(const path &wallet_filename)
    {
       FC_ASSERT( !wallet_filename.empty() );
       _wallet_filename = wallet_filename;
@@ -827,7 +827,7 @@ public:
    }
 
 
-   bool load_wallet_file(string wallet_filename = string())
+   bool load_wallet_file(path wallet_filename = path())
    {
       dlog("load_wallet_file() begin");
 
@@ -943,7 +943,7 @@ public:
       return fc::json::to_pretty_string( v );
    }
 
-   void save_wallet_file(string wallet_filename = string() )
+   void save_wallet_file(path wallet_filename = path() )
    {
       dlog("save_wallet_file() begin");
       FC_ASSERT( !is_locked() );
@@ -982,7 +982,7 @@ public:
          //
          // http://en.wikipedia.org/wiki/Most_vexing_parse
          //
-         fc::ofstream outfile{ boost::filesystem::path( wallet_filename ) };
+         boost::filesystem::ofstream outfile( wallet_filename );
          outfile.write( data.c_str(), data.length() );
          outfile.flush();
          outfile.close();
@@ -3331,7 +3331,7 @@ signed_transaction content_cancellation(const string& author,
       return _remote_db->head_block_time();
    }
 
-   string                  _wallet_filename;
+   boost::filesystem::path _wallet_filename;
    wallet_data             _wallet;
 
    map<public_key_type,string> _keys;
@@ -3352,7 +3352,6 @@ signed_transaction content_cancellation(const string& author,
 #ifdef __unix__
    mode_t                  _old_umask;
 #endif
-   const string _wallet_filename_extension = ".wallet";
 
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
    seeders_tracker _seeders_tracker;

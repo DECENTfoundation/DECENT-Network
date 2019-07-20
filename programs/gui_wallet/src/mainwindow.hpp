@@ -31,10 +31,10 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 public:
-   MainWindow(const std::string &wallet_file, const graphene::wallet::server_data &ws);
+   MainWindow(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
    virtual ~MainWindow();
 
-   const std::string& walletFile() const { return m_wallet_file; }
+   const boost::filesystem::path& walletFile() const { return m_wallet_file; }
 
 public slots:
    void slot_daemonFinished(int ret);
@@ -85,7 +85,7 @@ private:
    void checkDownloads();
 
    int m_daemon_restart = 0;
-   std::string m_wallet_file;
+   boost::filesystem::path m_wallet_file;
    graphene::wallet::server_data m_ws;
    size_t m_iSplashWidgetIndex;
    QTimer* m_pTimerBalance;

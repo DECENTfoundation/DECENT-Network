@@ -611,8 +611,8 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
    gui_wallet::Globals::Plugins::set_program_options(cli, cfg);
    cli.add_options()
       ("generate-keys,g", "Generate brain, wif private and public keys.")
-      ("wallet-file,w", bpo::value<std::string>()->default_value(
-          (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json").generic_string()), "Wallet to load.")
+      ("wallet-file,w", bpo::value<boost::filesystem::path>()->default_value(
+          (graphene::utilities::decent_path_finder::instance().get_decent_home() / "wallet.json")), "Wallet to load.")
       ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
    ;
 
@@ -620,7 +620,7 @@ void Globals::setCommandLine(bpo::options_description &app_options, bpo::options
    cfg_options.add(cfg);
 }
 
-void Globals::startDaemons(BlockChainStartType type, const std::string &wallet_file, const graphene::wallet::server_data &ws)
+void Globals::startDaemons(BlockChainStartType type, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
 {
    if (m_p_daemon_details)
       return;
@@ -1465,7 +1465,8 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       if( exists(config_ini_path) )
       {
          // get the basic options
-         bpo::store(bpo::parse_config_file<char>(config_ini_path.make_preferred().string().c_str(), cfg_options, true), options);
+         boost::filesystem::ifstream cfg_stream(config_ini_path);
+         bpo::store(bpo::parse_config_file<char>(cfg_stream, cfg_options, true), options);
       }
 
       bpo::notify(options);

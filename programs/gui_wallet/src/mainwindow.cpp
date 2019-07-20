@@ -33,7 +33,7 @@
 namespace gui_wallet
 {
 
-MainWindow::MainWindow(const std::string &wallet_file, const graphene::wallet::server_data &ws)
+MainWindow::MainWindow(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
 : QMainWindow()
 , m_wallet_file(wallet_file)
 , m_ws(ws)

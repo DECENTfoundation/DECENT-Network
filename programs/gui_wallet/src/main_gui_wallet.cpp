@@ -122,7 +122,8 @@ int main(int argc, char* argv[])
    if( exists(config_filename) )
    {
       // get the basic options
-      bpo::store(bpo::parse_config_file<char>(config_filename.make_preferred().string().c_str(), cfg_options, true), options);
+      boost::filesystem::ifstream cfg_stream(config_filename);
+      bpo::store(bpo::parse_config_file<char>(cfg_stream, cfg_options, true), options);
    }
    else
    {
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
    }
 
    graphene::wallet::server_data ws{ "ws://" + options["rpc-endpoint"].as<std::string>() };
-   gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<std::string>(), ws);
+   gui_wallet::MainWindow aMainWindow(options["wallet-file"].as<boost::filesystem::path>(), ws);
    QObject::connect(&gui_wallet::Globals::instance(), &gui_wallet::Globals::signal_daemonFinished,
                     &aMainWindow, &gui_wallet::MainWindow::slot_daemonFinished);
 

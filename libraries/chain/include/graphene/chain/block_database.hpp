@@ -22,11 +22,11 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <graphene/chain/protocol/block.hpp>
 
 namespace graphene { namespace chain {
-   class block_database 
+   class block_database
    {
       public:
          void open( const boost::filesystem::path& dbdir );
@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
          optional<signed_block> last()const;
          optional<block_id_type> last_id()const;
       private:
-         mutable std::fstream _blocks;
-         mutable std::fstream _block_num_to_pos;
+         mutable boost::filesystem::fstream _blocks;
+         mutable boost::filesystem::fstream _block_num_to_pos;
    };
 } }
