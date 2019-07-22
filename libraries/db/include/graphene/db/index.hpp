@@ -24,6 +24,7 @@
  */
 #pragma once
 #include <graphene/db/object.hpp>
+#include <graphene/db/exceptions.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -108,7 +109,8 @@ namespace graphene { namespace db {
          const object&              get( object_id_type id )const
          {
             auto maybe_found = find( id );
-            FC_ASSERT( maybe_found != nullptr, "Unable to find Object", ("id",id) );
+            if(maybe_found == nullptr)
+               FC_THROW_EXCEPTION(object_not_found_exception, "Object ID: ${id}", ("id", id));
             return *maybe_found;
          }
 

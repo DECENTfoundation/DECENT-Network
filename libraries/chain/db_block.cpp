@@ -439,7 +439,7 @@ void database::pop_block()
    _pending_tx_session.reset();
    auto head_id = head_block_id();
    optional<signed_block> head_block = fetch_block_by_id( head_id );
-   GRAPHENE_ASSERT( head_block.valid(), pop_empty_chain, "there are no blocks to pop" );
+   GRAPHENE_ASSERT( head_block.valid(), pop_empty_chain_exception, "there are no blocks to pop" );
 
    _fork_db.pop_block();
    _block_id_to_block.remove( head_id );

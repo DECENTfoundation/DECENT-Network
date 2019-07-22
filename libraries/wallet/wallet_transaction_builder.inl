@@ -26,7 +26,8 @@ transaction wallet_api::preview_builder_transaction(transaction_handle_type hand
 
 signed_transaction_info wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->sign_builder_transaction(transaction_handle, broadcast);
 }
 
@@ -35,7 +36,8 @@ signed_transaction_info wallet_api::propose_builder_transaction(transaction_hand
                                                                 uint32_t review_period_seconds,
                                                                 bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
 }
 
@@ -45,7 +47,8 @@ signed_transaction_info wallet_api::propose_builder_transaction2(transaction_han
                                                                  uint32_t review_period_seconds,
                                                                  bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
 }
 
@@ -62,7 +65,8 @@ string wallet_api::serialize_transaction( signed_transaction tx )const
 signed_transaction_info wallet_api::sign_transaction(signed_transaction tx, bool broadcast /* = false */)
 {
     try {
-       FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+       if(is_locked())
+          FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
        return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (tx) )
 }

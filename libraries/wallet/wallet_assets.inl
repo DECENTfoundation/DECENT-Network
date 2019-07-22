@@ -7,14 +7,18 @@ vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t 
 asset_object wallet_api::get_asset(const string& asset_name_or_id) const
 {
    auto a = my->find_asset(asset_name_or_id);
-   FC_ASSERT(a);
+   if(!a)
+      FC_THROW_EXCEPTION(asset_not_found_exception, "");
+   
    return *a;
 }
 
 monitored_asset_options wallet_api::get_monitored_asset_data(const string& asset_name_or_id) const
 {
    auto asset = get_asset(asset_name_or_id);
-   FC_ASSERT(asset.is_monitored_asset() );
+   if(!asset.is_monitored_asset())
+      FC_THROW_EXCEPTION(asset_not_monitored_exception, "");
+   
    return *asset.monitored_asset_opts;
 }
 
@@ -27,7 +31,9 @@ signed_transaction_info wallet_api::create_monitored_asset(const string& issuer,
                                                            bool broadcast)
 
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   
    return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
 }
 
@@ -37,7 +43,8 @@ signed_transaction_info wallet_api::update_monitored_asset(const string& symbol,
                                                            uint8_t minimum_feeds,
                                                            bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
 }
 
@@ -51,7 +58,8 @@ signed_transaction_info wallet_api::create_user_issued_asset(const string& issue
                                                              bool is_fixed_max_supply,
                                                              bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
 }
 
@@ -61,7 +69,8 @@ signed_transaction_info wallet_api::issue_asset(const string& to_account,
                                                 const string& memo,
                                                 bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->issue_asset(to_account, amount, symbol, memo, broadcast);
 }
 
@@ -73,7 +82,8 @@ signed_transaction_info wallet_api::update_user_issued_asset(const string& symbo
                                                              bool is_exchangeable,
                                                              bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
 }
 
@@ -84,7 +94,8 @@ signed_transaction_info wallet_api::fund_asset_pools(const string& from,
                                                      const string& DCT_symbol,
                                                      bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
 }
 
@@ -93,7 +104,8 @@ signed_transaction_info wallet_api::reserve_asset(const string& from,
                                                   const string& symbol,
                                                   bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->reserve_asset(from, amount, symbol, broadcast);
 }
 
@@ -108,7 +120,8 @@ signed_transaction_info wallet_api::claim_fees(const string& uia_amount,
                                                const string& dct_symbol,
                                                bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
 }
 
@@ -117,7 +130,8 @@ signed_transaction_info wallet_api::publish_asset_feed(const string& publishing_
                                                        price_feed feed,
                                                        bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
 }
 

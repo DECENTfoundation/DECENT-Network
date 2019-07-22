@@ -126,9 +126,8 @@ vector< variant > wallet_api::network_get_connected_peers()
 std::string wallet_api::sign_buffer(const std::string& str_buffer,
                                     const std::string& str_brainkey) const
 {
-   if (str_buffer.empty() ||
-       str_brainkey.empty())
-      throw std::runtime_error("You need buffer and brainkey to sign");
+   if(str_buffer.empty() || str_brainkey.empty())
+      FC_THROW_EXCEPTION(need_buffer_and_brainkey_exception, "");
 
    string normalized_brain_key = graphene::utilities::normalize_brain_key( str_brainkey );
    fc::ecc::private_key privkey = graphene::utilities::derive_private_key( normalized_brain_key );

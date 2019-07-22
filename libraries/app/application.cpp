@@ -35,6 +35,7 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/egenesis/egenesis.hpp>
 #include <graphene/net/exceptions.hpp>
+#include <graphene/app/exceptions.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/api.hpp>
 #include <graphene/app/plugin.hpp>
@@ -309,7 +310,7 @@ namespace detail {
          if( !_db_lock->try_lock() )
          {
             _db_lock.reset();
-            FC_THROW_EXCEPTION(fc::invalid_operation_exception, "Database is already used by another process");
+            FC_THROW_EXCEPTION(database_already_used_exception, "");
          }
 
          auto initial_state = [&] {
@@ -595,7 +596,7 @@ namespace detail {
             // translate to a graphene::net exception
             MONITORING_COUNTER_VALUE(blocks_unhandled)++;
             elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
-            FC_THROW_EXCEPTION(graphene::net::unlinkable_block_exception, "Error when pushing block:\n${e}", ("e", e.to_detail_string()));
+            FC_THROW_EXCEPTION(graphene::net::unlinkable_block_resync_peer_exception, "Error when pushing block:\n${e}", ("e", e.to_detail_string()));
          } catch( const fc::exception& e ) {
             elog("Error when pushing block:\n${e}", ("e", e.to_detail_string()));
             throw;
@@ -672,7 +673,7 @@ namespace detail {
                break;
              }
            if (!found_a_block_in_synopsis)
-             FC_THROW_EXCEPTION(graphene::net::peer_is_on_an_unreachable_fork, "Unable to provide a list of blocks starting at any of the blocks in peer's synopsis");
+             FC_THROW_EXCEPTION(graphene::net::peer_is_on_an_unreachable_fork_exception, "Unable to provide a list of blocks starting at any of the blocks in peer's synopsis");
          }
          for( uint32_t num = block_header::num_from_id(last_known_block_id);
               num <= _chain_db->head_block_num() && result.size() < limit;
@@ -846,7 +847,7 @@ namespace detail {
                      "(our chains diverge after block #${non_fork_high_block_num} but only undoable to block #${low_block_num})", 
                      ("low_block_num", low_block_num)
                      ("non_fork_high_block_num", non_fork_high_block_num));
-                FC_THROW_EXCEPTION(graphene::net::block_older_than_undo_history, "Peer is are on a fork I'm unable to switch to");
+                FC_THROW_EXCEPTION(graphene::net::block_older_than_undo_history_exception, "Peer is are on a fork I'm unable to switch to");
               }
             }
           }

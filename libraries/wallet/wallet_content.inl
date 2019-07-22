@@ -31,7 +31,8 @@ content_keys wallet_api::submit_content_async(const string& author,
                                               const fc::time_point_sec& expiration,
                                               const string& synopsis)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 }
 
@@ -39,13 +40,15 @@ signed_transaction_info wallet_api::content_cancellation(const string& author,
                                                          const string& URI,
                                                          bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->content_cancellation(author, URI, broadcast);
 }
 
 void wallet_api::download_content(const string& consumer, const string& URI, const string& region_code_from, bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
@@ -62,7 +65,8 @@ signed_transaction_info wallet_api::request_to_buy(const string& consumer,
                                                    const string& str_region_code_from,
                                                    bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
@@ -72,13 +76,15 @@ signed_transaction_info wallet_api::leave_rating_and_comment(const string& consu
                                                              const string& comment,
                                                              bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
 }
 
 DInteger wallet_api::restore_encryption_key(const string& consumer, buying_id_type buying)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->restore_encryption_key(consumer, buying);
 }
 
@@ -265,7 +271,8 @@ std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(cons
                                                                             const std::string& samples_dir,
                                                                             const DInteger& aes_key) const
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    fc::sha256 key1;
 #if CRYPTOPP_VERSION >= 600
    aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
@@ -281,7 +288,8 @@ std::pair<string, decent::encrypt::CustodyData>  wallet_api::create_package(cons
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const DInteger& aes_key) const
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    fc::sha256 key1;
 #if CRYPTOPP_VERSION >= 600
    aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
@@ -291,27 +299,31 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
 
    auto pack = PackageManager::instance().find_package(fc::ripemd160(package_hash));
    if (pack == nullptr) {
-       FC_THROW("Can not find package");
+      FC_THROW_EXCEPTION(cannot_find_package_exception, "");
    }
 
    if (pack->get_manipulation_state() != PackageInfo::ManipulationState::MS_IDLE) {
-       FC_THROW("Package is not in valid state");
+      FC_THROW_EXCEPTION(package_is_not_in_valid_state_exception, "");
    }
    pack->unpack(output_dir, key1);
 }
 
 void wallet_api::download_package(const std::string& url) const
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    auto content = get_content(url);
-   FC_ASSERT(content, "no such package in the system");
+   if(!content)
+      FC_THROW_EXCEPTION(no_such_content_at_this_url_exception, "URL: ${url}", ("url", url));
+   
    auto pack = PackageManager::instance().get_package(url, content->_hash );
    pack->download(false);
 }
 
 std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    auto package = PackageManager::instance().get_package(fc::ripemd160(package_hash));
    package->start_seeding(protocol, true);
    return package->get_url();
@@ -319,7 +331,8 @@ std::string wallet_api::upload_package(const std::string& package_hash, const st
 
 void wallet_api::remove_package(const std::string& package_hash) const
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    PackageManager::instance().release_package(fc::ripemd160(package_hash));
 }
 

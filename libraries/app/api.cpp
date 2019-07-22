@@ -25,12 +25,16 @@
 
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/app/api.hpp>
+#include <graphene/app/exceptions.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/balance.hpp>
 #include <graphene/app/impacted.hpp>
+#include <graphene/db/exceptions.hpp>
 #include <fc/crypto/base64.hpp>
 
 namespace graphene { namespace app {
+
+   const int CURRENT_OUTPUT_LIMIT_100 = 100;
 
    login_api::login_api(application& a)
    :_app(a)
@@ -97,43 +101,50 @@ namespace graphene { namespace app {
 
    fc::api<network_broadcast_api> login_api::network_broadcast()const
       {
-      FC_ASSERT(_network_broadcast_api);
+      if(!_network_broadcast_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_network_broadcast_api;
       }
 
    fc::api<network_node_api> login_api::network_node()const
       {
-      FC_ASSERT(_network_node_api);
+      if(!_network_node_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_network_node_api;
       }
 
    fc::api<database_api> login_api::database()const
       {
-      FC_ASSERT(_database_api);
+      if(!_database_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_database_api;
       }
 
    fc::api<history_api> login_api::history() const
       {
-      FC_ASSERT(_history_api);
+      if(!_history_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_history_api;
       }
 
    fc::api<crypto_api> login_api::crypto() const
       {
-      FC_ASSERT(_crypto_api);
+      if(!_crypto_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_crypto_api;
       }
 
    fc::api<graphene::app::messaging_api> login_api::messaging() const
       {
-      FC_ASSERT(_messaging_api);
+      if(!_messaging_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_messaging_api;
       }
 
    fc::api<monitoring_api> login_api::monitoring() const
       {
-      FC_ASSERT(_monitoring_api);
+      if(!_monitoring_api)
+         FC_THROW_EXCEPTION(api_not_available_exception, "");
       return *_monitoring_api;
       }
 
@@ -248,10 +259,14 @@ namespace graphene { namespace app {
                                                                       operation_history_id_type stop,
                                                                       unsigned limit,
                                                                       operation_history_id_type start ) const
-   {
-      FC_ASSERT( _app.chain_database() );
+   {      
+      if(!_app.chain_database()) 
+        FC_THROW_EXCEPTION(database_not_available_exception, "");      
+
       const auto& db = *_app.chain_database();
-      FC_ASSERT( limit <= 100 );
+      if(limit > CURRENT_OUTPUT_LIMIT_100)
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+
       vector<operation_history_object> result;
       const auto& stats = account(db).statistics(db);
       const account_transaction_history_object* node = db.find(stats.most_recent_op);
@@ -282,9 +297,13 @@ namespace graphene { namespace app {
                                                                                unsigned limit,
                                                                                uint32_t start) const
    {
-      FC_ASSERT( _app.chain_database() );
+      if(!_app.chain_database())
+         FC_THROW_EXCEPTION(database_not_available_exception, "");
+
       const auto& db = *_app.chain_database();
-      FC_ASSERT(limit <= 100);
+      if(limit > CURRENT_OUTPUT_LIMIT_100)
+         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+
       vector<operation_history_object> result;
       if( start == 0 )
         start = account(db).statistics(db).total_ops;
@@ -322,7 +341,9 @@ namespace graphene { namespace app {
       bool account_history_query_required = true;
       result.reserve(limit);
 
-      FC_ASSERT( _app.chain_database() );
+      if(!_app.chain_database())
+         FC_THROW_EXCEPTION(database_not_available_exception, "");
+
       const auto& db = *_app.chain_database();
 
       try
@@ -451,7 +472,8 @@ namespace graphene { namespace app {
    private_key_type crypto_api::wif_to_private_key(const string &wif)
    {
        fc::optional<private_key_type> key = graphene::utilities::wif_to_key(wif);
-       FC_ASSERT(key.valid(), "Malformed private key");
+       if(!key.valid())
+          FC_THROW_EXCEPTION(malformed_private_key_exception, "");
        return *key;
    }
 
@@ -492,8 +514,12 @@ namespace graphene { namespace app {
 
    vector<message_object> messaging_api::get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
    {
-      FC_ASSERT(sender.valid() || receiver.valid(), "at least one of the accounts needs to be specified");
-      FC_ASSERT(_app.chain_database());
+      if(!_app.chain_database())      
+         FC_THROW_EXCEPTION(database_not_available_exception, "");
+
+      if(!sender.valid() && !receiver.valid())
+         FC_THROW_EXCEPTION(at_least_one_account_needs_to_be_specified_exception, "");
+      
       const auto& db = *_app.chain_database();
       const auto& idx = db.get_index_type<message_index>();
 
@@ -503,7 +529,7 @@ namespace graphene { namespace app {
          try {
             (*receiver)(db);
          }
-         FC_CAPTURE_AND_RETHROW( (receiver) );
+         FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Receiver account: ${receiver}", ("receiver", receiver));
 
          const auto& ids = idx.indices().get<graphene::db::by_id>();
          const auto& midx = dynamic_cast<const graphene::db::primary_index<message_index>&>(idx);
@@ -517,7 +543,7 @@ namespace graphene { namespace app {
                try {
                   (*sender)(db);
                }
-               FC_CAPTURE_AND_RETHROW( (sender) );
+               FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
 
                find_message_objects(result, ids, itr->second, max_count, [&](const account_id_type& s) { return s == *sender; });
             }
@@ -530,7 +556,7 @@ namespace graphene { namespace app {
          try {
             (*sender)(db);
          }
-         FC_CAPTURE_AND_RETHROW( (sender) );
+         FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
 
          auto range = idx.indices().get<by_sender>().equal_range(*sender);
          while (range.first != range.second && max_count-- > 0) {

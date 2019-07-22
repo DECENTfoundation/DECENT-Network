@@ -8,7 +8,9 @@ std::string wallet_api::derive_private_key(const std::string& prefix_string, int
 graphene::chain::public_key_type wallet_api::get_public_key( const std::string& wif_private_key ) const
 {
    fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key( wif_private_key );
-   FC_ASSERT( private_key , "invalid wif private key");
+   if(!private_key)
+      FC_THROW_EXCEPTION(invalid_wif_private_key_exception, "");
+
    return private_key->get_public_key();
 }
 
@@ -221,7 +223,8 @@ signed_transaction_info wallet_api::register_account_with_keys(const string& nam
                                                                const string& registrar_account,
                                                                bool broadcast /* = false */)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -231,7 +234,8 @@ signed_transaction_info wallet_api::register_account(const string& name,
                                                      const string& registrar_account,
                                                      bool broadcast /* = false */)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->register_account( name, owner, active, active, registrar_account, broadcast );
 }
 
@@ -242,7 +246,8 @@ signed_transaction_info wallet_api::register_multisig_account(const string& name
                                                               const string& registrar_account,
                                                               bool broadcast /* = false */)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -251,7 +256,8 @@ signed_transaction_info wallet_api::create_account_with_brain_key(const string& 
                                                                   const string& registrar_account,
                                                                   bool broadcast /* = false */)
 {
-   FC_ASSERT( !my->is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
 }
 
@@ -261,7 +267,8 @@ signed_transaction_info wallet_api::update_account_keys(const string& name,
                                                         const string& memo,
                                                         bool broadcast /* = false */)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    fc::optional<authority> new_owner, new_active;
    fc::optional<public_key_type> new_memo;
    account_object acc = my->get_account( name );
@@ -297,7 +304,8 @@ signed_transaction_info wallet_api::update_account_keys_to_multisig(const string
    if( acc.options.memo_key != memo )
       new_memo = memo;
 
-   FC_ASSERT( new_owner || new_active || new_memo, "new authority needs to be different from the existing one" );
+   if(!new_owner && !new_active && !new_memo)
+      FC_THROW_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, "");
 
    return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
@@ -314,7 +322,8 @@ el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) cons
 {
    try
    {
-      FC_ASSERT( !is_locked() );
+      if(is_locked())
+         FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
 
       account_object consumer_account = get_account( consumer );
       el_gamal_key_pair_str res;
@@ -356,7 +365,8 @@ signed_transaction_info wallet_api::transfer(const string& from,
                                              const string& memo,
                                              bool broadcast /* = false */)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
 
@@ -366,7 +376,8 @@ pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string&
                                                                    const string& asset_symbol,
                                                                    const string& memo)
 {
-   FC_ASSERT( !is_locked() );
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    auto trx = my->transfer( from, to, amount, asset_symbol, memo, true );
    return std::make_pair(trx.id(),trx);
 }
