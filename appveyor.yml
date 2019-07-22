@@ -1,4 +1,4 @@
-version: 1.{build}
+version: 1.4.{build}
 
 image: Visual Studio 2017
 
@@ -40,12 +40,12 @@ build_script:
 
     IF %APPVEYOR_REPO_TAG% == true set DCORE_VERSION=%APPVEYOR_REPO_TAG_NAME%
 
-    IF NOT DEFINED DCORE_VERSION set DCORE_VERSION=1.4.%APPVEYOR_BUILD_NUMBER%
+    IF NOT DEFINED DCORE_VERSION set DCORE_VERSION=%APPVEYOR_BUILD_VERSION%
 
-    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%DCORE_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs
+    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%DCORE_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%DCORE_VERSION%
 
 artifacts:
-- path: scripts\Windows\Release\x64\bin\DECENTSetup.msi
+- path: $(DCORE_VERSION)\DECENTSetup.msi
   name: MSI
 
 deploy:
@@ -56,12 +56,12 @@ deploy:
   subject: decentfoundation
   repo: windows
   package: DCore-dev
-  version: dev
+  version: $(DCORE_VERSION)/$(DCORE_VERSION)
   artifact: MSI
   publish: true
   override: true
   on:
-    branch: develop
+    APPVEYOR_REPO_TAG: true
 
 notifications:
 - provider: Email

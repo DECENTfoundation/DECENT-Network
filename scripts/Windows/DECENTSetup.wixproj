@@ -3,6 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">$(Configuration)\$(Platform)\bin</OutputPath>
+    <IntermediateOutputPath>$(Configuration)\$(Platform)\obj</IntermediateOutputPath>
     <DCorePath>C:\Projects\DCore</DCorePath>
     <IPFSPath>C:\Projects\IPFS</IPFSPath>
     <QtPath>C:\Projects\Qt\5.12.4\msvc2017_64</QtPath>
@@ -17,13 +19,9 @@
     <Name>DECENTSetup</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <OutputPath>$(Configuration)\$(Platform)\bin</OutputPath>
-    <IntermediateOutputPath>$(Configuration)\$(Platform)\obj</IntermediateOutputPath>
     <DefineConstants>Debug;ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);MergeModulesPath=$(MergeModulesPath)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>$(Configuration)\$(Platform)\bin</OutputPath>
-    <IntermediateOutputPath>$(Configuration)\$(Platform)\obj</IntermediateOutputPath>
     <DefineConstants>ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);MergeModulesPath=$(MergeModulesPath)</DefineConstants>
   </PropertyGroup>
   <Target Name="EnsureProductProperties" Condition="$(ProductVersion) == ''">
