@@ -56,7 +56,7 @@ deploy:
   subject: decentfoundation
   repo: windows
   package: DCore-dev
-  version: $(DCORE_VERSION)/$(DCORE_VERSION)
+  version: $(DCORE_VERSION)/dev/$(DCORE_VERSION)
   artifact: MSI
   publish: true
   override: true
