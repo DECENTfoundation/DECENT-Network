@@ -167,6 +167,7 @@ namespace graphene { namespace db {
 
          /** public for testing purposes only... should be private in practice. */
          undo_database                          _undo_db;
+     protected:
          template<typename IndexType>
          IndexType&    get_mutable_index_type() {
             static_assert( std::is_base_of<index,IndexType>::value, "Type must be an index type" );

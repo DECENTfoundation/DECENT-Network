@@ -53,22 +53,9 @@ struct account_history_plugin::impl
 void account_history_plugin::impl::update_account_histories( const graphene::chain::signed_block& b )
 {
    graphene::chain::database& db = database();
-   const std::vector<fc::optional<graphene::chain::operation_history_object>>& hist = db.get_applied_operations();
-   bool is_first = true;
-   auto skip_oho_id = [&]() {
-      if( is_first && db._undo_db.enabled() ) // this ensures that the current id is rolled back on undo
-      {
-         db.remove( db.create<graphene::chain::operation_history_object>( []( graphene::chain::operation_history_object& obj) {} ) );
-         is_first = false;
-      }
-      else
-         db.get_mutable_index_type<graphene::db::simple_index<graphene::chain::operation_history_object>>().use_next_id();
-   };
-   for( const fc::optional<graphene::chain::operation_history_object>& o_op : hist )
+   for( const fc::optional<graphene::chain::operation_history_object>& o_op : db.get_applied_operations() )
    {
-      auto create_oho = [&]() {
-         is_first = false;
-         return db.create<graphene::chain::operation_history_object>([&](graphene::chain::operation_history_object &h) {
+      const auto& oho = db.create<graphene::chain::operation_history_object>([&](graphene::chain::operation_history_object &h) {
                   if (o_op.valid())
                   {
                      h.op           = o_op->op;
@@ -79,13 +66,11 @@ void account_history_plugin::impl::update_account_histories( const graphene::cha
                      h.virtual_op   = o_op->virtual_op;
                   }
                });
-      };
 
       if( !o_op.valid() ) {
-         skip_oho_id();
+         db.remove(oho);
          continue;
       }
-      auto oho = create_oho();
 
       // get the set of accounts this operation applies to
       fc::flat_set<graphene::chain::account_id_type> impacted;
