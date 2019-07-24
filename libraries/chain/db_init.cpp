@@ -165,6 +165,8 @@ void database::initialize_indexes()
    add_index< graphene::db::primary_index<graphene::db::flat_index<block_summary_object> > >();
    add_index< graphene::db::primary_index<graphene::db::simple_index<chain_property_object> > >();
    add_index< graphene::db::primary_index<graphene::db::simple_index<miner_schedule_object> > >();
+   add_index< graphene::db::primary_index<graphene::db::simple_index<operation_history_object> > >();
+   add_index< graphene::db::primary_index< account_transaction_history_index> >();
    add_index< graphene::db::primary_index< seeder_index> >();
    add_index< graphene::db::primary_index< content_index> >();
    add_index< graphene::db::primary_index< buying_index> >();

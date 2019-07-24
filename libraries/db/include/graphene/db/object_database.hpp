@@ -43,9 +43,9 @@ namespace graphene { namespace db {
          object_database(const std::vector< uint8_t >& object_type_count);
          ~object_database();
 
-         void reset_indexes() 
+         void reset_indexes()
          {
-            _index.clear(); 
+            _index.clear();
             _index.resize(_object_type_count.size());
             for(uint8_t i = 0; i < _object_type_count.size(); i++) {
                _index[i].resize(_object_type_count[i]);
@@ -167,7 +167,6 @@ namespace graphene { namespace db {
 
          /** public for testing purposes only... should be private in practice. */
          undo_database                          _undo_db;
-     protected:
          template<typename IndexType>
          IndexType&    get_mutable_index_type() {
             static_assert( std::is_base_of<index,IndexType>::value, "Type must be an index type" );
@@ -188,7 +187,7 @@ namespace graphene { namespace db {
 
          boost::filesystem::path                                   _data_dir;
          vector< vector< unique_ptr<index> > >                     _index;
-         std::vector< uint8_t >                                    _object_type_count;   // second level of two-dimensional array of indexes, 
+         std::vector< uint8_t >                                    _object_type_count;   // second level of two-dimensional array of indexes,
    };                                                                                    // first level is size of this vector
 
 } } // graphene::db
