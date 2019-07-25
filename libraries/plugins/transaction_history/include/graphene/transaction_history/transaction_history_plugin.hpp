@@ -24,18 +24,8 @@
 #pragma once
 
 #include <graphene/app/plugin.hpp>
-#include <graphene/chain/database.hpp>
-#include <graphene/chain/transaction_history_object.hpp>
-#include <fc/thread/future.hpp>
 
 namespace graphene { namespace transaction_history {
-      using namespace chain;
-
-
-namespace detail
-{
-   class transaction_history_plugin_impl;
-}
 
 class transaction_history_plugin : public graphene::app::plugin
 {
@@ -49,12 +39,9 @@ public:
       boost::program_options::options_description& cfg);
 
    virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
-   virtual void plugin_startup() override;
 
-   flat_set<account_id_type> tracked_accounts()const;
-
-   friend class detail::transaction_history_plugin_impl;
-   std::unique_ptr<detail::transaction_history_plugin_impl> my;
+   struct impl;
+   std::unique_ptr<impl> my;
 };
 
 } } //graphene::transaction_history
