@@ -104,7 +104,7 @@ namespace graphene { namespace chain {
 
    enum local_object_type
    {
-      local_seeding_object_type,                     // 0
+      local_seeding_object_type  = 0,
       // insert new here
       local_object_type_count    // added due to know count
    };
@@ -120,44 +120,44 @@ namespace graphene { namespace chain {
     */
    enum protocol_object_type
    {
-      null_object_type,                // 0
-      base_object_type,
-      account_object_type,
-      asset_object_type,
-      miner_object_type,
-      custom_object_type,              // 5
-      proposal_object_type,
-      operation_history_object_type,
-      withdraw_permission_object_type,
-      vesting_balance_object_type,
-      non_fungible_token_object_type,  // 10
-      non_fungible_token_data_object_type,
+      //null_object_type                   = 0,
+      //base_object_type                   = 1,
+      account_object_type                  = 2,
+      asset_object_type                    = 3,
+      miner_object_type                    = 4,
+      //custom_object_type                 = 5,
+      proposal_object_type                 = 6,
+      operation_history_object_type        = 7,
+      withdraw_permission_object_type      = 8,
+      vesting_balance_object_type          = 9,
+      non_fungible_token_object_type       = 10,
+      non_fungible_token_data_object_type  = 11,
       // insert new here
       protocol_object_type_count       // added due to need to know count
    };
 
    enum impl_object_type
    {
-      impl_global_property_object_type,
-      impl_dynamic_global_property_object_type,
-      impl_reserved0_object_type,      // formerly index_meta_object_type, TODO: delete me
-      impl_asset_dynamic_data_type,
-      impl_account_balance_object_type,
-      impl_account_statistics_object_type,         // 5
-      impl_transaction_object_type,
-      impl_block_summary_object_type,
-      impl_account_transaction_history_object_type,
-      impl_chain_property_object_type,
-      impl_miner_schedule_object_type,             // 10
-      impl_budget_record_object_type,
-      impl_buying_object_type,
-      impl_content_object_type,
-      impl_publisher_object_type,
-      impl_subscription_object_type,               // 15
-      impl_seeding_statistics_object_type,
-      impl_transaction_detail_object_type,
-      impl_messaging_object_type,
-      impl_transaction_history_object_type,
+      impl_global_property_object_type              = 0,
+      impl_dynamic_global_property_object_type      = 1,
+      //impl_index_meta_object_type                 = 2,
+      impl_asset_dynamic_data_type                  = 3,
+      impl_account_balance_object_type              = 4,
+      impl_account_statistics_object_type           = 5,
+      impl_transaction_object_type                  = 6,
+      impl_block_summary_object_type                = 7,
+      impl_account_transaction_history_object_type  = 8,
+      impl_chain_property_object_type               = 9,
+      impl_miner_schedule_object_type               = 10,
+      impl_budget_record_object_type                = 11,
+      impl_buying_object_type                       = 12,
+      impl_content_object_type                      = 13,
+      impl_publisher_object_type                    = 14,
+      impl_subscription_object_type                 = 15,
+      impl_seeding_statistics_object_type           = 16,
+      impl_transaction_detail_object_type           = 17,
+      impl_messaging_object_type                    = 18,
+      impl_transaction_history_object_type          = 19,
       // insert new here
       impl_object_type_count       // added due to need to know count
    };
@@ -165,10 +165,8 @@ namespace graphene { namespace chain {
    //typedef fc::unsigned_int            object_id_type;
    //typedef uint64_t                    object_id_type;
    class account_object;
-   class committee_member_object;
    class miner_object;
    class asset_object;
-   class custom_object;
    class proposal_object;
    class operation_history_object;
    class withdraw_permission_object;
@@ -179,7 +177,6 @@ namespace graphene { namespace chain {
    typedef graphene::db::object_id<protocol_ids, account_object_type, account_object>                         account_id_type;
    typedef graphene::db::object_id<protocol_ids, asset_object_type, asset_object>                             asset_id_type;
    typedef graphene::db::object_id<protocol_ids, miner_object_type, miner_object>                             miner_id_type;
-   typedef graphene::db::object_id<protocol_ids, custom_object_type, custom_object>                           custom_id_type;
    typedef graphene::db::object_id<protocol_ids, proposal_object_type, proposal_object>                       proposal_id_type;
    typedef graphene::db::object_id<protocol_ids, operation_history_object_type, operation_history_object>     operation_history_id_type;
    typedef graphene::db::object_id<protocol_ids, withdraw_permission_object_type,withdraw_permission_object>  withdraw_permission_id_type;
@@ -269,7 +266,7 @@ namespace graphene { namespace chain {
             i++;
         }
         return false;
-        
+
    }
 
    struct extended_public_key_type
@@ -280,9 +277,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_public_key_type();
       extended_public_key_type( const fc::ecc::extended_key_data& data );
       extended_public_key_type( const fc::ecc::extended_public_key& extpubkey );
@@ -293,7 +290,7 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_public_key_type& p1, const extended_public_key_type& p2);
       friend bool operator != ( const extended_public_key_type& p1, const extended_public_key_type& p2);
    };
-   
+
    struct extended_private_key_type
    {
       struct binary_key
@@ -302,9 +299,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_private_key_type();
       extended_private_key_type( const fc::ecc::extended_key_data& data );
       extended_private_key_type( const fc::ecc::extended_private_key& extprivkey );
@@ -338,7 +335,6 @@ FC_REFLECT_TYPENAME( graphene::chain::share_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::asset_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::miner_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::custom_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::proposal_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::operation_history_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::withdraw_permission_id_type )
