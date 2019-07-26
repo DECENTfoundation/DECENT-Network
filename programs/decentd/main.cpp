@@ -46,7 +46,7 @@
 #include <iostream>
 
 #ifdef _MSC_VER
-#include <signal.h> 
+#include <signal.h>
 #include <windows.h>
 #include "winsvc.hpp"
 #else
@@ -234,7 +234,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 
       boost::filesystem::path logs_dir, data_dir, config_filename;
       auto& path_finder = graphene::utilities::decent_path_finder::instance();
-	  
+
       if( run_as_daemon ) {
 #if defined(_MSC_VER)
          data_dir = GetAppDataDir();
@@ -381,6 +381,10 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
    } catch( const fc::exception& e ) {
       // deleting the node can yield, so do this outside the exception handler
       unhandled_exception = e;
+   } catch( const std::exception& e ) {
+      unhandled_exception = fc::exception(fc::std_exception_code, typeid(e).name(), e.what());
+   } catch( ... ) {
+      unhandled_exception = fc::unhandled_exception(FC_LOG_MESSAGE(error, "unknown"));
    }
 #if defined(_MSC_VER)
    s_bStop = TRUE;

@@ -126,9 +126,11 @@ void transaction_history_plugin::plugin_initialize(const boost::program_options:
       if (options.count("track-account")) {
          const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
          std::for_each(ops.begin(), ops.end(), [this](const std::string &acc) {
-            graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
-            FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
-            my->_tracked_accounts.insert(account);
+            try {
+               graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
+               FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
+               my->_tracked_accounts.insert(account);
+            } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: track-account = ${a}", ("a", acc));
          });
       }
       dlog( "tracking of transaction IDs is enabled" );

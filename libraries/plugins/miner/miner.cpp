@@ -96,7 +96,7 @@ public:
          check_reg_expr(key_pair_regex, val);
       }
    }
-  
+
    std::string _name;
 };
 
@@ -156,9 +156,11 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
    {
       const std::vector<std::string>& miners = options["miner-id"].as<std::vector<std::string>>();
       std::for_each(miners.begin(), miners.end(), [this](const std::string &miner) {
-         graphene::db::object_id_type account(miner.find_first_of('"') == 0 ? fc::json::from_string(miner).as<std::string>() : miner);
-         FC_ASSERT( account.is<graphene::chain::miner_id_type>(), "Invalid miner account ${s}", ("s", miner) );
-         _miners.insert(account);
+         try {
+            graphene::db::object_id_type account(miner.find_first_of('"') == 0 ? fc::json::from_string(miner).as<std::string>() : miner);
+            FC_ASSERT( account.is<graphene::chain::miner_id_type>(), "Invalid miner account ${s}", ("s", miner) );
+            _miners.insert(account);
+         } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: miner-id = ${s}", ("s", miner));
       });
    }
 
