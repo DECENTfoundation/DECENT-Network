@@ -76,7 +76,7 @@ namespace graphene { namespace chain {
 
       this->synopsis = co.synopsis;
       this->URI = co.URI;
-      this->AVG_rating = static_cast<uint32_t>(co.AVG_rating);
+      this->AVG_rating = co.AVG_rating;
       this->_hash = co._hash;
       this->size = co.size;
       this->expiration = co.expiration;

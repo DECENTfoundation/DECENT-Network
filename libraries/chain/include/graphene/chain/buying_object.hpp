@@ -18,8 +18,8 @@ namespace graphene { namespace chain {
    public:
       account_id_type consumer;
       string URI;
-      uint64_t size = uint64_t(-1); //< initialized by content.size
-      uint64_t rating = uint64_t(-1);  //< this is the user rating
+      uint64_t size = 0; //< initialized by content.size
+      uint32_t rating = 0;  //< this is the user rating
       string comment;
       asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
       asset paid_price_before_exchange; //< initialized by request_to_buy_operation.price
@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
          return ob.created;
       }
    };
-   
+
    template<>
    struct key_extractor<by_purchased, buying_object>
    {
@@ -108,7 +108,7 @@ namespace graphene { namespace chain {
    template <>
    struct key_extractor<by_URI_rated, buying_object>
    {
-      static std::tuple<string, uint64_t> get(buying_object const& ob)
+      static std::tuple<string, uint32_t> get(buying_object const& ob)
       {
          return std::make_tuple(ob.URI, ob.rating);
       }
@@ -177,7 +177,7 @@ namespace graphene { namespace chain {
             >
          >
    >buying_object_multi_index_type;
-   
+
    typedef graphene::db::generic_index< buying_object, buying_object_multi_index_type > buying_index;
 
 }}

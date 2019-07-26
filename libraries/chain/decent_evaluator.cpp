@@ -268,7 +268,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    graphene::db::object_id_type content_submit_evaluator::do_apply(const operation_type& o)
    {try{
       graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
@@ -497,7 +497,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       FC_ASSERT( paid_price_after_conversion.asset_id == content_price.asset_id );
       FC_ASSERT( paid_price_after_conversion >= content_price );
 
-      return void_result(); 
+      return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    graphene::db::object_id_type request_to_buy_evaluator::do_apply(const operation_type& o )
@@ -683,7 +683,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result leave_rating_evaluator::do_apply(const operation_type& o )
    {try{
       //adjust content statistics
@@ -694,20 +694,13 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       db().modify<buying_object>( *bo, [&]( buying_object& b ){
            b.rated_or_commented = true;
-           b.rating = o.rating;
+           b.rating = static_cast<uint32_t>(o.rating);
            b.comment = o.comment;
       });
 
       db().modify<content_object> ( *content, [&](content_object& co){
-           if(co.num_of_ratings == 0) {
-              co.AVG_rating = o.rating * 1000;
-              co.num_of_ratings++;
-           }
-           else {
-              //co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (++co.num_of_ratings); different result between ms compiler and clang, Bug - 35
-              co.AVG_rating = (co.AVG_rating * co.num_of_ratings + o.rating * 1000) / (co.num_of_ratings + 1);
-              co.num_of_ratings++;
-           }
+           co.AVG_rating = (co.AVG_rating * co.num_of_ratings + static_cast<uint32_t>(o.rating) * 1000) / (co.num_of_ratings + 1);
+           co.num_of_ratings++;
       });
 
       auto& d = db();
@@ -735,7 +728,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
    {try{
       return void_result();
@@ -822,7 +815,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       return obj_id;
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result proof_of_custody_evaluator::do_evaluate(const operation_type& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -849,7 +842,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
-   
+
    void_result proof_of_custody_evaluator::do_apply(const operation_type& o )
    {try{
       //get the seeder and content
@@ -922,7 +915,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
 
    void_result report_stats_evaluator::do_evaluate(const operation_type& o)
    {
-	   try {   
+	   try {
          for (const auto& item : o.stats)
          {
             FC_ASSERT( db().find_object(item.first), "Invalid seeder account specified." );

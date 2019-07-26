@@ -449,7 +449,7 @@ using namespace decent::encrypt;
       bool is_blocked = false;
 
       fc::ripemd160 _hash;
-      uint64_t AVG_rating = 0;
+      uint32_t AVG_rating = 0;
       uint32_t num_of_ratings = 0;
       uint32_t times_bought = 0;
       asset publishing_fee_escrow;
@@ -486,7 +486,7 @@ using namespace decent::encrypt;
          return false;
       }
    };
-   
+
    struct by_author;
    struct by_URI;
    struct by_AVG_rating;
@@ -520,7 +520,7 @@ using namespace decent::encrypt;
    template <>
    struct key_extractor<by_AVG_rating, content_object>
    {
-      static uint64_t get(content_object const& ob)
+      static uint32_t get(content_object const& ob)
       {
          return ob.AVG_rating;
       }
@@ -581,13 +581,13 @@ using namespace decent::encrypt;
                member<content_object, uint64_t, &content_object::size>
             >,
             ordered_non_unique<tag<by_AVG_rating>,
-               member<content_object, uint64_t, &content_object::AVG_rating>
+               member<content_object, uint32_t, &content_object::AVG_rating>
             >,
             ordered_non_unique<tag<by_times_bought>,
                member<content_object, uint32_t, &content_object::times_bought>,
                std::greater<uint32_t>
             >,
-   
+
             ordered_non_unique<tag<by_expiration>,
                member<content_object, time_point_sec, &content_object::expiration>
             >,
@@ -595,7 +595,7 @@ using namespace decent::encrypt;
             ordered_non_unique<tag<by_created>,
                member<content_object, time_point_sec, &content_object::created>
             >
-   
+
          >
    > content_object_multi_index_type;
 
