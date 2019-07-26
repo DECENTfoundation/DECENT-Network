@@ -141,12 +141,10 @@ void database::initialize_indexes()
    _undo_db.set_max_size( GRAPHENE_MIN_UNDO_HISTORY );
 
    //Protocol object indexes
-   add_index< graphene::db::primary_index<asset_index> >();
-   add_index< graphene::db::primary_index<non_fungible_token_index> >();
-
    auto acnt_index = add_index< graphene::db::primary_index<account_index> >();
    acnt_index->add_secondary_index<account_member_index>();
 
+   add_index< graphene::db::primary_index<asset_index> >();
    add_index< graphene::db::primary_index<miner_index> >();
 
    auto prop_index = add_index< graphene::db::primary_index<proposal_index > >();
@@ -154,6 +152,9 @@ void database::initialize_indexes()
 
    add_index< graphene::db::primary_index<withdraw_permission_index > >();
    add_index< graphene::db::primary_index<vesting_balance_index> >();
+
+   add_index< graphene::db::primary_index<non_fungible_token_index> >();
+   add_index< graphene::db::primary_index< non_fungible_token_data_index> >();
 
    //Implementation object indexes
    add_index< graphene::db::primary_index<transaction_index> >();
@@ -174,7 +175,10 @@ void database::initialize_indexes()
    add_index< graphene::db::primary_index< transaction_detail_index> >();
    add_index< graphene::db::primary_index< seeding_statistics_index> >();
    add_index< graphene::db::primary_index< budget_record_index> >();
-   add_index< graphene::db::primary_index< non_fungible_token_data_index> >();
+   add_index< graphene::db::primary_index< transaction_history_index> >();
+
+   auto msg_index = add_index< graphene::db::primary_index<message_index> >();
+   msg_index->add_secondary_index<message_receiver_index>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

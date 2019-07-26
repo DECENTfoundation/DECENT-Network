@@ -121,8 +121,6 @@ void transaction_history_plugin::plugin_set_program_options(
 
 void transaction_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-   database().add_index<graphene::db::primary_index<graphene::chain::transaction_history_index>>();
-
    if( options.at("transaction-id-history").as<bool>() )
    {
       database().applied_block.connect( [&](const graphene::chain::signed_block& b){ my->update_transaction_id_history(b); } );

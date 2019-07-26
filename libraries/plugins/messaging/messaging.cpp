@@ -28,8 +28,6 @@ std::string messaging_plugin::plugin_name()
 void messaging_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    try {
-      auto indx = database().add_index< graphene::db::primary_index < message_index > >();
-      indx->add_secondary_index<message_receiver_index>();
       _options = &options;
    } FC_LOG_AND_RETHROW()
 }
@@ -49,8 +47,8 @@ void messaging_plugin::plugin_shutdown()
    } FC_RETHROW()
 }
 
-void_result messaging_plugin::do_evaluate(const custom_operation& o) 
-{ 
+void_result messaging_plugin::do_evaluate(const custom_operation& o)
+{
    try {
       graphene::chain::message_payload pl;
       o.get_messaging_payload(pl);
@@ -63,12 +61,12 @@ void_result messaging_plugin::do_evaluate(const custom_operation& o)
          FC_ASSERT(itr != idx.end(), "Receiver ${id} does not exist.", ("id", pl.receivers_data[i].to));
       }
       FC_ASSERT(pl.from == o.payer, "Sender must pay for the operation.");
-      return void_result(); 
+      return void_result();
    } FC_CAPTURE_AND_RETHROW((o))
 };
 
-graphene::db::object_id_type messaging_plugin::do_apply(const custom_operation& o) 
-{ 
+graphene::db::object_id_type messaging_plugin::do_apply(const custom_operation& o)
+{
    auto & d = database();
 
    return database().create<message_object>([&o, &d](message_object& obj)
@@ -91,6 +89,6 @@ graphene::db::object_id_type messaging_plugin::do_apply(const custom_operation& 
 
       obj.created = d.head_block_time();
       obj.sender_pubkey = pl.pub_from;
-      
+
    }).id;
 };
