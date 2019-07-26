@@ -224,11 +224,8 @@ namespace graphene { namespace app {
          return true;
       }
 
-      void broadcast_updates( const vector<variant>& updates );
-
       /** called every time a block is applied to report the objects that were changed */
       void on_objects_changed(const vector<object_id_type>& ids);
-      void on_objects_removed(const vector<const graphene::db::object*>& objs);
       void on_applied_block();
 
       mutable fc::bloom_filter                               _subscribe_filter;
@@ -237,7 +234,6 @@ namespace graphene { namespace app {
       std::function<void(const fc::variant&)> _block_applied_callback;
 
       boost::signals2::scoped_connection                                                                                           _change_connection;
-      boost::signals2::scoped_connection                                                                                           _removed_connection;
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
       map< string, std::function<void()> >                              _content_subscriptions;
@@ -260,9 +256,6 @@ namespace graphene { namespace app {
       dlog("creating database api ${x}", ("x",int64_t(this)) );
       _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids) {
          on_objects_changed(ids);
-      });
-      _removed_connection = _db.removed_objects.connect([this](const vector<const graphene::db::object*>& objs) {
-         on_objects_removed(objs);
       });
       _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
 
@@ -2881,31 +2874,6 @@ namespace
    // Private methods                                                  //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-
-   void database_api_impl::broadcast_updates( const vector<variant>& updates )
-   {
-      if( updates.size() ) {
-         auto capture_this = shared_from_this();
-         fc::async([capture_this,updates](){
-            capture_this->_subscribe_callback( fc::variant(updates) );
-         });
-      }
-   }
-
-   void database_api_impl::on_objects_removed( const vector<const graphene::db::object*>& objs )
-   {
-      /// we need to ensure the database_api is not deleted for the life of the async operation
-      if( _subscribe_callback )
-      {
-         vector<variant>    updates;
-         updates.reserve(objs.size());
-
-         for( auto obj : objs )
-            updates.emplace_back( obj->id );
-         broadcast_updates( updates );
-      }
-
-   }
 
    void database_api_impl::on_objects_changed(const vector<object_id_type>& ids)
    {

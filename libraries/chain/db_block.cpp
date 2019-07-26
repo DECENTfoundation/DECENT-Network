@@ -570,20 +570,14 @@ void database::_apply_block( const signed_block& next_block )
 
 void database::notify_changed_objects()
 { try {
-   if( _undo_db.enabled() ) 
+   if( _undo_db.enabled() )
    {
       const auto& head_undo = _undo_db.head();
       vector<graphene::db::object_id_type> changed_ids;
-      changed_ids.reserve(head_undo.old_values.size());
+      changed_ids.reserve(head_undo.old_values.size() + head_undo.new_ids.size() + head_undo.removed.size());
       for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
       for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
-      vector<const graphene::db::object*> removed;
-      removed.reserve( head_undo.removed.size() );
-      for( const auto& item : head_undo.removed )
-      {
-         changed_ids.push_back( item.first );
-         removed.emplace_back( item.second.get() );
-      }
+      for( const auto& item : head_undo.removed ) changed_ids.push_back(item.first);
       changed_objects(changed_ids);
    }
 } FC_RETHROW() }
