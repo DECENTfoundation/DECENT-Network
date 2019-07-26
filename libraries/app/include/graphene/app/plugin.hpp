@@ -23,8 +23,6 @@
  */
 #pragma once
 
-#include <fc/io/json.hpp>
-
 #include <graphene/app/application.hpp>
 
 namespace graphene { namespace app {
@@ -151,14 +149,5 @@ private:
       return std::make_tuple((app.create_plugin<type<Idx>>())...);
    }
 };
-
-/// @defgroup JSON Some useful tools for boost::program_options arguments using vectors of JSON strings
-/// @{
-template<typename T>
-T dejsonify(const std::string& s)
-{
-   return fc::json::from_string(s).as<T>();
-}
-/// @}
 
 } } //graphene::app

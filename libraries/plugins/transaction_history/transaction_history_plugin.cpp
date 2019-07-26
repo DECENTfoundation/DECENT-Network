@@ -26,7 +26,6 @@
 #include <graphene/chain/transaction_history_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/app/impacted.hpp>
-#include <regex>
 
 namespace graphene { namespace transaction_history {
 
@@ -126,13 +125,11 @@ void transaction_history_plugin::plugin_initialize(const boost::program_options:
       database().applied_block.connect( [&](const graphene::chain::signed_block& b){ my->update_transaction_id_history(b); } );
       if (options.count("track-account")) {
          const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
-         const std::regex rx("^\"1\\x2E2\\x2E[0-9]{1,15}\"$");// account id, for example "1.2.18"
-         for (size_t i = 0; i < ops.size(); i++) {
-            bool matches_reg_expr = std::regex_match(ops[i], rx);
-            if(!matches_reg_expr)
-               FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: track-account = ${value}", ("value", ops[i]));
-         }
-         std::transform(ops.begin(), ops.end(), std::inserter(my->_tracked_accounts, my->_tracked_accounts.end()), &graphene::app::dejsonify<graphene::chain::account_id_type>);
+         std::for_each(ops.begin(), ops.end(), [this](const std::string &acc) {
+            graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
+            FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
+            my->_tracked_accounts.insert(account);
+         });
       }
       dlog( "tracking of transaction IDs is enabled" );
    }
