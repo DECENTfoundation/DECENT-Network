@@ -16,7 +16,6 @@
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/transaction_history/transaction_history_plugin.hpp>
 #include <graphene/utilities/dirhelper.hpp>
-#include <graphene/messaging/messaging.hpp>
 
 class QTimer;
 #endif
@@ -170,7 +169,6 @@ namespace gui_wallet
          graphene::miner_plugin::miner_plugin,
          graphene::account_history::account_history_plugin,
          decent::seeding::seeding_plugin,
-         decent::messaging::messaging_plugin,
          graphene::transaction_history::transaction_history_plugin
       >;
 

@@ -143,14 +143,14 @@ struct get_impacted_account_visitor
       for(auto& item : op.required_auths)
          _impacted.insert( item );
 
-      if (op.id == custom_operation_subtype_messaging) {
+      if (op.id == custom_evaluator::custom_operation_subtype_messaging) {
          message_payload pl;
          op.get_messaging_payload(pl);
-         for (auto& item : pl.receivers_data) {
+         for (auto& item : pl.receivers_data)
             _impacted.insert(item.to);
-         }
       }
    }
+
    void operator()( const assert_operation& op ) {}
    void operator()( const set_publishing_manager_operation& op ) {
       _impacted.insert( op.from );

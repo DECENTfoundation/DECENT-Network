@@ -20,7 +20,6 @@
 #include <graphene/transaction_history/transaction_history_plugin.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
-#include <graphene/messaging/messaging.hpp>
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/utilities/dirhelper.hpp>

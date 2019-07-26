@@ -25,7 +25,7 @@ set(TEST_FILES_LIST
 )
 
 add_executable( chain_test ${TEST_FILES_LIST} )
-target_link_libraries( chain_test graphene_app graphene_account_history graphene_egenesis_none decent_messaging ${PLATFORM_SPECIFIC_LIBS} )
+target_link_libraries( chain_test graphene_app graphene_account_history graphene_egenesis_none ${PLATFORM_SPECIFIC_LIBS} )
 if(MSVC)
   set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)

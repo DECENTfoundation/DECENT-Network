@@ -1013,7 +1013,7 @@ public:
    {
       if(!_builder_transactions.count(transaction_handle))
          FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-      
+
       _builder_transactions[transaction_handle].operations.emplace_back(op);
    }
    void replace_operation_in_builder_transaction(transaction_handle_type handle,
@@ -1022,7 +1022,7 @@ public:
    {
       if(!_builder_transactions.count(handle))
          FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-      
+
       signed_transaction& trx = _builder_transactions[handle];
       FC_ASSERT( operation_index < trx.operations.size());
       trx.operations[operation_index] = new_op;
@@ -1031,9 +1031,9 @@ public:
    {
       if(!_builder_transactions.count(handle))
          FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-      
+
       if(fee_asset != GRAPHENE_SYMBOL)
-         FC_THROW_EXCEPTION(fees_can_be_paid_in_core_asset_exception, "");      
+         FC_THROW_EXCEPTION(fees_can_be_paid_in_core_asset_exception, "");
 
       auto fee_asset_obj = get_asset(fee_asset);
       asset total_fee = fee_asset_obj.amount(0);
@@ -1367,7 +1367,7 @@ public:
                                                bool broadcast = false)
    { try {
       account_object issuer_account = get_account( issuer );
-      
+
       if(find_asset(symbol).valid())
          FC_THROW_EXCEPTION(asset_already_exists_exception, "");
 
@@ -1760,12 +1760,12 @@ public:
             std::vector<fc::optional<miner_object>> miner_objects = _remote_db->get_miners(ids_to_get);
             if (miner_objects.front())
                return *miner_objects.front();
-            FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));            
+            FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
          }
          else
          {
             // then maybe it's the owner account
-            
+
             account_id_type owner_account_id = get_account(owner_account).get_id();
             fc::optional<miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
             if (miner)
@@ -1898,12 +1898,12 @@ public:
       fc::optional<miner_object> miner_obj = _remote_db->get_miner_by_account(miner_owner_account_id);
       if(!miner_obj)
          FC_THROW_EXCEPTION(account_is_not_registered_as_miner_exception, "Account: ${miner}", ("miner", miner));
-       
+
       if (approve)
       {
          auto insert_result = voting_account_object.options.votes.insert(miner_obj->vote_id);
          if (!insert_result.second)
-            FC_THROW_EXCEPTION(account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));            
+            FC_THROW_EXCEPTION(account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
       }
       else
       {
@@ -1933,14 +1933,14 @@ public:
          account_id_type new_voting_account_id = get_account(*voting_account).get_id();
          if(account_object_to_modify.options.voting_account == new_voting_account_id)
             FC_THROW_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, "For: ${account} voter: ${voter}", ("account", account_to_modify)("voter", *voting_account));
-            
+
          account_object_to_modify.options.voting_account = new_voting_account_id;
       }
       else
       {
          if(account_object_to_modify.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT)
             FC_THROW_EXCEPTION(account_was_already_voting_for_itself_exception, "Account: ${account}", ("account", account_to_modify));
-            
+
          account_object_to_modify.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
       }
 
@@ -1964,7 +1964,7 @@ public:
 
       if(account_object_to_modify.options.num_miner == desired_number_of_miners)
          FC_THROW_EXCEPTION(account_was_already_voting_for_miners_exception, "Account: ${account} number of miners: ${miners} ", ("account", account_to_modify)("miners", desired_number_of_miners));
-         
+
       account_object_to_modify.options.num_miner = desired_number_of_miners;
 
       account_update_operation account_update_op;
@@ -2604,7 +2604,7 @@ public:
             }
          }
 
-         // checking for duplicates         
+         // checking for duplicates
          if(co_authors.size() != co_authors_id_to_split.size())
             FC_THROW_EXCEPTION(duplicity_at_the_list_of_coauthors_not_allowed_exception, "");
 
@@ -3006,7 +3006,7 @@ signed_transaction content_cancellation(const string& author,
 
          account_id_type account = get_account( account_id_or_name ).get_id();
          fc::optional<subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
-         
+
          if(!subscription_obj)
             FC_THROW_EXCEPTION(could_not_find_matching_subcription_exception, "Subscription: ${subscription}", ("subscription", subscription_id));
 
@@ -3056,7 +3056,7 @@ signed_transaction content_cancellation(const string& author,
 
    pair<account_id_type, vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
    {
-      fc::optional<content_object> co = _remote_db->get_content( URI );      
+      fc::optional<content_object> co = _remote_db->get_content( URI );
       if(!co.valid())
          FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
       pair<account_id_type, vector<account_id_type>> result;
@@ -3217,7 +3217,7 @@ signed_transaction content_cancellation(const string& author,
          }
 
          custom_operation cust_op;
-         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
          cust_op.set_messaging_payload(pl);
 
@@ -3257,7 +3257,7 @@ signed_transaction content_cancellation(const string& author,
          }
 
          custom_operation cust_op;
-         cust_op.id = graphene::chain::custom_operation_subtype_messaging;
+         cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
          cust_op.set_messaging_payload(pl);
 
@@ -3346,7 +3346,7 @@ signed_transaction content_cancellation(const string& author,
       auto it = _prototype_ops.find( operation_name );
       if(it == _prototype_ops.end())
          FC_THROW_EXCEPTION(unsupported_operation_exception, "Operation name: ${operation_name}", ("operation_name", operation_name));
-         
+
       return it->second;
    }
 
@@ -3550,7 +3550,7 @@ signed_transaction content_cancellation(const string& author,
 
    std::string operation_printer::operator()(const custom_operation& op) const
    {
-      if (op.id == custom_operation_subtype_messaging) {
+      if (op.id == graphene::chain::custom_evaluator::custom_operation_subtype_messaging) {
          message_payload pl;
          op.get_messaging_payload(pl);
 

@@ -26,42 +26,15 @@
 
 namespace graphene { namespace chain {
 
-   enum custom_operation_subtype : int
-   {
-      custom_operation_subtype_undefined = 0,
-      custom_operation_subtype_messaging,
-      custom_operation_subtype_max,
-   };
-
-   class custom_operation_interpreter
-   {
-   public:
-      virtual void_result do_evaluate(const custom_operation& o) = 0;
-      virtual graphene::db::object_id_type do_apply(const custom_operation& o) = 0;
-   };
-
-   //registrator for custom_evaluator
-   class custom_evaluator_register
-   {
-   public:
-       static custom_evaluator_register& instance();
-
-       void register_callback(custom_operation_subtype s, custom_operation_interpreter* i);
-       void unregister_callback(custom_operation_subtype s);
-       void unregister_all();
-
-       custom_operation_interpreter* find(custom_operation_subtype subtype);
-
-   private:
-       custom_evaluator_register() {}
-
-   private:
-       std::map<custom_operation_subtype, custom_operation_interpreter* > m_operation_subtypes;
-   };
-
    class custom_evaluator : public evaluator<custom_operation, custom_evaluator>
    {
-   public:
+     public:
+        enum custom_operation_subtype : uint16_t
+        {
+           custom_operation_subtype_undefined = 0,
+           custom_operation_subtype_messaging
+        };
+
         void_result do_evaluate(const operation_type& o);
         graphene::db::object_id_type do_apply(const operation_type& o);
    };

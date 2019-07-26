@@ -1,80 +1,48 @@
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/message_object.hpp>
 #include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-custom_evaluator_register& custom_evaluator_register::instance()
-{
-   static custom_evaluator_register register_instance;
-   return register_instance;
-}
-
-void custom_evaluator_register::register_callback(custom_operation_subtype s, custom_operation_interpreter* i)
-{
-  // lockit
-  m_operation_subtypes.insert(std::make_pair(s, i));
-}
-
-void custom_evaluator_register::unregister_callback(custom_operation_subtype s)
-{
-  // lockit
-  m_operation_subtypes.erase(s);
-}
-
-void custom_evaluator_register::unregister_all()
-{
-   m_operation_subtypes.clear();
-}
-
-custom_operation_interpreter* custom_evaluator_register::find(custom_operation_subtype subtype)
-{
-   auto iter = m_operation_subtypes.find(subtype);
-   if (iter == m_operation_subtypes.end()) {
-      // leave it unprocessed
-      return nullptr;
-   }
-
-   return iter->second;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
 void_result custom_evaluator::do_evaluate(const operation_type& o)
 {
-   try
-   {
-      const database& _db = db();
-      for( const auto acc : o.required_auths )
-         FC_ASSERT( _db.find_object( acc ), "Account does not exist." );
+   if (o.id != custom_operation_subtype_messaging)
+      return void_result();
 
-      custom_evaluator_register& instance = custom_evaluator_register::instance();
-
-      custom_operation_interpreter* evaluator = instance.find(static_cast<custom_operation_subtype>(o.id));
-      if (!evaluator) {
-         // leave it unprocessed
-         return void_result();
+   try {
+      message_payload pl;
+      o.get_messaging_payload(pl);
+      const database& d = db();
+      const auto& idx = d.get_index_type<account_index>().indices().get<graphene::db::by_id>();
+      const auto itr = idx.find(pl.from);
+      FC_ASSERT(itr != idx.end(), "Sender ${id} does not exist.", ("id", pl.from));
+      for (size_t i = 0; i < pl.receivers_data.size(); i++) {
+         const auto itr = idx.find(pl.receivers_data[i].to);
+         FC_ASSERT(itr != idx.end(), "Receiver ${id} does not exist.", ("id", pl.receivers_data[i].to));
       }
-
-      return evaluator->do_evaluate(o);
-
+      FC_ASSERT(pl.from == o.payer, "Sender must pay for the operation.");
+      return void_result();
    } FC_CAPTURE_AND_RETHROW((o))
 }
 
 graphene::db::object_id_type custom_evaluator::do_apply(const operation_type& o)
-{ 
-   try
+{
+   if (o.id != custom_operation_subtype_messaging)
+      return graphene::db::object_id_type();
+
+   database &d = db();
+   return d.create<message_object>([&o, &d](message_object& obj)
    {
-      custom_evaluator_register& instance = custom_evaluator_register::instance();
-
-      custom_operation_interpreter* evaluator = instance.find(static_cast<custom_operation_subtype>(o.id));
-      if (!evaluator) {
-         // leave it unprocessed
-         return graphene::db::object_id_type();
-      }
-
-      return evaluator->do_apply(o);
-
-   } FC_CAPTURE_AND_RETHROW((o))
+      message_payload pl;
+      o.get_messaging_payload(pl);
+      obj.created = d.head_block_time();
+      obj.sender_pubkey = pl.pub_from;
+      obj.sender = pl.from;
+      std::for_each(pl.receivers_data.begin(), pl.receivers_data.end(), [&obj](const message_payload_receivers_data& data) {
+         obj.receivers_data.push_back({ data.to, data.pub_to, data.nonce, data.data });
+      });
+   }).id;
 }
 
 } } // graphene::chain

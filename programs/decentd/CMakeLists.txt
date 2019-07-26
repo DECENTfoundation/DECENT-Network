@@ -13,7 +13,6 @@ target_link_libraries( decentd PRIVATE
                        graphene_app
                        graphene_account_history
                        graphene_transaction_history
-                       decent_messaging
                        decent_seeding
                        graphene_miner
                        ${CMAKE_DL_LIBS}

@@ -97,7 +97,6 @@ target_link_libraries(DECENT PRIVATE
                       graphene_wallet
                       graphene_account_history
                       graphene_transaction_history
-                      decent_messaging
                       decent_seeding
                       graphene_miner
                       nlohmann_json::nlohmann_json
