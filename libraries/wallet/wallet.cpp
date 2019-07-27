@@ -164,23 +164,16 @@ private:
    bool                      _is_finished;
 };
 
-struct operation_result_printer
-{
-public:
-   operation_result_printer( const wallet_api_impl& w )
-      : _wallet(w) {}
-   const wallet_api_impl& _wallet;
-   typedef std::string result_type;
-
-   std::string operator()(const void_result& x) const;
-   std::string operator()(const object_id_type& oid);
-   std::string operator()(const asset& a);
-};
-
 // BLOCK  TRX  OP  VOP
 struct operation_printer
 {
 private:
+   struct result_visitor : fc::visitor<std::string>
+   {
+      std::string operator()(const void_result& x) const;
+      std::string operator()(const object_id_type& oid) const;
+   };
+
    ostream& out;
    const wallet_api_impl& wallet;
    operation_result result;
@@ -3432,7 +3425,7 @@ signed_transaction content_cancellation(const string& author,
       out << op_name <<" ";
      // out << "balance delta: " << fc::json::to_string(acc.balance) <<"   ";
       out << payer.name << " fee: " << a.amount_to_pretty_string( op.fee );
-      operation_result_printer rprinter(wallet);
+      result_visitor rprinter;
       std::string str_result = result.visit(rprinter);
       if( !str_result.empty() )
       {
@@ -3641,19 +3634,14 @@ signed_transaction content_cancellation(const string& author,
       return std::string();
    }
 
-   std::string operation_result_printer::operator()(const void_result& x) const
+   std::string operation_printer::result_visitor::operator()(const void_result& x) const
    {
       return std::string();
    }
 
-   std::string operation_result_printer::operator()(const object_id_type& oid)
+   std::string operation_printer::result_visitor::operator()(const object_id_type& oid) const
    {
       return std::string(oid);
-   }
-
-   std::string operation_result_printer::operator()(const asset& a)
-   {
-      return _wallet.get_asset(a.asset_id).amount_to_pretty_string(a);
    }
 
    vector<account_id_type> seeders_tracker::track_content(const string& URI)
