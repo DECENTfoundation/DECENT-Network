@@ -25,7 +25,6 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <fc/io/raw.hpp>
-#include <fc/bitutil.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>
 
@@ -97,7 +96,7 @@ void transaction::set_expiration( fc::time_point_sec expiration_time )
 
 void transaction::set_reference_block( const block_id_type& reference_block )
 {
-   ref_block_num = static_cast<uint16_t>(fc::endian_reverse_u32(reference_block._hash[0]));
+   ref_block_num = static_cast<uint16_t>(block_header::num_from_id(reference_block));
    ref_block_prefix = reference_block._hash[1];
 }
 
