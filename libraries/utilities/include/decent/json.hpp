@@ -26,8 +26,8 @@ namespace fc {
 
    template<> struct reflector<decent::json_t> {
       typedef decent::json_t type;
-      typedef fc::true_type is_defined;
-      typedef fc::false_type is_enum;
+      typedef std::true_type is_defined;
+      typedef std::false_type is_enum;
       enum member_count_enum {
          local_member_count = 1,
          total_member_count = 1
