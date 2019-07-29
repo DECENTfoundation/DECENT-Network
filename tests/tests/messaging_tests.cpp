@@ -55,27 +55,28 @@ BOOST_AUTO_TEST_CASE( messaging )
    ACTOR(nathan);
    ACTOR(bobian);
    ACTOR(alice);
-   
+
    transfer(account_id_type()(db), nathan, asset(200000));
    enable_fees();
-  
+
    std::vector<std::string> to = { "alice", "bobian" };
    std::string text_sent = "Hello from nathan to alice and bobian";
 
    std::vector<account_object> to_accounts;
    account_id_type from_id = nathan_id;
-   
+
    message_payload pl;
 
    message_payload_receivers_data receivers_data_item;
 
    // message for bobian
    pl.receivers_data.emplace_back(text_sent, nathan_private_key, bobian.options.memo_key, bobian_id);
-   
+
    // message for alice
    pl.receivers_data.emplace_back(text_sent, nathan_private_key, alice.options.memo_key, alice_id);
 
    custom_operation cust_op;
+   cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
    cust_op.payer = from_id;
 
    pl.from = from_id;
@@ -86,16 +87,16 @@ BOOST_AUTO_TEST_CASE( messaging )
 
    fee_schedule s = db.get_global_properties().parameters.current_fees;
    s.set_fee(trx.operations.back());
-   
+
    const auto& global_params = db.get_global_properties().parameters;
    trx.expiration = db.head_block_time() + global_params.maximum_time_until_expiration;
    //custom_operation& result_op = (trx.operations.back()).get<custom_operation>();
    trx.validate();
 
    sign(trx, nathan_private_key);
-   
+
    PUSH_TX(db, trx);
-   
+
    auto msg_itr_found = db.get_index_type<message_index>().indices().get<by_id>().end();
    const auto& idx = db.get_index_type<message_index>();
    const auto& aidx = dynamic_cast<const primary_index<message_index>&>(idx);
@@ -103,9 +104,9 @@ BOOST_AUTO_TEST_CASE( messaging )
    auto itr = refs.message_to_receiver_memberships.find(bobian_id);
 
    if (itr != refs.message_to_receiver_memberships.end())
-   {  
+   {
       for (const object_id_type& item : itr->second) {
-               
+
          auto msg_itr = db.get_index_type<message_index>().indices().get<by_id>().find(item);
          if (msg_itr != db.get_index_type<message_index>().indices().get<by_id>().end()) {
             message_object o = *msg_itr;
