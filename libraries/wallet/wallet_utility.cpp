@@ -262,7 +262,7 @@ namespace wallet_utility
                        });
       return future_set_password.wait();
    }
-   void WalletAPI::Unlock(string const& str_password)
+   bool WalletAPI::Unlock(string const& str_password)
    {
       if (!IsConnected())
          throw wallet_exception("not yet connected");
@@ -270,7 +270,7 @@ namespace wallet_utility
       std::lock_guard<std::mutex> lock(m_mutex);
 
       auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<void> future_unlock =
+      fc::future<bool> future_unlock =
       m_pthread->async([&pimpl, &str_password] ()
                        {
                           return pimpl->unlock(str_password);

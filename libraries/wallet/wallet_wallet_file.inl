@@ -46,10 +46,12 @@ void wallet_api::lock()
    my->self.lock_changed(true);
 } FC_RETHROW() }
 
-void wallet_api::unlock(const string& password)
+bool wallet_api::unlock(const string& password)
 { try {
-   if(!is_locked())
-      FC_THROW_EXCEPTION(wallet_is_already_unlocked_exception, "");
+   if(!is_locked()) {
+      std::cout << "Wallet is already unlocked" << std::endl;
+      return false;
+   }
    
    if(password.size() == 0)
       FC_THROW_EXCEPTION(password_cannot_be_empty_exception, "");
@@ -111,6 +113,7 @@ void wallet_api::unlock(const string& password)
       save_wallet_file();
 
    my->self.lock_changed(false);
+   return true;
 } FC_RETHROW() }
 
 void wallet_api::set_password(const string& password )

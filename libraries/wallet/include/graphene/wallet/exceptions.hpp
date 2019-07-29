@@ -90,7 +90,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_DERIVED_EXCEPTION(wallet_filename_cannot_be_empty_exception, wallet_exception, fc::wallet_exception_base_code + wallet_filename_cannot_be_empty_code, "Wallet filename cannot be empty.")
    FC_DECLARE_DERIVED_EXCEPTION(wallet_is_locked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_locked_code, "The wallet is locked and needs to be unlocked.")
    FC_DECLARE_DERIVED_EXCEPTION(wallet_is_already_locked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_already_locked_code, "The wallet is already locked.")
-   FC_DECLARE_DERIVED_EXCEPTION(wallet_is_already_unlocked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_already_unlocked_code, "The wallet is already unlocked.")
+   //FC_DECLARE_DERIVED_EXCEPTION(wallet_is_already_unlocked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_already_unlocked_code, "The wallet is already unlocked.")
    FC_DECLARE_DERIVED_EXCEPTION(password_cannot_be_empty_exception, wallet_exception, fc::wallet_exception_base_code + password_cannot_be_empty_code, "Password cannot be empty.")
    //account
    FC_DECLARE_DERIVED_EXCEPTION(account_already_exist_exception, wallet_exception, fc::wallet_exception_base_code + account_already_exist_code, "Account already exists.");

@@ -41,7 +41,7 @@ namespace wallet_utility
       bool IsLocked();
       std::chrono::system_clock::time_point HeadBlockTime();
       void SetPassword(std::string const& str_password);
-      void Unlock(std::string const& str_password);
+      bool Unlock(std::string const& str_password);
       void SaveWalletFile();
       bool IsPackageManagerTaskWaiting();
       //std::vector<graphene::chain::content_summary> SearchContent(string const& str_term, uint32_t iCount);

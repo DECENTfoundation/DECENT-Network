@@ -91,12 +91,13 @@ void lock();
  * @param password the password previously set with \c set_password()
  * @ingroup WalletAPI_Wallet
  */
-void unlock(const string& password);
+bool unlock(const string& password);
 
 /**
  * @brief Sets a new password on the wallet.
  * The wallet must be either \c new or \c unlocked to execute this command.
  * @param password
+ * @return \c true if the specified wallet is successfuly unlocked and false if wallet is already unlocked
  * @ingroup WalletAPI_Wallet
  */
 void set_password(const string& password);
