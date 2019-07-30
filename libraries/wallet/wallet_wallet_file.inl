@@ -18,7 +18,7 @@ string wallet_api::get_private_key( public_key_type pubkey )const
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-   
+
    return key_to_wif( my->get_private_key( pubkey ) );
 }
 
@@ -32,11 +32,13 @@ bool wallet_api::is_locked()const
    return my->is_locked();
 }
 
-void wallet_api::lock()
+bool wallet_api::lock()
 { try {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_already_locked_exception, "");
-   
+   if(is_locked()) {
+      std::cout << "Wallet is already locked" << std::endl;
+      return false;
+   }
+
    my->encrypt_keys2();
    for( auto & key : my->_keys )
       key.second = key_to_wif(fc::ecc::private_key());
@@ -44,6 +46,7 @@ void wallet_api::lock()
    my->_el_gamal_keys.clear();
    my->_checksum = fc::sha512();
    my->self.lock_changed(true);
+   return true;
 } FC_RETHROW() }
 
 bool wallet_api::unlock(const string& password)
@@ -52,7 +55,7 @@ bool wallet_api::unlock(const string& password)
       std::cout << "Wallet is already unlocked" << std::endl;
       return false;
    }
-   
+
    if(password.size() == 0)
       FC_THROW_EXCEPTION(password_cannot_be_empty_exception, "");
 

@@ -39,8 +39,6 @@ namespace graphene { namespace wallet {
 
       wallet_filename_cannot_be_empty_code      = 6,
       wallet_is_locked_code                     = 7,
-      wallet_is_already_locked_code             = 8,
-      wallet_is_already_unlocked_code           = 9,
       password_cannot_be_empty_code             = 10,
       account_already_exist_code                = 11,
       invalid_wif_private_key_code              = 12,
@@ -83,14 +81,12 @@ namespace graphene { namespace wallet {
    FC_DECLARE_DERIVED_EXCEPTION(account_in_wallet_not_on_blockchain_exception, wallet_exception, fc::wallet_exception_base_code + account_in_wallet_not_on_blockchain_code, "Account present in the wallet but does not exist on the blockchain.")
 
    // general
-   FC_DECLARE_DERIVED_EXCEPTION(nft_already_exist_exception, wallet_exception, fc::wallet_exception_base_code + nft_already_exist_code, "Non fungible token with that symbol already exists.")   
+   FC_DECLARE_DERIVED_EXCEPTION(nft_already_exist_exception, wallet_exception, fc::wallet_exception_base_code + nft_already_exist_code, "Non fungible token with that symbol already exists.")
    FC_DECLARE_DERIVED_EXCEPTION(need_buffer_and_brainkey_exception, wallet_exception, fc::wallet_exception_base_code + need_buffer_and_brainkey_code, "You need buffer and brainkey to sign.")
    FC_DECLARE_DERIVED_EXCEPTION(need_buffer_pubkey_and_signature_exception, wallet_exception, fc::wallet_exception_base_code + need_buffer_pubkey_and_signature_code, "You need buffer, public key and signature to verify.")
    // wallet_filename
    FC_DECLARE_DERIVED_EXCEPTION(wallet_filename_cannot_be_empty_exception, wallet_exception, fc::wallet_exception_base_code + wallet_filename_cannot_be_empty_code, "Wallet filename cannot be empty.")
    FC_DECLARE_DERIVED_EXCEPTION(wallet_is_locked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_locked_code, "The wallet is locked and needs to be unlocked.")
-   FC_DECLARE_DERIVED_EXCEPTION(wallet_is_already_locked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_already_locked_code, "The wallet is already locked.")
-   //FC_DECLARE_DERIVED_EXCEPTION(wallet_is_already_unlocked_exception, wallet_exception, fc::wallet_exception_base_code + wallet_is_already_unlocked_code, "The wallet is already unlocked.")
    FC_DECLARE_DERIVED_EXCEPTION(password_cannot_be_empty_exception, wallet_exception, fc::wallet_exception_base_code + password_cannot_be_empty_code, "Password cannot be empty.")
    //account
    FC_DECLARE_DERIVED_EXCEPTION(account_already_exist_exception, wallet_exception, fc::wallet_exception_base_code + account_already_exist_code, "Account already exists.");
@@ -112,7 +108,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_DERIVED_EXCEPTION(account_is_already_not_voting_miner_exception, wallet_exception, fc::wallet_exception_base_code + account_is_already_not_voting_for_miner_code, "Account is already not voting for miner.");
    FC_DECLARE_DERIVED_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, wallet_exception, fc::wallet_exception_base_code + voting_proxy_is_already_set_to_voter_code, "Voting proxy is already set to voter.");
    FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_itself_exception, wallet_exception, fc::wallet_exception_base_code + account_was_already_voting_for_itself_code, "Account was already voting for itself.");
-   FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_miners_exception, wallet_exception, fc::wallet_exception_base_code + account_was_already_voting_for_miners_code, "Account was already voting for miners.");   
+   FC_DECLARE_DERIVED_EXCEPTION(account_was_already_voting_for_miners_exception, wallet_exception, fc::wallet_exception_base_code + account_was_already_voting_for_miners_code, "Account was already voting for miners.");
    // content
    FC_DECLARE_DERIVED_EXCEPTION(cannot_find_package_exception, wallet_exception, fc::wallet_exception_base_code + cannot_find_package_code, "Cannot find package.");
    FC_DECLARE_DERIVED_EXCEPTION(package_is_not_in_valid_state_exception, wallet_exception, fc::wallet_exception_base_code + package_is_not_in_valid_state_code, "Package is not in valid state.");
