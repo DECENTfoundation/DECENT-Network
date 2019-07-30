@@ -31,6 +31,7 @@
 #include <graphene/app/impacted.hpp>
 #include <graphene/db/exceptions.hpp>
 #include <fc/crypto/base64.hpp>
+#include <fc/thread/thread.hpp>
 
 namespace graphene { namespace app {
 
@@ -259,9 +260,9 @@ namespace graphene { namespace app {
                                                                       operation_history_id_type stop,
                                                                       unsigned limit,
                                                                       operation_history_id_type start ) const
-   {      
-      if(!_app.chain_database()) 
-        FC_THROW_EXCEPTION(database_not_available_exception, "");      
+   {
+      if(!_app.chain_database())
+        FC_THROW_EXCEPTION(database_not_available_exception, "");
 
       const auto& db = *_app.chain_database();
       if(limit > CURRENT_OUTPUT_LIMIT_100)
@@ -514,12 +515,12 @@ namespace graphene { namespace app {
 
    vector<message_object> messaging_api::get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const
    {
-      if(!_app.chain_database())      
+      if(!_app.chain_database())
          FC_THROW_EXCEPTION(database_not_available_exception, "");
 
       if(!sender.valid() && !receiver.valid())
          FC_THROW_EXCEPTION(at_least_one_account_needs_to_be_specified_exception, "");
-      
+
       const auto& db = *_app.chain_database();
       const auto& idx = db.get_index_type<message_index>();
 

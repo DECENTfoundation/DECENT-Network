@@ -24,12 +24,12 @@
 #pragma once
 
 #include <fc/optional.hpp>
-#include <fc/signals.hpp>
+#include <boost/signals2/signal.hpp>
 #include <fc/time.hpp>
 
 namespace graphene { namespace utilities {
 
-   typedef fc::signal<void()> time_discontinuity_signal_type;
+   typedef boost::signals2::signal<void()> time_discontinuity_signal_type;
    extern time_discontinuity_signal_type time_discontinuity_signal;
 
    fc::optional<fc::time_point> ntp_time();

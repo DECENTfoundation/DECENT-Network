@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 
 #include <fc/interprocess/signals.hpp>
+#include <fc/thread/thread.hpp>
 
 #include <graphene/wallet/wallet.hpp>
 #endif
@@ -34,7 +35,7 @@ QProcess* run_ipfs_daemon(QObject* parent, const QString& app_dir);
 
 namespace gui_wallet
 {
-   
+
 void ShowMessageBox(const QString& strTitle,
                     const QString& strMessage,
                     const QString& strDetailedText/* = QString()*/,
@@ -169,13 +170,13 @@ QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture)
       else
       {
          str_result = QString::fromStdString( arrParts.front());
-         
+
          if (arrParts.size() > 1) {
             str_result.append(" ");
             str_result.append(QString::fromStdString(arrParts[1]));
          }
       }
-      
+
       return str_result;
    }
 }
@@ -698,7 +699,7 @@ void Globals::startDaemons(BlockChainStartType type, const boost::filesystem::pa
    if (bNeedNewConnection)
       emit signal_connect();
 }
-   
+
 void Globals::stopDaemons()
 {
    bool bConnected = connected();
@@ -1105,7 +1106,7 @@ void Globals::slot_timer()
    {
       emit progressCommonTextMessage("connecting...");
    }
-   else 
+   else
    {
       auto currBlockTime = Globals::instance().getWallet().HeadBlockTime();
       uint64_t value = std::chrono::duration_cast<std::chrono::seconds>(currBlockTime - m_blockStart).count();
@@ -1324,7 +1325,7 @@ bool IsIpfsRunning()
       } while (Process32Next(snapshot, &entry));
 
    CloseHandle(snapshot);
-     
+
    return false;
 #elif defined( __GNUC__ )
    // add detection of running IPFS process

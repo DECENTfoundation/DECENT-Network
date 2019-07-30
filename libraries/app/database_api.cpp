@@ -27,12 +27,12 @@
 #include <boost/algorithm/string.hpp>
 #include <fc/bloom_filter.hpp>
 #include <fc/crypto/hex.hpp>
+#include <fc/thread/thread.hpp>
 #include <graphene/chain/get_config.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/app/database_api.hpp>
 #include <graphene/db/exceptions.hpp>
-
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4
 
@@ -1581,7 +1581,7 @@ namespace graphene { namespace app {
    {
       if(votes.size() >= CURRENT_OUTPUT_LIMIT_1000)
          FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Only ${l} votes can be queried at a time", ("l", CURRENT_OUTPUT_LIMIT_1000));
-      
+
       const auto& miner_idx = _db.get_index_type<miner_index>().indices().get<by_vote_id>();
 
       vector<optional<miner_object>> result;
@@ -2262,13 +2262,13 @@ namespace
       auto objects = get_objects({buying});
       if(objects.size() == 0)
          FC_THROW_EXCEPTION(db::buying_object_does_not_exist_exception, "Buying: ${buying}", ("buying", buying));
-      
+
       const buying_object bo = objects.front().template as<buying_object>();
       auto content = get_content(bo.URI);
 
       if(!content)
          FC_THROW_EXCEPTION(db::content_object_does_not_exist_exception, "URI: ${uri}", ("uri", bo.URI));
-      
+
       const content_object co = *content;
 
       decent::encrypt::ShamirSecret ss( static_cast<uint16_t>(co.quorum), static_cast<uint16_t>(co.key_parts.size()) );
@@ -2660,7 +2660,7 @@ namespace
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
          FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
-      
+
       vector<content_summary> result;
       result.reserve( count );
 

@@ -31,7 +31,7 @@
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
-#include <fc/signals.hpp>
+#include <boost/signals2/signal.hpp>
 
 #include <fc/monitoring.hpp>
 #include <fc/log/logger.hpp>
@@ -189,9 +189,9 @@ namespace graphene { namespace chain {
          /**
           * This signal is emitted for plugins to process every operation
           */
-         fc::signal<void(const operation_history_object&)> on_applied_operation;
-         fc::signal<void(const operation_history_object&)> on_new_commited_operation;
-         fc::signal<void(const operation_history_object&)> on_new_commited_operation_during_sync;
+         boost::signals2::signal<void(const operation_history_object&)> on_applied_operation;
+         boost::signals2::signal<void(const operation_history_object&)> on_new_commited_operation;
+         boost::signals2::signal<void(const operation_history_object&)> on_new_commited_operation_during_sync;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -201,19 +201,19 @@ namespace graphene { namespace chain {
           *  the write lock and may be in an "inconstant state" until after it is
           *  released.
           */
-         fc::signal<void(const signed_block&)>           applied_block;
+         boost::signals2::signal<void(const signed_block&)> applied_block;
 
          /**
           * This signal is emitted any time a new transaction is added to the pending
           * block state.
           */
-         fc::signal<void(const signed_transaction&)>     on_pending_transaction;
+         boost::signals2::signal<void(const signed_transaction&)> on_pending_transaction;
 
          /**
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
           */
-         fc::signal<void(const vector<graphene::db::object_id_type>&)> changed_objects;
+         boost::signals2::signal<void(const vector<graphene::db::object_id_type>&)> changed_objects;
 
          //////////////////// db_miner_schedule.cpp ////////////////////
 
@@ -291,7 +291,7 @@ namespace graphene { namespace chain {
          }
 
          const vector< unique_ptr<op_evaluator> > & get_operation_evaluators() const
-         {       
+         {
             return _operation_evaluators;
          }
 
@@ -324,7 +324,7 @@ namespace graphene { namespace chain {
           * to newly created VBID and return it.
           *
           * Otherwise, credit amount to ovbid.
-          * 
+          *
           * @return ID of newly created VBO, but only if VBO was created.
           */
          optional< vesting_balance_id_type > deposit_lazy_vesting(
@@ -415,7 +415,7 @@ namespace graphene { namespace chain {
                return fhd->data.block_num();
             return 0;
          }
-         
+
          double get_reindexing_percent() { return _reindexing_percent; } // helper for retrieving reindexing progress - gui can use it
          void set_no_need_reindexing() { _reindexing_percent = 100; } // called from main when there is no need to reindex
          /**

@@ -6,6 +6,7 @@
 #include <fc/network/http/websocket.hpp>
 #include <fc/filesystem.hpp>
 #include <fc/rpc/api_connection.hpp>
+#include <fc/thread/thread.hpp>
 #include <fc/api.hpp>
 #include <iostream>
 
@@ -345,11 +346,11 @@ namespace wallet_utility
                                 str_result = fc::json::to_pretty_string(result);
                              else
                                 str_result = it->second(result, args);
-                             
+
                              return str_result;
                           }
                           // may as well throw an exception?
-                          
+
                           return string();
                        });
       string str_result = future_run.wait();

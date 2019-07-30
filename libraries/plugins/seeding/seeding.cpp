@@ -9,6 +9,7 @@
 #include <decent/package/package.hpp>
 #include <decent/ipfs_check.hpp>
 #include <ipfs/client.h>
+#include <fc/thread/thread.hpp>
 
 namespace bpo = boost::program_options;
 
@@ -785,7 +786,7 @@ void seeding_plugin::plugin_set_program_options(
    cfg.add(cli);
 }
 
-void detail::SeedingListener::package_download_error(const std::string & error) 
+void detail::SeedingListener::package_download_error(const std::string & error)
 {
    elog("seeding plugin: package_download_error(): Failed downloading package ${s}, ${e}", ("s", _url)("e", error));
    failed++;
