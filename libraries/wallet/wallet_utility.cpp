@@ -4,7 +4,6 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/network/http/websocket.hpp>
-#include <fc/filesystem.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/api.hpp>
@@ -284,15 +283,13 @@ namespace wallet_utility
       if (!IsConnected())
          throw wallet_exception("not yet connected");
 
-      string str_file = fc::to_native_ansi_path(m_wallet_file);
-
       std::lock_guard<std::mutex> lock(m_mutex);
 
       auto& pimpl = m_pimpl->m_ptr_wallet_api;
       fc::future<void> future_save_wallet_file =
-      m_pthread->async([&pimpl, &str_file] ()
+      m_pthread->async([&pimpl, this] ()
                        {
-                          return pimpl->save_wallet_file(str_file);
+                          return pimpl->save_wallet_file(m_wallet_file);
                        });
       return future_save_wallet_file.wait();
    }
