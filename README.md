@@ -26,7 +26,7 @@ For Ubuntu 16.04 LTS, execute in console:
     sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev
     mkdir ~/dev
 
-For Debian 9, execute in console:
+For Debian 9 or later, execute in console:
 
     sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
