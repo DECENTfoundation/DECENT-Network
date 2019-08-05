@@ -121,47 +121,47 @@
 <context>
     <name>gui_wallet::CommentWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="676"/>
+        <location filename="../src/richdialog.cpp" line="678"/>
         <source>submit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="749"/>
+        <location filename="../src/richdialog.cpp" line="751"/>
         <source>description</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="836"/>
+        <location filename="../src/richdialog.cpp" line="838"/>
         <source>next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="837"/>
+        <location filename="../src/richdialog.cpp" line="839"/>
         <source>previous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="841"/>
+        <location filename="../src/richdialog.cpp" line="843"/>
         <source>Average Rating</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="848"/>
+        <location filename="../src/richdialog.cpp" line="850"/>
         <source>feedback</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="861"/>
+        <location filename="../src/richdialog.cpp" line="863"/>
         <source>Your own feedback</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="880"/>
+        <location filename="../src/richdialog.cpp" line="882"/>
         <source>Leave your feedback here</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="882"/>
+        <location filename="../src/richdialog.cpp" line="884"/>
         <source>Any thoughts?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -169,73 +169,73 @@
 <context>
     <name>gui_wallet::ContentInfoWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="377"/>
+        <location filename="../src/richdialog.cpp" line="379"/>
         <source>Details of content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="385"/>
+        <location filename="../src/richdialog.cpp" line="387"/>
         <source>Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="397"/>
+        <location filename="../src/richdialog.cpp" line="399"/>
         <source>Expiration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="407"/>
+        <location filename="../src/richdialog.cpp" line="409"/>
         <source>Uploaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="422"/>
+        <location filename="../src/richdialog.cpp" line="424"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="432"/>
+        <location filename="../src/richdialog.cpp" line="434"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="442"/>
+        <location filename="../src/richdialog.cpp" line="444"/>
         <source>Times Bought</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="467"/>
+        <location filename="../src/richdialog.cpp" line="469"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="478"/>
-        <location filename="../src/richdialog.cpp" line="522"/>
+        <location filename="../src/richdialog.cpp" line="480"/>
+        <location filename="../src/richdialog.cpp" line="524"/>
         <source>Download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="482"/>
+        <location filename="../src/richdialog.cpp" line="484"/>
         <source>Buy &amp;&amp; Download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="513"/>
+        <location filename="../src/richdialog.cpp" line="515"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="513"/>
+        <location filename="../src/richdialog.cpp" line="515"/>
         <source>Cannot buy and download content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="513"/>
+        <location filename="../src/richdialog.cpp" line="515"/>
         <source>IPFS is not running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="549"/>
+        <location filename="../src/richdialog.cpp" line="551"/>
         <source>Failed to download content</source>
         <translation type="unfinished"></translation>
     </message>
@@ -243,37 +243,37 @@
 <context>
     <name>gui_wallet::ContentReviewWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="569"/>
+        <location filename="../src/richdialog.cpp" line="571"/>
         <source>Details of content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="577"/>
+        <location filename="../src/richdialog.cpp" line="579"/>
         <source>Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="587"/>
+        <location filename="../src/richdialog.cpp" line="589"/>
         <source>Purchased</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="598"/>
+        <location filename="../src/richdialog.cpp" line="600"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="608"/>
+        <location filename="../src/richdialog.cpp" line="610"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="618"/>
+        <location filename="../src/richdialog.cpp" line="620"/>
         <source>Times Bought</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="644"/>
+        <location filename="../src/richdialog.cpp" line="646"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
@@ -299,37 +299,37 @@
 <context>
     <name>gui_wallet::ImportKeyWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="241"/>
+        <location filename="../src/richdialog.cpp" line="243"/>
         <source>Import account</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="248"/>
+        <location filename="../src/richdialog.cpp" line="250"/>
         <source>Ok</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="250"/>
+        <location filename="../src/richdialog.cpp" line="252"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="260"/>
+        <location filename="../src/richdialog.cpp" line="262"/>
         <source>Account name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="265"/>
+        <location filename="../src/richdialog.cpp" line="267"/>
         <source>Private Key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="302"/>
+        <location filename="../src/richdialog.cpp" line="304"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="302"/>
+        <location filename="../src/richdialog.cpp" line="304"/>
         <source>Cannot import key.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -652,62 +652,62 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::PasswordWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="953"/>
+        <location filename="../src/richdialog.cpp" line="955"/>
         <source>Create your password for DECENT Wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="954"/>
+        <location filename="../src/richdialog.cpp" line="956"/>
         <source>Create Password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="957"/>
+        <location filename="../src/richdialog.cpp" line="959"/>
         <source>Unlock your DECENT Wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="958"/>
+        <location filename="../src/richdialog.cpp" line="960"/>
         <source>Unlock</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="965"/>
+        <location filename="../src/richdialog.cpp" line="967"/>
         <source>New password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="968"/>
+        <location filename="../src/richdialog.cpp" line="970"/>
         <source>Password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="971"/>
+        <location filename="../src/richdialog.cpp" line="973"/>
         <source>The password is limited to a maximum of 50 characters </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="980"/>
+        <location filename="../src/richdialog.cpp" line="982"/>
         <source>Re-enter password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="982"/>
+        <location filename="../src/richdialog.cpp" line="984"/>
         <source>The password must be limited to 50 characters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="1039"/>
+        <location filename="../src/richdialog.cpp" line="1041"/>
         <source>Passwords are not equal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="1060"/>
+        <location filename="../src/richdialog.cpp" line="1062"/>
         <source>Cannot set this password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="1078"/>
+        <location filename="../src/richdialog.cpp" line="1080"/>
         <source>Cannot unlock the wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -884,42 +884,42 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::TransferWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="114"/>
+        <location filename="../src/richdialog.cpp" line="116"/>
         <source>Send</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="117"/>
+        <location filename="../src/richdialog.cpp" line="119"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="123"/>
+        <location filename="../src/richdialog.cpp" line="125"/>
         <source>Transfer of funds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="142"/>
+        <location filename="../src/richdialog.cpp" line="144"/>
         <source>Receiver account name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="148"/>
+        <location filename="../src/richdialog.cpp" line="150"/>
         <source>Amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="163"/>
+        <location filename="../src/richdialog.cpp" line="165"/>
         <source>Memo (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="228"/>
+        <location filename="../src/richdialog.cpp" line="230"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="228"/>
+        <location filename="../src/richdialog.cpp" line="230"/>
         <source>Failed to transfer DCT</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1113,17 +1113,17 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::UserInfoWidget</name>
     <message>
-        <location filename="../src/richdialog.cpp" line="325"/>
+        <location filename="../src/richdialog.cpp" line="327"/>
         <source>Registrar - </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="332"/>
+        <location filename="../src/richdialog.cpp" line="334"/>
         <source>Publishing manager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/richdialog.cpp" line="344"/>
+        <location filename="../src/richdialog.cpp" line="346"/>
         <source>Has rights to publish</source>
         <translation type="unfinished"></translation>
     </message>

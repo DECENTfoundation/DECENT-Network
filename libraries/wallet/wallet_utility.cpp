@@ -57,7 +57,6 @@ namespace graphene { namespace wallet {
          Impl(const boost::filesystem::path &wallet_file, graphene::wallet::server_data ws)
          : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
-         , m_wallet_file(wallet_file)
          {
             wallet_data wdata;
             bool has_wallet_file = exists(wallet_file);
@@ -124,7 +123,6 @@ namespace graphene { namespace wallet {
 
          wallet_api_ptr m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
-         boost::filesystem::path m_wallet_file;
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
          std::map<graphene::chain::asset_id_type, std::pair<std::string, uint8_t>> m_asset_symbols;
       };
@@ -142,7 +140,7 @@ namespace graphene { namespace wallet {
 
    void WalletAPI::Connect(std::atomic_bool& cancellation_token, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
    {
-      if (IsConnected())
+      if (is_connected())
          throw wallet_exception("already connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -188,125 +186,9 @@ namespace graphene { namespace wallet {
          throw wallet_exception(str_result);
    }
 
-   bool WalletAPI::IsConnected()
-   {
-      std::lock_guard<std::mutex> lock(m_mutex);
-      return nullptr != m_pimpl;
-   }
-
-   bool WalletAPI::IsNew()
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<bool> future_is_new =
-      m_pthread->async([&pimpl] () -> bool
-                       {
-                          return pimpl->is_new();
-                       });
-      return future_is_new.wait();
-   }
-   bool WalletAPI::IsLocked()
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<bool> future_is_locked =
-      m_pthread->async([&pimpl] () -> bool
-                       {
-                          return pimpl->is_locked();
-                       });
-      return future_is_locked.wait();
-   }
-   std::chrono::system_clock::time_point WalletAPI::HeadBlockTime()
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<fc::time_point_sec> future_head_block_time =
-      m_pthread->async([&pimpl] ()
-                       {
-                          return pimpl->head_block_time();
-                       });
-      fc::time_point_sec fctp = future_head_block_time.wait();
-      return std::chrono::system_clock::from_time_t(fctp.sec_since_epoch());
-   }
-   void WalletAPI::SetPassword(string const& str_password)
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<void> future_set_password =
-      m_pthread->async([&pimpl, &str_password] ()
-                       {
-                          return pimpl->set_password(str_password);
-                       });
-      return future_set_password.wait();
-   }
-   bool WalletAPI::Unlock(string const& str_password)
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<bool> future_unlock =
-      m_pthread->async([&pimpl, &str_password] ()
-                       {
-                          return pimpl->unlock(str_password);
-                       });
-      return future_unlock.wait();
-   }
-
-   void WalletAPI::SaveWalletFile()
-   {
-      if (!IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<void> future_save_wallet_file =
-      m_pthread->async([&pimpl, this] ()
-                       {
-                          return pimpl->save_wallet_file(m_pimpl->m_wallet_file);
-                       });
-      return future_save_wallet_file.wait();
-   }
-   /*
-   std::vector<graphene::chain::content_summary> WalletAPI::SearchContent(string const& str_term, uint32_t iCount)
-   {
-      if (false == IsConnected())
-         throw wallet_exception("not yet connected");
-
-      std::lock_guard<std::mutex> lock(m_mutex);
-
-      auto& pimpl = m_pimpl->m_ptr_wallet_api;
-      fc::future<vector<graphene::chain::content_summary>> future_search_content =
-      m_pthread->async([&pimpl, &str_term, iCount] ()
-                       {
-                          return pimpl->search_content(str_term, iCount);
-                       });
-      return future_search_content.wait();
-   }
-    */
-
    string WalletAPI::RunTask(string const& str_command)
    {
-      if (false == IsConnected())
+      if (!is_connected())
          throw wallet_exception("not yet connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
@@ -347,20 +229,13 @@ namespace graphene { namespace wallet {
       return str_result;
    }
 
-   bool WalletAPI::IsPackageManagerTaskWaiting()
+   std::shared_ptr<graphene::wallet::wallet_api> WalletAPI::get_api()
    {
-       if (!IsConnected())
+       if (m_pimpl == nullptr)
           throw wallet_exception("not yet connected");
 
-       std::lock_guard<std::mutex> lock(m_mutex);
-
-       auto& pimpl = m_pimpl->m_ptr_wallet_api;
-       fc::future<bool> future_is_package_manager_task_waiting =
-       m_pthread->async([&pimpl] () -> bool
-                        {
-                           return pimpl->is_package_manager_task_waiting();
-                        });
-       return future_is_package_manager_task_waiting.wait();
+       return m_pimpl->m_ptr_wallet_api;
    }
 
-} }
+}
+}

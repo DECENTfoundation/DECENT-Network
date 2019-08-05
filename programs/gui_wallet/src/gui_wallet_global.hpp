@@ -79,14 +79,14 @@ namespace gui_wallet
    class StackLayerWidget;
    QString CalculateRemainingTime(const QDateTime& dt, const QDateTime& dtFuture);
    QString CalculateRemainingTime_Behind(QDateTime const& dt, QDateTime const& dtFuture);
-   
+
    void ShowMessageBox(QString const& strTitle,
                         QString const& strMessage,
                         QString const& strDetailedText = QString(),
                         QWidget* parent = nullptr);
 
    uint64_t json_to_int64(nlohmann::json const& o);
-    
+
    std::size_t extra_space(const std::string& s) noexcept;
    std::string unescape_string(const std::string& s);
    std::string escape_string(const std::string& s);
@@ -157,7 +157,7 @@ namespace gui_wallet
       Globals(Globals const&) = delete;
       Globals(Globals&&) = delete;
       ~Globals();
-      
+
    public:
       enum class ConnectionState { NoState, Reindexing, Connecting, SyncingUp, Up };
       static Globals& instance();
@@ -172,7 +172,7 @@ namespace gui_wallet
       static void setCommandLine(bpo::options_description &app_options, bpo::options_description &cfg_options);
 
       void startDaemons(BlockChainStartType type, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
-      void stopDaemons();
+      void stopDaemons(const boost::filesystem::path &wallet_file);
       fc::logger& guiLogger() { return m_logger; }
       std::string getCurrentUser() const;
       graphene::wallet::WalletAPI& getWallet() const;
@@ -226,7 +226,7 @@ namespace gui_wallet
       void updateProgress(int value, int maxVal);
       void statusClearMessage();
       void walletUnlocked();
-      
+
       void walletConnectionError(std::string const& message);
       void walletConnectionStatusChanged(ConnectionState from, ConnectionState to);
 
@@ -263,13 +263,13 @@ namespace gui_wallet
    // Useful when highlighting rows in tableview
    template<class QTType>
    class EventPassthrough : public QTType {
-      
+
    public:
       template<class... Args>
       EventPassthrough(const Args&... args) : QTType(args...) {
          this->setMouseTracking(true);
       }
-      
+
       virtual bool event(QEvent *event) override{
          if (event->type() == QEvent::MouseMove)
             return false;
@@ -290,7 +290,7 @@ namespace gui_wallet
    struct DecentColumn
    {
       DecentColumn(const QString& title, int size, std::string const& sortid = std::string());
-      
+
       QString title;
       int size; // Negative value of size means absolute value of width, positive is weighted value
       std::string sortid; // "+author" means sort by author ascending "-author" descending
@@ -301,7 +301,7 @@ namespace gui_wallet
    class DecentTable : public QTableWidget
    {
       Q_OBJECT
-      
+
    public:
       DecentTable(QWidget* pParent);
       int getCurrentHighlightedRow() const;
@@ -313,11 +313,11 @@ namespace gui_wallet
       void signal_SortingChanged(int);
    private slots:
       void sectionClicked(int index);
-      
+
    private:
       virtual void resizeEvent(QResizeEvent * a_event);
       virtual void mouseMoveEvent(QMouseEvent * event);
-     
+
    private:
       int                            _current_highlighted_row = -1;
       int                            _sum_weights = 1;

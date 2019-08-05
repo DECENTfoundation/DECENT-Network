@@ -312,7 +312,7 @@ MainWindow::MainWindow(const boost::filesystem::path &wallet_file, const graphen
                      this, &MainWindow::slot_ResetPage);
    QObject::connect(m_pNextPage, &QPushButton::clicked,
                      this, &MainWindow::slot_NextPage);
-   
+
    {
       QAction* pActionExit = new QAction(tr("&Exit"), this);
 
@@ -358,7 +358,7 @@ MainWindow::MainWindow(const boost::filesystem::path &wallet_file, const graphen
 
    QObject::connect(&Globals::instance(), &Globals::signal_updateAccountAssets,
                     this, &MainWindow::slot_updateAccountAssets);
-   
+
    QObject::connect(&Globals::instance(), &Globals::signal_keyImported,
                     this, &MainWindow::DisplayWalletContentGUI);
 
@@ -378,7 +378,7 @@ MainWindow::MainWindow(const boost::filesystem::path &wallet_file, const graphen
     int height = style()->pixelMetric(QStyle::PM_TitleBarHeight);
     setWindowIcon(height > 32 ? QIcon(":/icon/images/windows_decent_icon_32x32.png")
          : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
-#endif 
+#endif
 }
 
 MainWindow::~MainWindow()
@@ -425,20 +425,20 @@ void MainWindow::slot_setSplash()
 
    pButton->hide();
    pButton->setText(tr("Proceed"));
-   
+
    QGridLayout* pLayoutSplash = new QGridLayout;
    pLayoutSplash->addWidget(pPleaseWaitLabel,  0, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(m_pConnectingProgress, 1, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(m_pConnectingLabel, 2, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(pSyncUpLabel, 3, 0, Qt::AlignVCenter | Qt::AlignCenter);
    pLayoutSplash->addWidget(pButton, 4, 0, Qt::AlignVCenter | Qt::AlignCenter);
-   
+
    pLayoutSplash->setSizeConstraint(QLayout::SetFixedSize);
    pLayoutSplash->setSpacing(10);
    pLayoutSplash->setContentsMargins(0, 0, 0, 0);
-   
+
    pSplashScreen->setLayout(pLayoutSplash);
-   
+
    QObject::connect(&Globals::instance(), &Globals::progressSyncMessage,
                     this, &MainWindow::slot_SyncProgressUpdate);
    QObject::connect(&Globals::instance(), &Globals::progressCommonTextMessage,
@@ -450,7 +450,7 @@ void MainWindow::slot_setSplash()
 
    QObject::connect(this, &MainWindow::signal_setSplashMainText,
                     pButton, &QWidget::show);
-   
+
    QObject::connect(pButton, &QPushButton::clicked,
                     this, &MainWindow::slot_closeSplash);
 
@@ -475,12 +475,12 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    if (!bGonnaCoverAgain)
    {
-      if (Globals::instance().getWallet().IsNew())
+      if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_new))
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
          emit signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
       }
-      else if (Globals::instance().getWallet().IsLocked())
+      else if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_locked))
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
          emit signal_setSplashMainText(tr("Please unlock your wallet"));
@@ -546,7 +546,7 @@ void MainWindow::slot_connectionStatusChanged(Globals::ConnectionState from, Glo
             // but there already is a splash
             closeSplash(true);
          }
-         
+
          slot_setSplash();
       }
    }
@@ -667,14 +667,14 @@ void MainWindow::updateBalance(const QString& balance)
 void MainWindow::slot_replayBlockChain()
 {
    ++m_daemon_restart;
-   Globals::instance().stopDaemons();
+   Globals::instance().stopDaemons(walletFile());
    Globals::instance().startDaemons(BlockChainStartType::Replay, m_wallet_file, m_ws);
 }
 
 void MainWindow::slot_resyncBlockChain()
 {
    ++m_daemon_restart;
-   Globals::instance().stopDaemons();
+   Globals::instance().stopDaemons(walletFile());
    Globals::instance().startDaemons(BlockChainStartType::Resync, m_wallet_file, m_ws);
 }
 
@@ -1059,7 +1059,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 void MainWindow::DisplayWalletContentGUI()
 {
    Globals::instance().setWalletUnlocked();
-   Globals::instance().getWallet().SaveWalletFile();
+   Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::save_wallet_file, walletFile());
    bool display_error_box = false;
    std::string exception_text;
    try

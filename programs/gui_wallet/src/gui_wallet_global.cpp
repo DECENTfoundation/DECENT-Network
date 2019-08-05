@@ -659,22 +659,22 @@ void Globals::startDaemons(BlockChainStartType type, const boost::filesystem::pa
 
    m_p_daemon_details->ipfs_process = daemon_process;
 
-   fc::set_signal_handler([this](int /*signal*/) {
+   fc::set_signal_handler([=](int /*signal*/) {
       elog( "Caught SIGINT attempting to exit cleanly" );
-      stopDaemons();
+      stopDaemons(wallet_file);
    }, SIGINT);
 
-   fc::set_signal_handler([this](int /*signal*/) {
+   fc::set_signal_handler([=](int /*signal*/) {
       elog( "Caught SIGTERM attempting to exit cleanly" );
-      stopDaemons();
+      stopDaemons(wallet_file);
    }, SIGTERM);
 
 
 #if !defined( _MSC_VER )
 
-   fc::set_signal_handler([this](int /*signal*/) {
+   fc::set_signal_handler([=](int /*signal*/) {
       elog( "Caught SIGHUP attempting to exit cleanly" );
-      stopDaemons();
+      stopDaemons(wallet_file);
    }, SIGHUP);
 
 #endif
@@ -699,7 +699,7 @@ void Globals::startDaemons(BlockChainStartType type, const boost::filesystem::pa
       emit signal_connect();
 }
 
-void Globals::stopDaemons()
+void Globals::stopDaemons(const boost::filesystem::path &wallet_file)
 {
    bool bConnected = connected();
 
@@ -719,7 +719,7 @@ void Globals::stopDaemons()
    if (m_p_wallet_operator)
    {
       if (bConnected) {
-         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
+         m_p_wallet_operator->m_wallet_api.exec(&graphene::wallet::wallet_api::save_wallet_file, wallet_file);
       }
       else {
          m_p_wallet_operator->cancel();
@@ -775,9 +775,6 @@ void Globals::clear()
 
    if (m_p_wallet_operator)
    {
-      if (connected())
-         m_p_wallet_operator->m_wallet_api.SaveWalletFile();
-
       delete m_p_wallet_operator;
       m_p_wallet_operator = nullptr;
    }
@@ -1038,7 +1035,7 @@ void Globals::slot_connected(std::string const& str_error)
    if (str_error.empty()) {
       emit walletConnectionStatusChanged(ConnectionState::Connecting, ConnectionState::SyncingUp);
 
-      m_blockStart = getWallet().HeadBlockTime();
+      m_blockStart = std::chrono::system_clock::from_time_t(getWallet().exec(&graphene::wallet::wallet_api::head_block_time).sec_since_epoch());
    }
    else
       emit walletConnectionError(str_error);
@@ -1107,7 +1104,7 @@ void Globals::slot_timer()
    }
    else
    {
-      auto currBlockTime = Globals::instance().getWallet().HeadBlockTime();
+      auto currBlockTime = std::chrono::system_clock::from_time_t(getWallet().exec(&graphene::wallet::wallet_api::head_block_time).sec_since_epoch());
       uint64_t value = std::chrono::duration_cast<std::chrono::seconds>(currBlockTime - m_blockStart).count();
       uint64_t maxValue = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - m_blockStart).count();
 

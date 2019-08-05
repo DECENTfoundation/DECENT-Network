@@ -2797,11 +2797,9 @@ signed_transaction content_cancellation(const string& author,
 
            if (contains_submit_content_async)
            {
-               bool still_waiting_for_package_manager = true;
                // hold on and periodically check if all package manager listeners are in a final state
-               while (still_waiting_for_package_manager)
+               while (my_api.exec(&wallet_api::is_package_manager_task_waiting))
                {
-                   still_waiting_for_package_manager = my_api.IsPackageManagerTaskWaiting();
                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                }
            }

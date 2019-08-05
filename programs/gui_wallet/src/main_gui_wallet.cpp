@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
       GUI_ELOG("Unknown exception");
    }
 
-   gui_wallet::Globals::instance().stopDaemons();
+   gui_wallet::Globals::instance().stopDaemons(aMainWindow.walletFile());
    gui_wallet::Globals::instance().clear();
 
    return 0;

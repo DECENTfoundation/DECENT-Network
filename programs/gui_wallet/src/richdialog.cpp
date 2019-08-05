@@ -4,6 +4,8 @@
 #include <QBoxLayout>
 #include <QDateTime>
 #include <QMenu>
+
+#include <graphene/wallet/wallet.hpp>
 #endif
 
 #include "richdialog.hpp"
@@ -109,13 +111,13 @@ TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QStri
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QHBoxLayout* assetLayout      = new QHBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
-   
+
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Send"));
 
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Back"));
-   
+
    QObject::connect(ok, &QPushButton::clicked, this, &TransferWidget::Transfer);
    QObject::connect(cancel, &QPushButton::clicked, this, &StackLayerWidget::closed);
 
@@ -159,7 +161,7 @@ TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QStri
    amount->setValidator(dblValidator);
    QObject::connect(amount, &QLineEdit::textChanged,
                     this, &TransferWidget::amountChanged);
-   
+
    memo->setPlaceholderText(tr("Memo (optional)"));
    memo->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(memo, &QLineEdit::textChanged,
@@ -178,7 +180,7 @@ TransferWidget::TransferWidget(QWidget* parent, const QList<QPair<QString, QStri
    mainLayout->addLayout(assetLayout);
    mainLayout->addWidget(memo);
    mainLayout->addLayout(buttonsLayout);
-   
+
    setLayout(mainLayout);
 
    name->setFocus();
@@ -243,17 +245,17 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    QVBoxLayout* mainLayout       = new QVBoxLayout();
    QVBoxLayout* lineEditsLayout  = new QVBoxLayout();
    QHBoxLayout* buttonsLayout    = new QHBoxLayout();
-   
+
    DecentButton* ok = new DecentButton(this, DecentButton::DialogAction);
    ok->setText(tr("Ok"));
    DecentButton* cancel = new DecentButton(this, DecentButton::DialogCancel);
    cancel->setText(tr("Cancel"));
-   
+
    QObject::connect(ok, &QPushButton::clicked,
                     this, &ImportKeyWidget::Import);
    QObject::connect(cancel, &QPushButton::clicked,
                     this, &StackLayerWidget::closed);
-   
+
    DecentLineEdit* name = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
    DecentLineEdit* key  = new DecentLineEdit(this, DecentLineEdit::DialogLineEdit, DecentLineEdit::DlgImport);
 
@@ -261,7 +263,7 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    name->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(name, &QLineEdit::textChanged,
                     this, &ImportKeyWidget::nameChanged);
-   
+
    key->setPlaceholderText(tr("Private Key"));
    key->setAttribute(Qt::WA_MacShowFocusRect, 0);
    QObject::connect(key, &QLineEdit::textChanged,
@@ -270,7 +272,7 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    lineEditsLayout->addWidget(pLabel);
    lineEditsLayout->addWidget(name);
    lineEditsLayout->addWidget(key);
-   
+
    buttonsLayout->setSpacing(20);
    buttonsLayout->addWidget(ok);
    buttonsLayout->addWidget(cancel);
@@ -278,7 +280,7 @@ ImportKeyWidget::ImportKeyWidget(QWidget* parent) : StackLayerWidget(parent)
    mainLayout->setContentsMargins(40, 10, 40, 10);
    mainLayout->addLayout(lineEditsLayout);
    mainLayout->addLayout(buttonsLayout);
-   
+
    setLayout(mainLayout);
 }
 
@@ -305,7 +307,7 @@ void ImportKeyWidget::Import()
 //
 //UserInfoWidget
 //
-   
+
 UserInfoWidget::UserInfoWidget(QWidget* parent,
                      const bool&    is_publishing_manager,
                      const bool     is_publishing_rights_received,
@@ -319,12 +321,12 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    QVBoxLayout* main_layout = new QVBoxLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 0);
-   
+
    DecentLabel* registrarLabel = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
    ++labelCount;
    registrarLabel->setText(tr("Registrar - ") + registrar);
    main_layout->addWidget(registrarLabel);
-   
+
    if(is_publishing_manager)
    {
       DecentLabel* managerIsPublishingLabel = new DecentLabel(this, DecentLabel::RowLabel);
@@ -332,7 +334,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
       managerIsPublishingLabel->setText((tr("Publishing manager")));
       main_layout->addWidget(managerIsPublishingLabel);
    }
-   
+
    if(is_publishing_rights_received)
    {
       DecentLabel* isPublishingRightsReceivedLabel;
@@ -344,7 +346,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
       isPublishingRightsReceivedLabel->setText((tr("Has rights to publish")));
       main_layout->addWidget(isPublishingRightsReceivedLabel);
    }
-   
+
    DecentButton* backButton = new DecentButton(this, DecentButton::DialogCancel);
    backButton->setText("Back");
    QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -352,7 +354,7 @@ UserInfoWidget::UserInfoWidget(QWidget* parent,
    buttonLayout->setContentsMargins(0, 20, 0, 0);
    main_layout->addLayout(buttonLayout);
    QObject::connect(backButton, &QPushButton::clicked, this, &StackLayerWidget::closed);
-   
+
    setWindowTitle(name + " (" + id + ")");
    setLayout(main_layout);
 }
@@ -434,7 +436,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(labelSizeTitle, iRowIndex, 0);
    main_layout->addWidget(labelSizeInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    // Times Bought
    //
    DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -444,11 +446,11 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    main_layout->addWidget(labelTimesBoughtTitle, iRowIndex, 0);
    main_layout->addWidget(labelTimesBoughtInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    std::string synopsis = a_cnt_details.synopsis;
    std::string title;
    std::string desc;
-   
+
    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
@@ -494,7 +496,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
    }
    pButtonsLayout->addWidget(cancelButton);
    main_layout->addLayout(pButtonsLayout, iRowIndex, 0, 1, 2);
-   
+
    setLayout(main_layout);
 
    setWindowTitle(QString::fromStdString(title));
@@ -505,7 +507,7 @@ ContentInfoWidget::ContentInfoWidget(QWidget* parent, const SDigitalContent& a_c
       : QIcon(":/icon/images/windows_decent_icon_16x16.png"));
 #endif
 }
-   
+
 void ContentInfoWidget::ButtonWasClicked()
 {
 #ifdef _MSC_VER
@@ -526,7 +528,7 @@ void ContentInfoWidget::ButtonWasClicked()
       Buy();
    }
 }
-   
+
 void ContentInfoWidget::Buy()
 {
    std::string downloadCommand = "download_content ";
@@ -536,7 +538,7 @@ void ContentInfoWidget::Buy()
    downloadCommand += " true";                                          // broadcast
 
    std::string str_error;
-   
+
    try
    {
       Globals::instance().runTask(downloadCommand);
@@ -547,7 +549,7 @@ void ContentInfoWidget::Buy()
    }
    if (!str_error.empty())
       ShowMessageBox("", tr("Failed to download content"), QString::fromStdString(str_error));
-   
+
    emit accepted();
 }
 
@@ -561,7 +563,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    QGridLayout* main_layout = new QGridLayout();
    main_layout->setSpacing(0);
    main_layout->setContentsMargins(0, 0, 0, 15);
-   
+
    int iRowIndex = 0;
    // Title
    //
@@ -579,7 +581,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelAuthorTitle, iRowIndex, 0);
    main_layout->addWidget(labelAuthorInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    // Purchased
    //
    DecentLabel* labelExpirationTitle = new DecentLabel(this, DecentLabel::RowLabel);
@@ -589,7 +591,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelExpirationTitle, iRowIndex, 0);
    main_layout->addWidget(labelExpirationInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    // Amount
    //
    DecentLabel* labelAmountTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -600,7 +602,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelAmountTitle, iRowIndex, 0);
    main_layout->addWidget(labelAmountInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    // Size
    //
    DecentLabel* labelSizeTitle = new DecentLabel(this, DecentLabel::RowLabel);
@@ -610,7 +612,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    main_layout->addWidget(labelSizeTitle, iRowIndex, 0);
    main_layout->addWidget(labelSizeInfo, iRowIndex, 1);
    ++iRowIndex;
-   
+
    // Times Bought
    //
    DecentLabel* labelTimesBoughtTitle = new DecentLabel(this, DecentLabel::RowLabel, DecentLabel::Highlighted);
@@ -624,7 +626,7 @@ ContentReviewWidget::ContentReviewWidget(QWidget* parent, const SDigitalContent&
    std::string synopsis = a_cnt_details.synopsis;
    std::string title;
    std::string desc;
-   
+
    graphene::chain::ContentObjectPropertyManager synopsis_parser(synopsis);
    title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
    desc = synopsis_parser.get<graphene::chain::ContentObjectDescription>();
@@ -720,7 +722,7 @@ void CommentWidget::submit()
 {
    if (m_pRatingWidget->m_rating == 0)
       return;
-   
+
    try {
       Globals::instance().runTaskParse("leave_rating_and_comment "
                                              "\"" + Globals::instance().getCurrentUser() + "\" "
@@ -739,7 +741,7 @@ void CommentWidget::submit()
    slot_Previous();
    slot_Next();
 }
-   
+
 // update contentInfo
 void CommentWidget::update()
 {
@@ -910,7 +912,7 @@ std::string CommentWidget::next_iterator()
    {
       return m_iterators.back();
    }
-   
+
    return std::string();
 }
 
@@ -921,7 +923,7 @@ bool CommentWidget::slot_Next()
 
    m_iterators.push_back(m_next_itr);
    update();
-   
+
    return true;
 }
 
@@ -932,7 +934,7 @@ bool CommentWidget::slot_Previous()
 
    m_iterators.pop_back();
    update();
-   
+
    return true;
 }
 // PasswordWidget
@@ -1047,7 +1049,7 @@ void PasswordWidget::slot_action()
    {
       try
       {
-         Globals::instance().getWallet().SetPassword(pass1.toStdString());
+         Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::set_password, pass1.toStdString());
       }
       catch(const std::exception& ex) {
          error = ex.what();
@@ -1065,7 +1067,7 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().getWallet().Unlock(pass1.toStdString());
+      Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::unlock, pass1.toStdString());
    }
    catch(const std::exception& ex) {
       error = ex.what();
