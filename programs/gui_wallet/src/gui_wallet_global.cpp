@@ -477,9 +477,8 @@ QString convertDateTimeToLocale2(const std::string& s)
 //
 // WalletOperator
 //
-WalletOperator::WalletOperator(const boost::filesystem::path &wallet_file)
-: m_wallet_api(wallet_file)
-, m_cancellation_token(false)
+WalletOperator::WalletOperator()
+: m_cancellation_token(false)
 {
 }
 
@@ -490,12 +489,12 @@ void WalletOperator::cancel()
    m_cancellation_token = true;
 }
 
-void WalletOperator::connect(const graphene::wallet::server_data &ws)
+void WalletOperator::connect(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
 {
    std::string str_error;
    try
    {
-      m_wallet_api.Connect(m_cancellation_token, ws);
+      m_wallet_api.Connect(m_cancellation_token, wallet_file, ws);
    }
    catch(const std::exception& ex)
    {
@@ -637,10 +636,10 @@ void Globals::startDaemons(BlockChainStartType type, const boost::filesystem::pa
 
 
       bNeedNewConnection = true;
-      m_p_wallet_operator = new WalletOperator(wallet_file);
+      m_p_wallet_operator = new WalletOperator();
       m_p_wallet_operator->moveToThread(m_p_wallet_operator_thread);
       QObject::connect(this, &Globals::signal_connect,
-                       m_p_wallet_operator, [=]() { m_p_wallet_operator->connect(ws); });
+                       m_p_wallet_operator, [=]() { m_p_wallet_operator->connect(wallet_file, ws); });
       QObject::connect(m_p_wallet_operator, &WalletOperator::signal_connected,
                        this, &Globals::slot_connected);
 
@@ -759,7 +758,7 @@ std::string Globals::getCurrentUser() const
    return m_str_currentUser;
 }
 
-WalletAPI& Globals::getWallet() const
+graphene::wallet::WalletAPI& Globals::getWallet() const
 {
    return m_p_wallet_operator->m_wallet_api;
 }

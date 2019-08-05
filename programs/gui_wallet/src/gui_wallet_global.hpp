@@ -95,24 +95,21 @@ namespace gui_wallet
    QString convertDateTimeToLocale(const std::string& s);
    QString convertDateTimeToLocale2(const std::string& s);
 
-
-   using WalletAPI = decent::wallet_utility::WalletAPI;
-
    class WalletOperator : public QObject
    {
       Q_OBJECT
    public:
-      WalletOperator(const boost::filesystem::path &wallet_file);
+      WalletOperator();
       ~WalletOperator();
 
       void cancel();
-      void connect(const graphene::wallet::server_data &ws);
+      void connect(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
 
    signals:
       void signal_connected(std::string const& str_error);
    public:
-      WalletAPI m_wallet_api;
       std::atomic_bool m_cancellation_token;
+      graphene::wallet::WalletAPI m_wallet_api;
    };
 
    // Asset
@@ -178,7 +175,7 @@ namespace gui_wallet
       void stopDaemons();
       fc::logger& guiLogger() { return m_logger; }
       std::string getCurrentUser() const;
-      WalletAPI& getWallet() const;
+      graphene::wallet::WalletAPI& getWallet() const;
       void clear();
       Asset asset(uint64_t amount, const std::string& assetId = Asset::dct_id);
       std::string runTask(std::string const& str_command);

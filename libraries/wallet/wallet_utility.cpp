@@ -9,13 +9,9 @@
 #include <fc/api.hpp>
 #include <iostream>
 
-namespace decent
-{
-namespace wallet_utility
-{
-   using wallet_api = graphene::wallet::wallet_api;
+namespace graphene { namespace wallet {
+
    using wallet_api_ptr = std::shared_ptr<wallet_api>;
-   using wallet_data = graphene::wallet::wallet_data;
    using websocket_client = fc::http::websocket_client;
    using websocket_client_ptr = std::shared_ptr<websocket_client>;
    using websocket_connection_ptr = fc::http::websocket_connection_ptr;
@@ -42,10 +38,6 @@ namespace wallet_utility
          std::string m_str_info;
       };
 
-   }
-
-   namespace detail
-   {
       class WalletAPIConnection : public fc::api_connection
       {  // no idea yet why deriving
       public:
@@ -56,15 +48,16 @@ namespace wallet_utility
          virtual fc::variant send_callback(uint64_t callback_id, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
          virtual void send_notice(uint64_t callback_id, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
       };
+   }
 
       using WalletAPIConnectionPtr = std::shared_ptr<WalletAPIConnection>;
 
-      class WalletAPIHelper
+      struct WalletAPI::Impl
       {
-      public:
-         WalletAPIHelper(const boost::filesystem::path &wallet_file, graphene::wallet::server_data ws)
+         Impl(const boost::filesystem::path &wallet_file, graphene::wallet::server_data ws)
          : m_ptr_wallet_api(nullptr)
          , m_ptr_fc_api_connection(nullptr)
+         , m_wallet_file(wallet_file)
          {
             wallet_data wdata;
             bool has_wallet_file = exists(wallet_file);
@@ -131,15 +124,15 @@ namespace wallet_utility
 
          wallet_api_ptr m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
+         boost::filesystem::path m_wallet_file;
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
          std::map<graphene::chain::asset_id_type, std::pair<std::string, uint8_t>> m_asset_symbols;
       };
-   }
+
    //
    //  WalletAPI
    //
-   WalletAPI::WalletAPI(const boost::filesystem::path &wallet_file)
-   : m_wallet_file(wallet_file)
+   WalletAPI::WalletAPI()
    {
    }
 
@@ -147,7 +140,7 @@ namespace wallet_utility
    {
    }
 
-   void WalletAPI::Connect(std::atomic_bool& cancellation_token, const graphene::wallet::server_data &ws)
+   void WalletAPI::Connect(std::atomic_bool& cancellation_token, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
    {
       if (IsConnected())
          throw wallet_exception("already connected");
@@ -156,14 +149,14 @@ namespace wallet_utility
       m_pthread.reset(new fc::thread("wallet_api_service"));
 
       fc::future<string> future_connect =
-      m_pthread->async([this, &cancellation_token, &ws] () -> string
+      m_pthread->async([this, &cancellation_token, &wallet_file, &ws] () -> string
                        {
                           std::string error;
                           while (! cancellation_token)
                           {
                              try
                              {
-                                m_pimpl.reset(new detail::WalletAPIHelper(m_wallet_file, ws));
+                                m_pimpl.reset(new Impl(wallet_file, ws));
                                 break;
                              }
                              catch(wallet_exception const& ex)
@@ -289,7 +282,7 @@ namespace wallet_utility
       fc::future<void> future_save_wallet_file =
       m_pthread->async([&pimpl, this] ()
                        {
-                          return pimpl->save_wallet_file(m_wallet_file);
+                          return pimpl->save_wallet_file(m_pimpl->m_wallet_file);
                        });
       return future_save_wallet_file.wait();
    }
@@ -370,5 +363,4 @@ namespace wallet_utility
        return future_is_package_manager_task_waiting.wait();
    }
 
-}
-}
+} }
