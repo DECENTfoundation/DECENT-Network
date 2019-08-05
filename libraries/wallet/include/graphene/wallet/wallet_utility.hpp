@@ -8,11 +8,6 @@
 
 namespace boost { namespace filesystem { class path; } }
 
-namespace fc
-{
-   class thread;
-}
-
 namespace graphene { namespace wallet {
    struct server_data;
    class wallet_api;
@@ -32,7 +27,8 @@ namespace graphene { namespace wallet {
       Result exec(Result (wallet_api::* func)(Args...), Values... values)
       {
          std::lock_guard<std::mutex> lock(m_mutex);
-         fc::future<Result> f = m_pthread->async([&]() -> Result { return (get_api().get()->*func)(values...); });
+         auto api = get_api();
+         fc::future<Result> f = m_pthread->async([&]() -> Result { return (api.get()->*func)(values...); });
          return f.wait();
       }
 
@@ -40,7 +36,8 @@ namespace graphene { namespace wallet {
       Result exec(Result (wallet_api::* func)(Args...) const, Values... values)
       {
          std::lock_guard<std::mutex> lock(m_mutex);
-         fc::future<Result> f = m_pthread->async([&]() -> Result { return (get_api().get()->*func)(values...); });
+         auto api = get_api();
+         fc::future<Result> f = m_pthread->async([&]() -> Result { return (api.get()->*func)(values...); });
          return f.wait();
       }
 
