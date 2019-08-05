@@ -3,6 +3,8 @@
 #pragma once
 
 #include <mutex>
+#include <memory>
+#include <atomic>
 
 namespace boost { namespace filesystem { class path; } }
 
