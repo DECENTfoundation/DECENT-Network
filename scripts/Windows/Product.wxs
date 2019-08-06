@@ -62,11 +62,11 @@
       </Component>
 
       <Component Id="decentd" Guid="AAA0E21D-F0DF-449D-83E0-99B3DD203EF8">
-        <File Id='decentd.exe.exe' Name='decentd.exe' DiskId='1' Source='$(var.DCorePath)\bin\decentd.exe' KeyPath='yes' />
+        <File Id='decentd.exe' Name='decentd.exe' DiskId='1' Source='$(var.DCorePath)\bin\decentd.exe' KeyPath='yes' />
       </Component>
 
       <Component Id="cli_wallet" Guid="CEABB874-22B0-4315-BA63-E060DDF336DA">
-        <File Id='cli_wallet.exe.exe' Name='cli_wallet.exe' DiskId='1' Source='$(var.DCorePath)\bin\cli_wallet.exe' KeyPath='yes' />
+        <File Id='cli_wallet.exe' Name='cli_wallet.exe' DiskId='1' Source='$(var.DCorePath)\bin\cli_wallet.exe' KeyPath='yes' />
       </Component>
 
       <Component Id="LicenceAgreement" Guid="056CCA3F-36C6-48B6-B02A-2E5DFB00417B">
