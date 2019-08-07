@@ -1053,8 +1053,6 @@ void Globals::slot_ConnectionStatusChange(ConnectionState from, ConnectionState 
    }
 }
 
-static graphene::app::application* s_node = nullptr;
-
 void Globals::slot_timer()
 {
    auto backup_state = m_connected_state;
@@ -1070,32 +1068,26 @@ void Globals::slot_timer()
       return;
    }
 
-   double reindexing_percent = 0;
-   if (s_node && m_connected_state == ConnectionState::NoState) {
-      reindexing_percent = s_node->chain_database()->get_reindexing_percent();
-      if (reindexing_percent >= 0 && reindexing_percent < 100) {
+   if (m_connected_state == ConnectionState::NoState) {
+      if (m_reindexing_percent >= 0 && m_reindexing_percent < 100) {
          m_connected_state = ConnectionState::Reindexing;
          emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Reindexing);
       }
       else
-      if (reindexing_percent == 100) {
+      if (m_reindexing_percent == 100) {
          m_connected_state = ConnectionState::Connecting;
          emit walletConnectionStatusChanged(ConnectionState::NoState, ConnectionState::Connecting);
       }
    } else
-   if (s_node && ConnectionState::Reindexing == m_connected_state)
+   if (ConnectionState::Reindexing == m_connected_state)
    {
-      double reindexing_percent = s_node->chain_database()->get_reindexing_percent();
-      if (reindexing_percent != -1) {
-         if (reindexing_percent == 100) {
-            m_connected_state = ConnectionState::Connecting;
-            emit walletConnectionStatusChanged(ConnectionState::Reindexing, ConnectionState::Connecting);
-         }
-         else {
-            QString showMsg = QString::number((int)reindexing_percent);
-            emit progressCommonTextMessage("reindexing database...");
-            emit updateProgress((int)reindexing_percent, 100);
-         }
+      if (m_reindexing_percent == 100) {
+         m_connected_state = ConnectionState::Connecting;
+         emit walletConnectionStatusChanged(ConnectionState::Reindexing, ConnectionState::Connecting);
+      }
+      else {
+         emit progressCommonTextMessage("reindexing database...");
+         emit updateProgress(m_reindexing_percent, 100);
       }
    } else
    if (ConnectionState::Connecting == m_connected_state)
@@ -1467,10 +1459,10 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
       }
 
       bpo::notify(options);
+      node->chain_database()->reindexing_progress.connect([](uint8_t progress) { gui_wallet::Globals::instance().set_reindexing_percent(progress); } );
       node->initialize(data_dir, options);
       node->initialize_plugins( options );
 
-      gui_wallet::s_node = node;
       node->startup();
       node->startup_plugins();
 

@@ -215,6 +215,11 @@ namespace graphene { namespace chain {
           */
          boost::signals2::signal<void(const vector<graphene::db::object_id_type>&)> changed_objects;
 
+         /**
+          * This signal is emitted to report database reindexing progress in percent (0 - 100).
+          */
+         boost::signals2::signal<void(uint8_t)> reindexing_progress;
+
          //////////////////// db_miner_schedule.cpp ////////////////////
 
          /**
@@ -416,11 +421,6 @@ namespace graphene { namespace chain {
             return 0;
          }
 
-         double get_reindexing_percent() { return _reindexing_percent; } // helper for retrieving reindexing progress - gui can use it
-         void set_no_need_reindexing() { _reindexing_percent = 100; } // called from main when there is no need to reindex
-         /**
-          * @}
-          */
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
@@ -510,7 +510,6 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
-         double                            _reindexing_percent = 0;
    };
 
 } }

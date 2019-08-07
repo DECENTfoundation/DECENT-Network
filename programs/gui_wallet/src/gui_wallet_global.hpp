@@ -184,6 +184,7 @@ namespace gui_wallet
       QLocale& locale() { return *m_p_locale; }
       bool connected() const;
       void display_error_and_stop_slot_timer(std::string param1, std::string param2, std::string param3);
+      void set_reindexing_percent(uint8_t progress) { m_reindexing_percent = progress; }
 
       //functions
       std::string ImportAccount(const std::string& name, const std::string& key);
@@ -248,6 +249,8 @@ namespace gui_wallet
       std::string m_exceptionMsgBoxParam1;
       std::string m_exceptionMsgBoxParam2;
       std::string m_exceptionMsgBoxParam3;
+
+      uint8_t m_reindexing_percent = 0;
    };
 
 #define GUI_LOGGER gui_wallet::Globals::instance().guiLogger()

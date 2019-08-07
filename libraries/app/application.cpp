@@ -303,7 +303,7 @@ namespace detail {
       void startup()
       { try {
          bool clean = !exists(_data_dir / "blockchain/dblock");
-  
+
          create_directories(_data_dir / "blockchain/dblock");
          FC_ASSERT(!_db_lock, "Database is already opened");
          _db_lock.reset(new fc::simple_lock_file(_data_dir / "blockchain/dblock/decentd"));
@@ -436,8 +436,6 @@ namespace detail {
             write_db_version();
          }
 
-         _chain_db->set_no_need_reindexing();
-
          if (!_options->count("genesis-json") &&
              _chain_db->get_chain_id() != graphene::egenesis::get_egenesis_chain_id()) {
             elog("Detected old database. Nuking and starting over.");
@@ -558,7 +556,7 @@ namespace detail {
             const auto& miner = blk_msg.block.miner(*_chain_db);
             const auto& miner_account = miner.miner_account(*_chain_db);
             auto last_irr = _chain_db->get_dynamic_global_properties().last_irreversible_block_num;
-            ilog("Got block: #${n} time: ${t} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})", 
+            ilog("Got block: #${n} time: ${t} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})",
                  ("t",blk_msg.block.timestamp)
                  ("n", blk_msg.block.block_num())
                  ("l", (latency.count()/1000))
@@ -651,7 +649,7 @@ namespace detail {
 
          result.reserve(limit);
          block_id_type last_known_block_id;
-         
+
          if (blockchain_synopsis.empty() ||
              (blockchain_synopsis.size() == 1 && blockchain_synopsis[0] == block_id_type()))
          {
@@ -712,13 +710,13 @@ namespace detail {
       }
 
       /**
-       * Returns a synopsis of the blockchain used for syncing.  This consists of a list of 
+       * Returns a synopsis of the blockchain used for syncing.  This consists of a list of
        * block hashes at intervals exponentially increasing towards the genesis block.
        * When syncing to a peer, the peer uses this data to determine if we're on the same
        * fork as they are, and if not, what blocks they need to send us to get us on their
        * fork.
        *
-       * In the over-simplified case, this is a straighforward synopsis of our current 
+       * In the over-simplified case, this is a straighforward synopsis of our current
        * preferred blockchain; when we first connect up to a peer, this is what we will be sending.
        * It looks like this:
        *   If the blockchain is empty, it will return the empty list.
@@ -734,7 +732,7 @@ namespace detail {
        *     the last item in the list will be the hash of the most recent block on our preferred chain
        * so if the blockchain had 26 blocks labeled a - z, the synopsis would be:
        *    a n u x z
-       * the idea being that by sending a small (<30) number of block ids, we can summarize a huge 
+       * the idea being that by sending a small (<30) number of block ids, we can summarize a huge
        * blockchain.  The block ids are more dense near the end of the chain where because we are
        * more likely to be almost in sync when we first connect, and forks are likely to be short.
        * If the peer we're syncing with in our example is on a fork that started at block 'v',
@@ -749,27 +747,27 @@ namespace detail {
        * no reason to fetch the blocks.
        *
        * Second, when a peer replies to our initial synopsis and gives us a list of the blocks they think
-       * we are missing, they only send a chunk of a few thousand blocks at once.  After we get those 
+       * we are missing, they only send a chunk of a few thousand blocks at once.  After we get those
        * block ids, we need to request more blocks by sending another synopsis (we can't just say "send me
        * the next 2000 ids" because they may have switched forks themselves and they don't track what
        * they've sent us).  For faster performance, we want to get a fairly long list of block ids first,
        * then start downloading the blocks.
        * The peer doesn't handle these follow-up block id requests any different from the initial request;
        * it treats the synopsis we send as our blockchain and bases its response entirely off that.  So to
-       * get the response we want (the next chunk of block ids following the last one they sent us, or, 
+       * get the response we want (the next chunk of block ids following the last one they sent us, or,
        * failing that, the shortest fork off of the last list of block ids they sent), we need to construct
        * a synopsis as if our blockchain was made up of:
        *    1. the blocks in our block chain up to the fork point (if there is a fork) or the head block (if no fork)
        *    2. the blocks we've already pushed from their fork (if there's a fork)
        *    3. the block ids they've previously sent us
-       * Segment 3 is handled in the p2p code, it just tells us the number of blocks it has (in 
+       * Segment 3 is handled in the p2p code, it just tells us the number of blocks it has (in
        * number_of_blocks_after_reference_point) so we can leave space in the synopsis for them.
        * We're responsible for constructing the synopsis of Segments 1 and 2 from our active blockchain and
        * fork database.  The reference_point parameter is the last block from that peer that has been
        * successfully pushed to the blockchain, so that tells us whether the peer is on a fork or on
        * the main chain.
        */
-      virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point, 
+      virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point,
                                                                uint32_t number_of_blocks_after_reference_point) override
       { try {
           std::vector<item_hash_t> synopsis;
@@ -794,13 +792,13 @@ namespace detail {
 
               if (reference_point_block_num < low_block_num)
               {
-                // we're on the same fork (at least as far as reference_point) but we've passed 
-                // reference point and could no longer undo that far if we diverged after that 
+                // we're on the same fork (at least as far as reference_point) but we've passed
+                // reference point and could no longer undo that far if we diverged after that
                 // block.  This should probably only happen due to a race condition where
-                // the network thread calls this function, and then immediately pushes a bunch of blocks, 
+                // the network thread calls this function, and then immediately pushes a bunch of blocks,
                 // then the main thread finally processes this function.
                 // with the current framework, there's not much we can do to tell the network
-                // thread what our current head block is, so we'll just pretend that 
+                // thread what our current head block is, so we'll just pretend that
                 // our head is actually the reference point.
                 // this *may* enable us to fetch blocks that we're unable to push, but that should
                 // be a rare case (and correctly handled)
@@ -844,7 +842,7 @@ namespace detail {
               if (non_fork_high_block_num < low_block_num)
               {
                 wlog("Unable to generate a usable synopsis because the peer we're generating it for forked too long ago "
-                     "(our chains diverge after block #${non_fork_high_block_num} but only undoable to block #${low_block_num})", 
+                     "(our chains diverge after block #${non_fork_high_block_num} but only undoable to block #${low_block_num})",
                      ("low_block_num", low_block_num)
                      ("non_fork_high_block_num", non_fork_high_block_num));
                 FC_THROW_EXCEPTION(graphene::net::block_older_than_undo_history_exception, "Peer is are on a fork I'm unable to switch to");
@@ -861,11 +859,11 @@ namespace detail {
           }
 
           // at this point:
-          // low_block_num is the block before the first block we can undo, 
+          // low_block_num is the block before the first block we can undo,
           // non_fork_high_block_num is the block before the fork (if the peer is on a fork, or otherwise it is the same as high_block_num)
           // high_block_num is the block number of the reference block, or the end of the chain if no reference provided
 
-          // true_high_block_num is the ending block number after the network code appends any item ids it 
+          // true_high_block_num is the ending block number after the network code appends any item ids it
           // knows about that we don't
           uint32_t orig_low_block_num =  low_block_num;
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
@@ -976,15 +974,15 @@ public:
    {
    }
    // ipv4:port or dnsname:port
-   const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS = 
+   const std::string REG_EXPR_IPV4_AND_PORT_OR_DNS =
       "^"
       "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\x2E){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))|" // ipv4::port or
       "(([^:]+):([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))" // dnsname:port. it is problem to test dnsname. in this case dnsname can be anything without character :
-      "$"; 
+      "$";
 
    const std::string REG_EXPR_CHECKPOINT =
       "^"
-      "\\x5B[0-9]{1,19},\"([0-9a-fA-F]){40}\"\\x5D"      
+      "\\x5B[0-9]{1,19},\"([0-9a-fA-F]){40}\"\\x5D"
       "$";
 
    void check_reg_expr(const std::regex& rx, const std::string& val)
@@ -1049,7 +1047,7 @@ public:
       {
          const std::regex rx(REG_EXPR_CHECKPOINT);
          for(size_t i = 0; i < val.size(); i++) {
-            check_reg_expr(rx, val);            
+            check_reg_expr(rx, val);
          }
       }
    }

@@ -52,18 +52,14 @@ database::~database()
 
 void database::reindex(boost::filesystem::path data_dir, const genesis_state_type& initial_allocation)
 { try {
-   try {
       dlog("reindexing blockchain");
-      _reindexing_percent = 0;
       wipe(data_dir, false);
       open(data_dir, [&initial_allocation] {return initial_allocation; });
 
       auto start = fc::time_point::now();
       auto last_block = _block_id_to_block.last();
       if (!last_block) {
-         dlog("!no last block");
-         ddump((last_block));
-         _reindexing_percent = 100;
+         dlog("no last block");
          return;
       }
 
@@ -71,12 +67,18 @@ void database::reindex(boost::filesystem::path data_dir, const genesis_state_typ
 
       ilog("Replaying blocks...");
       _undo_db.disable();
-      uint32_t one_perc_step = last_block_num / 100 + 1;
+      double reindexing_status = 0.0;
+      double one_perc_step = last_block_num / 100.0;
       for (uint32_t i = 1; i <= last_block_num; ++i)
       {
-         _reindexing_percent = double(i * 100) / last_block_num;
-         if (i % one_perc_step == 0 || i == last_block_num)
-            ilog("${p}%: ${i}/${t}", ("p", i / one_perc_step + std::min(i % one_perc_step, 1u) ) ("i", i) ("t", last_block_num));
+         if (reindexing_status <= (i - 1) || i == last_block_num)
+         {
+            // report progress done so far
+            auto progress = static_cast<uint8_t>((i - 1) * 100.0 / last_block_num);
+            reindexing_progress(progress);
+            reindexing_status += one_perc_step;
+            ilog("${p}%: ${i}/${t}", ("p", progress) ("i", i - 1) ("t", last_block_num));
+         }
 
          fc::optional< signed_block > block = _block_id_to_block.fetch_by_number(i);
          if (!block.valid())
@@ -106,15 +108,10 @@ void database::reindex(boost::filesystem::path data_dir, const genesis_state_typ
             skip_authority_check);
 
       }
+      reindexing_progress(100);
+      ilog("100%: ${t}/${t}", ("t", last_block_num));
+      ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((fc::time_point::now() - start).count()) / 1000000.0));
       _undo_db.enable();
-      auto end = fc::time_point::now();
-      ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((end - start).count()) / 1000000.0));
-      _reindexing_percent = 100;
-   }
-   catch (...) {
-      _reindexing_percent = -1;
-      throw;
-   }
 } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
 
 void database::wipe(const boost::filesystem::path& data_dir, bool include_blocks)
