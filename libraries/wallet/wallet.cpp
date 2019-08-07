@@ -335,20 +335,6 @@ private:
       }
    }
 
-   void enable_umask_protection()
-   {
-#ifdef __unix__
-      _old_umask = umask( S_IRWXG | S_IRWXO );
-#endif
-   }
-
-   void disable_umask_protection()
-   {
-#ifdef __unix__
-      umask( _old_umask );
-#endif
-   }
-
    void init_prototype_ops()
    {
       operation op;
@@ -917,30 +903,6 @@ public:
       return true;
    }
 
-   string save_old_wallet(const wallet_data& data)
-   {
-      return fc::json::to_pretty_string( _wallet );
-   }
-
-   string save_new_wallet(const wallet_data& data)
-   {
-      fc::mutable_variant_object mvo;
-      mvo["version"] = fc::variant(data.version);
-      mvo["update_time"] = fc::variant(data.update_time);
-      mvo["chain_id"] = fc::variant(data.chain_id);
-      mvo["my_accounts"] = fc::variant(data.my_accounts);
-      mvo["cipher_keys"] = fc::variant(data.cipher_keys);
-      mvo["extra_keys"] = fc::variant(data.extra_keys);
-      mvo["pending_account_registrations"] = fc::variant(data.pending_account_registrations);
-      mvo["pending_miner_registrations"] = fc::variant(data.pending_miner_registrations);
-      mvo["ws_server"] = fc::variant(data.ws_server);
-      mvo["ws_user"] = fc::variant(data.ws_user);
-      mvo["ws_password"] = fc::variant(data.ws_password);
-
-      fc::variant v(mvo);
-      return fc::json::to_pretty_string( v );
-   }
-
    void save_wallet_file(path wallet_filename = path() )
    {
       dlog("save_wallet_file() begin");
@@ -961,43 +923,45 @@ public:
       if( wallet_filename.empty() )
          wallet_filename = _wallet_filename;
 
-      wlog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
+      ilog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
 
-      string data;
-      if (_wallet.version == 0) {
-         data = save_old_wallet( _wallet );
-      }
-      else {
-         data = save_new_wallet( _wallet );
-      }
+      auto save_wallet_data = [](const wallet_data& data)
+      {
+         fc::mutable_variant_object mvo;
+         mvo["version"] = fc::variant(data.version);
+         mvo["update_time"] = fc::variant(data.update_time);
+         mvo["chain_id"] = fc::variant(data.chain_id);
+         mvo["my_accounts"] = fc::variant(data.my_accounts);
+         mvo["cipher_keys"] = fc::variant(data.cipher_keys);
+         mvo["extra_keys"] = fc::variant(data.extra_keys);
+         mvo["pending_account_registrations"] = fc::variant(data.pending_account_registrations);
+         mvo["pending_miner_registrations"] = fc::variant(data.pending_miner_registrations);
+         mvo["ws_server"] = fc::variant(data.ws_server);
+         mvo["ws_user"] = fc::variant(data.ws_user);
+         mvo["ws_password"] = fc::variant(data.ws_password);
+         return fc::json::to_pretty_string( mvo );
+      };
 
       try
       {
-         enable_umask_protection();
-         //
-         // Parentheses on the following declaration fails to compile,
-         // due to the Most Vexing Parse.  Thanks, C++
-         //
-         // http://en.wikipedia.org/wiki/Most_vexing_parse
-         //
-         boost::filesystem::ofstream outfile( wallet_filename );
+         std::string data = save_wallet_data( _wallet );
+#ifndef WIN32
+         struct umask_guard {
+            mode_t _old_umask;
+
+            umask_guard() : _old_umask( umask( S_IRWXG | S_IRWXO ) ) {}
+            ~umask_guard() { umask( _old_umask ); }
+         } _umask_guard;
+#endif
+
+         boost::filesystem::ofstream outfile;
+         outfile.exceptions( std::ios_base::failbit );
+         outfile.open( wallet_filename );
          outfile.write( data.c_str(), data.length() );
          outfile.flush();
          outfile.close();
-         disable_umask_protection();
       }
-      catch(const fc::exception& ex) {
-         elog("Error save wallet file: ${ex}", ("ex", ex.what()));
-
-         disable_umask_protection();
-         throw;
-      }
-      catch(const std::exception& ex) {
-         elog("Error save wallet file: ${ex}", ("ex", ex.what()));
-
-         disable_umask_protection();
-         throw;
-      }
+      FC_CAPTURE_LOG_AND_RETHROW( ("Error save wallet file")(wallet_filename) )
 
       dlog("save_wallet_file() end");
    }
@@ -3370,10 +3334,6 @@ signed_transaction content_cancellation(const string& author,
    flat_map<string, operation> _prototype_ops;
 
    static_variant_map _operation_which_map = create_static_variant_map< operation >();
-
-#ifdef __unix__
-   mode_t                  _old_umask;
-#endif
 
    vector<shared_ptr<graphene::wallet::detail::submit_transfer_listener>> _package_manager_listeners;
    seeders_tracker _seeders_tracker;
