@@ -94,7 +94,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_DERIVED_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, wallet_exception, fc::wallet_exception_base_code + new_auth_needs_to_be_different_from_existing_code, "New authority needs to be different from the existing one.")
    // asset
    FC_DECLARE_DERIVED_EXCEPTION(asset_not_found_exception, wallet_exception, fc::wallet_exception_base_code + asset_not_found_code, "Asset not found.")
-   FC_DECLARE_DERIVED_EXCEPTION(asset_not_monitored_exception, wallet_exception, fc::wallet_exception_base_code + asset_not_monitored_code, "Asset not found.")
+   FC_DECLARE_DERIVED_EXCEPTION(asset_not_monitored_exception, wallet_exception, fc::wallet_exception_base_code + asset_not_monitored_code, "Asset not monitored.")
    FC_DECLARE_DERIVED_EXCEPTION(asset_already_exists_exception, wallet_exception, fc::wallet_exception_base_code + asset_already_exists_code, "Asset already exists.")
    // transaction builder
    FC_DECLARE_DERIVED_EXCEPTION(invalid_transaction_handle_exception, wallet_exception, fc::wallet_exception_base_code + invalid_transaction_handle_code, "Invalid transaction handle.")
