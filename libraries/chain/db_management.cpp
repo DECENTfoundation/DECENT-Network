@@ -59,6 +59,7 @@ void database::reindex(boost::filesystem::path data_dir, const genesis_state_typ
       auto start = fc::time_point::now();
       auto last_block = _block_id_to_block.last();
       if (!last_block) {
+         reindexing_progress(100);
          dlog("no last block");
          return;
       }
