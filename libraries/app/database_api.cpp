@@ -28,10 +28,11 @@
 #include <fc/bloom_filter.hpp>
 #include <fc/crypto/hex.hpp>
 #include <fc/thread/thread.hpp>
+#include <graphene/app/database_api.hpp>
 #include <graphene/chain/get_config.hpp>
+#include <graphene/chain/seeding_statistics_object.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
-#include <graphene/app/database_api.hpp>
 #include <graphene/db/exceptions.hpp>
 
 #define GET_REQUIRED_FEES_MAX_RECURSION 4

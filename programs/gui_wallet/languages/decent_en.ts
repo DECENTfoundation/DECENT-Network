@@ -78,42 +78,42 @@
 <context>
     <name>gui_wallet::BrowseContentTab</name>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="22"/>
+        <location filename="../src/browse_content_tab.cpp" line="24"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="23"/>
+        <location filename="../src/browse_content_tab.cpp" line="25"/>
         <source>Author</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="24"/>
+        <location filename="../src/browse_content_tab.cpp" line="26"/>
         <source>Rating</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="25"/>
+        <location filename="../src/browse_content_tab.cpp" line="27"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="26"/>
+        <location filename="../src/browse_content_tab.cpp" line="28"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="27"/>
+        <location filename="../src/browse_content_tab.cpp" line="29"/>
         <source>Uploaded</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="28"/>
+        <location filename="../src/browse_content_tab.cpp" line="30"/>
         <source>Expiration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/browse_content_tab.cpp" line="232"/>
+        <location filename="../src/browse_content_tab.cpp" line="234"/>
         <source>Details</source>
         <translation type="unfinished"></translation>
     </message>
@@ -508,57 +508,57 @@ Error code: %1</source>
 <context>
     <name>gui_wallet::MinerVotingTab</name>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="29"/>
+        <location filename="../src/mining_vote_tab.cpp" line="31"/>
         <source>Miner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="30"/>
+        <location filename="../src/mining_vote_tab.cpp" line="32"/>
         <source>Link to proposal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="31"/>
+        <location filename="../src/mining_vote_tab.cpp" line="33"/>
         <source>Votes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="183"/>
-        <location filename="../src/mining_vote_tab.cpp" line="273"/>
+        <location filename="../src/mining_vote_tab.cpp" line="185"/>
+        <location filename="../src/mining_vote_tab.cpp" line="275"/>
         <source>Vote</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="187"/>
-        <location filename="../src/mining_vote_tab.cpp" line="273"/>
+        <location filename="../src/mining_vote_tab.cpp" line="189"/>
+        <location filename="../src/mining_vote_tab.cpp" line="275"/>
         <source>Un-vote</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="272"/>
+        <location filename="../src/mining_vote_tab.cpp" line="274"/>
         <source>For every vote or unvote opeation you will pay %1 fee</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="274"/>
+        <location filename="../src/mining_vote_tab.cpp" line="276"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="289"/>
-        <location filename="../src/mining_vote_tab.cpp" line="326"/>
+        <location filename="../src/mining_vote_tab.cpp" line="291"/>
+        <location filename="../src/mining_vote_tab.cpp" line="328"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="290"/>
+        <location filename="../src/mining_vote_tab.cpp" line="292"/>
         <source>Your vote for number of miners (%1) should be equal or smaller to number of votes you have given (%2)
 
 In order to un-vote, please change your vote for number of miners</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mining_vote_tab.cpp" line="326"/>
+        <location filename="../src/mining_vote_tab.cpp" line="328"/>
         <source>Failed to submit voting</source>
         <translation type="unfinished"></translation>
     </message>
@@ -715,82 +715,82 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::PurchasedTab</name>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="32"/>
+        <location filename="../src/purchased_tab.cpp" line="34"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="33"/>
+        <location filename="../src/purchased_tab.cpp" line="35"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="34"/>
+        <location filename="../src/purchased_tab.cpp" line="36"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="35"/>
+        <location filename="../src/purchased_tab.cpp" line="37"/>
         <source>Purchased</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="36"/>
+        <location filename="../src/purchased_tab.cpp" line="38"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="121"/>
+        <location filename="../src/purchased_tab.cpp" line="123"/>
         <source>Keys</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="124"/>
+        <location filename="../src/purchased_tab.cpp" line="126"/>
         <source>Waiting for key delivery</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="126"/>
+        <location filename="../src/purchased_tab.cpp" line="128"/>
         <source> </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="164"/>
+        <location filename="../src/purchased_tab.cpp" line="166"/>
         <source>Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="172"/>
+        <location filename="../src/purchased_tab.cpp" line="174"/>
         <source> MB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="207"/>
+        <location filename="../src/purchased_tab.cpp" line="209"/>
         <source>Download content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="299"/>
+        <location filename="../src/purchased_tab.cpp" line="301"/>
         <source>Extract</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="331"/>
+        <location filename="../src/purchased_tab.cpp" line="333"/>
         <source>Success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="332"/>
+        <location filename="../src/purchased_tab.cpp" line="334"/>
         <source>Package was successfully extracted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="334"/>
+        <location filename="../src/purchased_tab.cpp" line="336"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/purchased_tab.cpp" line="335"/>
+        <location filename="../src/purchased_tab.cpp" line="337"/>
         <source>Failed to extract package</source>
         <translation type="unfinished"></translation>
     </message>
@@ -927,122 +927,122 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::Upload_popup</name>
     <message>
-        <location filename="../src/upload_popup.cpp" line="42"/>
+        <location filename="../src/upload_popup.cpp" line="44"/>
         <source>Upload new content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="48"/>
+        <location filename="../src/upload_popup.cpp" line="50"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="54"/>
+        <location filename="../src/upload_popup.cpp" line="56"/>
         <source>Description</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="62"/>
+        <location filename="../src/upload_popup.cpp" line="64"/>
         <source>Expiration date</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="74"/>
-        <location filename="../src/upload_popup.cpp" line="130"/>
-        <location filename="../src/upload_popup.cpp" line="307"/>
+        <location filename="../src/upload_popup.cpp" line="76"/>
+        <location filename="../src/upload_popup.cpp" line="132"/>
+        <location filename="../src/upload_popup.cpp" line="309"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="86"/>
+        <location filename="../src/upload_popup.cpp" line="88"/>
         <source>Price in %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="95"/>
-        <location filename="../src/upload_popup.cpp" line="300"/>
+        <location filename="../src/upload_popup.cpp" line="97"/>
+        <location filename="../src/upload_popup.cpp" line="302"/>
         <source>Seeders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="101"/>
+        <location filename="../src/upload_popup.cpp" line="103"/>
         <source>Select Seeders</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="108"/>
+        <location filename="../src/upload_popup.cpp" line="110"/>
         <source>Content path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="113"/>
-        <location filename="../src/upload_popup.cpp" line="125"/>
+        <location filename="../src/upload_popup.cpp" line="115"/>
+        <location filename="../src/upload_popup.cpp" line="127"/>
         <source>Browse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="120"/>
+        <location filename="../src/upload_popup.cpp" line="122"/>
         <source>Samples (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="138"/>
+        <location filename="../src/upload_popup.cpp" line="140"/>
         <source>Back</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="141"/>
+        <location filename="../src/upload_popup.cpp" line="143"/>
         <source>Publish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="306"/>
+        <location filename="../src/upload_popup.cpp" line="308"/>
         <source>Seeder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="308"/>
+        <location filename="../src/upload_popup.cpp" line="310"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="312"/>
+        <location filename="../src/upload_popup.cpp" line="314"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="469"/>
+        <location filename="../src/upload_popup.cpp" line="471"/>
         <source>Publish for</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="495"/>
+        <location filename="../src/upload_popup.cpp" line="497"/>
         <source>Select content</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="512"/>
+        <location filename="../src/upload_popup.cpp" line="514"/>
         <source>Select samples</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="625"/>
-        <location filename="../src/upload_popup.cpp" line="721"/>
+        <location filename="../src/upload_popup.cpp" line="627"/>
+        <location filename="../src/upload_popup.cpp" line="723"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="625"/>
+        <location filename="../src/upload_popup.cpp" line="627"/>
         <source>Cannot upload content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="625"/>
+        <location filename="../src/upload_popup.cpp" line="627"/>
         <source>IPFS is not running.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_popup.cpp" line="721"/>
+        <location filename="../src/upload_popup.cpp" line="723"/>
         <source>Failed to submit content</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1050,62 +1050,62 @@ This operation will cost %2</source>
 <context>
     <name>gui_wallet::Upload_tab</name>
     <message>
-        <location filename="../src/upload_tab.cpp" line="24"/>
+        <location filename="../src/upload_tab.cpp" line="26"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="25"/>
+        <location filename="../src/upload_tab.cpp" line="27"/>
         <source>Rating</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="26"/>
+        <location filename="../src/upload_tab.cpp" line="28"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="27"/>
+        <location filename="../src/upload_tab.cpp" line="29"/>
         <source>Price</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="28"/>
+        <location filename="../src/upload_tab.cpp" line="30"/>
         <source>Published</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="29"/>
+        <location filename="../src/upload_tab.cpp" line="31"/>
         <source>Expiration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="30"/>
+        <location filename="../src/upload_tab.cpp" line="32"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="203"/>
+        <location filename="../src/upload_tab.cpp" line="205"/>
         <source>Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="209"/>
+        <location filename="../src/upload_tab.cpp" line="211"/>
         <source>Publish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="222"/>
+        <location filename="../src/upload_tab.cpp" line="224"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="222"/>
+        <location filename="../src/upload_tab.cpp" line="224"/>
         <source>Cannot resubmit content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/upload_tab.cpp" line="222"/>
+        <location filename="../src/upload_tab.cpp" line="224"/>
         <source>IPFS is not running.</source>
         <translation type="unfinished"></translation>
     </message>

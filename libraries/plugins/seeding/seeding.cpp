@@ -1,6 +1,13 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
 #include <graphene/seeding/seeding.hpp>
+#include <graphene/chain/database.hpp>
+#include <graphene/chain/account_object.hpp>
+#include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/content_object.hpp>
+#include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/seeding_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <decent/encrypt/encryptionutils.hpp>

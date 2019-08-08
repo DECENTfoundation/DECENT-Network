@@ -2,8 +2,6 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/db/object.hpp>
-#include <graphene/chain/database.hpp>
-
 #include <graphene/db/generic_index.hpp>
 
 #include <fc/time.hpp>

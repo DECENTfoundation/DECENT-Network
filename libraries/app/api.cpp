@@ -24,7 +24,7 @@
  */
 
 #include <graphene/utilities/key_conversion.hpp>
-#include <graphene/app/api.hpp>
+#include <graphene/app/api_access.hpp>
 #include <graphene/app/exceptions.hpp>
 #include <graphene/app/application.hpp>
 #include <graphene/app/balance.hpp>

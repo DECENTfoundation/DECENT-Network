@@ -9,6 +9,8 @@
 #include <QTimer>
 
 #include <boost/filesystem.hpp>
+
+#include <graphene/chain/content_object.hpp>
 #endif
 
 #include "upload_popup.hpp"
@@ -36,7 +38,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
       m_arrPublishers[iIndex].first = publishers[iIndex];
       m_arrPublishers[iIndex].second = false;
    }
-   
+
    //
    DecentLabel* pTitleLabel = new DecentLabel(this);
    pTitleLabel->setText(tr("Upload new content"));
@@ -141,7 +143,7 @@ Upload_popup::Upload_popup(QWidget* pParent, const std::string& id_modify/* = st
    pUploadButton->setText(tr("Publish"));
    pUploadButton->setFont(PopupButtonBigFont());
    pUploadButton->setEnabled(false);
-   
+
    //resubmit layout type
    if (!m_id_modify.empty())
    {
@@ -513,7 +515,7 @@ void Upload_popup::slot_BrowseSamples()
 
    emit signal_SamplesPathChange(sampleDir);
 }
-   
+
 void Upload_popup::getContents(std::string const& id,
                                std::string& hash,
                                std::string& str_expiration,
@@ -649,7 +651,7 @@ void Upload_popup::slot_UploadContent()
    std::string str_seeders = getChosenPublishers().join(", ").toStdString();
 
    std::string submitCommand;
-   
+
    if (!m_id_modify.empty())
    {
       std::string hash;
@@ -663,7 +665,7 @@ void Upload_popup::slot_UploadContent()
       getContents(m_id_modify, hash, str_expiration, str_size, str_quorum, str_fee, cd, uri);
 
       std::string str_AES_key = Globals::instance().runTask("generate_encryption_key");
-      
+
       //submit content
       submitCommand = "submit_content";
       submitCommand += " " + Globals::instance().getCurrentUser() + " []";//author
@@ -692,7 +694,7 @@ void Upload_popup::slot_UploadContent()
       submitCommand += " [" + str_seeders + "]";                           // seeders
       submitCommand += " \"" + m_life_time + "T23:59:59\"";                // expiration
       submitCommand += " \"" + escape_string(synopsis) + "\"";             // synopsis
-      
+
       // this is an example how price per regions will be used
       // submitCommand += " [[\"default\", \"0\"], [\"US\", \"10\"]]";
    }//if-else end

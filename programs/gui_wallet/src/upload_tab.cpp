@@ -3,6 +3,8 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QDateTime>
+
+#include <graphene/chain/content_object.hpp>
 #endif
 
 #include "upload_tab.hpp"
@@ -69,14 +71,14 @@ void Upload_tab::timeToUpdate(const std::string& result)
    size_t iSize = contents.size();
    if (iSize > m_i_page_size)
       iSize = m_i_page_size;
-   
+
    _digital_contents.resize(contents.size());
-   
+
    for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
       SDigitalContent& content = _digital_contents[iIndex];
       auto const& json_content = contents[iIndex];
-      
+
       content.type = DCT::GENERAL;
       content.author = json_content["author"].get<std::string>();
       uint64_t iPrice = json_to_int64(json_content["price"]["amount"]);
@@ -99,7 +101,7 @@ void Upload_tab::timeToUpdate(const std::string& result)
          else
             content.status = "Published";
       }
-      
+
       if (json_content["times_bought"].is_number())
          content.times_bought = json_content["times_bought"].get<int>();
       else
@@ -112,7 +114,7 @@ void Upload_tab::timeToUpdate(const std::string& result)
       set_next_page_iterator(contents[m_i_page_size]["id"].get<std::string>());
    else
       set_next_page_iterator(std::string());
-   
+
    ShowDigitalContentsGUI();
 }
 
@@ -202,7 +204,7 @@ void Upload_tab::ShowDigitalContentsGUI()
       info_icon->setEnabled(false);
       info_icon->setToolTip(tr("Details"));
       m_pTableWidget->setCellWidget(static_cast<int>(iIndex), eIcon, info_icon);
-      
+
       // Resubmit
       DecentButton* resubmit_button = new DecentButton(m_pTableWidget, DecentButton::TableIcon, DecentButton::Resubmit);
       resubmit_button->setEnabled(false);
@@ -244,7 +246,7 @@ void Upload_tab::slot_UploadPopup()
       Globals::instance().signal_stackWidgetPush(pUploadWidget);
    }
 }
-   
+
 void Upload_tab::slot_ShowContentPopup(int iIndex)
 {
    if (iIndex < 0 || iIndex >= static_cast<int>(_digital_contents.size()))
@@ -256,7 +258,7 @@ void Upload_tab::slot_ShowContentPopup(int iIndex)
    QObject::connect(pDetailsDialog, &ContentInfoWidget::accepted,
                     this, &Upload_tab::slot_Bought);
 }
-   
+
 void Upload_tab::slot_Bought()
 {
    Globals::instance().signal_showPurchasedTab();

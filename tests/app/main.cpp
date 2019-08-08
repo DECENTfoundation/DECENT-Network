@@ -24,6 +24,8 @@
  */
 #include <graphene/app/application.hpp>
 #include <graphene/app/plugin.hpp>
+#include <graphene/chain/database.hpp>
+#include <graphene/chain/account_object.hpp>
 
 #include "../common/tempdir.hpp"
 
@@ -73,7 +75,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       app2.initialize(app2_dir.path(), cfg2);
 
       BOOST_TEST_MESSAGE( "Starting app1 and waiting 500 ms" );
-      app1.startup();                                      
+      app1.startup();
       fc::usleep(fc::milliseconds(500));
       BOOST_TEST_MESSAGE( "Starting app2 and waiting 500 ms" );
       app2.startup();

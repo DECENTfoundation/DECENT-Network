@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 
-
 #include <graphene/chain/database.hpp>
 
 #include <graphene/chain/account_object.hpp>
@@ -32,6 +31,7 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
+#include <graphene/chain/seeding_statistics_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
@@ -341,7 +341,7 @@ uint64_t database::get_next_reward_switch_block(uint64_t start)const
 share_type database::get_asset_per_block_by_block_num(uint32_t block_num)
 {
    //this method is called AFTER the update of head_block_num in gpo or when user calls get_block.
-   //If user calls get_block calculation of miner_reward needs to search backward for block_reward. 
+   //If user calls get_block calculation of miner_reward needs to search backward for block_reward.
    uint64_t block_reward;
    if (block_num < DECENT_SPLIT_0)
       block_reward = DECENT_BLOCK_REWARD_0;

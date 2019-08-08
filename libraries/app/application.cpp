@@ -37,7 +37,7 @@
 #include <graphene/net/exceptions.hpp>
 #include <graphene/app/exceptions.hpp>
 #include <graphene/app/application.hpp>
-#include <graphene/app/api.hpp>
+#include <graphene/app/api_access.hpp>
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/hardfork.hpp>
 

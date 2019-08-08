@@ -3,6 +3,8 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QDateTime>
+
+#include <graphene/chain/content_object.hpp>
 #endif
 
 #include "browse_content_tab.hpp"
@@ -52,7 +54,7 @@ BrowseContentTab::BrowseContentTab(QWidget* pParent,
 void BrowseContentTab::timeToUpdate(const std::string& result)
 {
    _digital_contents.clear();
-   
+
    if (result.empty()) {
       ShowDigitalContentsGUI();
       return;
@@ -156,7 +158,7 @@ void BrowseContentTab::slot_Bought()
 }
 
 void BrowseContentTab::ShowDigitalContentsGUI() {
-   
+
    m_pTableWidget->setRowCount(static_cast<int>(_digital_contents.size()));
 
    int index = 0;
@@ -173,35 +175,35 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(title)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-     
+
       // Author
       colIndex++;
       m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::fromStdString(item.author)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
+
       // Rating
       colIndex++;
       QString rating = QString::number(item.AVG_rating, 'f', 2);
       m_pTableWidget->setItem(index,colIndex,new QTableWidgetItem(rating));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
-      
+
+
       // Size
       colIndex++;
       QString unit = " MB";
       double sizeAdjusted = item.size;
-      
+
       if(item.size > 1024) {
          unit = " GB";
          sizeAdjusted = item.size / 1024.0;
       }
-      
+
       m_pTableWidget->setItem(index, colIndex,new QTableWidgetItem(QString::number(sizeAdjusted, 'f', 2) + unit));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
+
       // Price
       colIndex++;
       m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(item.price.getString()));
@@ -215,12 +217,12 @@ void BrowseContentTab::ShowDigitalContentsGUI() {
       m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(convertDateToLocale(created_date)));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-      
+
       // Expiration
       colIndex++;
       QDateTime time = convertStringToDateTime(item.expiration);
       QString e_str = CalculateRemainingTime(QDateTime::currentDateTime(), time);
-      
+
       m_pTableWidget->setItem(index, colIndex, new QTableWidgetItem(e_str));
       m_pTableWidget->item(index, colIndex)->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
       m_pTableWidget->item(index, colIndex)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);

@@ -23,6 +23,7 @@
  */
 
 #include <graphene/app/plugin.hpp>
+#include <graphene/app/api_access.hpp>
 
 namespace graphene { namespace app {
 

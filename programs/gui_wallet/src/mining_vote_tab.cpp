@@ -6,6 +6,8 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QUrl>
+
+#include <graphene/chain/content_object.hpp>
 #endif
 
 #include "mining_vote_tab.hpp"

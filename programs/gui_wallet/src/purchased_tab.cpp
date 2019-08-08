@@ -3,6 +3,8 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QFileDialog>
+
+#include <graphene/chain/content_object.hpp>
 #endif
 
 #include "purchased_tab.hpp"
@@ -21,7 +23,7 @@ struct SDigitalContentPurchase : public SDigitalContent
    uint32_t received_download_bytes = 0;
    QString status_text;
 };
-   
+
 PurchasedTab::PurchasedTab(QWidget* pParent,
                            DecentLineEdit* pFilterLineEdit)
 : TabContentManager(pParent)
@@ -72,7 +74,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
    if (result.empty()) {
       return;
    }
-   
+
    auto contents = nlohmann::json::parse(result);
 
    size_t iSize = contents.size();
@@ -80,7 +82,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       iSize = m_i_page_size;
 
    _current_content.reserve(iSize);
-   
+
    for (size_t iIndex = 0; iIndex < iSize; ++iIndex)
    {
       auto content = contents[iIndex];
@@ -88,16 +90,16 @@ void PurchasedTab::timeToUpdate(const std::string& result)
       std::string URI = content["URI"].get<std::string>();
 
       // Create SDigitalContent object
-      
+
       _current_content.push_back(SDigitalContentPurchase());
       SDigitalContentPurchase& contentObject = _current_content.back();
-      
+
       if (content["delivered"].get<bool>()) {
          contentObject.type = DCT::BOUGHT;
       } else {
          contentObject.type = DCT::WAITING_DELIVERY;
       }
-      
+
       contentObject.author = content["author_account"].get<std::string>();
       uint64_t iPrice = json_to_int64(content["price"]["amount"]);
       std::string iSymbolId = content["price"]["asset_id"];
@@ -126,7 +128,7 @@ void PurchasedTab::timeToUpdate(const std::string& result)
          status_text = status_text + tr(" ") + QString::fromStdString(content["status_text"].get<std::string>());
       }
       contentObject.status_text = status_text;
-      
+
       if (content["times_bought"].is_number()) {
          contentObject.times_bought = content["times_bought"].get<int>();
       } else {
@@ -183,13 +185,13 @@ void PurchasedTab::ShowDigitalContentsGUI()
       bool is_delivered = true;
       if (DCT::WAITING_DELIVERY == contentObject.type)
          is_delivered = false;
-      
+
       m_pTableWidget->setItem(static_cast<int>(iIndex), 4, new QTableWidgetItem(contentObject.status_text));
-      
+
       if (total_key_parts == 0) {
          total_key_parts = 1;
       }
-      
+
       if (total_download_bytes == 0) {
          total_download_bytes = 1;
       }
@@ -252,15 +254,15 @@ void PurchasedTab::slot_ExtractionDirSelected(QString const& path) {
 
    std::string strExtractID = _current_content[m_iActiveItemIndex].id;
    std::string strExtractHash = _current_content[m_iActiveItemIndex].hash;
-   
+
    auto& global_instance = gui_wallet::Globals::instance();
    std::string str_current_username = global_instance.getCurrentUser();
-   
+
    try {
       key = Globals::instance().runTask("restore_encryption_key \"" + str_current_username + "\" \"" + strExtractID + "\"");
-      
+
       dummy = Globals::instance().runTask("extract_package \"" + strExtractHash + "\" \"" + path.toStdString() + "\" " + key);
-      
+
       if (dummy.find("exception:") != std::string::npos) {
          message = dummy;
       }

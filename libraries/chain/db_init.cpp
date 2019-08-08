@@ -36,6 +36,7 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/seeding_object.hpp>
+#include <graphene/chain/seeding_statistics_object.hpp>
 #include <graphene/chain/subscription_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>

@@ -25,9 +25,7 @@
 
 #include <boost/program_options.hpp>
 
-#include <graphene/chain/database.hpp>
 #include <graphene/net/node.hpp>
-#include <graphene/app/api_access.hpp>
 
 namespace boost {
   namespace filesystem {
@@ -35,10 +33,12 @@ namespace boost {
   }
 }
 
-namespace graphene { namespace app {
-   namespace detail { class application_impl; }
+namespace graphene {
+   namespace chain { class database; }
+   namespace app { namespace detail { class application_impl; }
 
    class abstract_plugin;
+   class api_access_info;
 
    class application
    {

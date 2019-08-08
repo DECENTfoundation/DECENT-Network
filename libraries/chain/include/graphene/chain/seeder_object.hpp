@@ -1,17 +1,15 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
-#include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
-#include <graphene/chain/seeding_statistics_object.hpp>
 
 #include <fc/reflect/reflect.hpp>
 
 #include <stdint.h>
 
 namespace graphene { namespace chain {
-   
+
    class seeder_object : public graphene::db::abstract_object<implementation_ids, impl_publisher_object_type, seeder_object>
    {
    public:
@@ -29,14 +27,14 @@ namespace graphene { namespace chain {
       // optional ISO 3166-1 alpha-2 two-letter region code
       string region_code;
    };
-   
+
    struct by_seeder;
    struct by_free_space;
    struct by_price;
    struct by_expiration;
    struct by_region;
    struct by_rating;
-   
+
    typedef multi_index_container<
       seeder_object,
          indexed_by<
@@ -61,9 +59,9 @@ namespace graphene { namespace chain {
             >
          >
    >seeder_object_multi_index_type;
-   
+
    typedef graphene::db::generic_index< seeder_object, seeder_object_multi_index_type > seeder_index;
-   
+
 }} // graphene::chain
 
 FC_REFLECT_DERIVED(graphene::chain::seeder_object,
