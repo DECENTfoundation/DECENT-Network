@@ -30,7 +30,6 @@
 #include <fc/crypto/city.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/network/ip.hpp>
-#include <fc/exception/exception.hpp>
 
 #include <graphene/net/stcp_socket.hpp>
 

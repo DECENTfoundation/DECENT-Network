@@ -5,7 +5,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <fc/exception/exception.hpp>
+#include <fc/exception.hpp>
 
 namespace decent {
 

@@ -17,7 +17,6 @@
 #include <streambuf>
 #include <fc/log/logger.hpp>
 #include <fc/crypto/sha512.hpp>
-#include <fc/exception/exception.hpp>
 #include <iostream>
 
 Params::Params()

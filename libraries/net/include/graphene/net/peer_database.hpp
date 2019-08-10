@@ -29,7 +29,6 @@
 #include <fc/io/enum_type.hpp>
 #include <fc/reflect/reflect.hpp>
 #include <fc/reflect/variant.hpp>
-#include <fc/exception/exception.hpp>
 #include <fc/io/raw.hpp>
 
 namespace graphene { namespace net {

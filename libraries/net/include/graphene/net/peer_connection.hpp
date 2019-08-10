@@ -186,7 +186,7 @@ namespace graphene { namespace net
       bool we_have_requested_close;
 
       connection_negotiation_status negotiation_status;
-      fc::oexception connection_closed_error;
+      fc::optional<fc::exception> connection_closed_error;
 
       fc::time_point get_connection_time()const { return _message_connection.get_connection_time(); }
       fc::time_point get_connection_terminated_time()const { return connection_terminated_time; }

@@ -38,7 +38,6 @@
 #include <fc/array.hpp>
 #include <fc/time.hpp>
 #include <fc/filesystem.hpp>
-#include <fc/exception/exception.hpp>
 #include <fc/safe.hpp>
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>

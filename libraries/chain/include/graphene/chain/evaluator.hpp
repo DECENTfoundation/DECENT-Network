@@ -138,7 +138,7 @@ namespace graphene { namespace chain {
          if( !trx_state->skip_fee_schedule_check )
          {
             share_type required_fee = calculate_fee_for_operation(op);
-            GRAPHENE_ASSERT( core_fee_paid >= required_fee,
+            FC_VERIFY_AND_THROW( core_fee_paid >= required_fee,
                        insufficient_fee_exception,
                        "Insufficient Fee Paid",
                        ("core_fee_paid",core_fee_paid)("required", required_fee) );

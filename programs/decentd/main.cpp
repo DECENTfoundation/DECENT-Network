@@ -226,7 +226,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 #endif
 
    graphene::app::application* node = new graphene::app::application();
-   fc::oexception unhandled_exception;
+   fc::optional<fc::exception> unhandled_exception;
    try {
       decent_plugins::types plugins = decent_plugins::create(*node);
 

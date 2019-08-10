@@ -33,7 +33,6 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/internal_exceptions.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 
 #include <algorithm>
@@ -43,13 +42,13 @@ namespace graphene { namespace chain {
 void verify_authority_accounts( const database& db, const authority& a )
 {
    const auto& chain_params = db.get_global_properties().parameters;
-   GRAPHENE_ASSERT(
+   FC_VERIFY_AND_THROW(
       a.num_auths() <= chain_params.maximum_authority_membership,
       internal_verify_auth_max_auth_exceeded,
       "Maximum authority membership exceeded" );
    for( const auto& acnt : a.account_auths )
    {
-      GRAPHENE_ASSERT( db.find_object( acnt.first ) != nullptr,
+      FC_VERIFY_AND_THROW( db.find_object( acnt.first ) != nullptr,
          internal_verify_auth_account_not_found,
          "Account ${a} specified in authority does not exist",
          ("a", acnt.first) );

@@ -29,7 +29,7 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
 
-#include <fc/exception/exception.hpp>
+#include <fc/exception.hpp>
 
 namespace graphene { namespace wallet {
 

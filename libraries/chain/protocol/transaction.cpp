@@ -306,7 +306,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
       operation_get_required_authorities( op, required_active, required_owner, other );
 
    if( !allow_committee )
-      GRAPHENE_ASSERT( required_active.find(GRAPHENE_MINER_ACCOUNT) == required_active.end(),
+      FC_VERIFY_AND_THROW( required_active.find(GRAPHENE_MINER_ACCOUNT) == required_active.end(),
                        invalid_committee_approval_exception, "Committee account may only propose transactions" );
 
    sign_state s(sigs,get_active);
@@ -318,25 +318,25 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
 
    for( const auto& auth : other )
    {
-      GRAPHENE_ASSERT( s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority ${auth}", ("auth",auth) );
+      FC_VERIFY_AND_THROW( s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority ${auth}", ("auth",auth) );
    }
 
    // fetch all of the top level authorities
    for( auto id : required_active )
    {
-      GRAPHENE_ASSERT( s.check_authority(id) ||
+      FC_VERIFY_AND_THROW( s.check_authority(id) ||
                        s.check_authority(get_owner(id)),
                        tx_missing_active_auth_exception, "Missing Active Authority ${id}", ("id",id) );
    }
 
    for( auto id : required_owner )
    {
-      GRAPHENE_ASSERT( owner_approvals.find(id) != owner_approvals.end() ||
+      FC_VERIFY_AND_THROW( owner_approvals.find(id) != owner_approvals.end() ||
                        s.check_authority(get_owner(id)), 
                        tx_missing_owner_auth_exception, "Missing Owner Authority ${id}", ("id",id) );
    }
 
-   GRAPHENE_ASSERT(
+   FC_VERIFY_AND_THROW(
       !s.remove_unused_signatures(),
       tx_irrelevant_sig_exception,
       "Unnecessary signature(s) detected"
@@ -361,20 +361,20 @@ void verify_authority1(const vector<operation>& ops, const public_key_type& sigs
       
       for (const auto& auth : other)
       {
-         GRAPHENE_ASSERT(s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority", ("auth", auth));
+         FC_VERIFY_AND_THROW(s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority", ("auth", auth));
       }
       
       // fetch all of the top level authorities
       for (auto id : required_active)
       {
-         GRAPHENE_ASSERT(s.check_authority(id) ||
+         FC_VERIFY_AND_THROW(s.check_authority(id) ||
             s.check_authority(get_owner(id)),
             tx_missing_active_auth_exception, "Missing Active Authority ${id}", ("id", id));
       }
       
       for (auto id : required_owner)
       {
-         GRAPHENE_ASSERT(
+         FC_VERIFY_AND_THROW(
             s.check_authority(get_owner(id)),
             tx_missing_owner_auth_exception, "Missing Owner Authority ${id}", ("id", id));
       }
@@ -387,7 +387,7 @@ flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id
    flat_set<public_key_type> result;
    for( const auto&  sig : signatures )
    {
-      GRAPHENE_ASSERT(
+      FC_VERIFY_AND_THROW(
          result.insert( fc::ecc::public_key(sig,d) ).second,
          tx_duplicate_sig_exception,
          "Duplicate Signature detected" );

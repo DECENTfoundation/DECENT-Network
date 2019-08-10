@@ -25,7 +25,6 @@
 #include <graphene/db/object.hpp>
 #include <deque>
 #include <unordered_set>
-#include <fc/exception/exception.hpp>
 
 namespace graphene { namespace db {
 

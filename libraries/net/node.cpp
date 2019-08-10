@@ -412,7 +412,7 @@ namespace graphene { namespace net { namespace detail {
       fc::time_point_sec get_blockchain_now() override;
       item_hash_t get_head_block_id() const override;
       uint32_t estimate_last_known_fork_from_git_revision_timestamp(uint32_t unix_timestamp) const override;
-      void error_encountered(const std::string& message, const fc::oexception& error) override;
+      void error_encountered(const std::string& message, const fc::optional<fc::exception>& error) override;
       uint8_t get_current_block_interval_in_seconds() const override;
     };
 
@@ -744,7 +744,7 @@ namespace graphene { namespace net { namespace detail {
       void disconnect_from_peer( peer_connection* originating_peer,
                                const std::string& reason_for_disconnect,
                                 bool caused_by_error = false,
-                               const fc::oexception& additional_data = fc::oexception() );
+                               const fc::optional<fc::exception>& additional_data = fc::optional<fc::exception>() );
 
       // methods implementing node's public interface
       void set_node_delegate(node_delegate* del, fc::thread* thread_for_delegate_calls, uint32_t block_size);
@@ -2453,7 +2453,7 @@ namespace graphene { namespace net { namespace detail {
         peer->last_block_time_delegate_has_seen = _delegate->get_block_time(item_hash_t());
       }
 
-      fc::oexception synopsis_exception;
+      fc::optional<fc::exception> synopsis_exception;
       try
       {
         std::vector<item_hash_t> blockchain_synopsis = create_blockchain_synopsis_for_peer( peer );
@@ -3084,7 +3084,7 @@ namespace graphene { namespace net { namespace detail {
       bool client_accepted_block = false;
       bool discontinue_fetching_blocks_from_peer = false;
 
-      fc::oexception handle_message_exception;
+      fc::optional<fc::exception> handle_message_exception;
 
       try
       {
@@ -3124,7 +3124,7 @@ namespace graphene { namespace net { namespace detail {
       // at the end of this function
       std::set<peer_connection_ptr> peers_with_newly_empty_item_lists;
       std::set<peer_connection_ptr> peers_we_need_to_sync_to;
-      std::map<peer_connection_ptr, std::pair<std::string, fc::oexception> > peers_to_disconnect; // map peer -> pair<reason_string, exception>
+      std::map<peer_connection_ptr, std::pair<std::string, fc::optional<fc::exception>> > peers_to_disconnect; // map peer -> pair<reason_string, exception>
 
       if( client_accepted_block )
       {
@@ -3149,7 +3149,7 @@ namespace graphene { namespace net { namespace detail {
                 std::ostringstream disconnect_reason_stream;
                 disconnect_reason_stream << "You need to upgrade your client due to hard fork at block " << block_message_to_send.block.block_num();
                 peers_to_disconnect[peer] = std::make_pair(disconnect_reason_stream.str(),
-                                                           fc::oexception(fc::exception(FC_LOG_MESSAGE(error, "You need to upgrade your client due to hard fork at block ${block_number}",
+                                                           fc::optional<fc::exception>(fc::exception(FC_LOG_MESSAGE(error, "You need to upgrade your client due to hard fork at block ${block_number}",
                                                                                                        ("block_number", block_message_to_send.block.block_num())))));
 #ifdef ENABLE_DEBUG_ULOGS
                 ulog("Disconnecting from peer during sync because their version is too old.  Their version date: ${date}", ("date", peer->graphene_git_revision_unix_timestamp));
@@ -3218,7 +3218,7 @@ namespace graphene { namespace net { namespace detail {
               peer->inhibit_fetching_sync_blocks = true;
             }
             else
-              peers_to_disconnect[peer] = std::make_pair(std::string("You offered us a block that we reject as invalid"), fc::oexception(handle_message_exception));
+              peers_to_disconnect[peer] = std::make_pair(std::string("You offered us a block that we reject as invalid"), fc::optional<fc::exception>(handle_message_exception));
           }
         }
       }
@@ -3227,7 +3227,7 @@ namespace graphene { namespace net { namespace detail {
       {
         const peer_connection_ptr& peer = peer_to_disconnect.first;
         std::string reason_string;
-        fc::oexception reason_exception;
+        fc::optional<fc::exception> reason_exception;
         std::tie(reason_string, reason_exception) = peer_to_disconnect.second;
         wlog("disconnecting client ${endpoint} because it offered us the rejected block",
              ("endpoint", peer->get_remote_endpoint()));
@@ -3289,7 +3289,7 @@ namespace graphene { namespace net { namespace detail {
 
       std::set<peer_connection_ptr> peers_with_newly_empty_item_lists;
       std::set<peer_connection_ptr> peers_we_need_to_sync_to;
-      std::map<peer_connection_ptr, fc::oexception> peers_with_rejected_block;
+      std::map<peer_connection_ptr, fc::optional<fc::exception>> peers_with_rejected_block;
 
       do
       {
@@ -3392,8 +3392,8 @@ namespace graphene { namespace net { namespace detail {
       dlog( "received a block from peer ${endpoint}, passing it to client", ("endpoint", originating_peer->get_remote_endpoint() ) );
       std::set<peer_connection_ptr> peers_to_disconnect;
       std::string disconnect_reason;
-      fc::oexception disconnect_exception;
-      fc::oexception restart_sync_exception;
+      fc::optional<fc::exception> disconnect_exception;
+      fc::optional<fc::exception> restart_sync_exception;
       try
       {
         // we can get into an intersting situation near the end of synchronization.  We can be in
@@ -4331,7 +4331,7 @@ namespace graphene { namespace net { namespace detail {
         wlog("connecting to peer ${peer} for firewall check", ("peer", new_peer->get_remote_endpoint()));
       }
 
-      fc::oexception connect_failed_exception;
+      fc::optional<fc::exception> connect_failed_exception;
 
       try
       {
@@ -4568,7 +4568,7 @@ namespace graphene { namespace net { namespace detail {
               }
               std::string error_message = error_message_stream.str();
               ulog(error_message);
-              _delegate->error_encountered( error_message, fc::oexception() );
+              _delegate->error_encountered( error_message, fc::optional<fc::exception>() );
               fc::usleep( fc::seconds(5 ) );
             }
             else // don't wait, just find a random port
@@ -4794,7 +4794,7 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::disconnect_from_peer( peer_connection* peer_to_disconnect,
                                           const std::string& reason_for_disconnect,
                                           bool caused_by_error /* = false */,
-                                          const fc::oexception& error /* = fc::oexception() */ )
+                                          const fc::optional<fc::exception>& error /* = fc::optional<fc::exception>() */ )
     {
       VERIFY_CORRECT_THREAD();
       move_peer_to_closing_list(peer_to_disconnect->shared_from_this());
@@ -4836,7 +4836,7 @@ namespace graphene { namespace net { namespace detail {
         std::ostringstream error_message;
         error_message << "I am disconnecting peer " << fc::variant( peer_to_disconnect->get_remote_endpoint() ).as_string() <<
                          " for reason: " << reason_for_disconnect;
-        _delegate->error_encountered(error_message.str(), fc::oexception());
+        _delegate->error_encountered(error_message.str(), fc::optional<fc::exception>());
         dlog(error_message.str());
       }
       else
@@ -5566,7 +5566,7 @@ namespace graphene { namespace net { namespace detail {
       INVOKE_AND_COLLECT_STATISTICS(estimate_last_known_fork_from_git_revision_timestamp, unix_timestamp);
     }
 
-    void statistics_gathering_node_delegate_wrapper::error_encountered(const std::string& message, const fc::oexception& error)
+    void statistics_gathering_node_delegate_wrapper::error_encountered(const std::string& message, const fc::optional<fc::exception>& error)
     {
       INVOKE_AND_COLLECT_STATISTICS(error_encountered, message, error);
     }
