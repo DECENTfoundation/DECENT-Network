@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/app/application.hpp>
-
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>

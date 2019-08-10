@@ -26,6 +26,7 @@
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
 
 #include "../common/tempdir.hpp"
 

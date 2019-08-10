@@ -23,6 +23,7 @@
  */
 
 #include <graphene/transaction_history/transaction_history_plugin.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/transaction_history_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/app/impacted.hpp>

@@ -26,6 +26,7 @@
 
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/miner_object.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
