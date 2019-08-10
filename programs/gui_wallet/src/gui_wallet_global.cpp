@@ -1438,7 +1438,7 @@ int runDecentD(gui_wallet::BlockChainStartType type, fc::promise<void>::ptr& exi
    }
 
    app::application* node = new app::application();
-   fc::oexception unhandled_exception;
+   fc::optional<fc::exception> unhandled_exception;
    try {
       gui_wallet::Globals::Plugins::types plugins = gui_wallet::Globals::Plugins::create(*node);
 

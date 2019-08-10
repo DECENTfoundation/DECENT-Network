@@ -33,11 +33,7 @@
 #include <fc/reflect/reflect.hpp>
 #include <fc/time.hpp>
 #include <fc/variant_object.hpp>
-#include <fc/exception/exception.hpp>
 #include <fc/io/enum_type.hpp>
-
-
-#include <vector>
 
 namespace graphene { namespace net {
   using graphene::chain::signed_transaction;
@@ -309,12 +305,12 @@ namespace graphene { namespace net {
 
     std::string        reason_for_closing;
     bool               closing_due_to_error;
-    fc::oexception     error;
+    fc::optional<fc::exception> error;
 
     closing_connection_message() : closing_due_to_error(false) {}
     closing_connection_message(const std::string& reason_for_closing,
                                bool closing_due_to_error = false,
-                               const fc::oexception& error = fc::oexception()) :
+                               const fc::optional<fc::exception>& error = fc::optional<fc::exception>()) :
       reason_for_closing(reason_for_closing),
       closing_due_to_error(closing_due_to_error),
       error(error)

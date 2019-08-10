@@ -939,7 +939,7 @@ namespace detail {
          return 0; // there are no forks in graphene
       }
 
-      virtual void error_encountered(const std::string& message, const fc::oexception& error) override
+      virtual void error_encountered(const std::string& message, const fc::optional<fc::exception>& error) override
       {
          // notify GUI or something cool
       }

@@ -203,7 +203,7 @@ void_result asset_reserve_evaluator::do_evaluate( const operation_type& o )
       const database& d = db();
 
       const asset_object& a = o.amount_to_reserve.asset_id(d);
-      GRAPHENE_ASSERT(
+      FC_VERIFY_AND_THROW(
          !a.is_monitored_asset(),
          asset_reserve_invalid_on_mia,
          "Cannot reserve ${sym} because it is a monitored asset",

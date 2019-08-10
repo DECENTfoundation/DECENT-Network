@@ -3,15 +3,12 @@
 #include <decent/encrypt/encryptionutils.hpp>
 #include <decent/encrypt/custodyutils.hpp>
 
-#include <fc/exception/exception.hpp>
 #include <fc/log/logger.hpp>
-//#include <graphene/chain/protocol/decent.hpp>
 #include <fc/io/raw.hpp>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <fc/thread/thread.hpp>
 #include <stdio.h>
 #include <sstream>
 #include <iomanip>

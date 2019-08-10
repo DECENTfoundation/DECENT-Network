@@ -8,7 +8,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-#include <fc/exception/exception.hpp>
+#include <fc/exception.hpp>
 #include <fc/log/console_appender.hpp>
 #include <fc/log/file_appender.hpp>
 #include <fc/filesystem.hpp>

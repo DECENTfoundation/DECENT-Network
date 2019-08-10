@@ -53,13 +53,13 @@ void_result proposal_create_evaluator::do_evaluate(const operation_type& o)
 
       if( auths.find(GRAPHENE_MINER_ACCOUNT) != auths.end() )
       {
-         GRAPHENE_ASSERT(
+         FC_VERIFY_AND_THROW(
             o.review_period_seconds.valid(),
             proposal_create_review_period_required,
             "Review period not given, but at least ${min} required",
             ("min", global_parameters.miner_proposal_review_period)
          );
-         GRAPHENE_ASSERT(
+         FC_VERIFY_AND_THROW(
             *o.review_period_seconds >= global_parameters.miner_proposal_review_period,
             proposal_create_review_period_insufficient,
             "Review period of ${t} specified, but at least ${min} required",
