@@ -22,8 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/chain/exceptions.hpp>
+#include <graphene/chain/protocol/transaction.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/chain/protocol/block.hpp>
+#include <graphene/chain/exceptions.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/smart_ref_impl.hpp>
 #include <algorithm>

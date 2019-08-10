@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
 #include <graphene/chain/account_object.hpp>

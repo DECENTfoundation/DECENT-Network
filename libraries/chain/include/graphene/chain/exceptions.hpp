@@ -25,7 +25,7 @@
 #pragma once
 
 #include <fc/exception/exception.hpp>
-#include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/protocol/operations.hpp>
 
 #define GRAPHENE_ASSERT( expr, exc_type, FORMAT, ... )                \
    FC_MULTILINE_MACRO_BEGIN                                           \

@@ -21,7 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/protocol/assert.hpp>
+#include <graphene/chain/protocol/account.hpp>
+#include <graphene/chain/protocol/asset_ops.hpp>
 
 namespace graphene { namespace chain {
 

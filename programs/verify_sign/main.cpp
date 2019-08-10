@@ -7,7 +7,7 @@
 #include <fc/variant_object.hpp>
 #include <fc/crypto/hex.hpp>
 
-#include <graphene/chain/protocol/protocol.hpp>
+#include <graphene/chain/protocol/operations.hpp>
 
 #include <algorithm>
 #include <iostream>
