@@ -2,6 +2,8 @@
 
 #ifndef STDAFX_H
 #include <QBoxLayout>
+
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #endif
 
 #include "overview_tab.hpp"

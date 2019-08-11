@@ -2,6 +2,8 @@
 #include <QBoxLayout>
 #include <QPlainTextEdit>
 #include <QTextCursor>
+
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #endif
 
 #include "rev_history_dlg.hpp"

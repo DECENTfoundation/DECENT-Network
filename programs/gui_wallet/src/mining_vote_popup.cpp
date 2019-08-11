@@ -3,6 +3,8 @@
 #ifndef STDAFX_H
 #include <QBoxLayout>
 #include <QLabel>
+
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #endif
 
 #include "mining_vote_popup.hpp"

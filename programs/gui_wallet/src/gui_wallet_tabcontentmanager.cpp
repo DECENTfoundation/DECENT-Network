@@ -3,6 +3,8 @@
 #ifndef STDAFX_H
 #include <QApplication>
 #include <QTimer>
+
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #endif
 
 #include "gui_wallet_tabcontentmanager.hpp"

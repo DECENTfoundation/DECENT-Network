@@ -5,6 +5,7 @@
 #include <QHeaderView>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
 #endif
 

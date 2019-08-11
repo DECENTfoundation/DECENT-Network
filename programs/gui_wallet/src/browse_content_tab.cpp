@@ -4,6 +4,7 @@
 #include <QBoxLayout>
 #include <QDateTime>
 
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/content_object.hpp>
 #endif
 

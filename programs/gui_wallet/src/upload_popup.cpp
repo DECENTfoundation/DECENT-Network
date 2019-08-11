@@ -9,7 +9,7 @@
 #include <QTimer>
 
 #include <boost/filesystem.hpp>
-
+#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/content_object.hpp>
 #endif
 
