@@ -44,12 +44,11 @@ else()
 endif()
 
 if( WIN32 )
-
     message( STATUS "Configuring DCore on WIN32" )
-
     add_compile_options( /D_WIN32_WINNT=0x0601 /D_CRT_SECURE_NO_WARNINGS )
 
     if( "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static" )
+        set(Boost_USE_STATIC_RUNTIME ON)
         foreach( flag_var FLAGS FLAGS_DEBUG FLAGS_RELEASE FLAGS_MINSIZEREL FLAGS_RELWITHDEBINFO )
             set( c_flag_var "CMAKE_C_${flag_var}" )
             if(${c_flag_var} MATCHES "/MD")
@@ -62,9 +61,7 @@ if( WIN32 )
             endif()
         endforeach(flag_var)
     endif()
-
 else() # Apple and Linux
-
     if( APPLE )
         # Apple Specific Options Here
         message( STATUS "Configuring DCore on OS X" )
@@ -101,7 +98,6 @@ else() # Apple and Linux
     # Based on http://www.delorie.com/gnu/docs/gdb/gdb_70.html
     # uncomment this line to tell GDB about macros (slows compile times)
 #    set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-2 -g3" )
-
 endif()
 
 set( ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build DCore for code coverage analysis" )
@@ -204,14 +200,6 @@ message( STATUS "Found PBC: ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
 add_library( pbc UNKNOWN IMPORTED )
 set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
 set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
-
-set(BOOST_COMPONENTS thread filesystem program_options serialization unit_test_framework coroutine iostreams)
-set(Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF")
-if(${Boost_USE_STATIC_LIBS} MATCHES "ON" AND "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static")
-    set(Boost_USE_STATIC_RUNTIME ON)
-endif()
-
-find_package(Boost 1.65.1 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
