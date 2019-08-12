@@ -475,12 +475,12 @@ void MainWindow::closeSplash(bool bGonnaCoverAgain)
 
    if (!bGonnaCoverAgain)
    {
-      if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_new))
+      if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_new).wait())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eSetPassword);
          emit signal_setSplashMainText(tr("Please set a password to encrypt your wallet"));
       }
-      else if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_locked))
+      else if (Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::is_locked).wait())
       {
          pLayer = new PasswordWidget(nullptr, PasswordWidget::eUnlock);
          emit signal_setSplashMainText(tr("Please unlock your wallet"));
@@ -1059,7 +1059,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 void MainWindow::DisplayWalletContentGUI()
 {
    Globals::instance().setWalletUnlocked();
-   Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::save_wallet_file, walletFile());
+   Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::save_wallet_file, walletFile()).wait();
    bool display_error_box = false;
    std::string exception_text;
    try

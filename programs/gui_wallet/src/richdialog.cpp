@@ -1049,7 +1049,7 @@ void PasswordWidget::slot_action()
    {
       try
       {
-         Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::set_password, pass1.toStdString());
+         Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::set_password, pass1.toStdString()).wait();
       }
       catch(const std::exception& ex) {
          error = ex.what();
@@ -1067,7 +1067,7 @@ void PasswordWidget::slot_action()
 
    try
    {
-      Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::unlock, pass1.toStdString());
+      Globals::instance().getWallet().exec(&graphene::wallet::wallet_api::unlock, pass1.toStdString()).wait();
    }
    catch(const std::exception& ex) {
       error = ex.what();
