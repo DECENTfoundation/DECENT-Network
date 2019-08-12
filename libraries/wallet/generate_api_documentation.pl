@@ -122,17 +122,24 @@ sub formatDocComment
 
   for (my $i = 0; $i < @{$doc}; ++$i)
   {
-    if ($doc->[$i] eq 'params')
+    if ($doc->[$i] eq 'params' or $doc->[$i]->{params})
     {
       $paramDocs .= "Parameters:\n";
-      @parametersList = @{$doc->[$i + 1]};
+      if ($doc->[$i] eq 'params')
+      {
+        ++$i;
+        @parametersList = @{$doc->[$i]};
+      }
+      else
+      {
+        @parametersList = @{$doc->[$i]->{params}};
+      }
       for my $parameter (@parametersList)
       {
         my $declname = $parameter->{parameters}->[0]->{name};
         my $decltype = cleanupDoxygenType($paramInfo->{$declname}->{type});
         $paramDocs .= Text::Wrap::fill('    ', '        ', "$declname: " . formatDocComment($parameter->{doc}) . " (type: $decltype)") . "\n";
       }
-      ++$i;
     }
     elsif ($doc->[$i]->{return})
     {
