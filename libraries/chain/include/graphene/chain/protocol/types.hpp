@@ -46,7 +46,7 @@
 #include <deque>
 #include <cstdint>
 #include <graphene/db/object_id.hpp>
-#include <graphene/chain/protocol/config.hpp>
+#include <graphene/chain/config.hpp>
 
 namespace graphene { namespace chain {
 
