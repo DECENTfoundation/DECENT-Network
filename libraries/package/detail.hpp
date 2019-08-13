@@ -15,12 +15,9 @@
 
 namespace decent { namespace package {
 
-
     class PackageInfo;
 
-
 namespace detail {
-
 
     bool is_nested(boost::filesystem::path nested, boost::filesystem::path base);
     boost::filesystem::path get_relative(boost::filesystem::path from, boost::filesystem::path to);
@@ -32,7 +29,6 @@ namespace detail {
     std::string get_proto(const std::string& url);
     bool is_correct_hash_str(const std::string& hash_str);
     fc::ripemd160 calculate_hash(const boost::filesystem::path& file_path);
-
 
     class PackageTask {
     public:
@@ -65,7 +61,6 @@ namespace detail {
         PackageInfo&                _package;
     };
 
-
 #define PACKAGE_INFO_GENERATE_EVENT(event_name, event_params)            \
 {                                                                        \
     std::lock_guard<std::recursive_mutex> guard(_package._event_mutex);  \
@@ -74,10 +69,9 @@ namespace detail {
             event_listener_-> event_name event_params ;                  \
 }                                                                        \
 
-
 #define PACKAGE_INFO_CHANGE_DATA_STATE(state)                                    \
 {                                                                                \
-    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));       \
+    dlog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));  \
     PackageInfo::DataState new_state = PackageInfo:: state;                      \
     PackageInfo::DataState old_state = new_state;                                \
     {                                                                            \
@@ -87,13 +81,12 @@ namespace detail {
     }                                                                            \
     if (old_state != new_state) {                                                \
         PACKAGE_INFO_GENERATE_EVENT(package_data_state_change, ( new_state ) );  \
-    }     \
+    }                                                                            \
 }                                                                                \
-
 
 #define PACKAGE_INFO_CHANGE_TRANSFER_STATE(state)                                    \
 {                                                                                    \
-    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));           \
+    dlog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));      \
     PackageInfo::TransferState new_state = PackageInfo:: state;                      \
     PackageInfo::TransferState old_state = new_state;                                \
     {                                                                                \
@@ -106,10 +99,9 @@ namespace detail {
     }                                                                                \
 }                                                                                    \
 
-
 #define PACKAGE_INFO_CHANGE_MANIPULATION_STATE(state)                                    \
 {                                                                                        \
-    ilog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));              \
+    dlog("Package ${p} changed state ${s}", ("p", _package._url)("s", #state));          \
     PackageInfo::ManipulationState new_state = PackageInfo:: state;                      \
     PackageInfo::ManipulationState old_state = new_state;                                \
     {                                                                                    \
@@ -122,13 +114,8 @@ namespace detail {
     }                                                                                    \
 }                                                                                        \
 
-
 #define PACKAGE_TASK_EXIT_IF_REQUESTED { if (is_stop_requested()) throw StopRequestedException(); }
 
-
-
 }
-
-
 
 } } // namespace decent::package::detail
