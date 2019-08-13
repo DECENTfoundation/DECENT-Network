@@ -49,7 +49,6 @@ string wallet_api::help() const
 
 string wallet_api::get_help(const string& method)const
 {
-   fc::api<wallet_api> tmp;
    std::stringstream ss;
    ss << "\n";
 
