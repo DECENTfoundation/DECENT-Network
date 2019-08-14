@@ -735,18 +735,7 @@ namespace graphene { namespace app {
 
    vector<optional<account_object>> database_api_impl::get_accounts(const vector<account_id_type>& account_ids)const
    {
-      // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
-      vector<optional<account_object>> result; result.reserve(account_ids.size());
-      std::transform(account_ids.begin(), account_ids.end(), std::back_inserter(result),
-                     [this](account_id_type id) -> optional<account_object> {
-                        if(auto o = _db.find(id))
-                        {
-                           subscribe_to_item( id );
-                           return *o;
-                        }
-                        return {};
-                     });
-      return result;
+      return _db.get_objects(account_ids);
    }
 
    std::map<string,full_account> database_api::get_full_accounts( const vector<string>& names_or_ids, bool subscribe )
@@ -1241,18 +1230,7 @@ namespace graphene { namespace app {
 
    vector<optional<asset_object>> database_api_impl::get_assets(const vector<asset_id_type>& asset_ids)const
    {
-      // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
-      vector<optional<asset_object>> result; result.reserve(asset_ids.size());
-      std::transform(asset_ids.begin(), asset_ids.end(), std::back_inserter(result),
-                     [this](asset_id_type id) -> optional<asset_object> {
-                        if(auto o = _db.find(id))
-                        {
-                           subscribe_to_item( id );
-                           return *o;
-                        }
-                        return {};
-                     });
-      return result;
+      return _db.get_objects(asset_ids);
    }
 
    vector<asset_object> database_api::list_assets(const string& lower_bound_symbol, uint32_t limit)const
@@ -1345,19 +1323,7 @@ namespace graphene { namespace app {
 
    vector<optional<non_fungible_token_object>> database_api_impl::get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const
    {
-      // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
-      vector<optional<non_fungible_token_object>> result;
-      result.reserve(nft_ids.size());
-      std::transform(nft_ids.begin(), nft_ids.end(), std::back_inserter(result),
-                     [this](non_fungible_token_id_type id) -> optional<non_fungible_token_object> {
-                        if(auto o = _db.find(id))
-                        {
-                           subscribe_to_item( id );
-                           return *o;
-                        }
-                        return {};
-                     });
-      return result;
+      return _db.get_objects(nft_ids);
    }
 
    vector<non_fungible_token_object> database_api::list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const
@@ -1419,19 +1385,7 @@ namespace graphene { namespace app {
 
    vector<optional<non_fungible_token_data_object>> database_api_impl::get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const
    {
-      // ToDo: this should be substituted by calling _db.get_objects but waiting for resolution of subscribe_to_item
-      vector<optional<non_fungible_token_data_object>> result;
-      result.reserve(nft_data_ids.size());
-      std::transform(nft_data_ids.begin(), nft_data_ids.end(), std::back_inserter(result),
-                     [this](non_fungible_token_data_id_type id) -> optional<non_fungible_token_data_object> {
-                        if(auto o = _db.find(id))
-                        {
-                           subscribe_to_item( id );
-                           return *o;
-                        }
-                        return {};
-                     });
-      return result;
+      return _db.get_objects(nft_data_ids);
    }
 
    vector<non_fungible_token_data_object> database_api::list_non_fungible_token_data(non_fungible_token_id_type nft_id)const
