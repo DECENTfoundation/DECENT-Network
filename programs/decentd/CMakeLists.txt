@@ -1,9 +1,3 @@
-find_package( Gperftools QUIET )
-if( GPERFTOOLS_FOUND )
-    message( STATUS "Found gperftools; compiling decentd with TCMalloc")
-    #    list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
-endif()
-
 add_executable( decentd main.cpp )
 if( WIN32 )
    target_sources( decentd PRIVATE winsvc.cpp winsvc.hpp )

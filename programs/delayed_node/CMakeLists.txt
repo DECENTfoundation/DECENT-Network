@@ -1,11 +1,4 @@
-
 add_executable( delayed_node main.cpp )
-
-find_package( Gperftools QUIET )
-if( GPERFTOOLS_FOUND )
-    message( STATUS "Found gperftools; compiling delayed_node with TCMalloc")
-    list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
-endif()
 
 target_link_libraries( delayed_node
                        PRIVATE graphene_app graphene_account_history graphene_market_history graphene_delayed_node graphene_chain graphene_egenesis_full fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
