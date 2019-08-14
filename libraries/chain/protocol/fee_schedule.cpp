@@ -52,7 +52,7 @@ namespace graphene { namespace chain {
    fee_schedule fee_schedule::get_default()
    {
       fee_schedule result;
-      for( int i = 0; i < fee_parameters().count(); ++i )
+      for( int i = 0; i < fee_parameters::type_info::count; ++i )
       {
          fee_parameters x; x.set_which(i);
          result.parameters.insert(x);
@@ -66,7 +66,7 @@ namespace graphene { namespace chain {
 
       non_virtual_operation_fees()
       {
-         (*this)(std::make_index_sequence<std::tuple_size<fee_parameters::types>::value>());
+         (*this)(std::make_index_sequence<fee_parameters::type_info::count>());
       }
 
       template<std::size_t i, typename std::enable_if_t<operation::type<i>::value, int> = 0>
