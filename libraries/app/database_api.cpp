@@ -1974,7 +1974,7 @@ namespace graphene { namespace app {
        {
           graphene::chain::operation op;
 
-          for( int32_t i = 0; i < graphene::chain::operation::type_info::count; ++i )
+          for( std::size_t i = 0; i < graphene::chain::operation::type_info::count; ++i )
           {
              op.set_which(i);
              op.visit( operation_info_visitor(op_names_ptr) );

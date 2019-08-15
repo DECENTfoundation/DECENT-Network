@@ -338,7 +338,7 @@ private:
    void init_prototype_ops()
    {
       operation op;
-      for( int t=0; t<operation::type_info::count; t++ )
+      for( std::size_t t=0; t<operation::type_info::count; t++ )
       {
          op.set_which( t );
          op.visit( op_prototype_visitor(t, _prototype_ops) );

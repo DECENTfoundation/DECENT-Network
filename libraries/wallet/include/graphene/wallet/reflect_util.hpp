@@ -107,7 +107,7 @@ static_variant_map create_static_variant_map()
 {
    T dummy;
    impl::static_variant_map_visitor vtor;
-   for( int i=0; i<T::type_info::count; i++ )
+   for( std::size_t i=0; i<T::type_info::count; i++ )
    {
       dummy.set_which(i);
       vtor.which = i;

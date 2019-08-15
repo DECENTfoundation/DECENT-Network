@@ -52,7 +52,7 @@ namespace graphene { namespace chain {
    fee_schedule fee_schedule::get_default()
    {
       fee_schedule result;
-      for( int i = 0; i < fee_parameters::type_info::count; ++i )
+      for( std::size_t i = 0; i < fee_parameters::type_info::count; ++i )
       {
          fee_parameters x; x.set_which(i);
          result.parameters.insert(x);
