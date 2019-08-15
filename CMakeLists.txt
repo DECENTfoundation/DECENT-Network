@@ -48,7 +48,6 @@ if( WIN32 )
     add_compile_options( /D_WIN32_WINNT=0x0601 /D_CRT_SECURE_NO_WARNINGS )
 
     if( "${VCPKG_TARGET_TRIPLET}" MATCHES "windows-static" )
-        set(Boost_USE_STATIC_RUNTIME ON)
         foreach( flag_var FLAGS FLAGS_DEBUG FLAGS_RELEASE FLAGS_MINSIZEREL FLAGS_RELWITHDEBINFO )
             set( c_flag_var "CMAKE_C_${flag_var}" )
             if(${c_flag_var} MATCHES "/MD")
