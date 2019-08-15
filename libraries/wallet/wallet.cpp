@@ -227,13 +227,11 @@ struct op_prototype_visitor
 {
    typedef void result_type;
 
-   int t = 0;
    flat_map< std::string, operation >& name2op;
 
    op_prototype_visitor(
-      int _t,
       flat_map< std::string, operation >& _prototype_ops
-      ):t(_t), name2op(_prototype_ops) {}
+      ):name2op(_prototype_ops) {}
 
    template<typename Type>
    result_type operator()( const Type& op )const
@@ -341,9 +339,8 @@ private:
       for( std::size_t t=0; t<operation::type_info::count; t++ )
       {
          op.set_which( t );
-         op.visit( op_prototype_visitor(t, _prototype_ops) );
+         op.visit( op_prototype_visitor(_prototype_ops) );
       }
-      return;
    }
 
    map<transaction_handle_type, signed_transaction> _builder_transactions;
