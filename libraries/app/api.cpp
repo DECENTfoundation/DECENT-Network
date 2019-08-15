@@ -29,7 +29,6 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/balance.hpp>
 #include <graphene/app/impacted.hpp>
-#include <graphene/db/exceptions.hpp>
 #include <fc/crypto/base64.hpp>
 #include <fc/thread/thread.hpp>
 
@@ -266,7 +265,7 @@ namespace graphene { namespace app {
 
       const auto& db = *_app.chain_database();
       if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       vector<operation_history_object> result;
       const auto& stats = account(db).statistics(db);
@@ -303,7 +302,7 @@ namespace graphene { namespace app {
 
       const auto& db = *_app.chain_database();
       if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(db::limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+         FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       vector<operation_history_object> result;
       if( start == 0 )
@@ -530,7 +529,7 @@ namespace graphene { namespace app {
          try {
             (*receiver)(db);
          }
-         FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Receiver account: ${receiver}", ("receiver", receiver));
+         FC_REWRAP_EXCEPTIONS(account_does_not_exist_exception, error, "Receiver account: ${receiver}", ("receiver", receiver));
 
          const auto& ids = idx.indices().get<graphene::db::by_id>();
          const auto& midx = dynamic_cast<const graphene::db::primary_index<message_index>&>(idx);
@@ -544,7 +543,7 @@ namespace graphene { namespace app {
                try {
                   (*sender)(db);
                }
-               FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
+               FC_REWRAP_EXCEPTIONS(account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
 
                find_message_objects(result, ids, itr->second, max_count, [&](const account_id_type& s) { return s == *sender; });
             }
@@ -557,7 +556,7 @@ namespace graphene { namespace app {
          try {
             (*sender)(db);
          }
-         FC_REWRAP_EXCEPTIONS(db::account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
+         FC_REWRAP_EXCEPTIONS(account_does_not_exist_exception, error, "Sender account: ${sender}", ("sender", sender));
 
          auto range = idx.indices().get<by_sender>().equal_range(*sender);
          while (range.first != range.second && max_count-- > 0) {

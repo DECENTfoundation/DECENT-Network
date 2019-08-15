@@ -510,7 +510,7 @@ public:
       auto rec = _remote_db->get_accounts({account_id}).front();
 
       if(!rec)
-         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
+         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
 
       return *rec;
    }
@@ -549,7 +549,7 @@ public:
    {
       auto rec = find_account(account_id);
       if(!rec)
-         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
+         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
       return *rec;
    }
 
@@ -557,7 +557,7 @@ public:
    {
       auto rec = find_account(account_name_or_id);
       if(!rec)
-         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
+         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
       return *rec;
    }
 
@@ -2598,7 +2598,7 @@ public:
          {
             const auto& s = _remote_db->get_seeder( seeders[i] );
             if(!s)
-               FC_THROW_EXCEPTION(db::seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
+               FC_THROW_EXCEPTION(seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
             Ciphertext cp;
             point p = ss.split[i];
 
