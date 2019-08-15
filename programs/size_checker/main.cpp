@@ -50,9 +50,6 @@ struct size_check_type_visitor
 {
    typedef void result_type;
 
-   int t = 0;
-   size_check_type_visitor(int _t ):t(_t){}
-
    template<typename Type>
    result_type operator()( const Type& op )const
    {
@@ -84,10 +81,10 @@ int main( int argc, char** argv )
 
       idump( (miners) );
 
-      for( int32_t i = 0; i < op.count(); ++i )
+      for( std::size_t i = 0; i < graphene::chain::operation::type_info::count; ++i )
       {
          op.set_which(i);
-         op.visit( size_check_type_visitor(i) );
+         op.visit( size_check_type_visitor() );
       }
 
       // sort them by mem size

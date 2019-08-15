@@ -192,8 +192,8 @@ struct serialize_type_visitor
 {
    typedef void result_type;
 
-   int t = 0;
-   serialize_type_visitor(int _t ):t(_t){}
+   std::size_t t = 0;
+   serialize_type_visitor(std::size_t _t ):t(_t){}
 
    template<typename Type>
    result_type operator()( const Type& op )const
@@ -240,7 +240,7 @@ struct serializer<std::vector<T>,false>
 template<typename T>
 struct serializer<fc::smart_ref<T>,false>
 {
-   static void init() { 
+   static void init() {
       serializer<T>::init(); }
    static void generate() {}
 };
@@ -297,7 +297,7 @@ struct serializer< fc::static_variant<T...>, false >
       {
          init = true;
          fc::static_variant<T...> var;
-         for( int i = 0; i < var.count(); ++i )
+         for( std::size_t i = 0; i < fc::static_variant<T...>::type_info::count; ++i )
          {
             var.set_which(i);
             var.visit( register_type_visitor() );
@@ -378,7 +378,7 @@ int main( int argc, char** argv )
     operation op;
 
     std::cout << "ChainTypes.operations=\n";
-    for( int i = 0; i < op.count(); ++i )
+    for( std::size_t i = 0; i < operation::type_info::count; ++i )
     {
        op.set_which(i);
        op.visit( detail_ns::serialize_type_visitor(i) );
