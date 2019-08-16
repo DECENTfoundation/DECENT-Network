@@ -72,7 +72,7 @@ void database::reindex(boost::filesystem::path data_dir, const genesis_state_typ
       double one_perc_step = last_block_num / 100.0;
       for (uint32_t i = 1; i <= last_block_num; ++i)
       {
-         if (reindexing_status <= (i - 1) || i == last_block_num)
+         if (reindexing_status <= (i - 1))
          {
             // report progress done so far
             auto progress = static_cast<uint8_t>((i - 1) * 100.0 / last_block_num);
