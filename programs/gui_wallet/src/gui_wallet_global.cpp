@@ -492,15 +492,19 @@ void WalletOperator::cancel()
 void WalletOperator::connect(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
 {
    std::string str_error;
-   try
+   while(!m_cancellation_token)
    {
-      m_wallet_api.Connect(m_cancellation_token, wallet_file, ws);
+      try
+      {
+         m_wallet_api.Connect(wallet_file, ws);
+         str_error.clear();
+         break;
+      }
+      catch(const std::exception& ex)
+      {
+         str_error = ex.what();
+      }
    }
-   catch(const std::exception& ex)
-   {
-      str_error = ex.what();
-   }
-
    emit signal_connected(str_error);
 }
 

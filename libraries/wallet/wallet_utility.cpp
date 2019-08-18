@@ -132,52 +132,39 @@ namespace graphene { namespace wallet {
    //
    WalletAPI::WalletAPI()
    {
+      m_pthread.reset(new fc::thread("wallet_api_service"));
    }
 
    WalletAPI::~WalletAPI()
    {
    }
 
-   void WalletAPI::Connect(std::atomic_bool& cancellation_token, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
+   void WalletAPI::Connect(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws)
    {
       if (is_connected())
          throw wallet_exception("already connected");
 
       std::lock_guard<std::mutex> lock(m_mutex);
-      m_pthread.reset(new fc::thread("wallet_api_service"));
 
       fc::future<string> future_connect =
-      m_pthread->async([this, &cancellation_token, &wallet_file, &ws] () -> string
+      m_pthread->async([this, &wallet_file, &ws] () -> string
                        {
-                          std::string error;
-                          while (! cancellation_token)
-                          {
-                             try
-                             {
-                                m_pimpl.reset(new Impl(wallet_file, ws));
-                                break;
-                             }
-                             catch(wallet_exception const& ex)
-                             {
-                                return ex.what();
-                             }
-                             catch(fc::exception const& ex)
-                             {
-                                error = ex.what();
-                             }
-                             catch(std::exception const& ex)
-                             {
-                                error = ex.what();
-                             }
-
-                             if (!error.empty()) {
-                                //log error ??
-                             }
-                          }
-
-//                          if (cancellation_token) {
-//                             std::cout << "cancelation_token" << std::endl;
-//                          }
+                           try
+                           {
+                              m_pimpl.reset(new Impl(wallet_file, ws));
+                           }
+                           catch(wallet_exception const& ex)
+                           {
+                              return ex.what();
+                           }
+                           catch(fc::exception const& ex)
+                           {
+                              return ex.to_detail_string();
+                           }
+                           catch(std::exception const& ex)
+                           {
+                              return ex.what();
+                           }
 
                           return string();
                        });

@@ -108,8 +108,9 @@ namespace gui_wallet
    signals:
       void signal_connected(std::string const& str_error);
    public:
-      std::atomic_bool m_cancellation_token;
       graphene::wallet::WalletAPI m_wallet_api;
+   private:
+      std::atomic_bool m_cancellation_token;
    };
 
    // Asset

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <mutex>
 #include <fc/thread/thread.hpp>
 
@@ -18,7 +17,7 @@ namespace graphene { namespace wallet {
       WalletAPI();
       ~WalletAPI();
 
-      void Connect(std::atomic_bool& cancellation_token, const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
+      void Connect(const boost::filesystem::path &wallet_file, const graphene::wallet::server_data &ws);
       std::string RunTask(std::string const& str_command);
 
       bool is_connected() { std::lock_guard<std::mutex> lock(m_mutex); return m_pimpl != nullptr; }

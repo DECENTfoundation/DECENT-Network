@@ -2710,8 +2710,7 @@ signed_transaction content_cancellation(const string& author,
 
    string from_command_file( const std::string& command_file_name ) const
    {
-       string result = "";
-       std::atomic_bool cancel_token(false);
+       string result;
        WalletAPI my_api;
        bool contains_submit_content_async = false;
 
@@ -2725,7 +2724,7 @@ signed_transaction content_cancellation(const string& author,
                FC_THROW_EXCEPTION(fc::file_not_found_exception, "File: ${f}", ("f", command_file_name));
            }
 
-           my_api.Connect(cancel_token, get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
+           my_api.Connect(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
 
            while (std::getline(cf_in, current_line))
            {
@@ -2766,8 +2765,6 @@ signed_transaction content_cancellation(const string& author,
            }
 
        } FC_CAPTURE_AND_RETHROW( (command_file_name) )
-
-       cancel_token = true;
 
        return result;
    }
