@@ -26,14 +26,14 @@ namespace graphene { namespace wallet {
       auto exec(Result (wallet_api::* func)(Args...), Values... values)
       {
          std::lock_guard<std::mutex> lock(m_mutex);
-         return m_pthread->async([api = get_api(), func, &values...]() -> Result { return (api.get()->*func)(values...); });
+         return m_pthread->async([=, api = get_api()]() -> Result { return (api.get()->*func)(values...); });
       }
 
       template<typename Result, typename ...Args, typename ...Values>
       auto exec(Result (wallet_api::* func)(Args...) const, Values... values)
       {
          std::lock_guard<std::mutex> lock(m_mutex);
-         return m_pthread->async([api = get_api(), func, &values...]() -> Result { return (api.get()->*func)(values...); });
+         return m_pthread->async([=, api = get_api()]() -> Result { return (api.get()->*func)(values...); });
       }
 
    private:
