@@ -277,25 +277,16 @@ namespace decent {
           bool has_default = od->semantic()->apply_default(store);
           if( !has_default )
              out_cfg << "# ";
+          out_cfg << od->long_name() << " = ";
           auto example = od->format_parameter();
           if( example.empty() )
              // This is a boolean switch
-             out_cfg << od->long_name() << " = " << "false\n";
-          else {
+             out_cfg << "false";
+          else if( example != "arg" )
              // The default string is formatted "arg (=<interesting part>)"
-             if( has_default ) {
-                example.erase(0, 6);
-                example.pop_back();
-             }
              // The implicit string is formatted "[=arg(=<interesting part>)]"
-             else {
-                example.erase(0, 7);
-                example.pop_back();
-                example.pop_back();
-             }
-             out_cfg << od->long_name() << " = " << example << "\n";
-          }
-          out_cfg << "\n";
+             out_cfg << (has_default ? example.substr(6, example.size() - 7) : example.substr(7, example.size() - 9));
+          out_cfg << "\n\n";
        }
 
        write_default_logging_config_to_stream(out_cfg, is_daemon);
