@@ -243,7 +243,7 @@ namespace decent {
                 std::string level_string = section_tree.get<std::string>("level");
                 std::string appenders_string = section_tree.get<std::string>("appenders");
                 fc::logger_config logger_config(logger_name);
-               
+
                 try {
                    logger_config.level = fc::variant(level_string).as<fc::log_level>();
                 }
@@ -274,19 +274,26 @@ namespace decent {
           if( !od->description().empty() )
              out_cfg << "# " << od->description() << "\n";
           boost::any store;
-          if( !od->semantic()->apply_default(store) )
-             out_cfg << "# " << od->long_name() << " = \n";
+          bool has_default = od->semantic()->apply_default(store);
+          if( !has_default )
+             out_cfg << "# ";
+          auto example = od->format_parameter();
+          if( example.empty() )
+             // This is a boolean switch
+             out_cfg << od->long_name() << " = " << "false\n";
           else {
-             auto example = od->format_parameter();
-             if( example.empty() )
-                // This is a boolean switch
-                out_cfg << od->long_name() << " = " << "false\n";
-             else {
-                // The string is formatted "arg (=<interesting part>)"
+             // The default string is formatted "arg (=<interesting part>)"
+             if( has_default ) {
                 example.erase(0, 6);
-                example.erase(example.length()-1);
-                out_cfg << od->long_name() << " = " << example << "\n";
+                example.pop_back();
              }
+             // The implicit string is formatted "[=arg(=<interesting part>)]"
+             else {
+                example.erase(0, 7);
+                example.pop_back();
+                example.pop_back();
+             }
+             out_cfg << od->long_name() << " = " << example << "\n";
           }
           out_cfg << "\n";
        }
