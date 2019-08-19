@@ -281,17 +281,17 @@
 <context>
     <name>gui_wallet::Globals</name>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="656"/>
+        <location filename="../src/gui_wallet_global.cpp" line="660"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="656"/>
+        <location filename="../src/gui_wallet_global.cpp" line="660"/>
         <source>Submiting or downloading content will not be functional.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/gui_wallet_global.cpp" line="656"/>
+        <location filename="../src/gui_wallet_global.cpp" line="660"/>
         <source>Cannot start IPFS</source>
         <translation type="unfinished"></translation>
     </message>
