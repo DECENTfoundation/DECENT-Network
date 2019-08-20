@@ -1145,7 +1145,9 @@ namespace graphene { namespace app {
    {
       const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
       auto itr = accounts_by_name.find(name);
-      FC_ASSERT( itr != accounts_by_name.end() );
+      if(itr == accounts_by_name.end())
+         FC_THROW_EXCEPTION(db::account_does_not_exist_exception, "Account: ${account}", ("account", name));
+      
       return get_account_balances(itr->get_id(), assets);
    }
 
