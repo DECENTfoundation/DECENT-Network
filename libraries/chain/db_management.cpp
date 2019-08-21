@@ -109,9 +109,9 @@ void database::reindex(boost::filesystem::path data_dir, const genesis_state_typ
             skip_authority_check);
 
       }
-      reindexing_progress(100);
       ilog("100%: ${t}/${t}", ("t", last_block_num));
       ilog("Done reindexing, elapsed time: ${t} sec", ("t", double((fc::time_point::now() - start).count()) / 1000000.0));
+      reindexing_progress(100);
       _undo_db.enable();
 } FC_CAPTURE_AND_RETHROW( (data_dir) ) }
 
