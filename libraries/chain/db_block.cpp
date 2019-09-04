@@ -104,6 +104,27 @@ std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of
   return result;
 }
 
+signed_block_with_info database::get_signed_block_with_info(const signed_block& block) const
+{
+   signed_block_with_info result;
+   reinterpret_cast<signed_block&>(result) = block;
+   result.block_id = block.id();
+   result.signing_key = block.signee();
+   result.transaction_ids.reserve( block.transactions.size() );
+   for( const processed_transaction& tx : block.transactions )
+      result.transaction_ids.push_back( tx.id() );
+
+   share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block.timestamp);
+   share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block.block_num());
+
+   //this should never happen, but better check.
+   if (miner_pay_from_fees < share_type(0))
+      miner_pay_from_fees = share_type(0);
+
+   result.miner_reward = miner_pay_from_fees + miner_pay_from_reward;
+   return result;
+}
+
 /**
  * Push block "may fail" in which case every partial change is unwound.  After
  * push block is successful the block is appended to the chain database on disk.

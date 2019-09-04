@@ -385,20 +385,6 @@ namespace graphene { namespace app {
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   static signed_block_with_info signed_block_with_info_from_block(const signed_block& block, share_type miner_reward)
-   {
-      signed_block_with_info result;
-      reinterpret_cast<signed_block&>(result) = block;
-      result.block_id = block.id();
-      result.signing_key = block.signee();
-      result.transaction_ids.reserve( block.transactions.size() );
-      for( const processed_transaction& tx : block.transactions )
-         result.transaction_ids.push_back( tx.id() );
-
-      result.miner_reward = miner_reward;
-      return result;
-   }
-
    optional<block_header> database_api::get_block_header(uint32_t block_num)const
    {
       return my->get_block_header(block_num);
@@ -433,14 +419,7 @@ namespace graphene { namespace app {
       if( !block )
          return {};
 
-      share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block->timestamp);
-      share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block_num);
-
-      //this should never happen, but better check.
-      if (miner_pay_from_fees < share_type(0))
-         miner_pay_from_fees = share_type(0);
-
-      return signed_block_with_info_from_block(*block, miner_pay_from_fees + miner_pay_from_reward);
+      return my->_db.get_signed_block_with_info(*block);
    }
 
    optional<signed_block> database_api_impl::get_block(uint32_t block_num)const
@@ -456,20 +435,9 @@ namespace graphene { namespace app {
       for( const auto& block : blocks )
       {
          if( block )
-         {
-            share_type miner_pay_from_fees = get_miner_pay_from_fees_by_block_time(block->timestamp);
-            share_type miner_pay_from_reward = get_asset_per_block_by_block_num(block->block_num());
-
-            //this should never happen, but better check.
-            if (miner_pay_from_fees < share_type(0))
-               miner_pay_from_fees = share_type(0);
-
-            result.emplace_back(signed_block_with_info_from_block(*block, miner_pay_from_fees + miner_pay_from_reward));
-         }
+            result.emplace_back(my->_db.get_signed_block_with_info(*block));
          else
-         {
             result.push_back({});
-         }
       }
 
       return result;
@@ -2763,70 +2731,6 @@ namespace
       return result;
    }
 
-   miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
-   {
-      const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
-      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
-      graphene::chain::miner_reward_input miner_reward_input;
-
-      fc::time_point_sec next_time = (fc::time_point_sec)0;
-      for (auto itr = idx.cbegin(), itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr )
-      {
-         if (itr->record.next_maintenance_time > block_time)
-         {
-            next_time = itr->record.next_maintenance_time;
-            miner_reward_input.from_accumulated_fees = itr->record.from_accumulated_fees;
-            miner_reward_input.block_interval = itr->record.block_interval;
-         }
-      }
-
-      FC_ASSERT(next_time != (fc::time_point_sec)0);
-      miner_reward_input.time_to_maint = (next_time - block_time).to_seconds();
-      return miner_reward_input;
-   }
-
-   share_type database_api_impl::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
-   {
-      const auto& idx = _db.get_index_type<budget_record_index>().indices().get<by_time>();
-      FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
-      graphene::chain::miner_reward_input miner_reward_input;
-
-      fc::time_point_sec next_time = (fc::time_point_sec)0;
-      fc::time_point_sec prev_time = (fc::time_point_sec)0;
-
-      auto itr = idx.cbegin();
-      for (auto itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr)
-      {
-         if (itr->record.next_maintenance_time > block_time)
-         {
-            next_time = itr->record.next_maintenance_time;
-            miner_reward_input.from_accumulated_fees = itr->record.from_accumulated_fees;
-            miner_reward_input.block_interval = itr->record.block_interval;
-         }
-      }
-
-      FC_ASSERT(next_time != (fc::time_point_sec)0);
-
-      itr--;
-
-      if (itr == idx.begin())
-      {
-         fc::optional<signed_block> first_block = get_block(1);
-         prev_time = first_block->timestamp;
-         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
-      }
-      else
-      {
-         itr--;
-
-         prev_time = (*itr).record.next_maintenance_time;
-         miner_reward_input.time_to_maint = (next_time - prev_time).to_seconds();
-      }
-
-      auto blocks_in_interval = (miner_reward_input.time_to_maint + miner_reward_input.block_interval - 1) / miner_reward_input.block_interval;
-      return blocks_in_interval > 0 ? miner_reward_input.from_accumulated_fees / blocks_in_interval : 0;
-   }
-
    //////////////////////////////////////////////////////////////////////
    //                                                                  //
    // Private methods                                                  //
@@ -2924,9 +2828,19 @@ namespace
       return my->get_time_to_maint_by_block_time(block_time);
    }
 
+   miner_reward_input database_api_impl::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
+   {
+      return _db.get_time_to_maint_by_block_time(block_time);
+   }
+
    share_type database_api::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
    {
       return my->get_miner_pay_from_fees_by_block_time(block_time);
+   }
+
+   share_type database_api_impl::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+   {
+      return _db.get_miner_pay_from_fees_by_block_time(block_time);
    }
 
    vector<database::votes_gained> database_api::get_actual_votes() const{
