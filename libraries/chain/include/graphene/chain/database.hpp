@@ -136,6 +136,7 @@ namespace graphene { namespace chain {
          optional<signed_block>     fetch_block_by_number( uint32_t num )const;
          const signed_transaction&  get_recent_transaction( const transaction_id_type& trx_id )const;
          std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
+         signed_block_with_info     get_signed_block_with_info(const signed_block& block) const;
 
          /**
           *  Calculate the percent of block production slots that were missed in the
@@ -388,8 +389,9 @@ namespace graphene { namespace chain {
          void set_and_reset_seeding_stats();
          void decent_housekeeping();
          share_type get_new_asset_per_block();
-         share_type get_asset_per_block_by_block_num(uint32_t block_num);
-         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time);
+         static share_type get_asset_per_block_by_block_num(uint32_t block_num);
+         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
+         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
          share_type get_miner_budget(uint32_t blocks);
          bool is_reward_switch_in_interval(uint64_t a, uint64_t b)const;
          uint64_t get_next_reward_switch_block(uint64_t start)const;

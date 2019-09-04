@@ -346,4 +346,68 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    process_budget();
 }
 
+share_type database::get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const
+{
+   const auto& idx = get_index_type<budget_record_index>().indices().get<by_time>();
+   FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
+   miner_reward_input rwd;
+
+   fc::time_point_sec next_time = (fc::time_point_sec)0;
+   fc::time_point_sec prev_time = (fc::time_point_sec)0;
+
+   auto itr = idx.cbegin();
+   for (auto itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr)
+   {
+      if (itr->record.next_maintenance_time > block_time)
+      {
+         next_time = itr->record.next_maintenance_time;
+         rwd.from_accumulated_fees = itr->record.from_accumulated_fees;
+         rwd.block_interval = itr->record.block_interval;
+      }
+   }
+
+   FC_ASSERT(next_time != (fc::time_point_sec)0);
+
+   itr--;
+
+   if (itr == idx.begin())
+   {
+      fc::optional<signed_block> first_block = fetch_block_by_number(1);
+      prev_time = first_block->timestamp;
+      rwd.time_to_maint = (next_time - prev_time).to_seconds();
+   }
+   else
+   {
+      itr--;
+
+      prev_time = (*itr).record.next_maintenance_time;
+      rwd.time_to_maint = (next_time - prev_time).to_seconds();
+   }
+
+   auto blocks_in_interval = (rwd.time_to_maint + rwd.block_interval - 1) / rwd.block_interval;
+   return blocks_in_interval > 0 ? rwd.from_accumulated_fees / blocks_in_interval : 0;
+}
+
+miner_reward_input database::get_time_to_maint_by_block_time(fc::time_point_sec block_time) const
+{
+   const auto& idx = get_index_type<budget_record_index>().indices().get<by_time>();
+   FC_ASSERT(idx.crbegin()->record.next_maintenance_time > block_time);
+   miner_reward_input rwd;
+
+   fc::time_point_sec next_time = (fc::time_point_sec)0;
+   for (auto itr = idx.cbegin(), itr_stop = idx.cend(); itr != itr_stop && (next_time == (fc::time_point_sec)0); ++itr )
+   {
+      if (itr->record.next_maintenance_time > block_time)
+      {
+         next_time = itr->record.next_maintenance_time;
+         rwd.from_accumulated_fees = itr->record.from_accumulated_fees;
+         rwd.block_interval = itr->record.block_interval;
+      }
+   }
+
+   FC_ASSERT(next_time != (fc::time_point_sec)0);
+   rwd.time_to_maint = (next_time - block_time).to_seconds();
+   return rwd;
+}
+
 } }
