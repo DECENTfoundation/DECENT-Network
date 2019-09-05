@@ -31,15 +31,15 @@ namespace graphene { namespace chain {
 class account_create_evaluator : public evaluator<account_create_operation, account_create_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& o );
-   graphene::db::object_id_type do_apply( const operation_type& o );
+   operation_result do_evaluate( const operation_type& o );
+   operation_result do_apply( const operation_type& o );
 };
 
 class account_update_evaluator : public evaluator<account_update_operation, account_update_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& o );
-   void_result do_apply( const operation_type& o );
+   operation_result do_evaluate( const operation_type& o );
+   operation_result do_apply( const operation_type& o );
 
 private:
    const account_object* acnt;

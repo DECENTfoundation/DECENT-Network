@@ -72,11 +72,9 @@ void verify_account_votes( const database& db, const account_options& options )
    {
       FC_ASSERT( id < max_vote_id );
    }
-
 }
 
-
-void_result account_create_evaluator::do_evaluate( const operation_type& op )
+operation_result account_create_evaluator::do_evaluate( const operation_type& op )
 { try {
    database& d = db();
 
@@ -101,7 +99,7 @@ void_result account_create_evaluator::do_evaluate( const operation_type& op )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type account_create_evaluator::do_apply( const operation_type& o )
+operation_result account_create_evaluator::do_apply( const operation_type& o )
 { try {
 
    database& d = db();
@@ -136,7 +134,7 @@ graphene::db::object_id_type account_create_evaluator::do_apply( const operation
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 
-void_result account_update_evaluator::do_evaluate( const operation_type& o )
+operation_result account_update_evaluator::do_evaluate( const operation_type& o )
 { try {
    database& d = db();
    try
@@ -159,7 +157,7 @@ void_result account_update_evaluator::do_evaluate( const operation_type& o )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result account_update_evaluator::do_apply( const operation_type& o )
+operation_result account_update_evaluator::do_apply( const operation_type& o )
 { try {
    database& d = db();
    d.modify( *acnt, [&](account_object& a){

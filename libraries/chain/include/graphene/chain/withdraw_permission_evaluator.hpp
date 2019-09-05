@@ -31,29 +31,29 @@ namespace graphene { namespace chain {
 class withdraw_permission_create_evaluator : public evaluator<withdraw_permission_create_operation, withdraw_permission_create_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& op );
-   graphene::db::object_id_type do_apply( const operation_type& op );
+   operation_result do_evaluate( const operation_type& op );
+   operation_result do_apply( const operation_type& op );
 };
 
 class withdraw_permission_claim_evaluator : public evaluator<withdraw_permission_claim_operation, withdraw_permission_claim_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   operation_result do_evaluate( const operation_type& op );
+   operation_result do_apply( const operation_type& op );
 };
 
 class withdraw_permission_update_evaluator : public evaluator<withdraw_permission_update_operation, withdraw_permission_update_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   operation_result do_evaluate( const operation_type& op );
+   operation_result do_apply( const operation_type& op );
 };
 
 class withdraw_permission_delete_evaluator : public evaluator<withdraw_permission_delete_operation, withdraw_permission_delete_evaluator>
 {
 public:
-   void_result do_evaluate( const operation_type& op );
-   void_result do_apply( const operation_type& op );
+   operation_result do_evaluate( const operation_type& op );
+   operation_result do_apply( const operation_type& op );
 };
 
 } } // graphene::chain

@@ -30,15 +30,15 @@ namespace graphene { namespace chain {
    class asset_create_evaluator : public evaluator<asset_create_operation, asset_create_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         graphene::db::object_id_type do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
    };
 
    class asset_issue_evaluator : public evaluator<asset_issue_operation, asset_issue_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
@@ -47,8 +47,8 @@ namespace graphene { namespace chain {
    class monitored_asset_update_evaluator : public evaluator<update_monitored_asset_operation, monitored_asset_update_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
 
       private:
          const asset_object* asset_to_update = nullptr;
@@ -57,8 +57,8 @@ namespace graphene { namespace chain {
    class user_issued_asset_update_evaluator : public evaluator<update_user_issued_asset_operation, user_issued_asset_update_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       const asset_object* asset_to_update = nullptr;
@@ -67,8 +67,8 @@ namespace graphene { namespace chain {
    class asset_fund_pools_evaluator : public evaluator<asset_fund_pools_operation, asset_fund_pools_evaluator>
    {
    public:
-      void_result do_evaluate(const operation_type& op);
-      void_result do_apply(const operation_type& op);
+      operation_result do_evaluate(const operation_type& op);
+      operation_result do_apply(const operation_type& op);
 
    private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
@@ -77,8 +77,8 @@ namespace graphene { namespace chain {
    class asset_reserve_evaluator : public evaluator<asset_reserve_operation, asset_reserve_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
@@ -87,8 +87,8 @@ namespace graphene { namespace chain {
    class asset_claim_fees_evaluator : public evaluator<asset_claim_fees_operation, asset_claim_fees_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       const asset_dynamic_data_object* asset_dyn_data = nullptr;
@@ -97,8 +97,8 @@ namespace graphene { namespace chain {
    class asset_publish_feeds_evaluator : public evaluator<asset_publish_feed_operation, asset_publish_feeds_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       std::map<std::pair<asset_id_type,asset_id_type>,price_feed> median_feed_values;
@@ -107,8 +107,8 @@ namespace graphene { namespace chain {
    class update_user_issued_asset_advanced_evaluator : public evaluator<update_user_issued_asset_advanced_operation, update_user_issued_asset_advanced_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
 
    private:
       const asset_object* asset_to_update = nullptr;

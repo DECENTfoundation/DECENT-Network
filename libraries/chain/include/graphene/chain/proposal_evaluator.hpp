@@ -33,8 +33,8 @@ namespace graphene { namespace chain {
    class proposal_create_evaluator : public evaluator<proposal_create_operation, proposal_create_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         graphene::db::object_id_type do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
 
       private:
          transaction _proposed_trx;
@@ -43,8 +43,8 @@ namespace graphene { namespace chain {
    class proposal_update_evaluator : public evaluator<proposal_update_operation, proposal_update_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
 
       private:
          const proposal_object* _proposal = nullptr;
@@ -56,8 +56,8 @@ namespace graphene { namespace chain {
    class proposal_delete_evaluator : public evaluator<proposal_delete_operation, proposal_delete_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply(const operation_type&);
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply(const operation_type&);
 
       private:
          const proposal_object* _proposal = nullptr;

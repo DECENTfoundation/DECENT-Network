@@ -8,7 +8,7 @@
 
 namespace graphene { namespace chain {
 
-void_result non_fungible_token_create_definition_evaluator::do_evaluate( const operation_type& op )
+operation_result non_fungible_token_create_definition_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -31,7 +31,7 @@ void_result non_fungible_token_create_definition_evaluator::do_evaluate( const o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_create_definition_evaluator::do_apply( const operation_type& op )
+operation_result non_fungible_token_create_definition_evaluator::do_apply( const operation_type& op )
 { try {
    const non_fungible_token_object& new_nft =
       db().create<non_fungible_token_object>( [&]( non_fungible_token_object& nft ) {
@@ -45,7 +45,7 @@ graphene::db::object_id_type non_fungible_token_create_definition_evaluator::do_
    return new_nft.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_update_definition_evaluator::do_evaluate( const operation_type& op )
+operation_result non_fungible_token_update_definition_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -66,13 +66,13 @@ void_result non_fungible_token_update_definition_evaluator::do_evaluate( const o
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_update_definition_evaluator::do_apply( const operation_type& op )
+operation_result non_fungible_token_update_definition_evaluator::do_apply( const operation_type& op )
 { try {
    db().modify( *nft_to_update, [&]( non_fungible_token_object& nft_obj ){
       nft_obj.options = op.options;
    });
 
-   return nft_to_update->id;
+   return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 template<typename T, typename U>
@@ -119,7 +119,7 @@ static void nft_check_data(const database& d, const non_fungible_token_data_type
    }
 }
 
-void_result non_fungible_token_issue_evaluator::do_evaluate( const operation_type& op )
+operation_result non_fungible_token_issue_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -141,7 +141,7 @@ void_result non_fungible_token_issue_evaluator::do_evaluate( const operation_typ
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type non_fungible_token_issue_evaluator::do_apply( const operation_type& op )
+operation_result non_fungible_token_issue_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    const non_fungible_token_data_object& new_nft_data =
@@ -169,7 +169,7 @@ graphene::db::object_id_type non_fungible_token_issue_evaluator::do_apply( const
    return new_nft_data.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_type& op )
+operation_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -183,7 +183,7 @@ void_result non_fungible_token_transfer_evaluator::do_evaluate( const operation_
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_transfer_evaluator::do_apply( const operation_type& op )
+operation_result non_fungible_token_transfer_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    account_id_type owner = nft_data_to_update->owner;
@@ -210,7 +210,7 @@ void_result non_fungible_token_transfer_evaluator::do_apply( const operation_typ
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_update_data_evaluator::do_evaluate( const operation_type& op )
+operation_result non_fungible_token_update_data_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
@@ -247,7 +247,7 @@ void_result non_fungible_token_update_data_evaluator::do_evaluate( const operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result non_fungible_token_update_data_evaluator::do_apply( const operation_type& op )
+operation_result non_fungible_token_update_data_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
    d.modify( *nft_data_to_update, [&]( non_fungible_token_data_object& nft_data ) {

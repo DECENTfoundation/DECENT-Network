@@ -35,8 +35,8 @@ namespace graphene { namespace chain {
            custom_operation_subtype_messaging
         };
 
-        void_result do_evaluate(const operation_type& o);
-        graphene::db::object_id_type do_apply(const operation_type& o);
+        operation_result do_evaluate(const operation_type& o);
+        operation_result do_apply(const operation_type& o);
    };
 
 } }

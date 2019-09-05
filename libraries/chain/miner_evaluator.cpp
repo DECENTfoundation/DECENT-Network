@@ -30,12 +30,12 @@
 
 namespace graphene { namespace chain {
 
-void_result miner_create_evaluator::do_evaluate( const operation_type& op )
+operation_result miner_create_evaluator::do_evaluate( const operation_type& op )
 {
    return void_result();
 }
 
-graphene::db::object_id_type miner_create_evaluator::do_apply( const operation_type& op )
+operation_result miner_create_evaluator::do_apply( const operation_type& op )
 { try {
    vote_id_type vote_id;
    db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
@@ -51,13 +51,13 @@ graphene::db::object_id_type miner_create_evaluator::do_apply( const operation_t
    return new_miner_object.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_evaluator::do_evaluate( const operation_type& op )
+operation_result miner_update_evaluator::do_evaluate( const operation_type& op )
 { try {
    FC_ASSERT(db().get(op.miner).miner_account == op.miner_account);
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_evaluator::do_apply( const operation_type& op )
+operation_result miner_update_evaluator::do_apply( const operation_type& op )
 { try {
    database& _db = db();
    _db.modify(
@@ -72,14 +72,14 @@ void_result miner_update_evaluator::do_apply( const operation_type& op )
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result miner_update_global_parameters_evaluator::do_evaluate(const operation_type& o)
+operation_result miner_update_global_parameters_evaluator::do_evaluate(const operation_type& o)
 { try {
       FC_ASSERT(trx_state->_is_proposed_trx);
 
       return void_result();
    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result miner_update_global_parameters_evaluator::do_apply(const operation_type& o)
+operation_result miner_update_global_parameters_evaluator::do_apply(const operation_type& o)
 { try {
       db().modify(db().get_global_properties(), [&o](global_property_object& p) {
          p.pending_parameters = o.new_parameters;
