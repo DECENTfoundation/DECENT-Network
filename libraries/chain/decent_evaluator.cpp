@@ -47,10 +47,9 @@ void content_payout(database& db, asset paid_price_after_exchange, const content
    }
 };
 
-
 }
 
-void_result set_publishing_manager_evaluator::do_evaluate( const operation_type& o )
+operation_result set_publishing_manager_evaluator::do_evaluate( const operation_type& o )
 {try{
    for( const auto id : o.to )
       FC_ASSERT (db().find_object(id), "Account does not exist");
@@ -59,7 +58,7 @@ void_result set_publishing_manager_evaluator::do_evaluate( const operation_type&
    return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result set_publishing_manager_evaluator::do_apply( const operation_type& o )
+operation_result set_publishing_manager_evaluator::do_apply( const operation_type& o )
 {try{
    for( auto to_id : o.to )
    {
@@ -91,7 +90,7 @@ void_result set_publishing_manager_evaluator::do_apply( const operation_type& o 
    return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o )
+operation_result set_publishing_right_evaluator::do_evaluate( const operation_type& o )
 {try{
     const auto& from_acc = db().get<account_object>(o.from);
     for( const auto id : o.to )
@@ -101,7 +100,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
     return void_result();
 }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result set_publishing_right_evaluator::do_apply( const operation_type& o )
+   operation_result set_publishing_right_evaluator::do_apply( const operation_type& o )
    {try{
       const auto& from_acc = db().get<account_object>(o.from);
 
@@ -131,7 +130,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       }FC_CAPTURE_AND_RETHROW( (o) )
    }
 
-   void_result content_submit_evaluator::do_evaluate(const operation_type& o )
+   operation_result content_submit_evaluator::do_evaluate(const operation_type& o )
    {try{
       FC_ASSERT( (db().head_block_time() > HARDFORK_4_TIME) || (o.co_authors.size() <= 10) );
 
@@ -269,12 +268,12 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   graphene::db::object_id_type content_submit_evaluator::do_apply(const operation_type& o)
+   operation_result content_submit_evaluator::do_apply(const operation_type& o)
    {try{
       graphene::chain::ContentObjectPropertyManager synopsis_parser(o.synopsis);
       std::string title = synopsis_parser.get<graphene::chain::ContentObjectTitle>();
 
-      graphene::db::object_id_type obj_id;
+      operation_result result;
       if( is_resubmit )
       {
          auto& content_idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -376,7 +375,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
                                         co.num_of_ratings = 0;
                                      });
 
-         obj_id = content.id;
+         result = content.id;
          db().adjust_balance(o.author,-o.publishing_fee);  //pay the escrow from author's account
          auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
          // Reserve the space on seeder's boxes
@@ -416,10 +415,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
                                                 });
       }
 
-      return obj_id;
+      return result;
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result content_cancellation_evaluator::do_evaluate(const operation_type& o)
+   operation_result content_cancellation_evaluator::do_evaluate(const operation_type& o)
    {
       try {
          auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -433,7 +432,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
-   void_result content_cancellation_evaluator::do_apply(const operation_type& o)
+   operation_result content_cancellation_evaluator::do_apply(const operation_type& o)
    {
       try {
          auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -448,7 +447,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       }FC_CAPTURE_AND_RETHROW((o))
    }
 
-   void_result request_to_buy_evaluator::do_evaluate(const operation_type& o )
+   operation_result request_to_buy_evaluator::do_evaluate(const operation_type& o )
    {try{
       database& d = db();
 
@@ -500,7 +499,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   graphene::db::object_id_type request_to_buy_evaluator::do_apply(const operation_type& o )
+   operation_result request_to_buy_evaluator::do_apply(const operation_type& o )
    {try{
       database& d = db();
 
@@ -591,7 +590,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return object.id;
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result deliver_keys_evaluator::do_evaluate(const operation_type& o )
+   operation_result deliver_keys_evaluator::do_evaluate(const operation_type& o )
    {try{
       const auto& buying = db().get<buying_object>(o.buying);
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -614,7 +613,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result deliver_keys_evaluator::do_apply(const operation_type& o )
+   operation_result deliver_keys_evaluator::do_apply(const operation_type& o )
    {try{
       //start with getting the buying and content objects...
       const auto& buying = db().get<buying_object>(o.buying);
@@ -670,7 +669,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result leave_rating_evaluator::do_evaluate(const operation_type& o )
+   operation_result leave_rating_evaluator::do_evaluate(const operation_type& o )
    {try{
       //check in buying history if the object exists
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -684,7 +683,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result leave_rating_evaluator::do_apply(const operation_type& o )
+   operation_result leave_rating_evaluator::do_apply(const operation_type& o )
    {try{
       //adjust content statistics
       auto& bidx = db().get_index_type<buying_index>().indices().get<by_consumer_URI>();
@@ -729,21 +728,22 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
+   operation_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
    {try{
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   graphene::db::object_id_type ready_to_publish_obsolete_evaluator::do_apply(const operation_type& o)
+   operation_result ready_to_publish_obsolete_evaluator::do_apply(const operation_type& o)
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
-      graphene::db::object_id_type obj_id;
+      operation_result result;
       if( sor == idx.end() ) { //this is initial publish request
-         obj_id = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
+         const seeding_statistics_object &sso = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
-         }).id;
+         });
+         result = sso.id;
          db().create<seeder_object>([&](seeder_object& so) {
               so.seeder = o.seeder;
               so.free_space = o.space;
@@ -751,7 +751,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
               so.price = asset(o.price_per_MByte);
               so.expiration = db().head_block_time() + DECENT_RTP_VALIDITY;
               so.ipfs_ID = o.ipfs_ID;
-              so.stats = obj_id;
+              so.stats = sso.id;
          });
       } else
       { //this is republish case
@@ -765,25 +765,26 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
          });
       }
 
-      return obj_id;
+      return result;
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result ready_to_publish_evaluator::do_evaluate(const operation_type& o )
+   operation_result ready_to_publish_evaluator::do_evaluate(const operation_type& o )
    {try{
       FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME );
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   graphene::db::object_id_type ready_to_publish_evaluator::do_apply(const operation_type& o )
+   operation_result ready_to_publish_evaluator::do_apply(const operation_type& o )
    {try{
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
-      graphene::db::object_id_type obj_id;
+      operation_result result;
       if( sor == idx.end() ) { //this is initial publish request
-         obj_id = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
+         const seeding_statistics_object &sso = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
-         }).id;
+         });
+         result = sso.id;
          db().create<seeder_object>([&](seeder_object& so) {
               so.seeder = o.seeder;
               so.free_space = o.space;
@@ -791,7 +792,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
               so.price = asset(o.price_per_MByte);
               so.expiration = db().head_block_time() + DECENT_RTP_VALIDITY;
               so.ipfs_ID = o.ipfs_ID;
-              so.stats = obj_id;
+              so.stats = sso.id;
               if( o.region_code.valid() )
                  so.region_code = *o.region_code;
               else
@@ -813,10 +814,10 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
          });
       }
 
-      return obj_id;
+      return result;
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result proof_of_custody_evaluator::do_evaluate(const operation_type& o )
+   operation_result proof_of_custody_evaluator::do_evaluate(const operation_type& o )
    {try{
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
       const auto& content = idx.find( o.URI );
@@ -843,7 +844,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result proof_of_custody_evaluator::do_apply(const operation_type& o )
+   operation_result proof_of_custody_evaluator::do_apply(const operation_type& o )
    {try{
       //get the seeder and content
       auto& idx = db().get_index_type<content_index>().indices().get<by_URI>();
@@ -913,7 +914,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
-   void_result report_stats_evaluator::do_evaluate(const operation_type& o)
+   operation_result report_stats_evaluator::do_evaluate(const operation_type& o)
    {
 	   try {
          for (const auto& item : o.stats)
@@ -925,7 +926,7 @@ void_result set_publishing_right_evaluator::do_evaluate( const operation_type& o
       return void_result();
    }
 
-   void_result report_stats_evaluator::do_apply(const operation_type& o)
+   operation_result report_stats_evaluator::do_apply(const operation_type& o)
    {
       try {
          auto& idx = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();

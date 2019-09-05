@@ -29,7 +29,7 @@
 
 namespace graphene { namespace chain {
 
-void_result proposal_create_evaluator::do_evaluate(const operation_type& o)
+operation_result proposal_create_evaluator::do_evaluate(const operation_type& o)
 { try {
    const database& d = db();
    const auto& global_parameters = d.get_global_properties().parameters;
@@ -76,7 +76,7 @@ void_result proposal_create_evaluator::do_evaluate(const operation_type& o)
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-graphene::db::object_id_type proposal_create_evaluator::do_apply(const operation_type& o)
+operation_result proposal_create_evaluator::do_apply(const operation_type& o)
 { try {
    database& d = db();
 
@@ -105,7 +105,7 @@ graphene::db::object_id_type proposal_create_evaluator::do_apply(const operation
    return proposal.id;
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_update_evaluator::do_evaluate(const operation_type& o)
+operation_result proposal_update_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
 
@@ -143,7 +143,7 @@ void_result proposal_update_evaluator::do_evaluate(const operation_type& o)
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_update_evaluator::do_apply(const operation_type& o)
+operation_result proposal_update_evaluator::do_apply(const operation_type& o)
 { try {
    database& d = db();
 
@@ -184,7 +184,7 @@ void_result proposal_update_evaluator::do_apply(const operation_type& o)
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_delete_evaluator::do_evaluate(const operation_type& o)
+operation_result proposal_delete_evaluator::do_evaluate(const operation_type& o)
 { try {
    database& d = db();
 
@@ -199,7 +199,7 @@ void_result proposal_delete_evaluator::do_evaluate(const operation_type& o)
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result proposal_delete_evaluator::do_apply(const operation_type& o)
+operation_result proposal_delete_evaluator::do_apply(const operation_type& o)
 { try {
    db().remove(*_proposal);
 

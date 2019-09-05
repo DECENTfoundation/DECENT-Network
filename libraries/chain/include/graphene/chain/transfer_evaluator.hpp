@@ -31,15 +31,15 @@ namespace graphene { namespace chain {
    class transfer_obsolete_evaluator : public evaluator<transfer_obsolete_operation, transfer_obsolete_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
    };
 
    class transfer_evaluator : public evaluator<transfer_operation, transfer_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
    };
 
 } } // graphene::chain

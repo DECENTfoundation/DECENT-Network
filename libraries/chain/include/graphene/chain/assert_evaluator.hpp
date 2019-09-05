@@ -30,8 +30,8 @@ namespace graphene { namespace chain {
    class assert_evaluator : public evaluator<assert_operation, assert_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
    };
 
 } } // graphene::chain

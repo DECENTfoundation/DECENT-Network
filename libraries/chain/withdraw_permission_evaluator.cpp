@@ -31,7 +31,7 @@
 
 namespace graphene { namespace chain {
 
-void_result withdraw_permission_create_evaluator::do_evaluate(const operation_type& op)
+operation_result withdraw_permission_create_evaluator::do_evaluate(const operation_type& op)
 { try {
    database& d = db();
    FC_ASSERT(d.find_object(op.withdraw_from_account));
@@ -44,7 +44,7 @@ void_result withdraw_permission_create_evaluator::do_evaluate(const operation_ty
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-graphene::db::object_id_type withdraw_permission_create_evaluator::do_apply(const operation_type& op)
+operation_result withdraw_permission_create_evaluator::do_apply(const operation_type& op)
 { try {
    return db().create<withdraw_permission_object>([&op](withdraw_permission_object& p) {
       p.withdraw_from_account = op.withdraw_from_account;
@@ -56,7 +56,7 @@ graphene::db::object_id_type withdraw_permission_create_evaluator::do_apply(cons
    }).id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_claim_evaluator::do_evaluate(const withdraw_permission_claim_evaluator::operation_type& op)
+operation_result withdraw_permission_claim_evaluator::do_evaluate(const withdraw_permission_claim_evaluator::operation_type& op)
 { try {
    const database& d = db();
 
@@ -74,7 +74,7 @@ void_result withdraw_permission_claim_evaluator::do_evaluate(const withdraw_perm
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_claim_evaluator::do_apply(const withdraw_permission_claim_evaluator::operation_type& op)
+operation_result withdraw_permission_claim_evaluator::do_apply(const withdraw_permission_claim_evaluator::operation_type& op)
 { try {
    database& d = db();
 
@@ -94,7 +94,7 @@ void_result withdraw_permission_claim_evaluator::do_apply(const withdraw_permiss
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_update_evaluator::do_evaluate(const withdraw_permission_update_evaluator::operation_type& op)
+operation_result withdraw_permission_update_evaluator::do_evaluate(const withdraw_permission_update_evaluator::operation_type& op)
 { try {
    database& d = db();
 
@@ -109,7 +109,7 @@ void_result withdraw_permission_update_evaluator::do_evaluate(const withdraw_per
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_update_evaluator::do_apply(const withdraw_permission_update_evaluator::operation_type& op)
+operation_result withdraw_permission_update_evaluator::do_apply(const withdraw_permission_update_evaluator::operation_type& op)
 { try {
    database& d = db();
 
@@ -123,7 +123,7 @@ void_result withdraw_permission_update_evaluator::do_apply(const withdraw_permis
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_delete_evaluator::do_evaluate(const withdraw_permission_delete_evaluator::operation_type& op)
+operation_result withdraw_permission_delete_evaluator::do_evaluate(const withdraw_permission_delete_evaluator::operation_type& op)
 { try {
    database& d = db();
 
@@ -134,7 +134,7 @@ void_result withdraw_permission_delete_evaluator::do_evaluate(const withdraw_per
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result withdraw_permission_delete_evaluator::do_apply(const withdraw_permission_delete_evaluator::operation_type& op)
+operation_result withdraw_permission_delete_evaluator::do_apply(const withdraw_permission_delete_evaluator::operation_type& op)
 { try {
    db().remove(db().get(op.withdrawal_permission));
    return void_result();

@@ -8,7 +8,7 @@
 
 namespace graphene { namespace chain {
 
-void_result subscribe_evaluator::do_evaluate( const operation_type& op )
+operation_result subscribe_evaluator::do_evaluate( const operation_type& op )
 {
    try {
       auto& idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -39,7 +39,7 @@ void_result subscribe_evaluator::do_evaluate( const operation_type& op )
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-graphene::db::object_id_type subscribe_evaluator::do_apply( const operation_type& op )
+operation_result subscribe_evaluator::do_apply( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -50,7 +50,7 @@ graphene::db::object_id_type subscribe_evaluator::do_apply( const operation_type
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
       time_point_sec now = db().head_block_time();
 
-      graphene::db::object_id_type obj_id;
+      operation_result result;
       if (subscription != idx2.end())
       {
          db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
@@ -63,7 +63,7 @@ graphene::db::object_id_type subscribe_evaluator::do_apply( const operation_type
       }
       else
       {
-         obj_id = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
+         result = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
@@ -90,11 +90,11 @@ graphene::db::object_id_type subscribe_evaluator::do_apply( const operation_type
                                                 obj.m_timestamp = d.head_block_time();
                                              });
 
-      return obj_id;
+      return result;
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result subscribe_by_author_evaluator::do_evaluate( const operation_type& op )
+operation_result subscribe_by_author_evaluator::do_evaluate( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -109,7 +109,7 @@ void_result subscribe_by_author_evaluator::do_evaluate( const operation_type& op
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-graphene::db::object_id_type subscribe_by_author_evaluator::do_apply( const operation_type& op )
+operation_result subscribe_by_author_evaluator::do_apply( const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -120,7 +120,7 @@ graphene::db::object_id_type subscribe_by_author_evaluator::do_apply( const oper
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
       time_point_sec now = db().head_block_time();
 
-      graphene::db::object_id_type obj_id;
+      operation_result result;
       if (subscription != idx2.end())
       {
          db().modify<subscription_object>(*subscription, [&subscription_period_in_secs, &now](subscription_object &so)
@@ -133,7 +133,7 @@ graphene::db::object_id_type subscribe_by_author_evaluator::do_apply( const oper
       }
       else
       {
-         obj_id = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
+         result = db().create<subscription_object>([&subscription_period_in_secs, &now, &op](subscription_object &so)
          {
             so.from = op.from;
             so.to = op.to;
@@ -157,11 +157,11 @@ graphene::db::object_id_type subscribe_by_author_evaluator::do_apply( const oper
                                                 obj.m_timestamp = d.head_block_time();
                                              });
 
-      return obj_id;
+      return result;
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const operation_type& op )
+operation_result automatic_renewal_of_subscription_evaluator::do_evaluate(const operation_type& op )
 {
    try {
       auto &idx = db().get_index_type<account_index>().indices().get<graphene::db::by_id>();
@@ -182,7 +182,7 @@ void_result automatic_renewal_of_subscription_evaluator::do_evaluate(const opera
    } FC_CAPTURE_AND_RETHROW( (op) )
 }
 
-void_result automatic_renewal_of_subscription_evaluator::do_apply(const operation_type& op )
+operation_result automatic_renewal_of_subscription_evaluator::do_apply(const operation_type& op )
 {
    try {
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<graphene::db::by_id>();

@@ -31,22 +31,22 @@ namespace graphene { namespace chain {
    class miner_create_evaluator : public evaluator<miner_create_operation, miner_create_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         graphene::db::object_id_type do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
    };
 
    class miner_update_evaluator : public evaluator<miner_update_operation, miner_update_evaluator>
    {
       public:
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
+         operation_result do_evaluate( const operation_type& o );
+         operation_result do_apply( const operation_type& o );
    };
 
    class miner_update_global_parameters_evaluator : public evaluator<miner_update_global_parameters_operation, miner_update_global_parameters_evaluator>
    {
    public:
-      void_result do_evaluate( const operation_type& o );
-      void_result do_apply( const operation_type& o );
+      operation_result do_evaluate( const operation_type& o );
+      operation_result do_apply( const operation_type& o );
    };
 
 } } // graphene::chain

@@ -31,15 +31,15 @@ namespace graphene { namespace chain {
 class vesting_balance_create_evaluator : public evaluator<vesting_balance_create_operation, vesting_balance_create_evaluator>
 {
     public:
-        void_result do_evaluate( const operation_type& op );
-        graphene::db::object_id_type do_apply( const operation_type& op );
+        operation_result do_evaluate( const operation_type& op );
+        operation_result do_apply( const operation_type& op );
 };
 
 class vesting_balance_withdraw_evaluator : public evaluator<vesting_balance_withdraw_operation, vesting_balance_withdraw_evaluator>
 {
     public:
-        void_result do_evaluate( const operation_type& op );
-        void_result do_apply( const operation_type& op );
+        operation_result do_evaluate( const operation_type& op );
+        operation_result do_apply( const operation_type& op );
 };
 
 } } // graphene::chain

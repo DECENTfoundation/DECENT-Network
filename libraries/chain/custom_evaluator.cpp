@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-void_result custom_evaluator::do_evaluate(const operation_type& o)
+operation_result custom_evaluator::do_evaluate(const operation_type& o)
 {
    if (o.id != custom_operation_subtype_messaging)
       return void_result();
@@ -26,10 +26,10 @@ void_result custom_evaluator::do_evaluate(const operation_type& o)
    } FC_CAPTURE_AND_RETHROW((o))
 }
 
-graphene::db::object_id_type custom_evaluator::do_apply(const operation_type& o)
+operation_result custom_evaluator::do_apply(const operation_type& o)
 {
    if (o.id != custom_operation_subtype_messaging)
-      return graphene::db::object_id_type();
+      return void_result();
 
    database &d = db();
    return d.create<message_object>([&o, &d](message_object& obj)
