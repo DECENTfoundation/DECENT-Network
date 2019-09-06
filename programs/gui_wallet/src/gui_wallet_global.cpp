@@ -723,7 +723,8 @@ void Globals::stopDaemons(const boost::filesystem::path &wallet_file)
    if (m_p_wallet_operator)
    {
       if (bConnected) {
-         m_p_wallet_operator->m_wallet_api.exec(&graphene::wallet::wallet_api::save_wallet_file, wallet_file).wait();
+         if(!m_p_wallet_operator->m_wallet_api.exec(&graphene::wallet::wallet_api::is_locked).wait())
+            m_p_wallet_operator->m_wallet_api.exec(&graphene::wallet::wallet_api::save_wallet_file, wallet_file).wait();
       }
       else {
          m_p_wallet_operator->cancel();
