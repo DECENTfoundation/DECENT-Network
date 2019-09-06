@@ -8,32 +8,23 @@ Building DCore
 
 ### Installing prerequisites in Linux
 
-For Ubuntu 18.04 LTS or later, execute in console:
+For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
 
     sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
+    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/$(lsb_release -is | tr "[:upper:]" "[:lower:]") $(lsb_release -cs) libpbc"
     sudo apt-get update
     sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     mkdir ~/dev
 
-For Ubuntu 16.04 LTS, execute in console:
-
-    sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
-    curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc"
-    sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make checkinstall realpath g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev
-    mkdir ~/dev
-
-For Debian 9 or later, execute in console:
-
-    sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
-    curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/debian $(lsb_release -cs) libpbc"
-    sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
-    mkdir ~/dev
+    # Download and build JSON 3.7.0
+    wget -nv https://github.com/nlohmann/json/archive/v3.7.0.tar.gz
+    tar xf v3.7.0.tar.gz
+    cd json-3.7.0
+    cmake .
+    sudo make -j$(nproc) install
+    cd ..
+    rm -rf json-3.7.0 v3.7.0.tar.gz
 
 For Fedora 29 or later, execute in console:
 
@@ -43,7 +34,7 @@ For Fedora 29 or later, execute in console:
     sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
     mkdir ~/dev
 
-> Note for Ubuntu 16.04 LTS and Debian 9, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
+> Note for Debian 9/Ubuntu 16.04 LTS legacy systems, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build Boost 1.65.1
      wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
@@ -67,19 +58,6 @@ For Fedora 29 or later, execute in console:
      export PATH=$CMAKE_ROOT/bin:$PATH
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
-
-> Note for any Ubuntu or Debian, in addition to the commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
-
-    # Download and build JSON 3.6.1
-     wget -nv https://github.com/nlohmann/json/archive/v3.6.1.tar.gz
-     tar xf v3.6.1.tar.gz
-     cd json-3.6.1
-     cmake .
-     sudo make -j$(nproc) install
-     cd ..
-     rm -rf json-3.6.1 v3.6.1.tar.gz
-
-> At this point, CMake configure should find the Boost distribution in the exported `$BOOST_ROOT`.
 
 ### Installing prerequisites in MacOS
 
@@ -118,7 +96,7 @@ Then, start _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
 ### Obtaining the sources
 
-After all the prerequisites are installed, execute in console (change current path to `~/dev` in Linux/MacOS or to `C:\Projects` in Windows):
+After all the prerequisites are installed, execute in console (change current path to `~/dev` in Linux/MacOS or to `\Projects` in Windows):
 
     git clone https://github.com/DECENTfoundation/DECENT-Network.git
     cd DECENT-Network
@@ -186,8 +164,8 @@ Optionally, now press Ctrl-C to stop `decentd`. You can edit configuration in `~
 Then, run the DCore daemon again:
 
     $ /usr/local/bin/decentd
-    
-This will launch the DCore daemon node with the default genesis. 
+
+This will launch the DCore daemon node with the default genesis.
 
 Then, in a separate console, start the command-line wallet by executing:
 
@@ -221,7 +199,7 @@ Seeder plugin is responsible for automatically announce seeder's capablity, down
 2. Add parameters to the DCore daemon
 
         --seeder [account-id] --seeder-private-key [private_wif_key] --content-private-key [el_gamal_private_key] --packages-path [path] --seeding-price [price] --free-space [free-space]
-    
+
     where [account-id] is one of your accounts, [private_wif_key] corresponding active key, [el_gamal_private_key] is the generated El-Gamal key, [path] is a filesystem location with at least [space] Megabytes available, and [price] is publishing price per MB per day, in satoshis.
 
 

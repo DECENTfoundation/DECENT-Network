@@ -41,6 +41,9 @@ matrix:
 
 addons:
   apt:
+    sources:
+      - sourceline: 'deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu xenial libpbc'
+        key_url: 'https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation'
     packages:
       - doxygen
       - qt5-default
@@ -48,6 +51,7 @@ addons:
       - qttools5-dev-tools
       - libcrypto++-dev
       - libcurl4-openssl-dev
+      - libpbc-dev
 
 before_cache:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -63,14 +67,6 @@ before_install:
       brew bundle cleanup --force &&
       brew bundle install --verbose &&
       brew link --force readline;
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -;
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/ubuntu $(lsb_release -cs) libpbc" &&
-      sudo apt-get update &&
-      sudo apt-get install -y libpbc-dev;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install);
