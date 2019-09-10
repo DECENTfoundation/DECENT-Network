@@ -26,46 +26,9 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/asset.hpp>
-#include <fc/io/json.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
-   struct message_payload_receivers_data
-   {
-      message_payload_receivers_data() = default;
-
-      /**
-       * @brief Construct encrypted message
-       * @param msg the message to encrypt
-       * @param priv the private key of sender
-       * @param pub the public key of receiver
-       * @param id the account id of receiver
-       * @param nonce the salt number to use for message encryption (will be generated if zero)
-       */
-      message_payload_receivers_data(const std::string &msg, const private_key_type& priv, const public_key_type& pub, account_id_type id, uint64_t nonce = 0);
-
-      /**
-       * @brief Decrypt message
-       * @param priv the private key of sender/receiver
-       * @param pub the public key of receiver/sender
-       * @return decrypted message
-       */
-      std::string get_message(const private_key_type& priv, const public_key_type& pub) const;
-
-      account_id_type to;
-      public_key_type pub_to;
-      uint64_t nonce = 0;
-      std::vector<char> data;
-   };
-
-   struct message_payload {
-      account_id_type from;
-      public_key_type pub_from;
-
-      std::vector<message_payload_receivers_data> receivers_data;
-   };
-
-   enum custom_operation_subtype : int;
    /**
     * @brief provides a generic way to add higher level protocols on top of miner consensus
     * @ingroup operations
@@ -89,27 +52,9 @@ namespace graphene { namespace chain {
       account_id_type   fee_payer()const { return payer; }
       void              validate()const;
       share_type        calculate_fee(const fee_parameters_type& k)const;
-
-      void get_messaging_payload(message_payload& pl) const
-      {
-         FC_ASSERT(data.size());
-         variant tmp = fc::json::from_string(std::string(data.begin(), data.end()));
-         fc::from_variant(tmp, pl);
-      }
-
-      void set_messaging_payload(const message_payload& pl)
-      {
-         variant tmp;
-         fc::to_variant(pl, tmp);
-         std::string s = fc::json::to_string(tmp);
-         data = std::vector<char>(s.begin(), s.end());
-      }
    };
 
-   
 } } // namespace graphene::chain
 
-FC_REFLECT( graphene::chain::message_payload_receivers_data, (to)(pub_to)(nonce)(data) )
-FC_REFLECT( graphene::chain::message_payload, (from)(pub_from)(receivers_data) )
 FC_REFLECT( graphene::chain::custom_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::custom_operation, (fee)(payer)(required_auths)(id)(data) )

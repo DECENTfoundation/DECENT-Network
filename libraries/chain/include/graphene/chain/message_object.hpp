@@ -31,9 +31,20 @@
 namespace graphene {
    namespace chain {
 
-   class message_object_receivers_data
+   struct message_object_receivers_data
    {
-   public:
+      message_object_receivers_data() = default;
+
+      /**
+       * @brief Construct encrypted message
+       * @param msg the message to encrypt
+       * @param priv the private key of sender
+       * @param pub the public key of receiver
+       * @param id the account id of receiver
+       * @param nonce the salt number to use for message encryption (will be generated if zero)
+       */
+      message_object_receivers_data(const std::string &msg, const private_key_type& priv, const public_key_type& pub, account_id_type id, uint64_t nonce = 0);
+
       /**
        * @brief Decrypt message
        * @param priv the private key of sender/receiver
@@ -74,18 +85,6 @@ namespace graphene {
       std::set<account_id_type> get_key_recipients(const message_object& a)const;
    };
 
-
-   class text_message
-   {
-   public:
-      
-      fc::time_point_sec created;
-      std::string from;
-      std::vector<std::string> to;
-      std::string text;// decrypted text
-
-   };
-
    using namespace boost::multi_index;
 
    struct by_sender;
@@ -119,13 +118,5 @@ FC_REFLECT_DERIVED(
    (sender)
    (sender_pubkey)
    (receivers_data)
-   (text)
-)
-
-FC_REFLECT(
-   graphene::chain::text_message,
-   (created)
-   (from)
-   (to)
    (text)
 )
