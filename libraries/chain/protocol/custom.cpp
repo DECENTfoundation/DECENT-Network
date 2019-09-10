@@ -22,7 +22,6 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/custom.hpp>
-#include <graphene/chain/protocol/memo.hpp>
 
 namespace graphene { namespace chain {
 
@@ -30,43 +29,10 @@ void custom_operation::validate()const
 {
    FC_ASSERT( fee.amount > 0 );
 }
+
 share_type custom_operation::calculate_fee(const fee_parameters_type& k)const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
-}
-
-message_payload_receivers_data::message_payload_receivers_data(const std::string &msg,
-                                                               const private_key_type& priv,
-                                                               const public_key_type& pub,
-                                                               account_id_type id,
-                                                               uint64_t _nonce)
-   : to(id), pub_to(pub)
-{
-   if (!msg.empty())
-   {
-      if( priv != private_key_type() && pub != public_key_type() )
-      {
-         nonce = _nonce == 0 ? memo_data::generate_nonce() : _nonce;
-         data = memo_data::encrypt_message(msg, priv, pub, nonce);
-      }
-      else
-      {
-         std::string text = memo_message(0, msg).serialize();
-         data.insert(data.begin(), text.begin(), text.end());
-      }
-   }
-}
-
-std::string message_payload_receivers_data::get_message(const private_key_type& priv, const public_key_type& pub) const
-{
-   if ( priv != private_key_type() && pub != public_key_type() )
-   {
-      return memo_data::decrypt_message(data, priv, pub, nonce);
-   }
-   else
-   {
-      return memo_message::deserialize(std::string(data.begin(), data.end())).text;
-   }
 }
 
 } }

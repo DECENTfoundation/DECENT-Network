@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/message_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -35,8 +36,19 @@ namespace graphene { namespace chain {
            custom_operation_subtype_messaging
         };
 
+        struct message_payload {
+           account_id_type from;
+           public_key_type pub_from;
+           std::vector<message_object_receivers_data> receivers_data;
+
+           void get_messaging_payload(const custom_operation& o);
+           void set_messaging_payload(custom_operation& o) const;
+        };
+
         operation_result do_evaluate(const operation_type& o);
         operation_result do_apply(const operation_type& o);
    };
 
 } }
+
+FC_REFLECT( graphene::chain::custom_evaluator::message_payload, (from)(pub_from)(receivers_data) )

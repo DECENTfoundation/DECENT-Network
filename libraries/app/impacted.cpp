@@ -144,10 +144,10 @@ struct get_impacted_account_visitor
          _impacted.insert( item );
 
       if (op.id == custom_evaluator::custom_operation_subtype_messaging) {
-         message_payload pl;
-         op.get_messaging_payload(pl);
+         custom_evaluator::message_payload pl;
+         pl.get_messaging_payload(op);
          for (auto& item : pl.receivers_data)
-            _impacted.insert(item.to);
+            _impacted.insert(item.receiver);
       }
    }
 
