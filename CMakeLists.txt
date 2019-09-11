@@ -33,10 +33,6 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 include( cotire )
 
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/contrib/fc/GitVersionGen" )
-include( GetGitRevisionDescription )
-get_git_head_revision( GIT_REFSPEC GIT_SHA2 )
-
 if( MSVC )
     option( USE_PCH "Use precompiled header" ON )
 else()
