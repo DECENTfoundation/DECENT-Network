@@ -64,8 +64,9 @@ BOOST_AUTO_TEST_CASE( messaging )
    std::vector<account_object> to_accounts;
    account_id_type from_id = nathan_id;
 
-   custom_evaluator::message_payload pl;
-   message_object_receivers_data receivers_data_item;
+   message_payload pl;
+
+   message_payload_receivers_data receivers_data_item;
 
    // message for bobian
    pl.receivers_data.emplace_back(text_sent, nathan_private_key, bobian.options.memo_key, bobian_id);
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE( messaging )
 
    pl.from = from_id;
    pl.pub_from = nathan.options.memo_key;
-   pl.set_messaging_payload(cust_op);
+   cust_op.set_messaging_payload(pl);
 
    trx.operations.push_back(cust_op);
 
