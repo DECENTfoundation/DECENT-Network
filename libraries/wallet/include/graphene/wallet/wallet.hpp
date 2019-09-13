@@ -269,13 +269,6 @@ namespace graphene { namespace wallet {
           bool voted;
       };
 
-      struct text_message
-      {
-         fc::time_point_sec created;
-         std::string from;
-         std::vector<std::string> to;
-         std::string text;// decrypted text
-      };
 
       struct balance_change_result_detail : public balance_change_result
       {
@@ -581,8 +574,6 @@ FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphen
                     (allowed_withdraw)(allowed_withdraw_time) )
 
 FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(voted) )
-
-FC_REFLECT( graphene::wallet::text_message, (created)(from)(to)(text) )
 
 FC_REFLECT_DERIVED( graphene::wallet::extended_asset, (graphene::chain::asset),(pretty_amount))
 

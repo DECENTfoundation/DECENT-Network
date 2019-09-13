@@ -3103,7 +3103,8 @@ signed_transaction content_cancellation(const string& author,
          vector<text_message> messages;
 
          for (message_object& obj : objects) {
-            text_message msg;
+            graphene::chain::text_message msg;
+
             msg.created = obj.created;
             account_object account_sender = get_account(obj.sender);
             msg.from = account_sender.name;
@@ -3130,7 +3131,8 @@ signed_transaction content_cancellation(const string& author,
       vector<text_message> messages;
 
       for (message_object& obj : objects) {
-         text_message msg;
+         graphene::chain::text_message msg;
+
          msg.created = obj.created;
          account_object account_sender = get_account(obj.sender);
          msg.from = account_sender.name;
@@ -3161,7 +3163,7 @@ signed_transaction content_cancellation(const string& author,
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
 
-         custom_evaluator::message_payload pl;
+         message_payload pl;
          pl.from = from_id;
          pl.pub_from = from_account.options.memo_key;
 
@@ -3173,7 +3175,7 @@ signed_transaction content_cancellation(const string& author,
          custom_operation cust_op;
          cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-         pl.set_messaging_payload(cust_op);
+         cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
          tx.operations.push_back(cust_op);
@@ -3201,7 +3203,7 @@ signed_transaction content_cancellation(const string& author,
 
          account_object from_account = get_account(from);
          account_id_type from_id = from_account.id;
-         custom_evaluator::message_payload pl;
+         message_payload pl;
          pl.from = from_id;
          pl.pub_from = public_key_type();
 
@@ -3213,7 +3215,7 @@ signed_transaction content_cancellation(const string& author,
          custom_operation cust_op;
          cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
-         pl.set_messaging_payload(cust_op);
+         cust_op.set_messaging_payload(pl);
 
          signed_transaction tx;
          tx.operations.push_back(cust_op);
@@ -3501,15 +3503,15 @@ signed_transaction content_cancellation(const string& author,
    std::string operation_printer::operator()(const custom_operation& op) const
    {
       if (op.id == graphene::chain::custom_evaluator::custom_operation_subtype_messaging) {
-         custom_evaluator::message_payload pl;
-         pl.get_messaging_payload(op);
+         message_payload pl;
+         op.get_messaging_payload(pl);
 
          const auto& from_account = wallet.get_account(pl.from);
          account_object to_account;
          std::string receivers;
 
          for (int i = 0; i < (int)pl.receivers_data.size(); i++) {
-            const auto& to_account = wallet.get_account(pl.receivers_data[i].receiver);
+            const auto& to_account = wallet.get_account(pl.receivers_data[i].to);
             receivers += to_account.name;
             receivers += " ";
          }
@@ -3528,13 +3530,13 @@ signed_transaction content_cancellation(const string& author,
                {
                   try {
 
-                     if (pl.pub_from == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type())
+                     if (pl.pub_from == public_key_type() || receivers_data_item.pub_to == public_key_type())
                      {
                         memo = receivers_data_item.get_message(private_key_type(), public_key_type());
                         break;
                      }
 
-                     auto it = wallet._keys.find(receivers_data_item.receiver_pubkey);
+                     auto it = wallet._keys.find(receivers_data_item.pub_to);
                      if (it != wallet._keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
@@ -3547,7 +3549,7 @@ signed_transaction content_cancellation(const string& author,
                         if (it != wallet._keys.end()) {
                            fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                            if (privkey)
-                              memo = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
+                              memo = receivers_data_item.get_message(*privkey, receivers_data_item.pub_to);
                            else
                               std::cout << "Cannot decrypt message." << std::endl;
                         }
