@@ -7,7 +7,7 @@ namespace graphene { namespace chain {
 
 operation_result custom_evaluator::do_evaluate(const operation_type& o)
 {
-   if (o.id != custom_operation_subtype_messaging)
+   if (o.id != operation_type::custom_operation_subtype_messaging)
       return void_result();
 
    try {
@@ -28,7 +28,7 @@ operation_result custom_evaluator::do_evaluate(const operation_type& o)
 
 operation_result custom_evaluator::do_apply(const operation_type& o)
 {
-   if (o.id != custom_operation_subtype_messaging)
+   if (o.id != operation_type::custom_operation_subtype_messaging)
       return void_result();
 
    database &d = db();

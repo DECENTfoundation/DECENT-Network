@@ -33,8 +33,6 @@
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/miner_object.hpp>
-
-#include <graphene/chain/custom_evaluator.hpp> //added
 #include <graphene/chain/message_object.hpp>
 
 #include <graphene/db/simple_index.hpp>
@@ -75,7 +73,7 @@ BOOST_AUTO_TEST_CASE( messaging )
    pl.receivers_data.emplace_back(text_sent, nathan_private_key, alice.options.memo_key, alice_id);
 
    custom_operation cust_op;
-   cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
+   cust_op.id = graphene::chain::custom_operation::custom_operation_subtype_messaging;
    cust_op.payer = from_id;
 
    pl.from = from_id;

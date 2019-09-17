@@ -28,7 +28,7 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <fc/io/json.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    struct message_payload_receivers_data
    {
@@ -75,9 +75,15 @@ namespace graphene { namespace chain {
     */
    struct custom_operation : public base_operation<false>
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION/1000;
          uint32_t price_per_kbyte = 10;
+      };
+
+      enum subtype : uint16_t
+      {
+         custom_operation_subtype_undefined = 0,
+         custom_operation_subtype_messaging
       };
 
       asset                     fee;
@@ -106,7 +112,6 @@ namespace graphene { namespace chain {
       }
    };
 
-   
 } } // namespace graphene::chain
 
 FC_REFLECT( graphene::chain::message_payload_receivers_data, (to)(pub_to)(nonce)(data) )

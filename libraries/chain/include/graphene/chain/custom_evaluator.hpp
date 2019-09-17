@@ -29,12 +29,6 @@ namespace graphene { namespace chain {
    class custom_evaluator : public evaluator<custom_operation, custom_evaluator>
    {
      public:
-        enum custom_operation_subtype : uint16_t
-        {
-           custom_operation_subtype_undefined = 0,
-           custom_operation_subtype_messaging
-        };
-
         operation_result do_evaluate(const operation_type& o);
         operation_result do_apply(const operation_type& o);
    };

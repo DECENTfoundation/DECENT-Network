@@ -86,7 +86,6 @@
 #include <graphene/wallet/api_documentation.hpp>
 #include <graphene/wallet/reflect_util.hpp>
 #include <graphene/wallet/exceptions.hpp>
-#include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/db/exceptions.hpp>
 
 #include <decent/encrypt/encryptionutils.hpp>
@@ -3173,7 +3172,7 @@ signed_transaction content_cancellation(const string& author,
          }
 
          custom_operation cust_op;
-         cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
+         cust_op.id = graphene::chain::custom_operation::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
          cust_op.set_messaging_payload(pl);
 
@@ -3213,7 +3212,7 @@ signed_transaction content_cancellation(const string& author,
          }
 
          custom_operation cust_op;
-         cust_op.id = graphene::chain::custom_evaluator::custom_operation_subtype_messaging;
+         cust_op.id = graphene::chain::custom_operation::custom_operation_subtype_messaging;
          cust_op.payer = from_id;
          cust_op.set_messaging_payload(pl);
 
@@ -3502,7 +3501,7 @@ signed_transaction content_cancellation(const string& author,
 
    std::string operation_printer::operator()(const custom_operation& op) const
    {
-      if (op.id == graphene::chain::custom_evaluator::custom_operation_subtype_messaging) {
+      if (op.id == graphene::chain::custom_operation::custom_operation_subtype_messaging) {
          message_payload pl;
          op.get_messaging_payload(pl);
 
