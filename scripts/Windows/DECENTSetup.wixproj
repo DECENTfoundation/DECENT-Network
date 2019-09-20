@@ -7,7 +7,7 @@
     <IntermediateOutputPath>$(Configuration)\$(Platform)\obj</IntermediateOutputPath>
     <DCorePath>C:\Projects\DCore</DCorePath>
     <IPFSPath>C:\Projects\IPFS</IPFSPath>
-    <QtPath>C:\Projects\Qt\5.12.4\msvc2017_64</QtPath>
+    <QtPath>C:\Projects\Qt\5.12.5\msvc2017_64</QtPath>
     <MergeModulesPath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules</MergeModulesPath>
     <ProductName>DECENT</ProductName>
     <ProductId>$([System.Guid]::NewGuid())</ProductId>
