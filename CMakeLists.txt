@@ -67,7 +67,7 @@ else() # Apple and Linux
             execute_process( COMMAND "${BREW_PROGRAM}" "--prefix" OUTPUT_VARIABLE HOMEBREW_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE )
             message( STATUS "Homebrew prefix: ${HOMEBREW_PREFIX}")
             list( APPEND CMAKE_PREFIX_PATH
-                  "${HOMEBREW_PREFIX}/opt/openssl"
+                  "${HOMEBREW_PREFIX}/opt/openssl@1.1"
                   "${HOMEBREW_PREFIX}/opt/qt"
                 )
         endif()

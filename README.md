@@ -67,13 +67,11 @@ For Fedora 29 or later, execute in console:
 Then, execute in console:
 
     $ brew update
-    $ brew install automake autoconf libtool cmake boost cryptopp openssl pbc qt readline doxygen git ipfs
+    $ brew install automake autoconf libtool cmake boost cryptopp openssl@1.1 pbc qt readline doxygen git ipfs
     $ brew tap nlohmann/json
     $ brew install nlohmann_json --with-cmake
     $ brew link --force readline
     $ mkdir ~/dev
-
-> Note that, if you want to use OpenSSL 1.1 change the `openssl` argument to `openssl@1.1` in the install command line (see also note in building step).
 
 ### Installing prerequisites in Windows
 
@@ -111,8 +109,6 @@ In order to build and install DCore, execute in console:
     cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ~/dev/DECENT-Network
     cmake --build . --target all -- -j -l 3.0
     cmake --build . --target install
-
-> Note for MacOS, if you want to use OpenSSL 1.1 you have to add `-DCMAKE_PREFIX_PATH=/usr/local/opt/openssl@1.1` to the `cmake` command line during the initial configuration.
 
 > Note that, in case of "Unix Makefiles" CMake generator, the last two commands are equivalent to:
 >
