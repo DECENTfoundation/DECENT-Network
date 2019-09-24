@@ -98,6 +98,7 @@ target_link_libraries(DECENT PRIVATE
                       graphene_account_history
                       graphene_transaction_history
                       decent_seeding
+                      decent_elasticsearch
                       graphene_miner
                       nlohmann_json::nlohmann_json
                       Qt5::Widgets

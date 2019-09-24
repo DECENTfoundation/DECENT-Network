@@ -14,6 +14,7 @@
 #include <graphene/miner/miner.hpp>
 #include <graphene/seeding/seeding.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/elasticsearch/elasticsearch_plugin.hpp>
 #include <graphene/transaction_history/transaction_history_plugin.hpp>
 #include <graphene/utilities/dirhelper.hpp>
 
@@ -167,6 +168,7 @@ namespace gui_wallet
          graphene::miner_plugin::miner_plugin,
          graphene::account_history::account_history_plugin,
          decent::seeding::seeding_plugin,
+         decent::elasticsearch::elasticsearch_plugin,
          graphene::transaction_history::transaction_history_plugin
       >;
 

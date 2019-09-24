@@ -8,6 +8,7 @@ target_link_libraries( decentd PRIVATE
                        graphene_account_history
                        graphene_transaction_history
                        decent_seeding
+                       decent_elasticsearch
                        graphene_miner
                        ${CMAKE_DL_LIBS}
                        ${PLATFORM_SPECIFIC_LIBS}

@@ -17,6 +17,7 @@
 #include <fc/thread/thread.hpp>
 
 #include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/elasticsearch/elasticsearch_plugin.hpp>
 #include <graphene/transaction_history/transaction_history_plugin.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/transaction_detail_object.hpp>
