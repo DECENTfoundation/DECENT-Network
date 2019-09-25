@@ -3035,21 +3035,18 @@ signed_transaction content_cancellation(const string& author,
       return false;
    }
 
-   vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
+   vector<message_data> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count)const
    {
       try {
-         const auto& mapi = _remote_api->messaging();
-         vector<message_object> objects = mapi->get_message_objects(sender, receiver, max_count);
-
-         for (message_object& obj : objects) {
+         vector<message_data> result;
+         for (const auto& obj : _remote_api->messaging()->get_message_objects(sender, receiver, max_count)) {
+            result.emplace_back(obj);
 
             for (const auto& receivers_data_item : obj.receivers_data) {
-
                try {
-
                   if( obj.sender_pubkey == public_key_type() || receivers_data_item.receiver_pubkey == public_key_type() )
                   {
-                     obj.text = receivers_data_item.get_message(private_key_type(), public_key_type());
+                     result.back().text = receivers_data_item.get_message(private_key_type(), public_key_type());
                      break;
                   }
 
@@ -3057,7 +3054,7 @@ signed_transaction content_cancellation(const string& author,
                   if (it != _keys.end()) {
                      fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                      if (privkey)
-                        obj.text = receivers_data_item.get_message(*privkey, obj.sender_pubkey );
+                        result.back().text = receivers_data_item.get_message(*privkey, obj.sender_pubkey );
                      else
                         std::cout << "Cannot decrypt message." << std::endl;
                   }
@@ -3066,7 +3063,7 @@ signed_transaction content_cancellation(const string& author,
                      if (it != _keys.end()) {
                         fc::optional< fc::ecc::private_key > privkey = wif_to_key(it->second);
                         if (privkey)
-                           obj.text = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
+                           result.back().text = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
                         else
                            std::cout << "Cannot decrypt message." << std::endl;
                      }
@@ -3074,7 +3071,6 @@ signed_transaction content_cancellation(const string& author,
                         std::cout << "Cannot decrypt message." << std::endl;
                      }
                   }
-
                }
                catch (fc::exception& e)
                {
@@ -3086,7 +3082,7 @@ signed_transaction content_cancellation(const string& author,
                }
             }
          }
-         return objects;
+         return result;
       } FC_CAPTURE_AND_RETHROW((sender)(receiver))
    }
 
@@ -3098,16 +3094,14 @@ signed_transaction content_cancellation(const string& author,
             return vector<text_message>();
 
          optional<account_id_type> sender_id;
-         vector<message_object> objects = get_message_objects(sender_id, optional<account_id_type>(receiver_id), max_count);
          vector<text_message> messages;
 
-         for (message_object& obj : objects) {
-            graphene::chain::text_message msg;
-
+         for (const auto& obj : get_message_objects(sender_id, optional<account_id_type>(receiver_id), max_count)) {
+            text_message msg;
             msg.created = obj.created;
             account_object account_sender = get_account(obj.sender);
             msg.from = account_sender.name;
-            for (message_object_receivers_data& item : obj.receivers_data)
+            for (const auto& item : obj.receivers_data)
             {
                msg.to.push_back(get_account(item.receiver).name);
             }
@@ -3126,16 +3120,15 @@ signed_transaction content_cancellation(const string& author,
          return vector<text_message>();
 
       optional<account_id_type> receiver_id;
-      vector<message_object> objects = get_message_objects(optional<account_id_type>(sender_id), receiver_id, max_count);
       vector<text_message> messages;
 
-      for (message_object& obj : objects) {
-         graphene::chain::text_message msg;
+      for (const auto& obj : get_message_objects(optional<account_id_type>(sender_id), receiver_id, max_count)) {
+         text_message msg;
 
          msg.created = obj.created;
          account_object account_sender = get_account(obj.sender);
          msg.from = account_sender.name;
-         for (message_object_receivers_data& item : obj.receivers_data)
+         for (const auto& item : obj.receivers_data)
          {
             msg.to.push_back(get_account(item.receiver).name);
          }

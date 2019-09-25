@@ -19,7 +19,7 @@ signed_transaction_info wallet_api::send_unencrypted_message(const std::string& 
    return my->send_unencrypted_message(from, to, text, broadcast);
 }
 
-vector<message_object> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const
+vector<message_data> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");

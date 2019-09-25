@@ -27,7 +27,6 @@
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
-
 namespace graphene {
    namespace chain {
 
@@ -56,8 +55,6 @@ namespace graphene {
       public_key_type sender_pubkey;
 
       std::vector<message_object_receivers_data> receivers_data;
-      
-      std::string text;// decrypted text
    };
 
    class message_receiver_index : public graphene::db::secondary_index
@@ -69,33 +66,15 @@ namespace graphene {
       virtual void object_modified(const graphene::db::object& after) override;
 
       std::map< account_id_type, std::set<graphene::db::object_id_type> > message_to_receiver_memberships;
-
-   protected:
-      std::set<account_id_type> get_key_recipients(const message_object& a)const;
-   };
-
-
-   class text_message
-   {
-   public:
-      
-      fc::time_point_sec created;
-      std::string from;
-      std::vector<std::string> to;
-      std::string text;// decrypted text
-
    };
 
    using namespace boost::multi_index;
 
    struct by_sender;
-   struct by_receiver;
-   struct by_created;
    typedef multi_index_container<
       message_object,
       indexed_by<
       graphene::db::object_id_index,
-      ordered_non_unique< tag<by_created>, member< message_object, time_point_sec, &message_object::created > >,
       ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >
       >
    > message_multi_index_type;
@@ -119,13 +98,4 @@ FC_REFLECT_DERIVED(
    (sender)
    (sender_pubkey)
    (receivers_data)
-   (text)
-)
-
-FC_REFLECT(
-   graphene::chain::text_message,
-   (created)
-   (from)
-   (to)
-   (text)
 )
