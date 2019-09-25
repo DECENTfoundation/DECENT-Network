@@ -287,6 +287,21 @@ struct signed_transaction_info : public signed_transaction
    transaction_id_type transaction_id;
 };
 
+struct message_data : public message_object
+{
+   message_data() = default;
+   message_data(const message_object& obj) : message_object(obj) {}
+   std::string text;
+};
+
+struct text_message
+{
+   fc::time_point_sec created;
+   std::string from;
+   std::vector<std::string> to;
+   std::string text;
+};
+
       namespace detail {
          class wallet_api_impl;
       }
@@ -2126,7 +2141,7 @@ public:
     * @return a vector of message objects
     * @ingroup WalletAPI_Messaging
     */
-   std::vector<message_object> get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const;
+   std::vector<message_data> get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const;
 
    /**
     * @brief Receives messages by receiver.
@@ -2405,6 +2420,10 @@ FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(vo
 FC_REFLECT_DERIVED( graphene::wallet::extended_asset, (graphene::chain::asset),(pretty_amount))
 
 FC_REFLECT_DERIVED( graphene::wallet::signed_transaction_info,(graphene::chain::signed_transaction),(transaction_id))
+
+FC_REFLECT_DERIVED( graphene::wallet::message_data,(graphene::chain::message_object),(text))
+
+FC_REFLECT( graphene::wallet::text_message, (created)(from)(to)(text) )
 
 FC_API( graphene::wallet::wallet_api,
         //General
