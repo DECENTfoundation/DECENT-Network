@@ -56,9 +56,25 @@ namespace graphene { namespace chain {
        */
       virtual void pay_fee();
 
-      database& db()const;
+      database& db() const { return trx_state->db(); }
 
-      //void check_required_authorities(const operation& op);
+      static void track_account(account_id_type account) { tracked_accounts.insert(account); }
+      static bool is_account_tracked(account_id_type account) { return tracked_accounts.empty() || tracked_accounts.find(account) != tracked_accounts.end(); }
+
+      template<typename Iterator>
+      static std::vector<account_id_type> tracked_accounts_intersection(Iterator beg, Iterator end)
+      {
+         if(tracked_accounts.empty())
+            return std::vector<account_id_type>(beg, end);
+
+         std::vector<account_id_type> result;
+         std::set_intersection( beg, end, tracked_accounts.begin(), tracked_accounts.end(), std::back_inserter(result));
+         return result;
+      }
+
+   private:
+      static fc::flat_set<account_id_type> tracked_accounts;
+
    protected:
       /**
        * @brief Fetch objects relevant to fee payer and set pointer members
@@ -88,7 +104,7 @@ namespace graphene { namespace chain {
 
       graphene::db::object_id_type get_relative_id( graphene::db::object_id_type rel_id ) const;
 
-      // the next two functions are helpers that allow template functions declared in this 
+      // the next two functions are helpers that allow template functions declared in this
       // header to call db() without including database.hpp, which would
       // cause a circular dependency
       share_type calculate_fee_for_operation(const operation& op) const;

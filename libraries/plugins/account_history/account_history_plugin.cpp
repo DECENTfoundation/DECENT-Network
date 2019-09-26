@@ -47,7 +47,6 @@ struct account_history_plugin::impl
       }
 
       account_history_plugin& _self;
-      fc::flat_set<graphene::chain::account_id_type> _tracked_accounts;
 };
 
 void account_history_plugin::impl::update_account_histories( const graphene::chain::signed_block& b )
@@ -102,47 +101,20 @@ void account_history_plugin::impl::update_account_histories( const graphene::cha
             impacted.insert( item.first );
 
       // for each operation this account applies to that is in the config link it into the history
-      if( _tracked_accounts.empty() )
+      for( const auto& account_id : graphene::chain::generic_evaluator::tracked_accounts_intersection(impacted.begin(), impacted.end()) )
       {
-         for( auto& account_id : impacted )
-         {
-            // we don't do index_account_keys here anymore, because
-            // that indexing now happens in observers' post_evaluate()
-
-            // add history
-            const auto& stats_obj = account_id(db).statistics(db);
-            const auto& ath = db.create<graphene::chain::account_transaction_history_object>( [&]( graphene::chain::account_transaction_history_object& obj ){
-                obj.operation_id = oho.id;
-                obj.account = account_id;
-                obj.sequence = stats_obj.total_ops+1;
-                obj.next = stats_obj.most_recent_op;
-            });
-            db.modify( stats_obj, [&]( graphene::chain::account_statistics_object& obj ){
-                obj.most_recent_op = ath.id;
-                obj.total_ops = ath.sequence;
-            });
-         }
-      }
-      else
-      {
-         for( auto account_id : _tracked_accounts )
-         {
-            if( impacted.find( account_id ) != impacted.end() )
-            {
-               // add history
-               const auto& stats_obj = account_id(db).statistics(db);
-               const auto& ath = db.create<graphene::chain::account_transaction_history_object>( [&]( graphene::chain::account_transaction_history_object& obj ){
-                  obj.operation_id = oho.id;
-                  obj.account = account_id;
-                  obj.sequence = stats_obj.total_ops+1;
-                  obj.next = stats_obj.most_recent_op;
-               });
-               db.modify( stats_obj, [&]( graphene::chain::account_statistics_object& obj ){
-                   obj.most_recent_op = ath.id;
-                   obj.total_ops = ath.sequence;
-               });
-            }
-         }
+         // add history
+         const auto& stats_obj = account_id(db).statistics(db);
+         const auto& ath = db.create<graphene::chain::account_transaction_history_object>( [&]( graphene::chain::account_transaction_history_object& obj ){
+               obj.operation_id = oho.id;
+               obj.account = account_id;
+               obj.sequence = stats_obj.total_ops+1;
+               obj.next = stats_obj.most_recent_op;
+         });
+         db.modify( stats_obj, [&]( graphene::chain::account_statistics_object& obj ){
+               obj.most_recent_op = ath.id;
+               obj.total_ops = ath.sequence;
+         });
       }
    }
 }
@@ -166,26 +138,11 @@ void account_history_plugin::plugin_set_program_options(
    boost::program_options::options_description& cfg
    )
 {
-   cli.add_options()
-         ("track-account", boost::program_options::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
-         ;
-   cfg.add(cli);
 }
 
 void account_history_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
    database().applied_block.connect( [&]( const graphene::chain::signed_block& b){ my->update_account_histories(b); } );
-
-   if (options.count("track-account")) {
-      const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
-      std::for_each(ops.begin(), ops.end(), [this](const std::string &acc) {
-         try {
-            graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
-            FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
-            my->_tracked_accounts.insert(account);
-         } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: track-account = ${a}", ("a", acc));
-      });
-   }
 }
 
 } }

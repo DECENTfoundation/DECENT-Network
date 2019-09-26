@@ -1096,6 +1096,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")
+         ("track-account", bpo::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
          ;
 
    bpo::options_description common_options("Common options");
@@ -1156,6 +1157,17 @@ void application::initialize(const boost::filesystem::path& data_dir, const boos
       fc::json::save_to_file(genesis_state, genesis_out);
 
       std::exit(EXIT_SUCCESS);
+   }
+
+   if(options.count("track-account")) {
+      const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
+      std::for_each(ops.begin(), ops.end(), [](const std::string &acc) {
+         try {
+            graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
+            FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
+            graphene::chain::generic_evaluator::track_account(account);
+         } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: track-account = ${a}", ("a", acc));
+      });
    }
 }
 
