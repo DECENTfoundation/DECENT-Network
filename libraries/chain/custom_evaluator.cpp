@@ -31,11 +31,14 @@ operation_result custom_evaluator::do_apply(const operation_type& o)
    if (o.id != operation_type::custom_operation_subtype_messaging)
       return void_result();
 
+   message_payload pl;
+   o.get_messaging_payload(pl);
+   if(!is_account_tracked(pl.from) && std::all_of(pl.receivers_data.begin(), pl.receivers_data.end(), [](const auto& data) { return !is_account_tracked(data.to); } ))
+      return void_result();
+
    database &d = db();
-   return d.create<message_object>([&o, &d](message_object& obj)
+   return d.create<message_object>([&](message_object& obj)
    {
-      message_payload pl;
-      o.get_messaging_payload(pl);
       obj.created = d.head_block_time();
       obj.sender_pubkey = pl.pub_from;
       obj.sender = pl.from;
