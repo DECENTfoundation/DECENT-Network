@@ -45,7 +45,6 @@ namespace graphene { namespace transaction_history {
       }
 
       transaction_history_plugin& _self;
-      fc::flat_set<graphene::chain::account_id_type> _tracked_accounts;
    };
 
    void transaction_history_plugin::impl::update_transaction_id_history(const graphene::chain::signed_block& b)
@@ -57,7 +56,6 @@ namespace graphene { namespace transaction_history {
       {
          fc::flat_set<graphene::chain::account_id_type> impacted;
          std::vector<graphene::chain::authority> other;
-         std::vector<graphene::chain::account_id_type> common_data;
 
          for( const auto& op : tx.operations )
          {
@@ -68,26 +66,13 @@ namespace graphene { namespace transaction_history {
                   impacted.insert( item.first );
          }
 
-         if( _tracked_accounts.empty() )
+         if( std::any_of(impacted.begin(), impacted.end(), graphene::chain::generic_evaluator::is_account_tracked) )
          {
             db.create<graphene::chain::transaction_history_object>( [&]( graphene::chain::transaction_history_object& obj ){
                obj.tx_id = tx.id();
                obj.block_num = b.block_num();
                obj.trx_in_block = tx_num;
             });
-         }
-         else
-         {
-            std::set_intersection( impacted.begin(), impacted.end(),
-               _tracked_accounts.begin(), _tracked_accounts.end(), std::back_inserter( common_data));
-            if( !common_data.empty() )
-            {
-               db.create<graphene::chain::transaction_history_object>( [&]( graphene::chain::transaction_history_object& obj ){
-                  obj.tx_id = tx.id();
-                  obj.block_num = b.block_num();
-                  obj.trx_in_block = tx_num;
-               });
-            }
          }
 
          tx_num++;
@@ -124,16 +109,6 @@ void transaction_history_plugin::plugin_initialize(const boost::program_options:
    if( options.at("transaction-id-history").as<bool>() )
    {
       database().applied_block.connect( [&](const graphene::chain::signed_block& b){ my->update_transaction_id_history(b); } );
-      if (options.count("track-account")) {
-         const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
-         std::for_each(ops.begin(), ops.end(), [this](const std::string &acc) {
-            try {
-               graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
-               FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
-               my->_tracked_accounts.insert(account);
-            } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: track-account = ${a}", ("a", acc));
-         });
-      }
       dlog( "tracking of transaction IDs is enabled" );
    }
    else
