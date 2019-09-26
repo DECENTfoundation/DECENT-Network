@@ -7,7 +7,6 @@
 #include <graphene/chain/buying_object.hpp>
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
-#include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/seeding_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
@@ -117,7 +116,7 @@ struct seeding_plugin_impl /*: public package_transfer_interface::transfer_liste
     * @param op_obj The operation wrapper
     * @param sync_mode
     */
-   void handle_commited_operation(const graphene::chain::operation_history_object &op_obj, bool sync_mode);
+   void handle_commited_operation(const graphene::chain::operation &op, bool sync_mode);
 
    /**
     * Restarts all downloads and seeding upon application start
@@ -294,23 +293,21 @@ void seeding_plugin_impl::handle_request_to_buy(const graphene::chain::request_t
    service_thread->async([this, tx]() { _self.app().p2p_node()->broadcast_transaction(tx); });
 }
 
-void seeding_plugin_impl::handle_commited_operation(const graphene::chain::operation_history_object &op_obj, bool sync_mode)
+void seeding_plugin_impl::handle_commited_operation(const graphene::chain::operation &op, bool sync_mode)
 {
-   if( op_obj.op.which() == graphene::chain::operation::tag<graphene::chain::request_to_buy_operation>::value ) {
+   if( op.which() == graphene::chain::operation::tag<graphene::chain::request_to_buy_operation>::value ) {
       if( sync_mode ) {
          dlog("seeding_plugin_impl::handle_commited_operation exiting, not producing yet");
          return;
       }
       dlog("seeding plugin:  handle_commited_operation() handling request_to_buy");
-      const graphene::chain::request_to_buy_operation &rtb_op = op_obj.op.get<graphene::chain::request_to_buy_operation>();
-      handle_request_to_buy(rtb_op);
+      handle_request_to_buy(op.get<graphene::chain::request_to_buy_operation>());
    }
 
-   if( op_obj.op.which() == graphene::chain::operation::tag<graphene::chain::content_submit_operation>::value ) {
+   if( op.which() == graphene::chain::operation::tag<graphene::chain::content_submit_operation>::value ) {
       dlog("seeding plugin:  handle_commited_operation() handling content_submit");
       //in case of content submit we don't really care if the sync has been finished or not...
-      const graphene::chain::content_submit_operation &cs_op = op_obj.op.get<graphene::chain::content_submit_operation>();
-      handle_content_submit(cs_op);
+      handle_content_submit(op.get<graphene::chain::content_submit_operation>());
    }
 }
 
@@ -762,9 +759,8 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
    my->service_thread = std::make_shared<fc::thread>("seeding");
    my->main_thread = &fc::thread::current();
 
-   database().on_new_commited_operation.connect( [&]( const graphene::chain::operation_history_object& b ){ my->handle_commited_operation( b, false ); } );
-   database().on_new_commited_operation_during_sync.connect( [&]( const graphene::chain::operation_history_object& b ){
-      my->handle_commited_operation(b, true); } );
+   database().on_new_commited_operation.connect( [&]( const graphene::chain::operation& op, uint32_t block_num ){ my->handle_commited_operation( op, false ); } );
+   database().on_new_commited_operation_during_sync.connect( [&]( const graphene::chain::operation& op, uint32_t block_num ){ my->handle_commited_operation(op, true); } );
 
 }FC_LOG_AND_RETHROW() }
 

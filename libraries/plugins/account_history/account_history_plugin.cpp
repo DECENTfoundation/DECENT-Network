@@ -52,35 +52,18 @@ struct account_history_plugin::impl
 void account_history_plugin::impl::update_account_histories( const graphene::chain::signed_block& b )
 {
    graphene::chain::database& db = database();
-   for( const fc::optional<graphene::chain::operation_history_object>& o_op : db.get_applied_operations() )
+   for( const auto& o_op : db.get_applied_operations() )
    {
-      const auto& oho = db.create<graphene::chain::operation_history_object>([&](graphene::chain::operation_history_object &h) {
-                  if (o_op.valid())
-                  {
-                     h.op           = o_op->op;
-                     h.result       = o_op->result;
-                     h.block_num    = o_op->block_num;
-                     h.trx_in_block = o_op->trx_in_block;
-                     h.op_in_trx    = o_op->op_in_trx;
-                     h.virtual_op   = o_op->virtual_op;
-                  }
-               });
-
-      if( !o_op.valid() ) {
-         db.remove(oho);
-         continue;
-      }
-
       // get the set of accounts this operation applies to
       fc::flat_set<graphene::chain::account_id_type> impacted;
       std::vector<graphene::chain::authority> other;
-      operation_get_required_authorities( oho.op, impacted, impacted, other );
+      operation_get_required_authorities( o_op.op, impacted, impacted, other );
 
-      if( oho.op.which() == graphene::chain::operation::tag<graphene::chain::account_create_operation>::value )
-         impacted.insert( oho.result.get<graphene::db::object_id_type>() );
-      else if (oho.op.which() == graphene::chain::operation::tag<graphene::chain::transfer_operation>::value ) {
+      if( o_op.op.which() == graphene::chain::operation::tag<graphene::chain::account_create_operation>::value )
+         impacted.insert( o_op.result.get<graphene::db::object_id_type>() );
+      else if (o_op.op.which() == graphene::chain::operation::tag<graphene::chain::transfer_operation>::value ) {
 
-         const graphene::chain::transfer_operation& tr2o = oho.op.get<graphene::chain::transfer_operation>();
+         const graphene::chain::transfer_operation& tr2o = o_op.op.get<graphene::chain::transfer_operation>();
          if( tr2o.to.is<graphene::chain::account_id_type>() ) {
             impacted.insert( tr2o.from );
             impacted.insert( tr2o.to.as<graphene::chain::account_id_type>() );
@@ -94,14 +77,27 @@ void account_history_plugin::impl::update_account_histories( const graphene::cha
          }
       }
       else
-         graphene::app::operation_get_impacted_accounts( oho.op, impacted );
+         graphene::app::operation_get_impacted_accounts( o_op.op, impacted );
 
       for( auto& a : other )
          for( auto& item : a.account_auths )
             impacted.insert( item.first );
 
+      auto accounts = graphene::chain::generic_evaluator::tracked_accounts_intersection(impacted.begin(), impacted.end());
+      if(accounts.empty())
+         return;
+
+      const auto& oho = db.create<graphene::chain::operation_history_object>([&](graphene::chain::operation_history_object &h) {
+         h.op           = o_op.op;
+         h.result       = o_op.result;
+         h.block_num    = o_op.block_num;
+         h.trx_in_block = o_op.trx_in_block;
+         h.op_in_trx    = o_op.op_in_trx;
+         h.virtual_op   = o_op.virtual_op;
+      });
+
       // for each operation this account applies to that is in the config link it into the history
-      for( const auto& account_id : graphene::chain::generic_evaluator::tracked_accounts_intersection(impacted.begin(), impacted.end()) )
+      for( const auto& account_id : accounts )
       {
          // add history
          const auto& stats_obj = account_id(db).statistics(db);

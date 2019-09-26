@@ -183,16 +183,29 @@ namespace graphene { namespace chain {
           */
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
-         const vector<optional< operation_history_object > >& get_applied_operations()const;
 
+         struct operation_info {
+            uint32_t  block_num    = 0;
+            uint16_t  trx_in_block = 0;
+            uint16_t  op_in_trx    = 0;
+            uint16_t  virtual_op   = 0;
+         };
+
+         struct applied_operation : public operation_info {
+            applied_operation() = default;
+            applied_operation(const operation_info& info, const operation& o) : operation_info(info), op(o) {}
+            operation op;
+            operation_result result;
+         };
+
+         const vector<applied_operation>& get_applied_operations() const { return _applied_ops; }
          string to_pretty_string( const asset& a )const;
 
          /**
           * This signal is emitted for plugins to process every operation
           */
-         boost::signals2::signal<void(const operation_history_object&)> on_applied_operation;
-         boost::signals2::signal<void(const operation_history_object&)> on_new_commited_operation;
-         boost::signals2::signal<void(const operation_history_object&)> on_new_commited_operation_during_sync;
+         boost::signals2::signal<void(const operation&, uint32_t block_num)> on_new_commited_operation;
+         boost::signals2::signal<void(const operation&, uint32_t block_num)> on_new_commited_operation_during_sync;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -498,12 +511,8 @@ namespace graphene { namespace chain {
           * order they occur and is cleared after the applied_block signal is
           * emited.
           */
-         vector<optional<operation_history_object> >  _applied_ops;
-
-         uint32_t                          _current_block_num    = 0;
-         uint16_t                          _current_trx_in_block = 0;
-         uint16_t                          _current_op_in_trx    = 0;
-         uint16_t                          _current_virtual_op   = 0;
+         vector<applied_operation> _applied_ops;
+         operation_info            _current_op_info;
 
          vector<uint64_t>                  _vote_tally_buffer;
          vector<uint64_t>                  _miner_count_histogram_buffer;

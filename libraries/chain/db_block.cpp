@@ -30,7 +30,6 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/block_summary_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
-#include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/miner_object.hpp>
@@ -227,16 +226,13 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
    }
    auto session = _undo_db.start_undo_session();
    try {
-
+      uint32_t block_num = new_block.block_num();
       for( const auto &trx : new_block.transactions ) {
          for( const auto &op : trx.operations ) {
-            operation_history_object oh(op);
-            oh.block_num = new_block.block_num();
-            oh.op = op;
             if(sync_mode)
-               on_new_commited_operation_during_sync(oh);
+               on_new_commited_operation_during_sync(op, block_num);
             else
-               on_new_commited_operation(oh);
+               on_new_commited_operation(op, block_num);
          }
       }
       session.merge();
@@ -479,31 +475,13 @@ void database::clear_pending()
 
 uint32_t database::push_applied_operation( const operation& op )
 {
-   _applied_ops.emplace_back(op);
-   operation_history_object& oh = *(_applied_ops.back());
-   oh.block_num    = _current_block_num;
-   oh.trx_in_block = _current_trx_in_block;
-   oh.op_in_trx    = _current_op_in_trx;
-   oh.virtual_op   = _current_virtual_op++;
-   oh.op = op;
-//   elog("calling registered callbacks for operation ${o}", ("o",oh));
-   on_applied_operation (oh);
+   _applied_ops.emplace_back(_current_op_info, op);
    return static_cast<uint32_t>(_applied_ops.size() - 1);
 }
 void database::set_applied_operation_result( uint32_t op_id, const operation_result& result )
 {
    assert( op_id < _applied_ops.size() );
-   if( _applied_ops[op_id] )
-      _applied_ops[op_id]->result = result;
-   else
-   {
-      elog( "Could not set operation result (head_block_num=${b})", ("b", head_block_num()) );
-   }
-}
-
-const vector<optional< operation_history_object > >& database::get_applied_operations() const
-{
-   return _applied_ops;
+   _applied_ops[op_id].result = result;
 }
 
 //////////////////// private methods ////////////////////
@@ -541,8 +519,8 @@ void database::_apply_block( const signed_block& next_block )
    const auto& dynamic_global_props = get<dynamic_global_property_object>(dynamic_global_property_id_type());
    bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp)  ;
 
-   _current_block_num    = next_block_num;
-   _current_trx_in_block = 0;
+   _current_op_info.block_num    = next_block_num;
+   _current_op_info.trx_in_block = 0;
 
    for( const auto& trx : next_block.transactions )
    {
@@ -553,7 +531,7 @@ void database::_apply_block( const signed_block& next_block )
        * when building a block.
        */
       apply_transaction( trx, skip | skip_transaction_signatures );
-      ++_current_trx_in_block;
+      ++_current_op_info.trx_in_block;
    }
 
    update_global_dynamic_data(next_block);
@@ -582,7 +560,7 @@ void database::_apply_block( const signed_block& next_block )
    applied_block( next_block ); //emit
 
    MONITORING_COUNTER_VALUE(blocks_applied)++;
-   MONITORING_COUNTER_VALUE(transactions_in_applied_blocks) += _current_trx_in_block;
+   MONITORING_COUNTER_VALUE(transactions_in_applied_blocks) += _current_op_info.trx_in_block;
 
    _applied_ops.clear();
 
@@ -668,11 +646,11 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
 
    //Finally process the operations
    processed_transaction ptrx(trx);
-   _current_op_in_trx = 0;
+   _current_op_info.op_in_trx = 0;
    for( const auto& op : ptrx.operations )
    {
       eval_state.operation_results.emplace_back(apply_operation(eval_state, op));
-      ++_current_op_in_trx;
+      ++_current_op_info.op_in_trx;
    }
    ptrx.operation_results = std::move(eval_state.operation_results);
 
@@ -707,7 +685,7 @@ const miner_object& database::validate_block_header( uint32_t skip, const signed
    FC_ASSERT( head_block_time() < next_block.timestamp, "", ("head_block_time",head_block_time())("next",next_block.timestamp)("blocknum",next_block.block_num()) );
    const miner_object& miner = next_block.miner(*this);
 
-   if( !(skip&skip_miner_signature) ) 
+   if( !(skip&skip_miner_signature) )
       FC_ASSERT( next_block.validate_signee( miner.signing_key ) );
 
    if( !(skip&skip_miner_schedule_check) )

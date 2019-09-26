@@ -47,9 +47,6 @@ namespace graphene { namespace chain {
    class operation_history_object : public graphene::db::abstract_object<protocol_ids, operation_history_object_type, operation_history_object>
    {
       public:
-         operation_history_object( const operation& o ):op(o){}
-         operation_history_object(){}
-
          operation         op;
          operation_result  result;
          /** the block that caused this operation */
@@ -79,7 +76,7 @@ namespace graphene { namespace chain {
     *  will help the operating system better manage / cache / page files and
     *  also accelerates load time.
     *
-    *  When the transaction history for a particular account is requested the
+    *  When the transaction history for a particular accou  nt is requested the
     *  linked list can be traversed with relatively effecient disk access because
     *  of the use of a memory mapped stack.
     */
@@ -94,7 +91,9 @@ namespace graphene { namespace chain {
          //std::pair<account_id_type,operation_history_id_type>  account_op()const  { return std::tie( account, operation_id ); }
          //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
-   
+
+using namespace boost::multi_index;
+
 struct by_seq;
 struct by_op;
 typedef multi_index_container<
