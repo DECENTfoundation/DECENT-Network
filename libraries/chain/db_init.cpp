@@ -61,25 +61,9 @@
 #include <graphene/chain/subscription_evaluator.hpp>
 #include <graphene/chain/non_fungible_token_evaluator.hpp>
 
-#include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/db/simple_index.hpp>
 
-#include <fc/smart_ref_impl.hpp>
-#include <fc/uint128.hpp>
-#include <fc/crypto/digest.hpp>
-
-#include <boost/algorithm/string.hpp>
-
 namespace graphene { namespace chain {
-
-// C++ requires that static class variables declared and initialized
-// in headers must also have a definition in a single source file,
-// else linker errors will occur [1].
-//
-// The purpose of this source file is to collect such definitions in
-// a single place.
-//
-// [1] http://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
 
 void database::initialize_evaluators()
 {
