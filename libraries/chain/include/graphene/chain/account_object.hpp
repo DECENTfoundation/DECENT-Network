@@ -28,7 +28,6 @@
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
-   class database;
 
    /**
     * @class account_statistics_object
@@ -42,7 +41,17 @@ namespace graphene { namespace chain {
    class account_statistics_object : public graphene::db::abstract_object<implementation_ids, impl_account_statistics_object_type, account_statistics_object>
    {
       public:
-         account_id_type  owner;
+         account_id_type owner;
+
+         /**
+          * The most recent calculated voting stake.
+          */
+         uint64_t voting_stake = 0;
+
+         /**
+          * The most recent votes cast.
+          */
+         flat_set<vote_id_type> votes;
 
          /**
           * Keep the most recent operation as a root pointer to a linked list of the transaction history.
@@ -56,7 +65,6 @@ namespace graphene { namespace chain {
           * total here and update it every time an order is created or modified.
           */
          share_type total_core_in_orders;
-
 
          /**
           * Tracks the fees paid by this account which have not been disseminated to the various parties that receive
@@ -91,7 +99,6 @@ namespace graphene { namespace chain {
          asset get_balance()const { return asset(balance, asset_type); }
          void  adjust_balance(const asset& delta);
    };
-
 
    /**
     * @brief This class represents an account on the object graph
@@ -148,7 +155,6 @@ namespace graphene { namespace chain {
             return db.get(*cashback_vb);
          }
          bool is_publishing_manager() const { return rights_to_publish.is_publishing_manager; }
-
    };
 
    /**
@@ -168,12 +174,10 @@ namespace graphene { namespace chain {
          map< account_id_type, set<account_id_type> > account_to_account_memberships;
          map< public_key_type, set<account_id_type> > account_to_key_memberships;
          /** some accounts use address authorities in the genesis block */
-         
 
       protected:
          set<account_id_type>  get_account_members( const account_object& a )const;
          set<public_key_type>  get_key_members( const account_object& a )const;
-   
 
          set<account_id_type>  before_account_members;
          set<public_key_type>  before_key_members;
@@ -217,7 +221,6 @@ namespace graphene { namespace chain {
     * @ingroup object_index
     */
    typedef graphene::db::generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
-
 
    struct by_name;
    struct by_publishing_manager_and_name;
@@ -281,6 +284,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (graphene::db::object),
                     (owner)
+                    (voting_stake)
+                    (votes)
                     (most_recent_op)
                     (total_ops)
                     (total_core_in_orders)

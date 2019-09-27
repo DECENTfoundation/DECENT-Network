@@ -418,6 +418,8 @@ namespace graphene { namespace chain {
          };
          vector<votes_gained> get_actual_votes() const;
 
+         uint64_t get_voting_stake(const account_object& acct) const;
+
          /**
           *  This method validates transactions without adding it to the pending state.
           *  @return true if the transaction would validate
@@ -446,7 +448,7 @@ namespace graphene { namespace chain {
          vector< unique_ptr<op_evaluator> >     _operation_evaluators;
 
          template<class Index>
-         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects()const;
+         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(const vector<uint64_t> &vote_tally_buffer) const;
 
          //////////////////// db_block.cpp ////////////////////
 
@@ -483,11 +485,7 @@ namespace graphene { namespace chain {
          //////////////////// db_maint.cpp ////////////////////
 
          void process_budget();
-         void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
-         void update_active_miners();
-
-         template<class... Types>
-         void perform_account_maintenance(std::tuple<Types...> helpers);
+         void perform_chain_maintenance(const signed_block& next_block);
          ///@}
          ///@}
 
@@ -513,10 +511,6 @@ namespace graphene { namespace chain {
           */
          vector<applied_operation> _applied_ops;
          operation_info            _current_op_info;
-
-         vector<uint64_t>                  _vote_tally_buffer;
-         vector<uint64_t>                  _miner_count_histogram_buffer;
-         uint64_t                          _total_voting_stake;
 
          flat_map<uint32_t,block_id_type>  _checkpoints;
 

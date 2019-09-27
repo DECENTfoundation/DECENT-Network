@@ -438,16 +438,13 @@ real_supply database::get_real_supply()const
 vector<database::votes_gained> database::get_actual_votes() const
 {
    vector<uint64_t> vote_tally_buffer;
-   vector<database::votes_gained> res;
+   vector<votes_gained> res;
    const auto& props = get_global_properties();
    vote_tally_buffer.resize(props.next_available_vote_id);
    const auto& aidx = get_index_type<account_index>().indices().get<graphene::db::by_id>();
    for( const auto& a : aidx ){
       const account_object& opinion_account = (a.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? a : get(a.options.voting_account);
-      const auto& stats = a.statistics(*this);
-      uint64_t voting_stake = stats.total_core_in_orders.value
-                              + (a.cashback_vb.valid() ? (*a.cashback_vb)(*this).balance.amount.value: 0)
-                              + get_balance(a.get_id(), asset_id_type()).amount.value;
+      uint64_t voting_stake = get_voting_stake(a);
       for( vote_id_type id : opinion_account.options.votes )
       {
          uint32_t offset = id.instance();
@@ -460,12 +457,12 @@ vector<database::votes_gained> database::get_actual_votes() const
    const auto& all_miners = get_index_type<miner_index>().indices();
    for( const miner_object& wit : all_miners )
    {
-      database::votes_gained vg;
+      votes_gained vg;
       vg.votes = vote_tally_buffer[wit.vote_id];
       vg.account_name = wit.miner_account(*this).name;
       res.push_back(vg);
    }
-   std::sort(res.begin(), res.end(), [](database::votes_gained a, database::votes_gained b)-> bool{return a.votes > b.votes;});
+   std::sort(res.begin(), res.end(), [](const votes_gained& a, const votes_gained& b) { return a.votes > b.votes; });
    return res;
 }
 

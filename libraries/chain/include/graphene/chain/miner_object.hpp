@@ -41,6 +41,7 @@ namespace graphene { namespace chain {
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
          uint32_t         vote_ranking = std::numeric_limits<uint32_t>::max();
+         vector<pair<account_id_type, uint64_t>> votes_gained;
 
          miner_object() : vote_id(vote_id_type::miner) {}
    };
@@ -49,7 +50,6 @@ namespace graphene { namespace chain {
 
    struct by_account;
    struct by_vote_id;
-   struct by_last_block;
    typedef multi_index_container<
       miner_object,
       indexed_by<
@@ -76,4 +76,5 @@ FC_REFLECT_DERIVED( graphene::chain::miner_object, (graphene::db::object),
                     (total_missed)
                     (last_confirmed_block_num)
                     (vote_ranking)
+                    (votes_gained)
                   )
