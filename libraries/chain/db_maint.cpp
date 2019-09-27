@@ -42,7 +42,7 @@
 namespace graphene { namespace chain {
 
 template<class Index>
-vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects() const
+vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects(const vector<uint64_t> &vote_tally_buffer) const
 {
    using ObjectType = typename Index::object_type;
    const auto& all_objects = get_index_type<Index>().indices();
@@ -52,9 +52,9 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
                   std::back_inserter(refs),
                   [](const ObjectType& o) { return std::cref(o); });
    std::stable_sort(refs.begin(), refs.end(),
-                   [this](const ObjectType& a, const ObjectType& b)->bool {
-      share_type oa_vote = _vote_tally_buffer[a.vote_id];
-      share_type ob_vote = _vote_tally_buffer[b.vote_id];
+                   [&](const ObjectType& a, const ObjectType& b)->bool {
+      share_type oa_vote = vote_tally_buffer[a.vote_id];
+      share_type ob_vote = vote_tally_buffer[b.vote_id];
       if( oa_vote != ob_vote )
          return oa_vote > ob_vote;
       return a.vote_id < b.vote_id;
@@ -62,78 +62,6 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
 
    return refs;
 }
-
-template<typename T, std::size_t... Is>
-void for_each_helper(T&& t, const account_object& a, std::index_sequence<Is...>)
-{
-   auto l = { (std::get<Is>(t)(a), 0)... };
-   (void)l;
-}
-
-template<class... Types>
-void database::perform_account_maintenance(std::tuple<Types...> helpers)
-{
-   const auto& idx = get_index_type<account_index>().indices().get<by_name>();
-   for( const account_object& a : idx )
-      for_each_helper(helpers, a, std::make_index_sequence<sizeof...(Types)>());
-}
-
-void database::update_active_miners()
-{ try {
-   assert( _miner_count_histogram_buffer.size() > 0 );
-   share_type stake_target = (_total_voting_stake-_miner_count_histogram_buffer[0]) / 2;
-
-   /// accounts that vote for 0 or 1 miner do not get to express an opinion on
-   /// the number of miners to have (they abstain and are non-voting accounts)
-
-   share_type stake_tally = 0; 
-
-   size_t miner_count = 0;
-   if( stake_target > 0 )
-   {
-      while( (miner_count < _miner_count_histogram_buffer.size() - 1)
-             && (stake_tally <= stake_target) )
-      {
-         stake_tally += _miner_count_histogram_buffer[++miner_count];
-      }
-   }
-
-   const chain_property_object& cpo = get_chain_properties();
-   auto wits = sort_votable_objects<miner_index>();
-   size_t count = std::min(std::max(miner_count*2+1, (size_t)cpo.immutable_parameters.min_miner_count), wits.size());
-
-   const global_property_object& gpo = get_global_properties();
-
-   uint32_t ranking = 0;
-   for( const miner_object& wit : wits )
-   {
-      modify( wit, [&]( miner_object& obj ){
-              obj.total_votes = _vote_tally_buffer[wit.vote_id];
-              obj.vote_ranking = ranking++;
-              });
-   }
-
-   // Update miner authority
-   modify( get(GRAPHENE_MINER_ACCOUNT), [&]( account_object& a )
-   {
-      vote_counter vc;
-      std::for_each( wits.begin(), wits.begin() + count,
-         [this, &vc](const miner_object& miner){ vc.add( miner.miner_account, _vote_tally_buffer[miner.vote_id] ); } );
-      vc.finish( a.active );
-   } );
-
-   modify(gpo, [&]( global_property_object& gp ){
-      gp.active_miners.clear();
-      gp.active_miners.reserve(wits.size());
-      std::transform(wits.begin(), wits.begin() + count,
-                     std::inserter(gp.active_miners, gp.active_miners.end()),
-                     [](const miner_object& w) {
-         return w.id;
-      });
-   });
-
-} FC_RETHROW() }
-
 
 /**
  * Update the budget for miners.
@@ -222,74 +150,107 @@ void database::process_budget()
    FC_RETHROW()
 }
 
-
-void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
+uint64_t database::get_voting_stake(const account_object& acct) const
 {
-   const auto& gpo = get_global_properties();
+   const auto& stats = acct.statistics(*this);
+   return stats.total_core_in_orders.value
+      + (acct.cashback_vb.valid() ? (*acct.cashback_vb)(*this).balance.amount.value: 0)
+      + get_balance(acct.get_id(), asset_id_type()).amount.value;
+}
 
-   struct vote_tally_helper {
-      database& d;
-      const global_property_object& props;
+void database::perform_chain_maintenance(const signed_block& next_block)
+{
+   const global_property_object& gpo = get_global_properties();
+   vector<uint64_t> vote_tally_buffer(gpo.next_available_vote_id);
+   vector<uint64_t> miner_count_histogram_buffer(gpo.parameters.maximum_miner_count / 2 + 1);
+   map<vote_id_type, vector<pair<account_id_type, uint64_t>>> miner_votes_gained;
+   uint64_t total_voting_stake = 0;
 
-      vote_tally_helper(database& d, const global_property_object& gpo)
-         : d(d), props(gpo)
+   for( const account_object& a : get_index_type<account_index>().indices().get<by_name>() ) {
+      // There may be a difference between the account whose stake is voting and the one specifying opinions.
+      // Usually they're the same, but if the stake account has specified a voting_account, that account is the one
+      // specifying the opinions.
+      const account_object& opinion_account = (a.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? a : get(a.options.voting_account);
+      uint64_t voting_stake = get_voting_stake(a);
+
+      for( vote_id_type id : opinion_account.options.votes )
       {
-         d._vote_tally_buffer.resize(props.next_available_vote_id);
-         d._miner_count_histogram_buffer.resize(props.parameters.maximum_miner_count / 2 + 1);
-         d._total_voting_stake = 0;
+         uint32_t offset = id.instance();
+         // if they somehow managed to specify an illegal offset, ignore it.
+         if( offset < vote_tally_buffer.size() ) {
+            vote_tally_buffer[offset] += voting_stake;
+            miner_votes_gained[id].push_back(std::make_pair(a.get_id(), voting_stake));
+         }
       }
 
-      void operator()(const account_object& stake_account) {
-         // There may be a difference between the account whose stake is voting and the one specifying opinions.
-         // Usually they're the same, but if the stake account has specified a voting_account, that account is the one
-         // specifying the opinions.
-         const account_object& opinion_account = (stake_account.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT) ? stake_account : d.get(stake_account.options.voting_account);
-         
-         const auto& stats = stake_account.statistics(d);
-         uint64_t voting_stake = stats.total_core_in_orders.value
-            + (stake_account.cashback_vb.valid() ? (*stake_account.cashback_vb)(d).balance.amount.value: 0)
-            + d.get_balance(stake_account.get_id(), asset_id_type()).amount.value;
-         
-         for( vote_id_type id : opinion_account.options.votes )
-         {
-            uint32_t offset = id.instance();
-            // if they somehow managed to specify an illegal offset, ignore it.
-            if( offset < d._vote_tally_buffer.size() )
-               d._vote_tally_buffer[offset] += voting_stake;
-         }
-         
-         if( opinion_account.options.num_miner <= props.parameters.maximum_miner_count )
-         {
-            auto offset = std::min(size_t(opinion_account.options.num_miner/2),
-                                       d._miner_count_histogram_buffer.size() - 1);
-            // votes for a number greater than maximum_miner_count
-            // are turned into votes for maximum_miner_count.
-            //
-            // in particular, this takes care of the case where a
-            // member was voting for a high number, then the
-            // parameter was lowered.
-            d._miner_count_histogram_buffer[offset] += voting_stake;
-         }
-         
-         d._total_voting_stake += voting_stake;
+      if( opinion_account.options.num_miner <= gpo.parameters.maximum_miner_count )
+      {
+         auto offset = std::min(size_t(opinion_account.options.num_miner/2), miner_count_histogram_buffer.size() - 1);
+         // votes for a number greater than maximum_miner_count
+         // are turned into votes for maximum_miner_count.
+         //
+         // in particular, this takes care of the case where a
+         // member was voting for a high number, then the
+         // parameter was lowered.
+         miner_count_histogram_buffer[offset] += voting_stake;
       }
-      
-   } tally_helper(*this, gpo);
 
-   perform_account_maintenance(std::tie(
-      tally_helper
-   ));
+      total_voting_stake += voting_stake;
+      modify(get(a.statistics), [&](account_statistics_object& stats) {
+         stats.voting_stake = voting_stake;
+         stats.votes = opinion_account.options.votes;
+      });
+   }
 
-   struct clear_canary {
-      clear_canary(vector<uint64_t>& target): target(target){}
-      ~clear_canary() { target.clear(); }
-   private:
-      vector<uint64_t>& target;
-   };
-   clear_canary a(_miner_count_histogram_buffer),
-                b(_vote_tally_buffer);
+   FC_ASSERT( !miner_count_histogram_buffer.empty() );
+   share_type stake_target = (total_voting_stake - miner_count_histogram_buffer.front()) / 2;
 
-   update_active_miners();
+   /// accounts that vote for 0 or 1 miner do not get to express an opinion on
+   /// the number of miners to have (they abstain and are non-voting accounts)
+
+   share_type stake_tally = 0;
+   size_t miner_count = 0;
+   if( stake_target > 0 )
+   {
+      while( (miner_count < miner_count_histogram_buffer.size() - 1) && (stake_tally <= stake_target) )
+      {
+         stake_tally += miner_count_histogram_buffer[++miner_count];
+      }
+   }
+
+   const chain_property_object& cpo = get_chain_properties();
+   auto wits = sort_votable_objects<miner_index>(vote_tally_buffer);
+   size_t count = std::min(std::max(miner_count*2+1, (size_t)cpo.immutable_parameters.min_miner_count), wits.size());
+
+   uint32_t ranking = 0;
+   for( const miner_object& wit : wits )
+   {
+      modify( wit, [&]( miner_object& obj ){
+         obj.total_votes = vote_tally_buffer[wit.vote_id];
+         obj.vote_ranking = ranking++;
+         obj.votes_gained = miner_votes_gained[obj.vote_id];
+      });
+   }
+
+   // Update miner authority
+   modify( get(GRAPHENE_MINER_ACCOUNT), [&]( account_object& a )
+   {
+      vote_counter vc;
+      std::for_each( wits.begin(), wits.begin() + count,
+         [&vote_tally_buffer, &vc](const miner_object& miner){ vc.add( miner.miner_account, vote_tally_buffer[miner.vote_id] ); } );
+      vc.finish( a.active );
+   } );
+
+   modify(gpo, [&]( global_property_object& gp ){
+      gp.active_miners.clear();
+      gp.active_miners.reserve(wits.size());
+      std::transform(wits.begin(), wits.begin() + count,
+                     std::inserter(gp.active_miners, gp.active_miners.end()),
+                     [](const miner_object& w) {
+         return w.id;
+      });
+   });
+
    decent_housekeeping();
 
    modify(gpo, [&](global_property_object& p) {

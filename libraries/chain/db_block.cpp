@@ -515,7 +515,6 @@ void database::_apply_block( const signed_block& next_block )
    FC_ASSERT( (skip & skip_merkle_check) || next_block.transaction_merkle_root == next_block.calculate_merkle_root(), "", ("next_block.transaction_merkle_root",next_block.transaction_merkle_root)("calc",next_block.calculate_merkle_root())("next_block",next_block)("id",next_block.id()) );
 
    const miner_object& signing_miner = validate_block_header(skip, next_block);
-   const auto& global_props = get_global_properties();
    const auto& dynamic_global_props = get<dynamic_global_property_object>(dynamic_global_property_id_type());
    bool maint_needed = (dynamic_global_props.next_maintenance_time <= next_block.timestamp)  ;
 
@@ -540,7 +539,7 @@ void database::_apply_block( const signed_block& next_block )
 
    // Are we at the maintenance interval?
    if( maint_needed )
-      perform_chain_maintenance(next_block, global_props);
+      perform_chain_maintenance(next_block);
 
    create_block_summary(next_block);
    clear_expired_transactions();
