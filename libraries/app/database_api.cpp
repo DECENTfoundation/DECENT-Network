@@ -227,7 +227,7 @@ namespace graphene { namespace app {
       }
 
       /** called every time a block is applied to report the objects that were changed */
-      void on_objects_changed(const vector<object_id_type>& ids);
+      void on_objects_changed(const vector<object_id_type>& ids, bool sync_mode);
       void on_applied_block();
 
       mutable fc::bloom_filter                               _subscribe_filter;
@@ -256,9 +256,7 @@ namespace graphene { namespace app {
    database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
    {
       dlog("creating database api ${x}", ("x",int64_t(this)) );
-      _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids) {
-         on_objects_changed(ids);
-      });
+      _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids, bool sync_mode){ on_objects_changed(ids, sync_mode); });
       _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
 
       _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
@@ -2728,7 +2726,7 @@ namespace
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   void database_api_impl::on_objects_changed(const vector<object_id_type>& ids)
+   void database_api_impl::on_objects_changed(const vector<object_id_type>& ids, bool sync_mode)
    {
       vector<variant>    updates;
       vector< string > content_update_queue;

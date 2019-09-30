@@ -226,7 +226,7 @@ namespace graphene { namespace chain {
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
           */
-         boost::signals2::signal<void(const vector<graphene::db::object_id_type>&)> changed_objects;
+         boost::signals2::signal<void(const vector<graphene::db::object_id_type>&, bool sync_mode)> changed_objects;
 
          /**
           * This signal is emitted to report database reindexing progress in percent (0 - 100).
@@ -440,7 +440,7 @@ namespace graphene { namespace chain {
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
-         void notify_changed_objects();
+         void notify_changed_objects(bool sync_mode);
 
       private:
          optional<db::undo_database::session>   _pending_tx_session;
@@ -453,11 +453,11 @@ namespace graphene { namespace chain {
 
        public:
          // these were formerly private, but they have a fairly well-defined API, so let's make them public
-         void                  apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );
+         void                  apply_block( const signed_block& next_block, uint32_t skip = skip_nothing, bool sync_mode = false);
          processed_transaction apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
          operation_result      apply_operation( transaction_evaluation_state& eval_state, const operation& op );
       private:
-         void                  _apply_block( const signed_block& next_block );
+         void                  _apply_block( const signed_block& next_block, bool sync_mode );
          processed_transaction _apply_transaction( const signed_transaction& trx );
 
          ///Steps involved in applying a new block

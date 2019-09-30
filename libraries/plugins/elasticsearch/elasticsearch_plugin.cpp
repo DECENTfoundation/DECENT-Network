@@ -128,6 +128,7 @@ public:
          _thread.join();
    }
 
+   const std::string& basic_auth() const { return _req.auth; }
    std::size_t limit() const { return _limit; }
 
    void stop()
@@ -137,7 +138,7 @@ public:
       _sync.notify_one();
    }
 
-   bool push_bulk(std::deque<std::string> &lines, bool sync)
+   bool push_bulk(std::deque<std::string> &lines, bool sync_mode)
    {
       {
          std::unique_lock<std::mutex> lock(_mutex, std::try_to_lock);
@@ -145,7 +146,7 @@ public:
             return false;
 
          // prepare bulk requests
-         while(sync ? !lines.empty() : lines.size() >= _limit) {
+         while(sync_mode ? lines.size() >= _limit : !lines.empty()) {
             auto it = lines.begin();
             auto end = _limit == 0 || _limit > lines.size() ? lines.end() : it + _limit;
 
@@ -214,7 +215,7 @@ std::size_t elasticsearch_thread::Bulk::total = 0;
 
 struct elasticsearch_plugin::impl
 {
-   impl(elasticsearch_plugin& _plugin, const std::string &_index_prefix);
+   impl(elasticsearch_plugin& _plugin, const std::string &_url, const std::string &_index_prefix);
    ~impl();
 
    template<std::size_t N, typename ...Types>
@@ -273,16 +274,18 @@ struct elasticsearch_plugin::impl
       graphene::chain::budget_record_object
    >;
 
-   void check(const std::string &url, const std::string &basic_auth, uint32_t bulk_limit, uint32_t bulk_pause);
+   void check(const std::string &basic_auth, uint32_t bulk_limit, uint32_t bulk_pause);
+   void clear();
    void stop();
+   void snapshot();
 
-   void reindex(uint8_t progress, const std::string &url, const std::string &basic_auth);
+   void reindex(uint8_t progress);
    void index_block(const graphene::chain::signed_block& block);
-   bool index_objects(const std::vector<graphene::db::object_id_type>& ids);
+   bool index_objects(const std::vector<graphene::db::object_id_type>& ids, bool sync_mode);
 
-   bool push_bulk(bool sync)
+   bool push_bulk(bool sync_mode)
    {
-      return (sync ? bulk_lines.empty() : bulk_lines.size() < worker->limit()) || worker->push_bulk(bulk_lines, sync);
+      return (sync_mode ? bulk_lines.size() < worker->limit() : bulk_lines.empty()) || worker->push_bulk(bulk_lines, sync_mode);
    }
 
    template<typename T>
@@ -338,9 +341,11 @@ struct elasticsearch_plugin::impl
 
 private:
    graphene::chain::database& _db;
+   std::string url;
    std::string index_prefix;
    CURL *curl = nullptr;
    bool reindexing = false;
+   bool syncing = false;
    uint32_t block_number = 0;
    fc::time_point_sec block_time;
    std::deque<std::string> bulk_lines;
@@ -348,8 +353,8 @@ private:
    std::unique_ptr<elasticsearch_thread> worker;
 };
 
-elasticsearch_plugin::impl::impl(elasticsearch_plugin& _plugin, const std::string &_index_prefix)
-   : _db(_plugin.database()), index_prefix(_index_prefix)
+elasticsearch_plugin::impl::impl(elasticsearch_plugin& _plugin, const std::string &_url, const std::string &_index_prefix)
+   : _db(_plugin.database()), url(_url), index_prefix(_index_prefix)
 {
    curl = curl_easy_init();
    prepare_object_ids(std::make_index_sequence<object_types_t::size::value>());
@@ -363,13 +368,21 @@ elasticsearch_plugin::impl::~impl()
    }
 }
 
-void elasticsearch_plugin::impl::check(const std::string &url, const std::string &basic_auth, uint32_t bulk_limit, uint32_t bulk_pause)
+void elasticsearch_plugin::impl::check(const std::string &basic_auth, uint32_t bulk_limit, uint32_t bulk_pause)
 {
    CurlRequest req{curl, url + "/_nodes", basic_auth};
    if(!curl_call(req, "GET"))
       FC_THROW_EXCEPTION(fc::exception, "Elasticsearch service is not up in url ${url}", ("url", url));
 
    worker.reset(new elasticsearch_thread(curl, url, basic_auth, bulk_limit, bulk_pause));
+}
+
+void elasticsearch_plugin::impl::clear()
+{
+   ilog("Clean up object indices");
+   CurlRequest req{curl, url + "/" + index_prefix + "*_object", worker->basic_auth()};
+   if(!curl_call(req, "DELETE"))
+      FC_THROW_EXCEPTION(fc::exception, "Error deleting object indices in url ${url}", ("url", url));
 }
 
 void elasticsearch_plugin::impl::stop()
@@ -380,21 +393,22 @@ void elasticsearch_plugin::impl::stop()
    worker.reset();
 }
 
-void elasticsearch_plugin::impl::reindex(uint8_t progress, const std::string &url, const std::string &basic_auth)
+void elasticsearch_plugin::impl::snapshot()
+{
+   ilog("Inspecting object database");
+   inspect_all(std::make_index_sequence<object_types_t::size::value>());
+   if(!worker->push_bulk(bulk_lines, false))
+      FC_THROW_EXCEPTION(fc::exception, "Error populating object indices.");
+}
+
+void elasticsearch_plugin::impl::reindex(uint8_t progress)
 {
    reindexing = progress != 100;
 
-   if(progress == 0) {
-      CurlRequest req{curl, url + "/" + index_prefix + "*_object", basic_auth};
-      if(!curl_call(req, "DELETE"))
-         FC_THROW_EXCEPTION(fc::exception, "Error deleting object indices in url ${url}", ("url", url));
-   }
-   else if(progress == 100) {
-      ilog("Inspecting object database");
-      inspect_all(std::make_index_sequence<object_types_t::size::value>());
-      if(!worker->push_bulk(bulk_lines, true))
-         FC_THROW_EXCEPTION(fc::exception, "Error populating object indices.");
-   }
+   if(progress == 0)
+      clear();
+   else if(progress == 100)
+      snapshot();
 }
 
 void elasticsearch_plugin::impl::index_block(const graphene::chain::signed_block& block)
@@ -412,18 +426,29 @@ void elasticsearch_plugin::impl::index_block(const graphene::chain::signed_block
                      .append(prepare_bulk_data(adapt(trx, _db), block_number, block_time)));
 }
 
-bool elasticsearch_plugin::impl::index_objects(const std::vector<graphene::db::object_id_type>& ids)
+bool elasticsearch_plugin::impl::index_objects(const std::vector<graphene::db::object_id_type>& ids, bool sync_mode)
 {
-   auto beg = object_ids.cbegin();
-   auto end = object_ids.cend();
-   for(const graphene::db::object_id_type& id : ids) {
-      auto range = std::equal_range(beg, end, std::make_pair(id.space(), id.type()));
-      if(range.first != end && std::distance(range.first, range.second) == 1)
-         object_types_t::inspect(range.first - beg, *this, id);
+   if(syncing && !sync_mode) {
+      dlog("sync finished");
+      syncing = false;
+      snapshot();
+   }
+   else if(sync_mode && block_number == 1) {
+      dlog("sync started");
+      syncing = true;
    }
 
-   auto max_sync_offset = fc::seconds(2 * _db.get_global_properties().parameters.block_interval);
-   return push_bulk(fc::time_point::now() - block_time < max_sync_offset);
+   if(!syncing) {
+      auto beg = object_ids.cbegin();
+      auto end = object_ids.cend();
+      for(const graphene::db::object_id_type& id : ids) {
+         auto range = std::equal_range(beg, end, std::make_pair(id.space(), id.type()));
+         if(range.first != end && std::distance(range.first, range.second) == 1)
+            object_types_t::inspect(range.first - beg, *this, id);
+      }
+   }
+
+   return push_bulk(sync_mode);
 }
 
 elasticsearch_plugin::elasticsearch_plugin(graphene::app::application* app) : graphene::app::plugin(app)
@@ -459,22 +484,21 @@ void elasticsearch_plugin::plugin_initialize(const boost::program_options::varia
    if(!options.count("elasticsearch-api"))
       return;
 
-   std::string url = options["elasticsearch-api"].as<std::string>();
-   std::string basic_auth = options.count("elasticsearch-basic-auth") ? options["elasticsearch-basic-auth"].as<std::string>() : std::string();
+   my.reset(new impl(*this, options["elasticsearch-api"].as<std::string>(),
+      options.count("elasticsearch-index-prefix") ? options["elasticsearch-index-prefix"].as<std::string>() : std::string()));
+   my->check(options.count("elasticsearch-basic-auth") ? options["elasticsearch-basic-auth"].as<std::string>() : std::string(),
+      options["elasticsearch-bulk-limit"].as<uint32_t>(), options["elasticsearch-bulk-pause"].as<uint32_t>());
 
-   my.reset(new impl(*this, options.count("elasticsearch-index-prefix") ? options["elasticsearch-index-prefix"].as<std::string>() : std::string()));
-   my->check(url, basic_auth, options["elasticsearch-bulk-limit"].as<uint32_t>(), options["elasticsearch-bulk-pause"].as<uint32_t>());
-
-   database().reindexing_progress.connect([=](uint8_t progress) {
-      my->reindex(progress, url, basic_auth);
+   database().reindexing_progress.connect([this](uint8_t progress) {
+      my->reindex(progress);
    } );
 
    database().applied_block.connect([this](const graphene::chain::signed_block& block) {
       my->index_block(block);
    });
 
-   database().changed_objects.connect([this](const std::vector<graphene::db::object_id_type>& ids) {
-      if(!my->index_objects(ids))
+   database().changed_objects.connect([this](const std::vector<graphene::db::object_id_type>& ids, bool sync_mode) {
+      if(!my->index_objects(ids, sync_mode))
          dlog("Elasticsearch worker is busy.");
    });
 }
@@ -484,7 +508,7 @@ void elasticsearch_plugin::plugin_shutdown()
    if(!my)
       return;
 
-   while(!my->push_bulk(true)) {
+   while(!my->push_bulk(false)) {
       wlog("Elasticsearch worker is busy.");
       std::this_thread::sleep_for(std::chrono::seconds(1));
    }

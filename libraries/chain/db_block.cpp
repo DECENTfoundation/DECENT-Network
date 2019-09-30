@@ -167,7 +167,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
                 optional<fc::exception> except;
                 try {
                    graphene::db::undo_database::session session = _undo_db.start_undo_session();
-                   apply_block( (*ritr)->data, skip );
+                   apply_block( (*ritr)->data, skip, sync_mode );
                    _block_id_to_block.store( (*ritr)->id, (*ritr)->data );
                    session.commit();
                 }
@@ -191,7 +191,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
                    for( auto ritr = branches.second.rbegin(); ritr != branches.second.rend(); ++ritr )
                    {
                       auto session = _undo_db.start_undo_session();
-                      apply_block( (*ritr)->data, skip );
+                      apply_block( (*ritr)->data, skip, sync_mode );
                       _block_id_to_block.store( new_block.id(), (*ritr)->data );
                       session.commit();
                    }
@@ -206,7 +206,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
 
    try {
       auto session = _undo_db.start_undo_session();
-      apply_block(new_block, skip);
+      apply_block(new_block, skip, sync_mode);
       _block_id_to_block.store(new_block.id(), new_block);
       session.commit();
       //we will notify after session commit, since we want to be sure that seeding plugin works and generated tx will refer to commited block_objects
@@ -280,7 +280,7 @@ processed_transaction database::_push_transaction( const signed_transaction& trx
    auto processed_trx = _apply_transaction( trx );
    _pending_tx.push_back(processed_trx);
 
-   notify_changed_objects();
+   notify_changed_objects(false);
    // The transaction applied successfully. Merge its changes into the pending block session.
    temp_session.merge();
 
@@ -478,7 +478,7 @@ void database::set_applied_operation_result( uint32_t op_id, const operation_res
 
 //////////////////// private methods ////////////////////
 
-void database::apply_block( const signed_block& next_block, uint32_t skip )
+void database::apply_block( const signed_block& next_block, uint32_t skip, bool sync_mode )
 {
    auto block_num = next_block.block_num();
    if( _checkpoints.size() && _checkpoints.rbegin()->second != block_id_type() )
@@ -493,12 +493,12 @@ void database::apply_block( const signed_block& next_block, uint32_t skip )
 
    detail::with_skip_flags( *this, skip, [&]()
    {
-      _apply_block( next_block );
+      _apply_block( next_block, sync_mode );
    } );
    return;
 }
 
-void database::_apply_block( const signed_block& next_block )
+void database::_apply_block( const signed_block& next_block, bool sync_mode )
 { try {
    uint32_t next_block_num = next_block.block_num();
    uint32_t skip = get_node_properties().skip_flags;
@@ -555,10 +555,10 @@ void database::_apply_block( const signed_block& next_block )
 
    _applied_ops.clear();
 
-   notify_changed_objects();
+   notify_changed_objects(sync_mode);
 } FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
 
-void database::notify_changed_objects()
+void database::notify_changed_objects(bool sync_mode)
 { try {
    if( _undo_db.enabled() )
    {
@@ -568,7 +568,7 @@ void database::notify_changed_objects()
       for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
       for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
       for( const auto& item : head_undo.removed ) changed_ids.push_back(item.first);
-      changed_objects(changed_ids);
+      changed_objects(changed_ids, sync_mode);
    }
 } FC_RETHROW() }
 
