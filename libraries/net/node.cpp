@@ -4952,20 +4952,21 @@ namespace graphene { namespace net { namespace detail {
 
     void node_impl::broadcast( const message& item_to_broadcast, const message_propagation_data& propagation_data )
     {
-      ilog("node_impl::broadcast begin");
       VERIFY_CORRECT_THREAD();
       fc::uint160_t hash_of_message_contents;
       if( item_to_broadcast.msg_type == graphene::net::block_message_type )
       {
         graphene::net::block_message block_message_to_broadcast = item_to_broadcast.as<graphene::net::block_message>();
         hash_of_message_contents = block_message_to_broadcast.block_id; // for debugging
+        _message_cache.block_accepted();
         _most_recent_blocks_accepted.push_back( block_message_to_broadcast.block_id );
+        dlog( "broadcasting block: ${block}", ("block", hash_of_message_contents) );
       }
       else if( item_to_broadcast.msg_type == graphene::net::trx_message_type )
       {
         graphene::net::trx_message transaction_message_to_broadcast = item_to_broadcast.as<graphene::net::trx_message>();
         hash_of_message_contents = transaction_message_to_broadcast.trx.id(); // for debugging
-        dlog( "broadcasting trx: ${trx}", ("trx", transaction_message_to_broadcast) );
+        dlog( "broadcasting trx: ${trx}", ("trx", hash_of_message_contents) );
         MONITORING_COUNTER_VALUE(transactions_queued_to_broadcast)++;
       }
       message_hash_type hash_of_item_to_broadcast = item_to_broadcast.id();
