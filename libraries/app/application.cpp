@@ -518,10 +518,7 @@ namespace detail {
       {
          try
          {
-            if( id.item_type == graphene::net::block_message_type )
-               return _chain_db->is_known_block(id.item_hash);
-            else
-               return _chain_db->is_known_transaction(id.item_hash);
+            return id.item_type == graphene::net::block_message_type && _chain_db->is_known_block(id.item_hash);
          }
          FC_CAPTURE_AND_RETHROW( (id) )
       }
@@ -689,7 +686,7 @@ namespace detail {
             // ilog("Serving up block #${num}", ("num", opt_block->block_num()));
             return block_message(std::move(*opt_block));
          }
-         return trx_message( _chain_db->get_recent_transaction( id.item_hash ) );
+         FC_THROW_EXCEPTION(fc::key_not_found_exception, "");
       } FC_CAPTURE_AND_RETHROW( (id) ) }
 
       virtual chain_id_type get_chain_id()const override

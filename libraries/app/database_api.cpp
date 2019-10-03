@@ -463,15 +463,6 @@ namespace graphene { namespace app {
       return my->head_block_time();
    }
 
-   optional<signed_transaction> database_api::get_recent_transaction_by_id( const transaction_id_type& id )const
-   {
-      try {
-         return my->_db.get_recent_transaction( id );
-      } catch ( ... ) {
-         return optional<signed_transaction>();
-      }
-   }
-
    processed_transaction database_api_impl::get_transaction(uint32_t block_num, uint32_t trx_num)const
    {
       auto opt_block = _db.fetch_block_by_number(block_num);
@@ -1115,7 +1106,7 @@ namespace graphene { namespace app {
       auto itr = accounts_by_name.find(name);
       if(itr == accounts_by_name.end())
          FC_THROW_EXCEPTION(app::account_does_not_exist_exception, "Account: ${account}", ("account", name));
-      
+
       return get_account_balances(itr->get_id(), assets);
    }
 

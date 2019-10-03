@@ -134,7 +134,6 @@ namespace graphene { namespace chain {
          block_id_type              get_block_id_for_num( uint32_t block_num )const;
          optional<signed_block>     fetch_block_by_id( const block_id_type& id )const;
          optional<signed_block>     fetch_block_by_number( uint32_t num )const;
-         const signed_transaction&  get_recent_transaction( const transaction_id_type& trx_id )const;
          std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
          signed_block_with_info     get_signed_block_with_info(const signed_block& block) const;
 

@@ -77,14 +77,6 @@ optional<signed_block> database::fetch_block_by_number( uint32_t num )const
       return _block_id_to_block.fetch_by_number(num);
 }
 
-const signed_transaction& database::get_recent_transaction(const transaction_id_type& trx_id) const
-{
-   auto& index = get_index_type<transaction_index>().indices().get<by_trx_id>();
-   auto itr = index.find(trx_id);
-   FC_ASSERT(itr != index.end());
-   return itr->trx;
-}
-
 std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of_fork) const
 {
   pair<fork_database::branch_type, fork_database::branch_type> branches = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
@@ -597,11 +589,9 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    if( true || !(skip&skip_validate) )   /* issue #505 explains why this skip_flag is disabled */
       trx.validate();
 
-   auto& trx_idx = get_mutable_index_type<transaction_index>();
-   const chain_id_type& chain_id = get_chain_id();
+   auto& trx_idx = get_index_type<transaction_index>().indices().get<by_trx_id>();
    auto trx_id = trx.id();
-   FC_ASSERT( (skip & skip_transaction_dupe_check) ||
-              trx_idx.indices().get<by_trx_id>().find(trx_id) == trx_idx.indices().get<by_trx_id>().end() );
+   FC_ASSERT( (skip & skip_transaction_dupe_check) || trx_idx.find(trx_id) == trx_idx.end() );
    transaction_evaluation_state eval_state(this);
    const chain_parameters& chain_parameters = get_global_properties().parameters;
    eval_state._trx = &trx;
@@ -610,7 +600,7 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    {
       auto get_active = [&]( account_id_type id ) { return &id(*this).active; };
       auto get_owner  = [&]( account_id_type id ) { return &id(*this).owner;  };
-      trx.verify_authority( trx.get_signature_keys(chain_id), get_active, get_owner, get_global_properties().parameters.max_authority_depth );
+      trx.verify_authority( trx.get_signature_keys(get_chain_id()), get_active, get_owner, get_global_properties().parameters.max_authority_depth );
    }
 
    //Skip all manner of expiration and TaPoS checking if we're on block 1; It's impossible that the transaction is
@@ -636,8 +626,8 @@ processed_transaction database::_apply_transaction(const signed_transaction& trx
    if( !(skip & skip_transaction_dupe_check) )
    {
       create<transaction_object>([&](transaction_object& transaction) {
+         transaction.expiration = trx.expiration;
          transaction.trx_id = trx_id;
-         transaction.trx = trx;
       });
    }
 

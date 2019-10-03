@@ -163,7 +163,7 @@ namespace graphene { namespace app {
           *
           * @param cb
           * @param clear_filter
-          * @ingroup DatabaseAPI_Subscription         
+          * @ingroup DatabaseAPI_Subscription
           */
          void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
 
@@ -250,15 +250,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_BlockTx
           */
          fc::time_point_sec head_block_time()const;
-
-         /**
-          * @brief If the transaction has not expired, this method will return the transaction for the given ID or
-          * it will return \c null if it is not known. Just because it is not known does not mean it wasn't
-          * included in the blockchain.
-          * @param id ID of the transaction to retrieve
-          * @ingroup DatabaseAPI_BlockTx
-          */
-         optional<signed_transaction> get_recent_transaction_by_id( const transaction_id_type& id )const;
 
          /**
           * @brief This method will return the transaction for the given ID (transaction hash) or
@@ -1103,7 +1094,6 @@ FC_API(graphene::app::database_api,
           (get_blocks)
           (get_transaction)
           (head_block_time)
-          (get_recent_transaction_by_id)
           (get_transaction_by_id)
           (get_transaction_id)
 
