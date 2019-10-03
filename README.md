@@ -26,14 +26,6 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
     cd ..
     rm -rf json-3.7.0 v3.7.0.tar.gz
 
-For Fedora 29 or later, execute in console:
-
-    sudo dnf install curl
-    sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
-    sudo curl https://docs.decent.ch/assets/bintray-decentfoundation.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
-    mkdir ~/dev
-
 > Note for Debian 9/Ubuntu 16.04 LTS legacy systems, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build Boost 1.65.1
@@ -58,6 +50,23 @@ For Fedora 29 or later, execute in console:
      export PATH=$CMAKE_ROOT/bin:$PATH
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
+
+For Fedora 29 or later, execute in console:
+
+    sudo dnf install curl
+    sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
+    sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-fedora.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    mkdir ~/dev
+
+For CentOS 8, execute in console:
+
+    sudo dnf install curl
+    sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
+    sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-centos.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
+    sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    sudo dnf install --enablerepo PowerTools automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    mkdir ~/dev
 
 ### Installing prerequisites in MacOS
 
