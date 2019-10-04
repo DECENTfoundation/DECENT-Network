@@ -154,7 +154,7 @@ int start_as_daemon()
 int main_internal(int argc, char** argv, bool run_as_daemon = false)
 {
    bpo::options_description app_options("DECENT Daemon");
-   bpo::options_description cfg_options("DECENT Daemon");
+   bpo::options_description cfg_options("Configuration options");
    bpo::variables_map options;
 
    using decent_plugins = graphene::app::plugin_set<
@@ -166,10 +166,9 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 
    try
    {
-      bpo::options_description cli, cfg;
-      graphene::app::application::set_program_options(cli, cfg);
-      decent_plugins::set_program_options(cli, cfg);
-      cli.add_options()
+      graphene::app::application::set_program_options(app_options, cfg_options);
+      decent_plugins::set_program_options(app_options, cfg_options);
+      app_options.add_options()
 #if defined(_MSC_VER)
          ("install-win-service", "Register itself as Windows service")
          ("remove-win-service", "Unregister itself as Windows service")
@@ -178,8 +177,6 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 #endif
       ;
 
-      app_options.add(cli);
-      cfg_options.add(cfg);
       bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(app_options).allow_unregistered().run();
       bpo::store(optparsed, options);
       if (decent::check_unrecognized(optparsed))

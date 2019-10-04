@@ -284,14 +284,6 @@ namespace detail {
       {
       }
 
-      void set_dbg_init_key( genesis_state_type& genesis, const std::string& init_key )
-      {
-         flat_set< std::string > initial_miner_names;
-         public_key_type init_pubkey( init_key );
-         for( uint64_t i=0; i<genesis.initial_active_miners; i++ )
-            genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
-      }
-
       void write_db_version()
       {
          std::ofstream db_version( (_data_dir / "db_version").generic_string().c_str(), std::ios::out | std::ios::binary | std::ios::trunc );
@@ -320,24 +312,20 @@ namespace detail {
                std::string genesis_str;
                fc::read_file_contents( _options->at("genesis-json").as<boost::filesystem::path>(), genesis_str );
                genesis_state_type genesis = fc::json::from_string( genesis_str ).as<genesis_state_type>();
-               bool modified_genesis = false;
                if( _options->count("genesis-timestamp") )
                {
-                  genesis.initial_timestamp = fc::time_point_sec( graphene::utilities::now() ) + genesis.initial_parameters.block_interval + _options->at("genesis-timestamp").as<uint32_t>();
+                  genesis.initial_timestamp = fc::time_point_sec(_options->at("genesis-timestamp").as<uint32_t>());
                   genesis.initial_timestamp -= genesis.initial_timestamp.sec_since_epoch() % genesis.initial_parameters.block_interval;
-                  modified_genesis = true;
-                  std::cerr << "Used genesis timestamp:  " << genesis.initial_timestamp.to_iso_string() << " (PLEASE RECORD THIS)\n";
+                  ilog("Effective genesis timestamp: ${t}", ("t", genesis.initial_timestamp.to_iso_string()));
                }
                if( _options->count("dbg-init-key") )
                {
                   std::string init_key = _options->at( "dbg-init-key" ).as<string>();
                   FC_ASSERT( genesis.initial_miner_candidates.size() >= genesis.initial_active_miners );
-                  set_dbg_init_key( genesis, init_key );
-                  modified_genesis = true;
+                  public_key_type init_pubkey( init_key );
+                  for( uint64_t i=0; i<genesis.initial_active_miners; i++ )
+                     genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
                   std::cerr << "Set init miner key to " << init_key << "\n";
-               }
-               if( modified_genesis )
-               {
                   std::cerr << "WARNING:  GENESIS WAS MODIFIED, YOUR CHAIN ID MAY BE DIFFERENT\n";
                   genesis_str += "BOGUS";
                   genesis.initial_chain_id = fc::sha256::hash( genesis_str );
@@ -1088,7 +1076,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
                                        "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
-         ("server-allowed-domains", "List of allowed domains to comunicate with or asterix for all domains")
+         ("server-allowed-domains", "List of allowed domains to communicate with or asterix for all domains")
          ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this server")
          ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this server")
          ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this server")
@@ -1109,10 +1097,16 @@ void application::set_program_options(boost::program_options::options_descriptio
           "invalid file is found, it will be replaced with an example Genesis State.")
          ("replay-blockchain", "Rebuild object graph by replaying all blocks")
          ("resync-blockchain", "Delete all blocks and re-sync with network from scratch")
-         ("force-validate", "Force validation of all transactions")
-         ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json with current time plus this many seconds (experts only!)")
          ;
+
+   bpo::options_description advanced_options("Advanced options");
+   advanced_options.add_options()
+         ("force-validate", bpo::bool_switch(), "Force validation of all transactions")
+         ("genesis-timestamp", bpo::value<uint32_t>(), "Replace timestamp from genesis.json")
+         ;
+
    command_line_options.add(common_options);
+   command_line_options.add(advanced_options);
    command_line_options.add(configuration_file_options);
 
    // hidden settings only in config file
