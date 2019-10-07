@@ -2,6 +2,7 @@
 #include <graphene/wallet/wallet_utility.hpp>
 #include <graphene/wallet/wallet.hpp>
 #include <graphene/utilities/dirhelper.hpp>
+#include <boost/filesystem.hpp>
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/api_connection.hpp>

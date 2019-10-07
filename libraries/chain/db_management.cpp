@@ -24,18 +24,15 @@
  */
 
 #include <graphene/chain/database.hpp>
-
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
-
+#include <boost/filesystem.hpp>
 #include <fc/io/fstream.hpp>
-
 #include <fstream>
 #include <functional>
 #include <iostream>
 
 namespace graphene { namespace chain {
-
 
 database::database(const std::vector< uint8_t >& object_type_count)
 : object_database(object_type_count)
