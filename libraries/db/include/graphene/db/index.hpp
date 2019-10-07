@@ -25,13 +25,7 @@
 #pragma once
 #include <graphene/db/object.hpp>
 #include <graphene/db/exceptions.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <fc/io/raw.hpp>
-#include <fc/io/json.hpp>
 #include <fc/crypto/sha256.hpp>
-#include <fstream>
 
 namespace graphene { namespace db {
    class object_database;
@@ -80,7 +74,9 @@ namespace graphene { namespace db {
          virtual void           use_next_id() = 0;
          virtual void           set_next_id( object_id_type id ) = 0;
 
-         virtual const object&  load( const std::vector<char>& data ) = 0;
+         virtual const object& load( const std::vector<char>& data ) = 0;
+         virtual std::vector<char> store( const object& obj ) = 0;
+
          /**
           *  Polymorphically insert by moving an object into the index.
           *  this should throw if the object is already in the database.
@@ -96,22 +92,32 @@ namespace graphene { namespace db {
          /**
           *  Opens the index loading objects from a file
           */
-         virtual void open( const boost::filesystem::path& db ) = 0;
-         virtual void save( const boost::filesystem::path& db ) = 0;
+         void open( const boost::filesystem::path& db );
+
+         /**
+          *  Saves the index saving objects to a file
+          */
+         void save( const boost::filesystem::path& db );
 
          /** @return the object with id or nullptr if not found */
-         virtual const object*      find( object_id_type id )const = 0;
+         virtual const object* find( object_id_type id )const = 0;
 
          /**
           * This version will automatically check for nullptr and throw an exception if the
           * object ID could not be found.
           */
-         const object&              get( object_id_type id )const
+         const object& get( object_id_type id )const
          {
             auto maybe_found = find( id );
             if(maybe_found == nullptr)
                FC_THROW_EXCEPTION(object_not_found_exception, "Object ID: ${id}", ("id", id));
             return *maybe_found;
+         }
+
+         fc::sha256 get_object_version()const
+         {
+            std::string desc = "1.0";//get_type_description<object_type>();
+            return fc::sha256::hash(desc);
          }
 
          virtual void               modify( const object& obj, const std::function<void(object&)>& ) = 0;
@@ -218,48 +224,6 @@ namespace graphene { namespace db {
          virtual void           use_next_id()override                    { ++_next_id.number;  }
          virtual void           set_next_id( object_id_type id )override { _next_id = id;      }
 
-         fc::sha256 get_object_version()const
-         {
-            std::string desc = "1.0";//get_type_description<object_type>();
-            return fc::sha256::hash(desc);
-         }
-
-         virtual void open( const boost::filesystem::path& db )override
-         { try{
-            if( !exists( db ) ) return;
-            boost::interprocess::file_mapping fm( db.generic_string().c_str(), boost::interprocess::read_only );
-            boost::interprocess::mapped_region mr( fm, boost::interprocess::read_only, 0, file_size(db) );
-            fc::datastream<const char*> ds( (const char*)mr.get_address(), mr.get_size() );
-            fc::sha256 open_ver;
-
-            fc::raw::unpack(ds, _next_id);
-            fc::raw::unpack(ds, open_ver);
-            FC_ASSERT( open_ver == get_object_version(), "Incompatible Version, the serialization of objects in this index has changed" );
-            try {
-               vector<char> tmp;
-               while( true ) 
-               {
-                  fc::raw::unpack( ds, tmp );
-                  load( tmp );
-               }
-            } catch ( const fc::exception&  ){}
-         }FC_CAPTURE_AND_RETHROW((db))}
-
-         virtual void save( const boost::filesystem::path& db )override
-         {
-            std::ofstream out( db.generic_string(), 
-                               std::ofstream::binary | std::ofstream::out | std::ofstream::trunc );
-            FC_ASSERT( out );
-            auto ver  = get_object_version();
-            fc::raw::pack( out, _next_id );
-            fc::raw::pack( out, ver );
-            this->inspect_all_objects( [&]( const object& o ) {
-                auto vec = fc::raw::pack( static_cast<const object_type&>(o) );
-                auto packed_vec = fc::raw::pack( vec );
-                out.write( packed_vec.data(), packed_vec.size() );
-            });
-         }
-
          virtual const object&  load( const std::vector<char>& data )override
          {
             const auto& result = DerivedIndex::insert( fc::raw::unpack<object_type>( data ) );
@@ -268,6 +232,10 @@ namespace graphene { namespace db {
             return result;
          }
 
+         virtual std::vector<char> store( const object& obj )override
+         {
+            return fc::raw::pack( static_cast<const object_type&>(obj) );
+         }
 
          virtual const object&  create(const std::function<void(object&)>& constructor )override
          {

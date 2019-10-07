@@ -24,7 +24,7 @@
  */
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/exceptions.hpp>
-
+#include <boost/filesystem.hpp>
 #include <fc/io/raw.hpp>
 #include <fc/container/flat.hpp>
 #include <fc/uint128.hpp>
