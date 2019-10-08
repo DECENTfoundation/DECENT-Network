@@ -4,12 +4,15 @@
 
 #include <mutex>
 #include <fc/thread/thread.hpp>
+#include <graphene/app/database_api.hpp>
 
 namespace boost { namespace filesystem { class path; } }
 
 namespace graphene { namespace wallet {
    struct server_data;
    class wallet_api;
+
+   typedef typename fc::api<graphene::app::database_api>::vtable_type db_api;
 
    class WalletAPI
    {
@@ -21,6 +24,13 @@ namespace graphene { namespace wallet {
       std::string RunTask(std::string const& str_command);
 
       bool is_connected() { std::lock_guard<std::mutex> lock(m_mutex); return m_pimpl != nullptr; }
+
+      template<typename Result, typename ...Args, typename ...Values>
+      auto query(std::function<Result(Args...)> db_api::* func, Values... values)
+      {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         return m_pthread->async([=, api = get_db_api()]() -> Result { return ((*api).*func)(values...); });
+      }
 
       template<typename Result, typename ...Args, typename ...Values>
       auto exec(Result (wallet_api::* func)(Args...), Values... values)
@@ -37,6 +47,7 @@ namespace graphene { namespace wallet {
       }
 
    private:
+      fc::api<app::database_api> get_db_api();
       std::shared_ptr<wallet_api> get_api();
 
       // wallet_api does not like to be accessed from several threads

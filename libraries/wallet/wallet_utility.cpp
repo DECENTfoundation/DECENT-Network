@@ -7,12 +7,10 @@
 #include <fc/network/http/websocket.hpp>
 #include <fc/rpc/api_connection.hpp>
 #include <fc/thread/thread.hpp>
-#include <fc/api.hpp>
 #include <iostream>
 
 namespace graphene { namespace wallet {
 
-   using wallet_api_ptr = std::shared_ptr<wallet_api>;
    using websocket_client = fc::http::websocket_client;
    using websocket_client_ptr = std::shared_ptr<websocket_client>;
    using websocket_connection_ptr = fc::http::websocket_connection_ptr;
@@ -21,7 +19,6 @@ namespace graphene { namespace wallet {
    using fc_api = fc::api<wallet_api>;
    using fc_api_ptr = std::shared_ptr<fc_api>;
    using fc_remote_api = fc::api<graphene::app::login_api>;
-   using fc_remote_api_ptr = std::shared_ptr<fc_remote_api>;
 
    namespace
    {
@@ -85,29 +82,27 @@ namespace graphene { namespace wallet {
                                             ptr_ws_client.reset();
                                          });
 
-            fc_remote_api_ptr ptr_remote_api =
-               fc_remote_api_ptr(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
-            if (false == (*ptr_remote_api)->login(ws.user, ws.password))
+            m_ptr_remote_api.reset(new fc_remote_api(ptr_api_connection->get_remote_api<graphene::app::login_api>(1)));
+            if (!(*m_ptr_remote_api)->login(ws.user, ws.password))
                throw wallet_exception("fc::api<graphene::app::login_api>::login");
 
             if (!has_wallet_file)
-               wdata.chain_id = (*ptr_remote_api)->database()->get_chain_id();
+               wdata.chain_id = (*m_ptr_remote_api)->database()->get_chain_id();
 
-            //  capture ptr_api_connection and ptr_remote_api too. encapsulate all inside wallet_api
-            m_ptr_wallet_api.reset(new wallet_api(*ptr_remote_api, wdata.chain_id, ws),
-                                   [ptr_api_connection, ptr_remote_api](wallet_api* &p_wallet_api) mutable
+            // capture ptr_api_connection too. encapsulate all inside wallet_api
+            m_ptr_wallet_api.reset(new wallet_api(*m_ptr_remote_api, wdata.chain_id, ws),
+                                   [ptr_api_connection](wallet_api* &p_wallet_api) mutable
                                    {
                                       delete p_wallet_api;
                                       p_wallet_api = nullptr;
                                       ptr_api_connection.reset();
-                                      ptr_remote_api.reset();
                                    });
 
             if (has_wallet_file)
                m_ptr_wallet_api->load_wallet_file(wallet_file.generic_string());
             m_ptr_wallet_api->set_wallet_filename( wallet_file.generic_string() );
 
-            fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api.get()));
+            fc_api_ptr ptr_fc_api = fc_api_ptr(new fc_api(m_ptr_wallet_api));
 
             for (auto& name_formatter : m_ptr_wallet_api->get_result_formatters())
                m_result_formatters[name_formatter.first] = name_formatter.second;
@@ -122,7 +117,8 @@ namespace graphene { namespace wallet {
             m_ptr_fc_api_connection->register_api(*ptr_fc_api);
          }
 
-         wallet_api_ptr m_ptr_wallet_api;
+         std::shared_ptr<fc_remote_api> m_ptr_remote_api;
+         std::shared_ptr<wallet_api> m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
          std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
          std::map<graphene::chain::asset_id_type, std::pair<std::string, uint8_t>> m_asset_symbols;
@@ -213,17 +209,23 @@ namespace graphene { namespace wallet {
 
                           return string();
                        });
-      string str_result = future_run.wait();
-      return str_result;
+      return future_run.wait();
    }
 
-   std::shared_ptr<graphene::wallet::wallet_api> WalletAPI::get_api()
+   fc::api<app::database_api> WalletAPI::get_db_api()
+   {
+       if (m_pimpl == nullptr)
+          throw wallet_exception("not yet connected");
+
+       return (*m_pimpl->m_ptr_remote_api)->database();
+   }
+
+   std::shared_ptr<wallet_api> WalletAPI::get_api()
    {
        if (m_pimpl == nullptr)
           throw wallet_exception("not yet connected");
 
        return m_pimpl->m_ptr_wallet_api;
    }
-
 }
 }
