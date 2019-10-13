@@ -212,7 +212,7 @@ namespace graphene { namespace wallet {
       return future_run.wait();
    }
 
-   fc::api<app::database_api> WalletAPI::get_db_api()
+   fc::api<app::database_api> WalletAPI::get_db_api() const
    {
        if (m_pimpl == nullptr)
           throw wallet_exception("not yet connected");
@@ -220,7 +220,15 @@ namespace graphene { namespace wallet {
        return (*m_pimpl->m_ptr_remote_api)->database();
    }
 
-   std::shared_ptr<wallet_api> WalletAPI::get_api()
+   fc::api<app::network_broadcast_api> WalletAPI::get_net_api() const
+   {
+       if (m_pimpl == nullptr)
+          throw wallet_exception("not yet connected");
+
+       return (*m_pimpl->m_ptr_remote_api)->network_broadcast();
+   }
+
+   std::shared_ptr<wallet_api> WalletAPI::get_api() const
    {
        if (m_pimpl == nullptr)
           throw wallet_exception("not yet connected");

@@ -4,7 +4,7 @@
 
 #include <mutex>
 #include <fc/thread/thread.hpp>
-#include <graphene/app/database_api.hpp>
+#include <graphene/app/api.hpp>
 
 namespace boost { namespace filesystem { class path; } }
 
@@ -13,6 +13,7 @@ namespace graphene { namespace wallet {
    class wallet_api;
 
    typedef typename fc::api<graphene::app::database_api>::vtable_type db_api;
+   typedef typename fc::api<graphene::app::network_broadcast_api>::vtable_type net_api;
 
    class WalletAPI
    {
@@ -33,6 +34,13 @@ namespace graphene { namespace wallet {
       }
 
       template<typename Result, typename ...Args, typename ...Values>
+      auto broadcast(std::function<Result(Args...)> net_api::* func, Values... values)
+      {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         return m_pthread->async([=, api = get_net_api()]() -> Result { return ((*api).*func)(values...); });
+      }
+
+      template<typename Result, typename ...Args, typename ...Values>
       auto exec(Result (wallet_api::* func)(Args...), Values... values)
       {
          std::lock_guard<std::mutex> lock(m_mutex);
@@ -47,8 +55,9 @@ namespace graphene { namespace wallet {
       }
 
    private:
-      fc::api<app::database_api> get_db_api();
-      std::shared_ptr<wallet_api> get_api();
+      fc::api<app::database_api> get_db_api() const;
+      fc::api<app::network_broadcast_api> get_net_api() const;
+      std::shared_ptr<wallet_api> get_api() const;
 
       // wallet_api does not like to be accessed from several threads
       // so all the access is encapsulated inside m_pthread :(
