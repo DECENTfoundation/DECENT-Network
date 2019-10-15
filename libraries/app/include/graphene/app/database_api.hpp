@@ -160,7 +160,7 @@ namespace graphene { namespace app {
          ///////////////////
 
          /**
-          *
+          * @deprecate since 1.4.2
           * @param cb
           * @param clear_filter
           * @ingroup DatabaseAPI_Subscription         
@@ -190,6 +190,7 @@ namespace graphene { namespace app {
          void set_content_update_callback( std::function<void()>cb, const string & URI );
 
          /**
+          * @deprecate since 1.4.2
           * @brief Stop receiving any notifications.
           * @note This unsubscribes from all subscribed objects.
           * @ingroup DatabaseAPI_Subscription
