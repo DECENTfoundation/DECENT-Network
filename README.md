@@ -4,7 +4,7 @@ Building DCore
 | CI | Status |
 | -- | ------ |
 | Travis | [![Build Status](https://travis-ci.org/DECENTfoundation/DECENT-Network.svg?branch=master)](https://travis-ci.org/DECENTfoundation/DECENT-Network) |
-| Appveyor | [![Build Status](https://ci.appveyor.com/api/projects/status/github/decentfoundation/DECENT-Network?svg=true&branch=master)](https://ci.appveyor.com/api/project/DECENTfoundation/DECENT-Network) |
+| Appveyor | [![Build Status](https://ci.appveyor.com/api/projects/status/github/decentfoundation/DECENT-Network?svg=true&branch=master)](https://ci.appveyor.com/project/DECENTfoundation/DECENT-Network) |
 
 ### Installing prerequisites in Linux
 
