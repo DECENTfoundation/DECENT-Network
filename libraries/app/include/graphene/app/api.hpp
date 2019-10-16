@@ -46,9 +46,7 @@
  */
 namespace graphene { namespace app {
    using namespace graphene::chain;
-   using namespace fc::ecc;
    using namespace std;
-   
 
    class application;
 
@@ -120,7 +118,7 @@ namespace graphene { namespace app {
           * @brief Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
           * for the account can be found in the account statistics (or use 0 for start).
-          * @note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
+          * @note The sequence number of the oldest operation is 1 and the operations are in increasing order,
           * from the oldest operation to the most recent.
           * @param account The account whose history should be queried
           * @param stop Sequence number of earliest operation. 0 is default and will
@@ -440,7 +438,7 @@ namespace graphene { namespace app {
       /**
       * @brief Retrieves monitoring counters by names.
       * @param names Counter names. Pass epmty vector to retrieve all counters.
-      * @return Vector of monitoring counters. Persistent counters which was not reset yet or non-persisten counters shows datetime of reset equal to begin of epoch. 
+      * @return Vector of monitoring counters. Persistent counters which was not reset yet or non-persisten counters shows datetime of reset equal to begin of epoch.
       * @ingroup MonitoringAPI
       */
       std::vector<monitoring::counter_item> get_counters(const std::vector<std::string>& names) const;
@@ -531,15 +529,11 @@ namespace graphene { namespace app {
 
 }}  // graphene::app
 
-FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation,
-        (id)(block_num)(trx_num)(trx) )
-//FC_REFLECT_TYPENAME( fc::ecc::compact_signature );
-//FC_REFLECT_TYPENAME( fc::ecc::commitment_type );
+FC_REFLECT( graphene::app::network_broadcast_api::transaction_confirmation, (id)(block_num)(trx_num)(trx) )
 FC_REFLECT( graphene::app::asset_array, (asset0)(asset1) )
 FC_REFLECT( graphene::app::balance_change_result, (hist_object)(balance)(fee)(timestamp)(transaction_id) )
 FC_REFLECT( graphene::app::network_node_info, (listening_on)(node_public_key)(node_id)(firewalled)(connection_count) )
 FC_REFLECT( graphene::app::advanced_node_parameters, (peer_connection_retry_timeout)(desired_number_of_connections)(maximum_number_of_connections)(maximum_number_of_blocks_to_handle_at_one_time)(maximum_number_of_sync_blocks_to_prefetch)(maximum_blocks_per_peer_during_syncing) )
-
 
 FC_API(graphene::app::history_api,
        (info)

@@ -16,7 +16,6 @@ add_library( graphene_chain
              get_config.cpp
              hardfork.cpp
              pts_address.cpp
-             protocol/types.cpp
              protocol/authority.cpp
              protocol/asset.cpp
              protocol/assert.cpp

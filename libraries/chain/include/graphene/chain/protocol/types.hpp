@@ -76,19 +76,6 @@ namespace graphene { namespace chain {
    using                               fc::flat_map;
    using                               fc::flat_set;
    using                               fc::static_variant;
-   using                               fc::ecc::range_proof_type;
-   using                               fc::ecc::range_proof_info;
-   using                               fc::ecc::commitment_type;
-   struct void_t{};
-
-   typedef fc::ecc::private_key        private_key_type;
-   typedef fc::sha256 chain_id_type;
-
-   typedef decent::encrypt::CustodyData custody_data_type;
-   typedef decent::encrypt::CustodyProof custody_proof_type;
-   typedef decent::encrypt::DIntegerString bigint_type;
-   typedef decent::encrypt::CiphertextString ciphertext_type;
-   typedef decent::encrypt::DeliveryProofString delivery_proof_type;
 
    enum reserved_spaces
    {
@@ -162,8 +149,6 @@ namespace graphene { namespace chain {
       impl_object_type_count       // added due to need to know count
    };
 
-   //typedef fc::unsigned_int            object_id_type;
-   //typedef uint64_t                    object_id_type;
    class account_object;
    class miner_object;
    class asset_object;
@@ -226,6 +211,7 @@ namespace graphene { namespace chain {
    typedef graphene::db::object_id<implementation_ids, impl_transaction_history_object_type, transaction_history_object>           transaction_history_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
+   typedef fc::sha256                                           chain_id_type;
    typedef fc::ripemd160                                        block_id_type;
    typedef fc::ripemd160                                        checksum_type;
    typedef fc::ripemd160                                        transaction_id_type;
@@ -233,52 +219,18 @@ namespace graphene { namespace chain {
    typedef fc::ecc::compact_signature                           signature_type;
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
+   typedef fc::ecc::private_key                                 private_key_type;
+   typedef fc::ecc::public_key                                  public_key_type;
 
-   struct public_key_type
-   {
-       struct binary_key
-       {
-          binary_key() {}
-          uint32_t                 check = 0;
-          fc::ecc::public_key_data data;
-       };
-       fc::ecc::public_key_data key_data;
-       public_key_type();
-       public_key_type( const fc::ecc::public_key_data& data );
-       public_key_type( const fc::ecc::public_key& pubkey );
-       explicit public_key_type( const std::string& base58str );
-       operator fc::ecc::public_key_data() const;
-       operator fc::ecc::public_key() const;
-       explicit operator std::string() const;
-       friend bool operator == ( const public_key_type& p1, const fc::ecc::public_key& p2);
-       friend bool operator == ( const public_key_type& p1, const public_key_type& p2);
-       friend bool operator != ( const public_key_type& p1, const public_key_type& p2);
-   };
-   inline bool operator < ( const public_key_type& a, const public_key_type& b )
-   {
-        int i=0;
-        while (i<33 )
-        {
-            if(a.key_data.at(i) < b.key_data.at(i) )
-                return true;
-            if(a.key_data.at(i) > b.key_data.at(i) )
-                return false;
-            i++;
-        }
-        return false;
+   typedef decent::encrypt::CustodyData custody_data_type;
+   typedef decent::encrypt::CustodyProof custody_proof_type;
+   typedef decent::encrypt::DIntegerString bigint_type;
+   typedef decent::encrypt::CiphertextString ciphertext_type;
+   typedef decent::encrypt::DeliveryProofString delivery_proof_type;
 
-   }
+   struct void_t {};
 
 } }  // graphene::chain
-
-namespace fc
-{
-    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo );
-    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo );
-}
-
-FC_REFLECT( graphene::chain::public_key_type, (key_data) )
-FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_id_type )
