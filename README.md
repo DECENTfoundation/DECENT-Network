@@ -1,10 +1,10 @@
-Intro for new developers
-------------------------
-
-This is a quick introduction to get new developers up to speed on DCore.
-
 Building DCore
----------------
+--------------
+
+| CI | Status |
+| -- | ------ |
+| Travis | [![Build Status](https://travis-ci.org/DECENTfoundation/DECENT-Network.svg?branch=master)](https://travis-ci.org/DECENTfoundation/DECENT-Network) |
+| Appveyor | [![Build Status](https://ci.appveyor.com/api/projects/status/github/decentfoundation/DECENT-Network?svg=true&branch=master)](https://ci.appveyor.com/api/projects/status/github/decentfoundation/DECENT-Network?svg=true&branch=master) |
 
 ### Installing prerequisites in Linux
 
@@ -13,12 +13,11 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
     sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/$(lsb_release -is | tr "[:upper:]" "[:lower:]") $(lsb_release -cs) libpbc"
-    sudo apt-get update
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen wget git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
+    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen git qt5-default qttools5-dev qttools5-dev-tools libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     mkdir ~/dev
 
     # Download and build JSON 3.7.0
-    wget -nv https://github.com/nlohmann/json/archive/v3.7.0.tar.gz
+    curl -LO https://github.com/nlohmann/json/archive/v3.7.0.tar.gz
     tar xf v3.7.0.tar.gz
     cd json-3.7.0
     cmake .
@@ -29,7 +28,7 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
 > Note for Debian 9/Ubuntu 16.04 LTS legacy systems, the default versions of Boost and CMake installed are too old and not supported. In order to install a supported ones, in addition to the common commands above, execute the following in console (in the same shell session, where you are going to build DCore itself):
 
     # Download and build Boost 1.65.1
-     wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
+     curl -LO https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz
      tar xf boost_1_65_1.tar.gz
      mkdir boost
      cd boost_1_65_1
@@ -40,7 +39,7 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
      rm -rf boost_1_65_1 boost_1_65_1.tar.gz
 
     # Download and build CMake 3.13.4
-     wget -nv https://cmake.org/files/v3.13/cmake-3.13.4.tar.gz
+     curl -LO https://cmake.org/files/v3.13/cmake-3.13.4.tar.gz
      tar xf cmake-3.13.4.tar.gz
      mkdir cmake
      cd cmake-3.13.4
@@ -56,7 +55,7 @@ For Fedora 29 or later, execute in console:
     sudo dnf install curl
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
     sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-fedora.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
     mkdir ~/dev
 
 For CentOS 8, execute in console:
@@ -65,7 +64,7 @@ For CentOS 8, execute in console:
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
     sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-centos.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
     sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-    sudo dnf install --enablerepo PowerTools automake autoconf libtool make cmake gcc-c++ doxygen wget git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    sudo dnf install --enablerepo PowerTools automake autoconf libtool make cmake gcc-c++ doxygen git qt5-qtbase-devel qt5-linguist readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
     mkdir ~/dev
 
 ### Installing prerequisites in MacOS
