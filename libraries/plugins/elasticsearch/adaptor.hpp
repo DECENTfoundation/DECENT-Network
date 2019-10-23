@@ -279,6 +279,7 @@ fc::mutable_variant_object adapt(const graphene::chain::signed_block_with_info &
 
    fc::mutable_variant_object o(v);
    o.set("miner", adapt_miner(o["miner"], db));
+   o.set("transactions_count", static_cast<uint64_t>(obj.transaction_ids.size()));
    o.erase("block_id");
    o.erase("timestamp");
    o.erase("extensions");
@@ -293,8 +294,7 @@ fc::mutable_variant_object adapt(const graphene::chain::processed_transaction &o
    fc::to_variant(obj, v);
 
    fc::mutable_variant_object o(v);
-   o.erase("extensions");
-   o.erase("transactions");
+   o.set("operations_count", static_cast<uint64_t>(obj.operations.size()));
 
    fc::variants &results = o["operation_results"].get_array();
    for(std::size_t i = 0; i < results.size(); ++i)
@@ -304,6 +304,7 @@ fc::mutable_variant_object adapt(const graphene::chain::processed_transaction &o
    for(std::size_t i = 0; i < operations.size(); ++i)
          operations[i] =  adapt_operation(obj.operations[i], db, adapt_static_variant(obj.operations[i], operations[i].get_array()));
 
+   o.erase("extensions");
    return o;
 }
 
