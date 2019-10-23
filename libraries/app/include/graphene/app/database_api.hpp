@@ -66,49 +66,6 @@ namespace graphene { namespace app {
 
       class database_api_impl;
 
-      struct order
-      {
-         double                     price;
-         double                     quote;
-         double                     base;
-      };
-
-      struct order_book
-      {
-         string                      base;
-         string                      quote;
-         vector< order >             bids;
-         vector< order >             asks;
-      };
-
-      struct market_ticker
-      {
-         string                     base;
-         string                     quote;
-         double                     latest;
-         double                     lowest_ask;
-         double                     highest_bid;
-         double                     percent_change;
-         double                     base_volume;
-         double                     quote_volume;
-      };
-
-      struct market_volume
-      {
-         string                     base;
-         string                     quote;
-         double                     base_volume;
-         double                     quote_volume;
-      };
-
-      struct market_trade
-      {
-         fc::time_point_sec         date;
-         double                     price;
-         double                     amount;
-         double                     value;
-      };
-
       struct miner_voting_info
       {
          miner_id_type id;
@@ -160,14 +117,6 @@ namespace graphene { namespace app {
          ///////////////////
 
          /**
-          * @deprecate since 1.4.2
-          * @param cb
-          * @param clear_filter
-          * @ingroup DatabaseAPI_Subscription
-          */
-         void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
-
-         /**
           *
           * @param cb
           * @ingroup DatabaseAPI_Subscription
@@ -188,14 +137,6 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Subscription
           */
          void set_content_update_callback( std::function<void()>cb, const string & URI );
-
-         /**
-          * @deprecate since 1.4.2
-          * @brief Stop receiving any notifications.
-          * @note This unsubscribes from all subscribed objects.
-          * @ingroup DatabaseAPI_Subscription
-          */
-         void cancel_all_subscriptions();
 
          /////////////////////////////
          // Blocks and transactions //
@@ -1069,11 +1010,6 @@ namespace graphene { namespace app {
 
    } }
 
-FC_REFLECT( graphene::app::order, (price)(quote)(base) );
-FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
 FC_REFLECT( graphene::app::operation_info, (id)(name)(current_fees) );
 
@@ -1082,11 +1018,9 @@ FC_API(graphene::app::database_api,
           (get_objects)
 
           // Subscriptions
-          (set_subscribe_callback)
           (set_pending_transaction_callback)
           (set_block_applied_callback)
           (set_content_update_callback)
-          (cancel_all_subscriptions)
 
           // Blocks and transactions
           (get_block_header)

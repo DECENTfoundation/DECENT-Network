@@ -79,11 +79,9 @@ namespace graphene { namespace app {
       fc::variants get_objects(const vector<object_id_type>& ids)const;
 
       // Subscriptions
-      void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
       void set_content_update_callback( const string & URI, std::function<void()> cb );
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
-      void cancel_all_subscriptions();
 
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
@@ -204,42 +202,19 @@ namespace graphene { namespace app {
       optional<subscription_object> get_subscription( const subscription_id_type& sid) const;
 
       //private:
-      template<typename T>
-      void subscribe_to_item( const T& i )const
-      {
-         auto vec = fc::raw::pack(i);
-         if( !_subscribe_callback )
-            return;
-
-         if( !is_subscribed_to_item(i) )
-         {
-            idump((i));
-            _subscribe_filter.insert( vec.data(), vec.size() );//(vecconst char*)&i, sizeof(i) );
-         }
-      }
-
-      template<typename T>
-      bool is_subscribed_to_item( const T& i )const
-      {
-         if( !_subscribe_callback )
-            return false;
-         return true;
-      }
 
       /** called every time a block is applied to report the objects that were changed */
       void on_objects_changed(const vector<object_id_type>& ids, bool sync_mode);
       void on_applied_block();
 
-      mutable fc::bloom_filter                               _subscribe_filter;
-      std::function<void(const fc::variant&)> _subscribe_callback;
       std::function<void(const fc::variant&)> _pending_trx_callback;
       std::function<void(const fc::variant&)> _block_applied_callback;
 
-      boost::signals2::scoped_connection                                                                                           _change_connection;
-      boost::signals2::scoped_connection                                                                                           _applied_block_connection;
-      boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
-      map< string, std::function<void()> >                              _content_subscriptions;
-      graphene::chain::database&                                                                                                   _db;
+      boost::signals2::scoped_connection   _change_connection;
+      boost::signals2::scoped_connection   _applied_block_connection;
+      boost::signals2::scoped_connection   _pending_trx_connection;
+      map< string, std::function<void()> > _content_subscriptions;
+      graphene::chain::database& _db;
    };
 
    //////////////////////////////////////////////////////////////////////
@@ -282,21 +257,6 @@ namespace graphene { namespace app {
 
    fc::variants database_api_impl::get_objects(const vector<object_id_type>& ids)const
    {
-      if( _subscribe_callback )
-      {
-         for( auto id : ids )
-         {
-            if( (id.type() != operation_history_object_type || id.space() != protocol_ids) && (id.type() != impl_account_transaction_history_object_type || id.space() != implementation_ids) )
-            {
-               this->subscribe_to_item( id );
-            }
-         }
-      }
-      else
-      {
-         elog( "getObjects without subscribe callback??" );
-      }
-
       fc::variants result;
       result.reserve(ids.size());
 
@@ -315,27 +275,6 @@ namespace graphene { namespace app {
    // Subscriptions                                                    //
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
-
-   void database_api::set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter )
-   {
-      my->set_subscribe_callback( cb, clear_filter );
-   }
-
-   void database_api_impl::set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter )
-   {
-      ddump((clear_filter));
-      _subscribe_callback = cb;
-      if( clear_filter || !cb )
-      {
-         static fc::bloom_parameters param;
-         param.projected_element_count    = 10000;
-         param.false_positive_probability = 1.0/10000;
-         param.maximum_size = 1024*8*8*2;
-         param.compute_optimal_parameters();
-         _subscribe_filter = fc::bloom_filter(param);
-      }
-   }
-
 
    void database_api::set_content_update_callback( std::function<void()> cb, const string & URI )
    {
@@ -365,16 +304,6 @@ namespace graphene { namespace app {
    void database_api_impl::set_block_applied_callback( std::function<void(const variant& block_id)> cb )
    {
       _block_applied_callback = cb;
-   }
-
-   void database_api::cancel_all_subscriptions()
-   {
-      my->cancel_all_subscriptions();
-   }
-
-   void database_api_impl::cancel_all_subscriptions()
-   {
-      set_subscribe_callback( std::function<void(const fc::variant&)>(), true);
    }
 
    //////////////////////////////////////////////////////////////////////
@@ -658,8 +587,6 @@ namespace graphene { namespace app {
 
       for( auto& key : keys )
       {
-         subscribe_to_item( key );
-
          const auto& idx = _db.get_index_type<account_index>();
          const auto& aidx = dynamic_cast<const graphene::db::primary_index<account_index>&>(idx);
          const auto& refs = aidx.get_secondary_index<graphene::chain::account_member_index>();
@@ -673,9 +600,6 @@ namespace graphene { namespace app {
          }
          final_result.emplace_back( std::move(result) );
       }
-
-      for( auto i : final_result )
-         subscribe_to_item(i);
 
       return final_result;
    }
@@ -703,6 +627,9 @@ namespace graphene { namespace app {
 
    std::map<std::string, full_account> database_api_impl::get_full_accounts( const vector<std::string>& names_or_ids, bool subscribe)
    {
+      if( subscribe )
+         ilog( "subscribe callback functionality has been removed and 'subscribe' parameter has no effect" );
+
       idump((names_or_ids));
       std::map<std::string, full_account> results;
 
@@ -720,12 +647,6 @@ namespace graphene { namespace app {
          }
          if (account != nullptr)
          {
-            if( subscribe )
-            {
-               ilog( "subscribe to ${id}", ("id",account->name) );
-               subscribe_to_item( account->id );
-            }
-
             // fc::mutable_variant_object full_account;
             full_account acnt;
             acnt.account = *account;
@@ -1043,8 +964,6 @@ namespace graphene { namespace app {
           ++itr )
       {
          result.insert(make_pair(itr->name, itr->get_id()));
-         if( limit == 1 )
-            subscribe_to_item( itr->get_id() );
       }
 
       return result;
@@ -2728,29 +2647,15 @@ namespace
 
    void database_api_impl::on_objects_changed(const vector<object_id_type>& ids, bool sync_mode)
    {
-      vector<variant>    updates;
       vector< string > content_update_queue;
 
       for(auto id : ids)
       {
          const graphene::db::object* obj = nullptr;
-         if( _subscribe_callback )
-         {
-            obj = _db.find_object( id );
-            if( obj )
-            {
-               updates.emplace_back( obj->to_variant() );
-            }
-            else
-            {
-               updates.emplace_back(id); // send just the id to indicate removal
-            }
-         }
 
          if( _content_subscriptions.size() )
          {
-            if( !_subscribe_callback )
-               obj = _db.find_object( id );
+            obj = _db.find_object( id );
             if( obj )
             {
                const content_object* content = dynamic_cast<const content_object*>(obj);
@@ -2766,9 +2671,7 @@ namespace
       /// pushing the future back / popping the prior future if it is complete.
       /// if a connection hangs then this could get backed up and result in
       /// a failure to exit cleanly.
-      fc::async([capture_this,this,updates, content_update_queue](){
-         if( _subscribe_callback ) _subscribe_callback( updates );
-
+      fc::async([capture_this,this, content_update_queue](){
          for( const auto& item: content_update_queue )
          {
             _content_subscriptions[ item ]( );

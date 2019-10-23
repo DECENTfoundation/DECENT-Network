@@ -396,21 +396,6 @@ public:
       _wallet.ws_password = ws.password;
       decent::package::PackageManager::instance().recover_all_packages();
    }
-   virtual ~wallet_api_impl()
-   {
-      try
-      {
-         _remote_db->cancel_all_subscriptions();
-      }
-      catch (const fc::exception&)
-      {
-         // Right now the wallet_api has no way of knowing if the connection to the
-         // miner has already disconnected (via the miner node exiting first).
-         // If it has exited, cancel_all_subscriptsions() will throw and there's
-         // nothing we can do about it.
-         // dlog("Caught exception ${e} while canceling database subscriptions", ("e", e));
-      }
-   }
 
    void encrypt_keys()
    {
