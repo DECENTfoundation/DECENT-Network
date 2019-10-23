@@ -32,7 +32,7 @@ matrix:
           - $HOME/Library/Caches/Homebrew
 
     - os: osx
-      osx_image: xcode10.2
+      osx_image: xcode10.3
       compiler: clang
       cache:
         directories:
