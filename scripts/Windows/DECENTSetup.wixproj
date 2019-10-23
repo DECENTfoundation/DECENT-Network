@@ -8,7 +8,7 @@
     <DCorePath>C:\Projects\DCore</DCorePath>
     <IPFSPath>C:\Projects\IPFS</IPFSPath>
     <QtPath>C:\Projects\Qt\5.12.5\msvc2017_64</QtPath>
-    <MergeModulesPath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules</MergeModulesPath>
+    <VCRuntimePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules\Microsoft_VC141_CRT_x64.msm</VCRuntimePath>
     <ProductName>DECENT</ProductName>
     <ProductId>$([System.Guid]::NewGuid())</ProductId>
     <ProductVersion></ProductVersion>
@@ -19,10 +19,10 @@
     <Name>DECENTSetup</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>Debug;ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);MergeModulesPath=$(MergeModulesPath)</DefineConstants>
+    <DefineConstants>Debug;ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);VCRuntimePath=$(VCRuntimePath)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DefineConstants>ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);MergeModulesPath=$(MergeModulesPath)</DefineConstants>
+    <DefineConstants>ProductName=$(ProductName);ProductId=$(ProductId);ProductVersion=$(ProductVersion);QtPath=$(QtPath);DCorePath=$(DCorePath);IPFSPath=$(IPFSPath);VCRuntimePath=$(VCRuntimePath)</DefineConstants>
   </PropertyGroup>
   <Target Name="EnsureProductProperties" Condition="$(ProductVersion) == ''">
     <Error Text="You must specify an unique ProductVersion property" />
