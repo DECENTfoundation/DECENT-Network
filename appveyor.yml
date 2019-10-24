@@ -1,4 +1,4 @@
-version: 1.4.{build}
+version: 1.5.0.{build}
 
 image: Visual Studio 2017
 
@@ -38,14 +38,10 @@ build_script:
 
     ninja -j2 install
 
-    IF %APPVEYOR_REPO_TAG% == true set DCORE_VERSION=%APPVEYOR_REPO_TAG_NAME%
-
-    IF NOT DEFINED DCORE_VERSION set DCORE_VERSION=%APPVEYOR_BUILD_VERSION%
-
-    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%DCORE_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%DCORE_VERSION%
+    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%APPVEYOR_BUILD_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_BUILD_VERSION%
 
 artifacts:
-- path: $(DCORE_VERSION)\DECENTSetup.msi
+- path: $(APPVEYOR_BUILD_VERSION)\DECENTSetup.msi
   name: MSI
 
 deploy:
@@ -56,7 +52,7 @@ deploy:
   subject: decentfoundation
   repo: windows
   package: DCore-dev
-  version: $(DCORE_VERSION)/dev/$(DCORE_VERSION)
+  version: $(APPVEYOR_BUILD_VERSION)/dev/$(APPVEYOR_BUILD_VERSION)
   artifact: MSI
   publish: true
   override: true
