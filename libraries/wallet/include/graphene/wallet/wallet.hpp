@@ -698,7 +698,7 @@ public:
     * @brief Get operations relevant to the specified account referenced
     * by an event numbering specific to the account. The current number of operations
     * for the account can be found in the account statistics (or use 0 for start).
-    * @note The sequence number of the oldest operation is 1 and the operations are in increasing order, 
+    * @note The sequence number of the oldest operation is 1 and the operations are in increasing order,
     * from the oldest operation to the most recent.
     * @param name The account whose history should be queried
     * @param stop Sequence number of earliest operation. 0 is default and will
@@ -968,28 +968,6 @@ public:
                                     const std::string& asset_symbol,
                                     const std::string& memo,
                                     bool broadcast = false);
-
-   /**
-    *  @brief This method works just like transfer, except it always broadcasts and
-    *  returns the transaction ID along with the signed transaction.
-    *  @param from the name or id of the account sending the funds
-    *  @param to the name or id of the account or id of the content receiving the funds
-    *  @param amount the amount to send (in nominal units -- to send half of a DCT, specify 0.5)
-    *  @param asset_symbol the symbol or id of the asset to send
-    *  @param memo a memo to attach to the transaction.  The memo will be encrypted in the
-    *             transaction and readable for the receiver.  There is no length limit
-    *             other than the limit imposed by maximum transaction size, but transaction
-    *             increase with transaction size
-    * @note transaction fee is fixed and does not depend on the length of the memo
-    * @warning Obsolete method. Use \c transfer instead.
-    * @return the transaction ID along with the signed transaction
-    * @ingroup WalletAPI_Account
-    */
-   std::pair<transaction_id_type,signed_transaction> transfer2(const std::string& from,
-                                                          const std::string& to,
-                                                          const std::string& amount,
-                                                          const std::string& asset_symbol,
-                                                          const std::string& memo );
 
    /**
     * @brief Generates private El Gamal key and corresponding public key.
@@ -2477,7 +2455,6 @@ FC_API( graphene::wallet::wallet_api,
         (update_account_keys)
         (update_account_keys_to_multisig)
         (transfer)
-        (transfer2)
         (generate_el_gamal_keys)
         (get_el_gammal_key)
         (generate_brain_key_el_gamal_key)

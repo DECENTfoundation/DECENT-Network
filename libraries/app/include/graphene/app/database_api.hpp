@@ -257,14 +257,6 @@ namespace graphene { namespace app {
 
          /**
           * @brief Retrieve compile-time constants.
-          * @deprecated use get_configuration instead
-          * @return configured constants
-          * @ingroup DatabaseAPI_Globals
-          */
-         fc::variant_object get_config()const;
-
-         /**
-          * @brief Retrieve compile-time constants.
           * @return configured constants
           * @ingroup DatabaseAPI_Globals
           */
@@ -904,16 +896,6 @@ namespace graphene { namespace app {
                                                 uint32_t count )const;
 
          /**
-          * @brief Get a list of seeders by price, in increasing order. Same method as list_seeders_by_price, kept for compatibility.
-          * @deprecated use list_seeders_by_price instead
-          * @param count maximum number of seeders to retrieve
-          * @return the seeders found
-          * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception
-          */
-         vector<seeder_object> list_publishers_by_price( uint32_t count )const;
-
-         /**
           * @brief Get a list of seeders by price, in increasing order.
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
@@ -1037,7 +1019,6 @@ FC_API(graphene::app::database_api,
           (about)
           (get_chain_properties)
           (get_global_properties)
-          (get_config)
           (get_configuration)
           (get_chain_id)
           (get_dynamic_global_properties)
@@ -1125,7 +1106,6 @@ FC_API(graphene::app::database_api,
           (generate_content_keys)
           (restore_encryption_key)
           (search_content)
-          (list_publishers_by_price)
           (list_seeders_by_price)
           (list_seeders_by_upload)
           (list_seeders_by_region)

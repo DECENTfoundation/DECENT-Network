@@ -369,15 +369,3 @@ signed_transaction_info wallet_api::transfer(const string& from,
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
-
-pair<transaction_id_type,signed_transaction> wallet_api::transfer2(const string& from,
-                                                                   const string& to,
-                                                                   const string& amount,
-                                                                   const string& asset_symbol,
-                                                                   const string& memo)
-{
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-   auto trx = my->transfer( from, to, amount, asset_symbol, memo, true );
-   return std::make_pair(trx.id(),trx);
-}

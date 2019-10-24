@@ -459,11 +459,6 @@ namespace graphene { namespace app {
    {
    }
 
-   public_key_type crypto_api::get_public_key( const string &wif_priv_key )
-   {
-      return wif_to_public_key(wif_priv_key);
-   }
-
    public_key_type crypto_api::wif_to_public_key(const string &wif)
    {
       return wif_to_private_key(wif).get_public_key();
