@@ -1154,7 +1154,7 @@ void application::initialize(const boost::filesystem::path& data_dir, const boos
       const std::vector<std::string>& ops = options["track-account"].as<std::vector<std::string>>();
       std::for_each(ops.begin(), ops.end(), [](const std::string &acc) {
          try {
-            graphene::db::object_id_type account(acc.find_first_of('"') == 0 ? fc::json::from_string(acc).as<std::string>() : acc);
+            graphene::db::object_id_type account(acc);
             FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid account ${a}", ("a", acc) );
             graphene::chain::generic_evaluator::track_account(account);
          } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: track-account = ${a}", ("a", acc));

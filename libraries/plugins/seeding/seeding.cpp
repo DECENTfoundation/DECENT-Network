@@ -660,7 +660,7 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
 
    if( options.count("seeder") ) {
       auto seeder = options["seeder"].as<std::string>();
-      graphene::db::object_id_type account(seeder.find_first_of('"') == 0 ? fc::json::from_string(seeder).as<std::string>() : seeder);
+      graphene::db::object_id_type account(seeder);
       FC_ASSERT( account.is<graphene::chain::account_id_type>(), "Invalid seeder account ${s}", ("s", seeder) );
       my->seeding_options.seeder = account;
    } else {
@@ -669,9 +669,6 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
 
    if( options.count("seeder-private-key") ) {
       auto wif_key = options["seeder-private-key"].as<std::string>();
-      if( wif_key.find_first_of('"') == 0 )
-         wif_key = fc::json::from_string(wif_key).as<std::string>();
-
       fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(wif_key);
       if( !private_key.valid() ) {
          try {
@@ -690,9 +687,6 @@ void seeding_plugin::plugin_initialize( const boost::program_options::variables_
 
    if( options.count("content-private-key") ) {
       auto content_key = options["content-private-key"].as<std::string>();
-      if( content_key.find_first_of('"') == 0 )
-         content_key = fc::json::from_string(content_key).as<std::string>();
-
       my->seeding_options.content_private_key = decent::encrypt::DInteger::from_string(content_key);
       if( my->seeding_options.content_private_key.IsZero() ) {
          FC_THROW("Invalid content private key ${key_string}", ("key_string", content_key));
