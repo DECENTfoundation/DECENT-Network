@@ -23,25 +23,19 @@
  * THE SOFTWARE.
  */
 #include <graphene/miner/miner.hpp>
-
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/miner_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/time.hpp>
-
 #include <graphene/utilities/key_conversion.hpp>
 
-#include <fc/smart_ref_impl.hpp>
 #include <fc/thread/thread.hpp>
 
 #include <iostream>
-#include <regex>
-
-using namespace graphene::miner_plugin;
-using std::string;
-using std::vector;
 
 namespace bpo = boost::program_options;
+
+namespace graphene { namespace miner_plugin {
 
 void new_chain_banner( const graphene::chain::database& db )
 {
@@ -61,45 +55,7 @@ void new_chain_banner( const graphene::chain::database& db )
          "\n"
          ;
    }
-   return;
 }
-
-// pair of public and private key, i.e.:["DCT6M...","5KQwr..."]
-const std::regex key_pair_regex("^\\x5B\"?(DCT[0-9a-zA-Z]{50})\"?,\"?([0-9a-zA-Z]{51})\"?\\x5D$");
-
-class param_validator_miner
-{
-public:
-   param_validator_miner(const std::string param_name)
-      : _name(param_name)
-   {
-   }
-
-   void check_reg_expr(const std::regex& rx, const std::string& val)
-   {
-      bool matches_reg_expr = std::regex_match(val, rx);
-      if(!matches_reg_expr)
-         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
-   }
-
-   void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
-   {
-      for (size_t i = 0; i < val.size(); i++) {
-         bool matches_reg_expr = std::regex_match(val[i], rx);
-         if (!matches_reg_expr)
-            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
-      }
-   }
-
-   void operator()(const std::vector<std::string>& val)
-   {
-      if (_name == "private-key") {
-         check_reg_expr(key_pair_regex, val);
-      }
-   }
-
-   std::string _name;
-};
 
 miner_plugin::miner_plugin(graphene::app::application* app) : graphene::app::plugin(app) {}
 
@@ -124,14 +80,10 @@ void miner_plugin::plugin_set_program_options(
    command_line_options.add_options()
          ("enable-stale-production", bpo::bool_switch(), "Enable block production, even if the chain is stale.")
          ("required-miners-participation", bpo::value<uint32_t>()->default_value(33), "Percent of miners (0-99) that must be participating in order to produce blocks")
-         ("miner-id,m", bpo::value<vector<string>>()->composing()->multitoken(),
+         ("miner-id,m", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
           ("ID of miner controlled by this node (may specify multiple times), e.g. " + static_cast<std::string>(miner_id_example)).c_str())
-         ("miner-private-key,k", bpo::value<vector<string>>()->composing()->multitoken(),
+         ("miner-private-key,k", bpo::value<std::vector<std::string>>()->composing()->multitoken(),
           ("Miner WIF private key (may specify multiple times), e.g. " + graphene::utilities::key_to_wif(default_priv_key)).c_str())
-         ("private-key", bpo::value<vector<string>>()->composing()->multitoken()->notifier(param_validator_miner("private-key")),
-          ("DEPRECATED: Tuple of [PublicKey, WIF private key] (may specify multiple times), e.g. [" +
-          static_cast<std::string>(graphene::chain::public_key_type(default_priv_key.get_public_key())) + "," +
-          graphene::utilities::key_to_wif(default_priv_key) + "]").c_str())
          ;
    config_file_options.add(command_line_options);
 }
@@ -163,43 +115,14 @@ void miner_plugin::plugin_initialize(const boost::program_options::variables_map
             _miners.insert(account);
          } FC_RETHROW_EXCEPTIONS(error, "Invalid argument: miner-id = ${s}", ("s", miner));
       });
-   }
 
-   if( options.count("miner-private-key") )
-   {
+      FC_ASSERT( options.count("miner-private-key"), "Missing miner private key" );
       const std::vector<std::string>& keys = options["miner-private-key"].as<std::vector<std::string>>();
       std::for_each(keys.begin(), keys.end(), [this](const std::string &key) {
          fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key);
          FC_ASSERT( private_key.valid(), "Invalid miner private key" );
          _private_keys[private_key->get_public_key()] = *private_key;
       });
-   }
-   else if( options.count("private-key") )
-   {
-      const std::vector<std::string>& key_id_to_wif_pairs = options["private-key"].as<std::vector<std::string>>();
-      std::for_each(key_id_to_wif_pairs.begin(), key_id_to_wif_pairs.end(), [this](const std::string& key_id_to_wif_pair) {
-         std::smatch key_match;
-         FC_ASSERT( std::regex_match(key_id_to_wif_pair, key_match, key_pair_regex) && key_match.size() == 3 );
-         fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key_match[2]);
-         if (!private_key)
-         {
-            // the key isn't in WIF format; see if they are still passing the old native private key format.  This is
-            // just here to ease the transition, can be removed soon
-            try
-            {
-               private_key = fc::variant(static_cast<std::string>(key_match[2])).as<fc::ecc::private_key>();
-            }
-            catch (const fc::exception&)
-            {
-               FC_THROW("Invalid WIF-format private key ${key_string}", ("key_string", static_cast<std::string>(key_match[2])));
-            }
-         }
-
-         graphene::chain::public_key_type pk(key_match[1]);
-         FC_ASSERT( pk == private_key->get_public_key() );
-         _private_keys[pk] = *private_key;
-      });
-      wlog("Using deprecated private-key argument - please use miner-private-key instead (see also help)");
    }
 } FC_LOG_AND_RETHROW() }
 
@@ -380,3 +303,5 @@ block_production_condition::block_production_condition_enum miner_plugin::maybe_
 
    return block_production_condition::produced;
 }
+
+} } // graphene::miner_plugin
