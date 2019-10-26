@@ -151,7 +151,7 @@ namespace graphene { namespace app {
           * @param ids IDs of the objects to retrieve
           * @return the objects retrieved, in the order they are mentioned in ids
           * @ingroup DatabaseAPI_Globals
-          * @throw invalid_space_id_exception (101), invalid_type_id_exception (102)
+          * @throw invalid_space_id_exception, invalid_type_id_exception
           */
          fc::variants get_objects(const vector<object_id_type>& ids)const;
 
@@ -240,7 +240,7 @@ namespace graphene { namespace app {
           * @param trx_in_block specifies the position of the transaction within the block
           * @return the transaction
           * @ingroup DatabaseAPI_BlockTx
-          * @throw block_not_found_exception (105), block_does_not_contain_requested_trx_exception (106)
+          * @throw block_not_found_exception, block_does_not_contain_requested_trx_exception
           */
          processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
@@ -268,7 +268,7 @@ namespace graphene { namespace app {
           * be loaded for these objects to be maintained.
           * @param id ID of the transaction to retrieve
           * @ingroup DatabaseAPI_BlockTx
-          * @throw block_not_found_exception (105), block_does_not_contain_requested_trx_exception (106)
+          * @throw block_not_found_exception, block_does_not_contain_requested_trx_exception
           */
          optional<processed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
 
@@ -440,7 +440,7 @@ namespace graphene { namespace app {
           * @param limit maximum number of results to return ( must not exceed 1000 )
           * @return map of account names to corresponding IDs
           * @ingroup DatabaseAPI_Account
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
 
@@ -452,7 +452,7 @@ namespace graphene { namespace app {
           * @param limit maximum number of results to return ( must not exceed 1000 )
           * @return list of corresponding accounts
           * @ingroup DatabaseAPI_Account
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
 
@@ -499,7 +499,7 @@ namespace graphene { namespace app {
           * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
           * @return a list of the given account's balances
           * @ingroup DatabaseAPI_Balance
-          * @throw account_does_not_exist_exception (104)
+          * @throw account_does_not_exist_exception
           */
          vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
 
@@ -617,7 +617,7 @@ namespace graphene { namespace app {
           * @param limit maximum number of non fungible tokens to fetch (must not exceed 100)
           * @return the non fungible tokens found
           * @ingroup DatabaseAPI_NonFungibleToken
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<non_fungible_token_object> list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const;
 
@@ -689,7 +689,7 @@ namespace graphene { namespace app {
           * @param limit maximum number of results to return ( must not exceed 1000 )
           * @return map of miner names to corresponding IDs
           * @ingroup DatabaseAPI_Mining
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          map<string, miner_id_type> lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const;
 
@@ -706,7 +706,7 @@ namespace graphene { namespace app {
           * @param count maximum number of price feeds to fetch (must not exceed 100)
           * @returns a list of price feeds published by the miner
           * @ingroup DatabaseAPI_Mining
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
                                                                   const uint32_t count)const;
@@ -741,7 +741,7 @@ namespace graphene { namespace app {
           * any vote ids that are not found.
           * @param votes set of votes
           * @ingroup DatabaseAPI_Mining
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<optional<miner_object>> lookup_vote_ids( const vector<vote_id_type>& votes )const;
 
@@ -805,7 +805,7 @@ namespace graphene { namespace app {
           * @param trx the signed transaction
           * @return \c true if the \c trx has all of the required signatures, otherwise throws an exception
           * @ingroup DatabaseAPI_AuthValidation
-          * @throw account_does_not_exist_exception (104), tx_missing_other_auth_exception (409), invalid_committee_approval_exception (412), tx_irrelevant_sig_exception (410)
+          * @throw account_does_not_exist_exception, tx_missing_other_auth_exception, invalid_committee_approval_exception, tx_irrelevant_sig_exception
           */
          bool           verify_authority( const signed_transaction& trx )const;
 
@@ -815,7 +815,7 @@ namespace graphene { namespace app {
           * @param signers set of public keys
           * @return \c true if the signers have enough authority
           * @ingroup DatabaseAPI_AuthValidation
-          * @throw account_does_not_exist_exception (104)
+          * @throw account_does_not_exist_exception
           */
          bool           verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
 
@@ -846,7 +846,7 @@ namespace graphene { namespace app {
           * @param limit the maximum number of accounts to return (max: 100)
           * @return a list of publishing managers
           * @ingroup DatabaseAPI_Content
-          * @throw account_does_not_exist_exception (104)
+          * @throw account_does_not_exist_exception
           */
          vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const;
 
@@ -862,7 +862,7 @@ namespace graphene { namespace app {
           * @param URI URI of the buyings to retrieve
           * @return a list of buyings corresponding to the provided URI
           * @ingroup DatabaseAPI_Content
-          * @throw object_not_found_code (103)
+          * @throw object_not_found_code
           */
          vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
 
@@ -926,7 +926,7 @@ namespace graphene { namespace app {
           * @param URI URI of the content to retrieve
           * @return the content corresponding to the provided URI, or \c null if no matching content was found
           * @ingroup DatabaseAPI_Content
-          * @throw object_not_found_exception (103)
+          * @throw object_not_found_exception
           */
          optional<content_object> get_content( const string& URI )const;
 
@@ -935,7 +935,7 @@ namespace graphene { namespace app {
           * @param seeders list of seeder account IDs
           * @return generated key, key parts and quorum
           * @ingroup DatabaseAPI_Content
-          * @throw seeder_not_found_exception (111)
+          * @throw seeder_not_found_exception
           */
          content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
 
@@ -945,7 +945,7 @@ namespace graphene { namespace app {
           * @param buying the buying object
           * @return AES encryption key
           * @ingroup DatabaseAPI_Content
-          * @throw object_not_found_exception (103), buying_object_does_not_exist_exception (108), content_object_does_not_exist_exception (109), decryption_of_key_particle_failed_exception (110)
+          * @throw object_not_found_exception, buying_object_does_not_exist_exception, content_object_does_not_exist_exception, decryption_of_key_particle_failed_exception
           */
          fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
 
@@ -960,7 +960,7 @@ namespace graphene { namespace app {
           * @param count maximum number of contents to fetch (must not exceed 100)
           * @return the contents found
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107) 
+          * @throw limit_exceeded_exception
           */
          vector<content_summary> search_content(const string& term,
                                                 const string& order,
@@ -976,7 +976,7 @@ namespace graphene { namespace app {
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<seeder_object> list_publishers_by_price( uint32_t count )const;
 
@@ -985,7 +985,7 @@ namespace graphene { namespace app {
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<seeder_object> list_seeders_by_price( uint32_t count )const;
 
@@ -994,7 +994,7 @@ namespace graphene { namespace app {
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<seeder_object> list_seeders_by_upload( const uint32_t count )const;
 
@@ -1011,7 +1011,7 @@ namespace graphene { namespace app {
           * @param count maximum number of seeders to retrieve
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
 
@@ -1037,7 +1037,7 @@ namespace graphene { namespace app {
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
           * @return a list of subscription objects corresponding to the provided consumer
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
@@ -1047,7 +1047,7 @@ namespace graphene { namespace app {
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
           * @return a list of subscription objects corresponding to the provided consumer
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
 
@@ -1057,7 +1057,7 @@ namespace graphene { namespace app {
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
           * @return a list of subscription objects corresponding to the provided author
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
@@ -1067,7 +1067,7 @@ namespace graphene { namespace app {
           * @param count maximum number of subscription objects to fetch (must not exceed 100)
           * @return a list of subscription objects corresponding to the provided author
           * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception (107)
+          * @throw limit_exceeded_exception
           */
          vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
 
