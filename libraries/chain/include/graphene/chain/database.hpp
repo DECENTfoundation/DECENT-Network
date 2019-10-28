@@ -405,12 +405,10 @@ namespace graphene { namespace chain {
          share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
          miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
          share_type get_miner_budget(uint32_t blocks);
-         bool is_reward_switch_in_interval(uint64_t a, uint64_t b)const;
          uint64_t get_next_reward_switch_block(uint64_t start)const;
 
          real_supply get_real_supply()const;
 
-         bool is_reward_switch_time() const;
          struct votes_gained{
             string account_name;
             uint64_t votes;

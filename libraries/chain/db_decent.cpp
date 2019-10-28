@@ -300,29 +300,6 @@ void database::decent_housekeeping()
    }
 }
 
-bool database::is_reward_switch_time() const
-{
-   auto now = head_block_num();
-   return ( now == DECENT_SPLIT_0 || now == DECENT_SPLIT_1 || now == DECENT_SPLIT_2 || now == DECENT_SPLIT_3 || now == DECENT_SPLIT_4 );
-}
-
-bool database::is_reward_switch_in_interval(uint64_t a, uint64_t b)const
-{
-   if(a>=b)
-      return false;
-   if (a <= DECENT_SPLIT_0 && b >= DECENT_SPLIT_0)
-      return true;
-   if (a <= DECENT_SPLIT_1 && b >= DECENT_SPLIT_1)
-      return true;
-   if (a <= DECENT_SPLIT_2 && b >= DECENT_SPLIT_2)
-      return true;
-   if (a <= DECENT_SPLIT_3 && b >= DECENT_SPLIT_3)
-      return true;
-   if (a <= DECENT_SPLIT_4 && b >= DECENT_SPLIT_4)
-      return true;
-   return false;
-}
-
 uint64_t database::get_next_reward_switch_block(uint64_t start)const
 {
    if(start <= DECENT_SPLIT_0 )
