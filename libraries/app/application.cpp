@@ -100,7 +100,11 @@ namespace detail {
 
       void reset_p2p_node(const boost::filesystem::path& data_dir)
       { try {
-         _p2p_network = std::make_shared<net::node>("Graphene Reference Implementation");
+         _p2p_network = std::make_shared<net::node>("Graphene Reference Implementation",
+            _options->count("p2p-cert-authority-file") ? _options->at("p2p-cert-authority-file").as<std::string>() : std::string(),
+            _options->count("p2p-cert-file") ? _options->at("p2p-cert-file").as<std::string>() : std::string(),
+            _options->count("p2p-cert-key-file") ? _options->at("p2p-cert-key-file").as<std::string>() : std::string(),
+            _options->count("p2p-cert-key-password") ? _options->at("p2p-cert-key-password").as<std::string>() : std::string());
 
          _p2p_network->load_configuration(data_dir / "p2p");
          _p2p_network->set_node_delegate(this, _chain_db->get_global_properties().parameters.maximum_block_size);
@@ -115,7 +119,6 @@ namespace detail {
 
                  seeds.push_back(seed_string);
              }
-
          }
          else if( _chain_db->get_chain_id() == graphene::egenesis::get_egenesis_chain_id() )
          {
@@ -1000,7 +1003,8 @@ public:
             FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, Cannot convert string to IP endpoint", ("name", _name)("value", val));
          }
       }
-      else if (_name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file") {
+      else if (_name == "p2p-cert-authority-file" || _name == "p2p-cert-file" || _name == "p2p-cert-key-file" || _name == "p2p-cert-key-file" ||
+               _name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file") {
          boost::filesystem::path p(val);
          bool file_exists = boost::filesystem::exists(p);
          if(!file_exists)
@@ -1067,17 +1071,20 @@ void application::set_program_options(boost::program_options::options_descriptio
 
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
+         ("p2p-cert-authority-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-authority-file")), "The TLS certificate authority file")
+         ("p2p-cert-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-file")), "The TLS certificate file (public) for this P2P node")
+         ("p2p-cert-key-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-key-file")), "The TLS certificate file (private key) for this P2P node")
+         ("p2p-cert-key-password", bpo::value<string>(), "Password for TLS certificate file (private key) for this P2P node")
          ("seed-node,s", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
          ("checkpoint,c", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("checkpoint")), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090")->notifier(param_validator_app("rpc-endpoint")), "Endpoint for websocket RPC to listen on")
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
-         ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers "
-                                       "(--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
+         ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers (--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
          ("server-allowed-domains", "List of allowed domains to communicate with or asterix for all domains")
-         ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this server")
-         ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this server")
-         ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this server")
-         ("server-cert-password,P", bpo::value<string>(), "Password for this certificate")
+         ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this websocket server")
+         ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this websocket server")
+         ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this websocket server")
+         ("server-cert-password", bpo::value<string>(), "Password for TLC certificate file (private key) for this websocket server")
          ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")

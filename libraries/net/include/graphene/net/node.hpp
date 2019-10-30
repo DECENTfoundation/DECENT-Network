@@ -75,26 +75,26 @@ namespace graphene { namespace net {
           *  @param sync_mode true if the message was fetched through the sync process, false during normal operation
           *  @returns maximum block size (as set in global properties)
           *
-          *  @throws exception if error validating the item, otherwise the item is
+          *  @throw exception if error validating the item, otherwise the item is
           *          safe to broadcast on.
           */
-         virtual uint32_t handle_block( const graphene::net::block_message& blk_msg, bool sync_mode, 
+         virtual uint32_t handle_block( const graphene::net::block_message& blk_msg, bool sync_mode,
                                     std::vector<fc::uint160_t>& contained_transaction_message_ids ) = 0;
-         
+
          /**
           *  @brief Called when a new transaction comes in from the network
           *
-          *  @throws exception if error validating the item, otherwise the item is
+          *  @throw exception if error validating the item, otherwise the item is
           *          safe to broadcast on.
           */
          virtual void handle_transaction( const graphene::net::trx_message& trx_msg ) = 0;
 
          /**
           *  @brief Called when a new message comes in from the network other than a
-          *         block or a transaction.  Currently there are no other possible 
+          *         block or a transaction.  Currently there are no other possible
           *         messages, so this should never be called.
           *
-          *  @throws exception if error validating the item, otherwise the item is
+          *  @throw exception if error validating the item, otherwise the item is
           *          safe to broadcast on.
           */
          virtual void handle_message( const message& message_to_process ) = 0;
@@ -134,7 +134,7 @@ namespace graphene { namespace net {
           *     &c.
           *   the last item in the list will be the hash of the most recent block on our preferred chain
           */
-         virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point, 
+         virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point,
                                                                   uint32_t number_of_blocks_after_reference_point) = 0;
 
          /**
@@ -168,7 +168,6 @@ namespace graphene { namespace net {
 
          virtual void error_encountered(const std::string& message, const fc::optional<fc::exception>& error) = 0;
          virtual uint8_t get_current_block_interval_in_seconds() const = 0;
-
    };
 
    /**
@@ -202,6 +201,7 @@ namespace graphene { namespace net {
       uint32_t current_head_block_number;
       fc::time_point_sec current_head_block_time;
    };
+
    struct peer_status
    {
       uint32_t         version;
@@ -223,7 +223,7 @@ namespace graphene { namespace net {
    class node : public std::enable_shared_from_this<node>
    {
       public:
-        node(const std::string& user_agent);
+        node(const std::string& user_agent, const std::string& auth_file, const std::string& cert_file, const std::string& key_file, const std::string& key_password);
         virtual ~node();
 
         void close();
@@ -332,8 +332,9 @@ namespace graphene { namespace net {
     class simulated_network : public node
     {
     public:
+      simulated_network(const std::string& user_agent, const std::string& auth_file, const std::string& cert_file, const std::string& key_file, const std::string& key_password)
+        : node(user_agent, auth_file, cert_file, key_file, key_password) {}
       ~simulated_network();
-      simulated_network(const std::string& user_agent) : node(user_agent) {}
       void      listen_to_p2p_network() override {}
       void      connect_to_p2p_network() override {}
       void      connect_to_endpoint(const fc::ip::endpoint& ep) override {}
@@ -350,7 +351,6 @@ namespace graphene { namespace net {
       void message_sender(node_info* destination_node);
       std::list<node_info*> network_nodes;
     };
-
 
    typedef std::shared_ptr<node> node_ptr;
    typedef std::shared_ptr<simulated_network> simulated_network_ptr;

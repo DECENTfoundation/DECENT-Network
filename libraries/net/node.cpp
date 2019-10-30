@@ -512,6 +512,10 @@ namespace graphene { namespace net { namespace detail {
       uint8_t _recent_block_interval_in_seconds; // a cached copy of the block interval, to avoid a thread hop to the blockchain to get the current value
 
       std::string          _user_agent_string;
+      std::string          _auth_file;
+      std::string          _cert_file;
+      std::string          _key_file;
+      std::string          _key_password;
       /** _node_public_key is a key automatically generated when the client is first run, stored in
        * node_config.json.  It doesn't really have much of a purpose yet, there was just some thought
        * that we might someday have a use for nodes having a private key (sent in hello messages)
@@ -606,7 +610,7 @@ namespace graphene { namespace net { namespace detail {
 
       std::list<fc::future<void> > _handle_message_calls_in_progress;
 
-      node_impl(const std::string& user_agent);
+      node_impl(const std::string& user_agent, const std::string& auth_file, const std::string& cert_file, const std::string& key_file, const std::string& key_password);
       virtual ~node_impl();
 
       void save_node_configuration();
@@ -821,7 +825,7 @@ namespace graphene { namespace net { namespace detail {
 #define MAXIMUM_NUMBER_OF_BLOCKS_TO_HANDLE_AT_ONE_TIME 200
 #define MAXIMUM_NUMBER_OF_BLOCKS_TO_PREFETCH (10 * MAXIMUM_NUMBER_OF_BLOCKS_TO_HANDLE_AT_ONE_TIME)
 
-    node_impl::node_impl(const std::string& user_agent) :
+    node_impl::node_impl(const std::string& user_agent, const std::string& auth_file, const std::string& cert_file, const std::string& key_file, const std::string& key_password) :
 #ifdef P2P_IN_DEDICATED_THREAD
       _thread(std::make_shared<fc::thread>("p2p")),
 #endif // P2P_IN_DEDICATED_THREAD
@@ -835,6 +839,10 @@ namespace graphene { namespace net { namespace detail {
       _items_to_fetch_sequence_counter(0),
       _recent_block_interval_in_seconds(GRAPHENE_MAX_BLOCK_INTERVAL),
       _user_agent_string(user_agent),
+      _auth_file(auth_file),
+      _cert_file(cert_file),
+      _key_file(key_file),
+      _key_password(key_password),
       _desired_number_of_connections(GRAPHENE_NET_DEFAULT_DESIRED_CONNECTIONS),
       _maximum_number_of_connections(GRAPHENE_NET_DEFAULT_MAX_CONNECTIONS),
       _peer_connection_retry_timeout(GRAPHENE_NET_DEFAULT_PEER_CONNECTION_RETRY_TIME),
@@ -3685,7 +3693,7 @@ namespace graphene { namespace net { namespace detail {
         {
           // we're not connected to them, so we need to set up a connection to them
           // to test.
-          peer_connection_ptr peer_for_testing(peer_connection::make_shared(this));
+          peer_connection_ptr peer_for_testing(peer_connection::make_shared(this, _auth_file));
           peer_for_testing->firewall_check_state = new firewall_check_state_data;
           peer_for_testing->firewall_check_state->endpoint_to_test = check_firewall_message_received.endpoint_to_check;
           peer_for_testing->firewall_check_state->expected_node_id = check_firewall_message_received.node_id;
@@ -4242,11 +4250,24 @@ namespace graphene { namespace net { namespace detail {
       VERIFY_CORRECT_THREAD();
       while ( !_accept_loop_complete.canceled() )
       {
-        peer_connection_ptr new_peer(peer_connection::make_shared(this));
+        peer_connection_ptr new_peer(peer_connection::make_shared(this, _cert_file, _key_file, _key_password));
 
         try
         {
-          _tcp_server.accept( new_peer->get_socket() );
+          try
+          {
+            _tcp_server.accept(new_peer->get_socket());
+          }
+          catch(const fc::exception& e)
+          {
+            // if socket is open it might be SSL problem - ignore peer
+            if (new_peer->get_socket().is_open())
+            {
+              wdump((e));
+              continue;
+            }
+            throw;
+          }
           ilog( "accepted inbound connection from ${remote_endpoint}", ("remote_endpoint", new_peer->get_socket().remote_endpoint() ) );
           if (_node_is_shutting_down)
             return;
@@ -4674,7 +4695,7 @@ namespace graphene { namespace net { namespace detail {
                            ("endpoint", remote_endpoint));
 
       dlog("node_impl::connect_to_endpoint(${endpoint})", ("endpoint", remote_endpoint));
-      peer_connection_ptr new_peer(peer_connection::make_shared(this));
+      peer_connection_ptr new_peer(peer_connection::make_shared(this, _auth_file));
       new_peer->set_remote_endpoint(remote_endpoint);
       initiate_connect_to(new_peer);
     }
@@ -5157,8 +5178,6 @@ namespace graphene { namespace net { namespace detail {
 
   }  // end namespace detail
 
-
-
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // implement node functions, they call the matching function in to detail::node_impl in the correct thread //
 
@@ -5170,8 +5189,8 @@ namespace graphene { namespace net { namespace detail {
     return my->method_name(__VA_ARGS__)
 #endif // P2P_IN_DEDICATED_THREAD
 
-  node::node(const std::string& user_agent) :
-    my(new detail::node_impl(user_agent))
+  node::node(const std::string& user_agent, const std::string& auth_file, const std::string& cert_file, const std::string& key_file, const std::string& key_password)
+    : my(new detail::node_impl(user_agent, auth_file, cert_file, key_file, key_password))
   {
   }
 

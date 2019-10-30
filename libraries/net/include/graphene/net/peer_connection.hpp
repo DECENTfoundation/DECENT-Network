@@ -271,10 +271,14 @@ namespace graphene { namespace net
       unsigned _send_message_queue_tasks_running; // temporary debugging
 #endif
     private:
-      peer_connection(peer_connection_delegate* delegate);
+      peer_connection(peer_connection_delegate* delegate, const std::string& cert_file);
+      peer_connection(peer_connection_delegate* delegate,const std::string& cert_file,
+                      const std::string& key_file, const std::string& key_password);
       void destroy();
     public:
-      static peer_connection_ptr make_shared(peer_connection_delegate* delegate); // use this instead of the constructor
+      static peer_connection_ptr make_shared(peer_connection_delegate* delegate, const std::string& cert_file);
+      static peer_connection_ptr make_shared(peer_connection_delegate* delegate,const std::string& cert_file,
+                                             const std::string& key_file, const std::string& key_password);
       virtual ~peer_connection();
 
       fc::tcp_socket& get_socket();

@@ -35,7 +35,8 @@ namespace graphene { namespace net {
 class stcp_socket : public virtual fc::iostream
 {
   public:
-    stcp_socket();
+    stcp_socket(const std::string& cert_file);
+    stcp_socket(const std::string& cert_file, const std::string& key_file, const std::string& key_password);
     ~stcp_socket();
     fc::tcp_socket&  get_socket() { return _sock; }
     void             accept();

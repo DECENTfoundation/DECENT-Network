@@ -22,27 +22,32 @@
  * THE SOFTWARE.
  */
 #include <assert.h>
-
 #include <algorithm>
-
-#include <fc/crypto/hex.hpp>
-#include <fc/crypto/aes.hpp>
-#include <fc/crypto/city.hpp>
-#include <fc/log/logger.hpp>
+#include <fc/crypto/elliptic.hpp>
 #include <fc/network/ip.hpp>
 
 #include <graphene/net/stcp_socket.hpp>
 
 namespace graphene { namespace net {
 
-stcp_socket::stcp_socket()
-//:_buf_len(0)
+stcp_socket::stcp_socket(const std::string& cert_file)
+   : _sock(cert_file)
 #ifndef NDEBUG
-   : _read_buffer_in_use(false),
-     _write_buffer_in_use(false)
+   , _read_buffer_in_use(false)
+   , _write_buffer_in_use(false)
 #endif
 {
 }
+
+stcp_socket::stcp_socket(const std::string& cert_file, const std::string& key_file, const std::string& key_password)
+   : _sock(cert_file, key_file, key_password)
+#ifndef NDEBUG
+   , _read_buffer_in_use(false)
+   , _write_buffer_in_use(false)
+#endif
+{
+}
+
 stcp_socket::~stcp_socket()
 {
 }
@@ -50,23 +55,16 @@ stcp_socket::~stcp_socket()
 void stcp_socket::do_key_exchange()
 {
   _priv_key = fc::ecc::private_key::generate();
-  fc::ecc::public_key pub = _priv_key.get_public_key();
-  fc::ecc::public_key_data s = pub.serialize();
-  std::shared_ptr<char> serialized_key_buffer(new char[sizeof(fc::ecc::public_key_data)], [](char* p){ delete[] p; });
-  memcpy(serialized_key_buffer.get(), (char*)&s, sizeof(fc::ecc::public_key_data));
-  _sock.write( serialized_key_buffer, sizeof(fc::ecc::public_key_data) );
-  _sock.read( serialized_key_buffer, sizeof(fc::ecc::public_key_data) );
+  fc::ecc::public_key_data s = _priv_key.get_public_key().serialize();
+  _sock.writesome( s.data, sizeof(fc::ecc::public_key_data) );
   fc::ecc::public_key_data rpub;
-  memcpy((char*)&rpub, serialized_key_buffer.get(), sizeof(fc::ecc::public_key_data));
-
+  _sock.readsome( rpub.data, sizeof(fc::ecc::public_key_data) );
   _shared_secret = _priv_key.get_shared_secret( rpub );
-//    ilog("shared secret ${s}", ("s", shared_secret) );
-  _send_aes.init( fc::sha256::hash( (char*)&_shared_secret, sizeof(_shared_secret) ), 
+  _send_aes.init( fc::sha256::hash( (char*)&_shared_secret, sizeof(_shared_secret) ),
                   fc::city_hash_crc_128((char*)&_shared_secret,sizeof(_shared_secret) ) );
-  _recv_aes.init( fc::sha256::hash( (char*)&_shared_secret, sizeof(_shared_secret) ), 
+  _recv_aes.init( fc::sha256::hash( (char*)&_shared_secret, sizeof(_shared_secret) ),
                   fc::city_hash_crc_128((char*)&_shared_secret,sizeof(_shared_secret) ) );
 }
-
 
 void stcp_socket::connect_to( const fc::ip::endpoint& remote_endpoint )
 {
@@ -89,8 +87,8 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
     assert( len > 0 && (len % 16) == 0 );
 
 #ifndef NDEBUG
-    // This code was written with the assumption that you'd only be making one call to readsome 
-    // at a time so it reuses _read_buffer.  If you really need to make concurrent calls to 
+    // This code was written with the assumption that you'd only be making one call to readsome
+    // at a time so it reuses _read_buffer.  If you really need to make concurrent calls to
     // readsome(), you'll need to prevent reusing _read_buffer here
     struct check_buffer_in_use {
       bool& _buffer_in_use;
@@ -103,10 +101,10 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
     if (!_read_buffer)
       _read_buffer.reset(new char[read_buffer_length], [](char* p){ delete[] p; });
 
-    len = std::min<size_t>(read_buffer_length, len);
+    len = std::min(read_buffer_length, len);
 
     size_t s = _sock.readsome( _read_buffer, len, 0 );
-    if( s % 16 ) 
+    if( s % 16 )
     {
       _sock.read(_read_buffer, 16 - (s%16), s);
       s += 16-(s%16);
@@ -115,7 +113,7 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
     return s;
 } FC_RETHROW_EXCEPTIONS( warn, "", ("len",len) ) }
 
-size_t stcp_socket::readsome( const std::shared_ptr<char>& buf, size_t len, size_t offset ) 
+size_t stcp_socket::readsome( const std::shared_ptr<char>& buf, size_t len, size_t offset )
 {
   return readsome(buf.get() + offset, len);
 }
@@ -131,7 +129,7 @@ size_t stcp_socket::writesome( const char* buffer, size_t len )
 
 #ifndef NDEBUG
     // This code was written with the assumption that you'd only be making one call to writesome
-    // at a time so it reuses _write_buffer.  If you really need to make concurrent calls to 
+    // at a time so it reuses _write_buffer.  If you really need to make concurrent calls to
     // writesome(), you'll need to prevent reusing _write_buffer here
     struct check_buffer_in_use {
       bool& _buffer_in_use;
@@ -167,10 +165,9 @@ void stcp_socket::flush()
   _sock.flush();
 }
 
-
 void stcp_socket::close()
 {
-  try 
+  try
   {
     _sock.close();
   }FC_RETHROW_EXCEPTIONS( warn, "error closing stcp socket" );
@@ -180,6 +177,5 @@ void stcp_socket::accept()
 {
   do_key_exchange();
 }
-
 
 }} // namespace graphene::net

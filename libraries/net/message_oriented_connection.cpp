@@ -76,8 +76,37 @@ namespace graphene { namespace net {
       void set_block_size(uint32_t block_size);
       void bind(const fc::ip::endpoint& local_endpoint);
 
-      message_oriented_connection_impl(message_oriented_connection* self,
-                                       message_oriented_connection_delegate* delegate = nullptr);
+      message_oriented_connection_impl(message_oriented_connection* self, message_oriented_connection_delegate* delegate, const std::string& cert_file)
+      : _self(self),
+        _delegate(delegate),
+        _sock(cert_file),
+        _max_message_size(0),
+        _bytes_received(0),
+        _bytes_sent(0),
+        _send_message_in_progress(false),
+        _run_loop(true)
+  #ifndef NDEBUG
+        ,_thread(&fc::thread::current())
+  #endif
+      {
+      }
+
+      message_oriented_connection_impl(message_oriented_connection* self, message_oriented_connection_delegate* delegate, const std::string& cert_file,
+                                       const std::string& key_file, const std::string& key_password)
+      : _self(self),
+        _delegate(delegate),
+        _sock(cert_file, key_file, key_password),
+        _max_message_size(0),
+        _bytes_received(0),
+        _bytes_sent(0),
+        _send_message_in_progress(false),
+        _run_loop(true)
+  #ifndef NDEBUG
+        ,_thread(&fc::thread::current())
+  #endif
+      {
+      }
+
       ~message_oriented_connection_impl();
 
       void send_message(const message& message_to_send);
@@ -93,20 +122,6 @@ namespace graphene { namespace net {
       fc::sha512 get_shared_secret() const;
     };
 
-    message_oriented_connection_impl::message_oriented_connection_impl(message_oriented_connection* self,
-                                                                       message_oriented_connection_delegate* delegate)
-    : _self(self),
-      _delegate(delegate),
-      _max_message_size(0),
-      _bytes_received(0),
-      _bytes_sent(0),
-      _send_message_in_progress(false),
-      _run_loop(true)
-#ifndef NDEBUG
-      ,_thread(&fc::thread::current())
-#endif
-    {
-    }
     message_oriented_connection_impl::~message_oriented_connection_impl()
     {
       VERIFY_CORRECT_THREAD();
@@ -363,9 +378,14 @@ namespace graphene { namespace net {
 
   } // end namespace graphene::net::detail
 
+  message_oriented_connection::message_oriented_connection(message_oriented_connection_delegate* delegate, const std::string& cert_file)
+    : my(new detail::message_oriented_connection_impl(this, delegate, cert_file))
+  {
+  }
 
-  message_oriented_connection::message_oriented_connection(message_oriented_connection_delegate* delegate) :
-    my(new detail::message_oriented_connection_impl(this, delegate))
+  message_oriented_connection::message_oriented_connection(message_oriented_connection_delegate* delegate, const std::string& cert_file,
+                              const std::string& key_file, const std::string& key_password)
+    : my(new detail::message_oriented_connection_impl(this, delegate, cert_file, key_file, key_password))
   {
   }
 

@@ -32,7 +32,7 @@ namespace graphene { namespace net {
   class message_oriented_connection;
 
   /** receives incoming messages from a message_oriented_connection object */
-  class message_oriented_connection_delegate 
+  class message_oriented_connection_delegate
   {
   public:
     virtual void on_message(message_oriented_connection* originating_connection, const message& received_message) = 0;
@@ -43,7 +43,9 @@ namespace graphene { namespace net {
   class message_oriented_connection
   {
      public:
-       message_oriented_connection(message_oriented_connection_delegate* delegate = nullptr);
+       message_oriented_connection(message_oriented_connection_delegate* delegate, const std::string& cert_file);
+       message_oriented_connection(message_oriented_connection_delegate* delegate, const std::string& cert_file,
+                                   const std::string& key_file, const std::string& key_password);
        ~message_oriented_connection();
        fc::tcp_socket& get_socket();
 
@@ -65,6 +67,7 @@ namespace graphene { namespace net {
      private:
        std::unique_ptr<detail::message_oriented_connection_impl> my;
   };
+
   typedef std::shared_ptr<message_oriented_connection> message_oriented_connection_ptr;
 
 } } // graphene::net
