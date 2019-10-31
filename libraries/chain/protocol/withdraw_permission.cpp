@@ -41,7 +41,7 @@ void withdraw_permission_claim_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
-share_type withdraw_permission_claim_operation::calculate_fee(const fee_parameters_type& k)const
+share_type withdraw_permission_claim_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now )const
 {
    share_type core_fee_required = k.fee;
    if( memo )

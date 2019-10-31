@@ -26,6 +26,7 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/asset.hpp>
+#include <graphene/chain/hardfork.hpp>
 #include <fc/io/json.hpp>
 
 namespace graphene { namespace chain {
@@ -65,7 +66,6 @@ namespace graphene { namespace chain {
       std::vector<message_payload_receivers_data> receivers_data;
    };
 
-   enum custom_operation_subtype : int;
    /**
     * @brief provides a generic way to add higher level protocols on top of miner consensus
     * @ingroup operations
@@ -94,7 +94,7 @@ namespace graphene { namespace chain {
 
       account_id_type   fee_payer()const { return payer; }
       void              validate()const;
-      share_type        calculate_fee(const fee_parameters_type& k)const;
+      share_type        calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now )const;
 
       void get_messaging_payload(message_payload& pl) const
       {

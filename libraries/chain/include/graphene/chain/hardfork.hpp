@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-using fork_times_t = std::array<fc::time_point_sec, 4>;
+using fork_times_t = std::array<fc::time_point_sec, 5>;
 extern fork_times_t fork_times;
 
 } }
@@ -28,4 +28,9 @@ extern fork_times_t fork_times;
 // #4 - NFT and submit content: removed 10 co-authors constraint, allowed CDN expiration date change
 #ifndef HARDFORK_4_TIME
 #define HARDFORK_4_TIME graphene::chain::fork_times[3]
+#endif
+
+// #5 - modified fee calculations
+#ifndef HARDFORK_5_TIME
+#define HARDFORK_5_TIME graphene::chain::fork_times[4]
 #endif

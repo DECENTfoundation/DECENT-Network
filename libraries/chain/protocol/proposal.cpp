@@ -43,7 +43,7 @@ void proposal_create_operation::validate() const
    for( const auto& op : proposed_ops ) operation_validate( op.op );
 }
 
-share_type proposal_create_operation::calculate_fee(const fee_parameters_type& k) const
+share_type proposal_create_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now) const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
@@ -71,7 +71,7 @@ void proposal_update_operation::validate() const
    }
 }
 
-share_type proposal_update_operation::calculate_fee(const fee_parameters_type& k) const
+share_type proposal_update_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now) const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }

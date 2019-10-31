@@ -30,9 +30,12 @@ void custom_operation::validate()const
 {
    FC_ASSERT( fee.amount > 0 );
 }
-share_type custom_operation::calculate_fee(const fee_parameters_type& k)const
+share_type custom_operation::calculate_fee(const fee_parameters_type& k, fc::time_point_sec now)const
 {
-   return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
+   if ( now > HARDFORK_5_TIME && id == custom_operation_subtype_messaging )
+      return k.fee + 2 * calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
+   else
+      return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
 
 message_payload_receivers_data::message_payload_receivers_data(const std::string &msg,

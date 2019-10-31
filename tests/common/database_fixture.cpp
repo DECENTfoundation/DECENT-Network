@@ -287,7 +287,7 @@ account_create_operation database_fixture::make_account(
      }
      create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
-     create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
+     create_account.fee = db.current_fee_schedule().calculate_fee( create_account, db.head_block_time() );
      return create_account;
   } FC_RETHROW() }
 
@@ -325,7 +325,7 @@ account_create_operation database_fixture::make_account(
      }
      create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
-     create_account.fee = db.current_fee_schedule().calculate_fee( create_account );
+     create_account.fee = db.current_fee_schedule().calculate_fee( create_account, db.head_block_time() );
      return create_account;
   }
   FC_CAPTURE_AND_RETHROW((name)(referrer_percent))
@@ -546,7 +546,7 @@ void database_fixture::transfer(
 
      if( fee == asset() )
      {
-        for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+        for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
      }
      trx.validate();
      db.push_transaction(trx, ~0);
@@ -621,7 +621,7 @@ void database_fixture::publish_feed( const asset_object& mia, const account_obje
      op.feed.core_exchange_rate = price(asset(1, op.feed.core_exchange_rate.base.asset_id), asset(1, op.feed.core_exchange_rate.quote.asset_id));
   trx.operations.emplace_back( std::move(op) );
 
-  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
   trx.validate();
   db.push_transaction(trx, ~0);
   trx.operations.clear();
@@ -710,7 +710,7 @@ const limit_order_object* database_fixture::create_sell_order( const account_obj
   buy_order.amount_to_sell = amount;
   buy_order.min_to_receive = recv;
   trx.operations.push_back(buy_order);
-  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
   trx.validate();
   auto processed = db.push_transaction(trx, ~0);
   trx.operations.clear();
@@ -763,7 +763,7 @@ asset database_fixture::cancel_limit_order( const limit_order_object& order )
   cancel_order.fee_paying_account = order.seller;
   cancel_order.order = order.id;
   trx.operations.push_back(cancel_order);
-  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+  for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
   trx.validate();
   auto processed = db.push_transaction(trx, ~0);
   trx.operations.clear();

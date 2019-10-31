@@ -301,7 +301,7 @@ void wallet_api_impl::on_block_applied(const fc::variant& block_id)
 void wallet_api_impl::set_operation_fees(chain::signed_transaction& tx, const chain::fee_schedule& s) const
 {
    for( auto& op : tx.operations )
-      s.set_fee(op);
+      s.set_fee(op, _remote_db->head_block_time());
 }
 
 fc::optional<chain::account_object> wallet_api_impl::find_account(chain::account_id_type account_id) const
@@ -779,7 +779,7 @@ chain::asset wallet_api_impl::set_fees_on_builder_transaction(transaction_handle
 
    auto gprops = _remote_db->get_global_properties().parameters;
    for( auto& op : _builder_transactions[handle].operations )
-      total_fee += gprops.current_fees->set_fee( op );
+      total_fee += gprops.current_fees->set_fee( op, _remote_db->head_block_time() );
 
    return total_fee;
 }
@@ -808,7 +808,7 @@ chain::signed_transaction wallet_api_impl::propose_builder_transaction(transacti
    if( review_period_seconds )
       op.review_period_seconds = review_period_seconds;
    trx.operations = {op};
-   _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
+   _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front(), _remote_db->head_block_time() );
 
    return trx = sign_transaction(trx, broadcast);
 }
@@ -827,7 +827,7 @@ chain::signed_transaction wallet_api_impl::propose_builder_transaction2(transact
    if( review_period_seconds )
       op.review_period_seconds = review_period_seconds;
    trx.operations = {op};
-   _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
+   _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front(), _remote_db->head_block_time() );
 
    return trx = sign_transaction(trx, broadcast);
 }
@@ -1881,7 +1881,7 @@ chain::signed_transaction wallet_api_impl::propose_parameter_change(const std::s
    prop_op.fee_paying_account = get_account(proposing_account).id;
 
    prop_op.proposed_ops.emplace_back( update_op );
-   current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+   current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, _remote_db->head_block_time() );
 
    chain::signed_transaction tx;
    tx.operations.push_back(prop_op);
@@ -1959,7 +1959,7 @@ chain::signed_transaction wallet_api_impl::propose_fee_change(const std::string&
    prop_op.fee_paying_account = get_account(proposing_account).id;
 
    prop_op.proposed_ops.emplace_back( update_op );
-   current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
+   current_params.current_fees->set_fee( prop_op.proposed_ops.back().op, _remote_db->head_block_time() );
 
    chain::signed_transaction tx;
    tx.operations.push_back(prop_op);

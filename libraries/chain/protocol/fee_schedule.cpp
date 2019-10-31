@@ -119,12 +119,13 @@ namespace graphene { namespace chain {
       typedef uint64_t result_type;
 
       const fee_parameters& param;
-      calc_fee_visitor( const fee_parameters& p ):param(p){}
+      const fc::time_point_sec now;
+      calc_fee_visitor( const fee_parameters& p, const fc::time_point_sec now ):param(p), now(now){}
 
       template<typename OpType>
       result_type operator()(  const OpType& op )const
       {
-         return op.calculate_fee( param.get<typename OpType::fee_parameters_type>() ).value;
+         return op.calculate_fee( param.get<typename OpType::fee_parameters_type>(), now ).value;
       }
    };
 
@@ -161,7 +162,7 @@ namespace graphene { namespace chain {
       this->scale = 0;
    }
 
-   asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::calculate_fee( const operation& op, const fc::time_point_sec now, const price& core_exchange_rate )const
    {
       //idump( (op)(core_exchange_rate) );
       fee_parameters params;
@@ -171,7 +172,7 @@ namespace graphene { namespace chain {
       if( itr != parameters.end() )
          params = *itr;
 
-      auto base_value = op.visit( calc_fee_visitor( params ) );
+      auto base_value = op.visit( calc_fee_visitor( params, now ) );
       auto scaled = fc::uint128(base_value) * scale;
       scaled /= GRAPHENE_100_PERCENT;
       FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
@@ -186,14 +187,14 @@ namespace graphene { namespace chain {
       return result;
    }
 
-   asset fee_schedule::set_fee( operation& op, const price& core_exchange_rate )const
+   asset fee_schedule::set_fee( operation& op, fc::time_point_sec now, const price& core_exchange_rate )const
    {
-      auto f = calculate_fee( op, core_exchange_rate );
+      auto f = calculate_fee( op, now, core_exchange_rate );
       auto f_max = f;
       for( int i=0; i<MAX_FEE_STABILIZATION_ITERATION; i++ )
       {
          op.visit( set_fee_visitor( f_max ) );
-         auto f2 = calculate_fee( op, core_exchange_rate );
+         auto f2 = calculate_fee( op, now, core_exchange_rate );
          if( f == f2 )
             break;
          f_max = std::max( f_max, f2 );

@@ -99,7 +99,7 @@ boost::container::flat_set<account_id_type> generic_evaluator::tracked_accounts;
 
    share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const
    {
-     return db().current_fee_schedule().calculate_fee( op ).amount;
+     return db().current_fee_schedule().calculate_fee( op, db().head_block_time() ).amount;
    }
    void generic_evaluator::db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account)
    {

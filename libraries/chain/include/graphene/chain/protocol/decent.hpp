@@ -428,7 +428,8 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return author; }
       void validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const {if(seeders.size()) return 0; return k.fee; };
+      share_type      calculate_fee( const fee_parameters_type& k,
+                                     const fc::time_point_sec now )const {if(seeders.size()) return 0; return k.fee; };
    };
 
    /**

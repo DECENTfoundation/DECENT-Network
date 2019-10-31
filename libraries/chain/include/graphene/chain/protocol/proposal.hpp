@@ -96,7 +96,7 @@ namespace graphene { namespace chain {
 
        account_id_type fee_payer()const { return fee_paying_account; }
        void            validate()const;
-       share_type      calculate_fee(const fee_parameters_type& k)const;
+       share_type      calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now )const;
    };
 
    /**
@@ -137,7 +137,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      share_type      calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now )const;
       void get_required_authorities( std::vector<authority>& )const;
       void get_required_active_authorities( boost::container::flat_set<account_id_type>& )const;
       void get_required_owner_authorities( boost::container::flat_set<account_id_type>& )const;

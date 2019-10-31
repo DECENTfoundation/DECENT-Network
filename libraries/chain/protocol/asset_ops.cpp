@@ -67,7 +67,8 @@ bool is_valid_symbol( const std::string& symbol )
     return true;
 }
 
-share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
+share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param,
+                                                 const fc::time_point_sec now )const
 {
 
    if( monitored_asset_opts.valid() )
@@ -103,7 +104,8 @@ void  asset_create_operation::validate()const
    }
 }
 
-share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)const
+share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k,
+                                                const fc::time_point_sec now )const
 {
    return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.fee );
 }

@@ -466,7 +466,7 @@ void seeding_plugin_impl::send_ready_to_publish()
       graphene::chain::signed_transaction tx;
       tx.operations.push_back(op);
 
-      database().get_global_properties().parameters.current_fees->set_fee(tx.operations.back());
+      database().get_global_properties().parameters.current_fees->set_fee(tx.operations.back(), database().head_block_time());
       auto dyn_props = database().get_dynamic_global_properties();
       tx.set_reference_block(dyn_props.head_block_id);
       tx.set_expiration(dyn_props.time + fc::seconds(30));

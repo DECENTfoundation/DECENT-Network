@@ -135,7 +135,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return monitored_asset_opts.valid() ? account_id_type() : issuer; }
       void            validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const;
+      share_type      calculate_fee( const fee_parameters_type& k, const fc::time_point_sec now )const;
    };
 
    /**
@@ -158,7 +158,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee(const fee_parameters_type& k)const;
+      share_type      calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now )const;
    };
 
    /**

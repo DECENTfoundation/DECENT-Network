@@ -1605,22 +1605,23 @@ namespace graphene { namespace app {
       max_recursion(_max_recursion)
       {}
 
-      fc::variant set_op_fees( chain::operation& op )
+
+      fc::variant set_op_fees( chain::operation& op, fc::time_point_sec now )
       {
          if( op.which() == chain::operation::tag<chain::proposal_create_operation>::value )
          {
-            return set_proposal_create_op_fees( op );
+            return set_proposal_create_op_fees( op, now );
          }
          else
          {
-            chain::asset fee = current_fee_schedule.set_fee( op, core_exchange_rate );
+            chain::asset fee = current_fee_schedule.set_fee( op, now, core_exchange_rate );
             fc::variant result;
             fc::to_variant( fee, result );
             return result;
          }
       }
 
-      fc::variant set_proposal_create_op_fees( chain::operation& proposal_create_op )
+      fc::variant set_proposal_create_op_fees( chain::operation& proposal_create_op, fc::time_point_sec now )
       {
          chain::proposal_create_operation& op = proposal_create_op.get<chain::proposal_create_operation>();
          std::pair<chain::asset, fc::variants> result;
@@ -1628,12 +1629,12 @@ namespace graphene { namespace app {
          {
             FC_ASSERT( current_recursion < max_recursion );
             ++current_recursion;
-            result.second.push_back( set_op_fees( prop_op.op ) );
+            result.second.push_back( set_op_fees( prop_op.op, now ) );
             --current_recursion;
          }
          // we need to do this on the boxed version, which is why we use
          // two mutually recursive functions instead of a visitor
-         result.first = current_fee_schedule.set_fee( proposal_create_op, core_exchange_rate );
+         result.first = current_fee_schedule.set_fee( proposal_create_op, now, core_exchange_rate );
          fc::variant vresult;
          fc::to_variant( result, vresult );
          return vresult;
@@ -1659,7 +1660,9 @@ namespace graphene { namespace app {
                                       GET_REQUIRED_FEES_MAX_RECURSION );
 
       fc::variants result(ops.size());
-      std::transform(ops.begin(), ops.end(), result.begin(), [&](chain::operation &op) { return helper.set_op_fees( op ); } );
+
+      std::transform(ops.begin(), ops.end(), result.begin(), [&](chain::operation &op) {
+         return helper.set_op_fees( op, _db.head_block_time() ); } );
       return result;
    }
 

@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       top.to = nathan_account.id;
       top.amount = asset( 10000);
       trx.operations.push_back(top);
-      for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+      for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
 
       asset fee = trx.operations.front().get<transfer_operation>().fee;
       trx.validate();
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE( transfer_core_asset )
       top.amount = asset(2000);
       trx.operations.push_back(top);
 
-      for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+      for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
 
       fee = trx.operations.front().get<transfer_operation>().fee;
       set_expiration( db, trx );
@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE( uia_fees )
       op.from = nathan_account.id;
       op.to   = miner_account.id;
       op.amount = test_asset.amount(100);
-      op.fee = db.current_fee_schedule().calculate_fee( op, test_asset.options.core_exchange_rate );
+      op.fee = db.current_fee_schedule().calculate_fee( op, db.head_block_time(), test_asset.options.core_exchange_rate );
       BOOST_CHECK(op.fee.asset_id == test_asset.id);
       asset old_balance = db.get_balance(nathan_account.get_id(), test_asset.get_id());
       asset fee = op.fee;

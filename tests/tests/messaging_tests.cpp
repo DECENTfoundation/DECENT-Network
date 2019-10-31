@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( messaging )
    trx.operations.push_back(cust_op);
 
    fee_schedule s = db.get_global_properties().parameters.current_fees;
-   s.set_fee(trx.operations.back());
+   s.set_fee(trx.operations.back(), db.head_block_time());
 
    const auto& global_params = db.get_global_properties().parameters;
    trx.expiration = db.head_block_time() + global_params.maximum_time_until_expiration;

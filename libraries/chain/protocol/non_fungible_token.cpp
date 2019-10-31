@@ -44,7 +44,8 @@ void non_fungible_token_create_definition_operation::validate() const
    });
 }
 
-share_type non_fungible_token_create_definition_operation::calculate_fee(const fee_parameters_type& param) const
+share_type non_fungible_token_create_definition_operation::calculate_fee(const fee_parameters_type& param,
+                                                                         const fc::time_point_sec now) const
 {
    share_type fee = 5 * param.basic_fee;
 
@@ -77,7 +78,8 @@ void non_fungible_token_issue_operation::validate() const
    FC_ASSERT( fee.amount >= 0 );
 }
 
-share_type non_fungible_token_issue_operation::calculate_fee(const fee_parameters_type& param) const
+share_type non_fungible_token_issue_operation::calculate_fee(const fee_parameters_type& param,
+                                                             const fc::time_point_sec now) const
 {
    share_type fee = param.fee;
    std::for_each(data.begin(), data.end(), [&](const fc::variant &v) { fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte); } );
@@ -108,7 +110,8 @@ void non_fungible_token_update_data_operation::validate()const
    });
 }
 
-share_type non_fungible_token_update_data_operation::calculate_fee(const fee_parameters_type& param) const
+share_type non_fungible_token_update_data_operation::calculate_fee(const fee_parameters_type& param,
+                                                                   const fc::time_point_sec now) const
 {
    share_type fee = param.fee;
    std::for_each(data.begin(), data.end(), [&](const std::pair<std::string, fc::variant> &v) {

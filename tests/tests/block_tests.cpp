@@ -769,7 +769,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
    t.to = bobian.id;
    t.amount = amount;
    trx.operations.push_back(t);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
    trx.validate();
 
    db.push_transaction(trx, ~0);
@@ -779,7 +779,7 @@ BOOST_FIXTURE_TEST_CASE( double_sign_check, database_fixture )
    t.to = alice.id;
    t.amount = amount;
    trx.operations.push_back(t);
-   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
+   for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op, db.head_block_time());
    trx.validate();
 
    BOOST_TEST_MESSAGE( "Verify that not-signing causes an exception" );

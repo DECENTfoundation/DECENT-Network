@@ -26,6 +26,7 @@
 
 #include <graphene/chain/protocol/authority.hpp>
 #include <fc/static_variant.hpp>
+#include <fc/time.hpp>
 
 namespace graphene { namespace chain {
 
@@ -87,7 +88,7 @@ namespace graphene { namespace chain {
    struct base_operation : public std::integral_constant<bool, VIRTUAL>
    {
       template<typename T>
-      share_type calculate_fee(const T& params)const
+      share_type calculate_fee( const T& params, const fc::time_point_sec now )const
       {
          return params.fee;
       }

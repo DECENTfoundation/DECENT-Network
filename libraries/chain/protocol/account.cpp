@@ -179,7 +179,7 @@ bool operator != (const graphene::chain::account_options &a, const graphene::cha
    return !( a == b );
 }
 
-share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
+share_type account_create_operation::calculate_fee( const fee_parameters_type& k, const fc::time_point_sec now )const
 {
    auto core_fee_required = k.basic_fee;
 
@@ -197,7 +197,7 @@ void account_create_operation::validate()const
    options.validate();
 }
 
-share_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
+share_type account_update_operation::calculate_fee( const fee_parameters_type& k, const fc::time_point_sec now )const
 {
    auto core_fee_required = k.fee;
    return core_fee_required;

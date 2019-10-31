@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
          xfer_op.to = GRAPHENE_NULL_ACCOUNT;
          xfer_op.amount = asset( 1000000 );
          trx.operations.push_back( xfer_op );
-         db1->current_fee_schedule().set_fee( trx.operations.back() );
+         db1->current_fee_schedule().set_fee( trx.operations.back(), db1->head_block_time() );
 
          trx.set_expiration( db1->get_slot_time( 10 ) );
          trx.sign( nathan_key, db1->get_chain_id() );
