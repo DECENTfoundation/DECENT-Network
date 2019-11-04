@@ -4,7 +4,6 @@ image: Visual Studio 2017
 
 environment:
   BOOST: C:\Libraries\boost_1_69_0
-  QT: C:\Qt\5.12\msvc2017_64
   DOXYGEN: 1.8.14
   IPFS: 0.4.22
 
@@ -34,14 +33,14 @@ build_script:
 - cmd: >-
     call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
 
-    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_PROGRAM_PATH=%APPVEYOR_BUILD_FOLDER%\..\Doxygen.%DOXYGEN%\tools -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -DQt5Widgets_DIR=%QT%\lib\cmake\Qt5Widgets -DQt5LinguistTools_DIR=%QT%\lib\cmake\Qt5LinguistTools -G Ninja .
+    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_PROGRAM_PATH=%APPVEYOR_BUILD_FOLDER%\..\Doxygen.%DOXYGEN%\tools -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -G Ninja .
 
     ninja -j2 install
 
-    msbuild scripts\Windows\DECENTSetup.sln /p:Configuration=Release /p:ProductVersion=%APPVEYOR_BUILD_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:QtPath=%QT% /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_BUILD_VERSION%
+    msbuild scripts\Windows\DCore.sln /p:Configuration=Release /p:ProductVersion=%APPVEYOR_BUILD_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_BUILD_VERSION%
 
 artifacts:
-- path: $(APPVEYOR_BUILD_VERSION)\DECENTSetup.msi
+- path: $(APPVEYOR_BUILD_VERSION)\DCore.msi
   name: MSI
 
 deploy:

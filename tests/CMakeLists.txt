@@ -1,5 +1,4 @@
-file(GLOB COMMON_SOURCES "common/*.cpp")
-
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../CMakeModules" )
 find_package( Gperftools QUIET )
 if( GPERFTOOLS_FOUND )
     message( STATUS "Found gperftools; compiling tests with TCMalloc")
@@ -64,6 +63,7 @@ target_link_libraries( encrypt_test PRIVATE decent_encrypt )
 #add_executable( pbc_benchmark_test encrypt/test_pbc_benchmark.cpp )
 #target_link_libraries( pbc_benchmark_test decent_encrypt )
 
+#file(GLOB COMMON_SOURCES "common/*.cpp")
 #
 #file(GLOB PERFORMANCE_TESTS "performance/*.cpp")
 #add_executable( performance_test ${PERFORMANCE_TESTS} ${COMMON_SOURCES} )

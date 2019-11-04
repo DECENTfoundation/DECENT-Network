@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="$(var.ProductId)" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="DECENT" UpgradeCode="bb8df61f-8306-4d7d-8fd9-81ee69aca935">
+    <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" />
+
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="LicenceAgreement.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
+
+    <Icon Id='ProductIcon' SourceFile='dcore.ico' />
+
+    <Property Id='ARPPRODUCTICON' Value='ProductIcon' />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes"/>
+
+    <Feature Id="ProductFeature" Title="DCore" Level="1">
+      <Component Id="decentd" Guid="70da8553-5ccd-4e86-9918-8a09f4d8e45a" Directory="INSTALLFOLDER">
+        <File Id='decentd.exe' Name='decentd.exe' DiskId='1' Source='$(var.DCorePath)\bin\decentd.exe' KeyPath='yes' />
+        <ServiceControl Id='decentd.service' Name='DCore' Start='install' Stop='both' Remove='uninstall' />
+        <ServiceInstall Name='DCore' DisplayName='DCore Network Node' Description='Fast, powerful and cost-efficient blockchain' 
+                        ErrorControl='normal' Interactive='no' Start='auto' Type='ownProcess' Vital='yes' />
+      </Component>
+
+      <Component Id="cli_wallet" Guid="12d8b879-5323-4d91-a995-8141b24e8594" Directory="INSTALLFOLDER">
+        <File Id='cli_wallet.exe' Name='cli_wallet.exe' DiskId='1' Source='$(var.DCorePath)\bin\cli_wallet.exe' KeyPath='yes' />
+      </Component>
+
+      <Component Id="LicenceAgreement" Guid="cbcdf757-e4cf-4ad7-9ab2-dbebf9bd384c" Directory="INSTALLFOLDER">
+        <File Id='LicenceAgreement.rtf' Name='LicenceAgreement.rtf' DiskId='1' Source='LicenceAgreement.rtf' KeyPath='yes' />
+      </Component>
+
+      <!-- third-party -->
+      <Component Id="ipfs" Guid="37cb3eb4-184c-4671-996b-ea2bcf023c99" Directory="INSTALLFOLDER">
+        <File Id='ipfs.exe' Name='ipfs.exe' DiskId='1' Source='$(var.IPFSPath)\ipfs.exe' KeyPath='yes' />
+      </Component>
+    </Feature>
+
+    <Feature Id="VCRuntime" Title="C++ Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+      <MergeRef Id="VCRuntimeMergeModule"/>
+    </Feature>
+
+    <InstallExecuteSequence/>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="DCore"/>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Merge Id="VCRuntimeMergeModule" SourceFile="$(var.VCRuntimePath)" DiskId="1" Language="0"/>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

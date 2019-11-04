@@ -30,14 +30,6 @@
           "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
         },
         {
-          "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
-        },
-        {
-          "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
-        },
-        {
           "name": "VCPKG_TARGET_TRIPLET",
           "value": "x64-windows-static"
         }
@@ -71,14 +63,6 @@
         {
           "name": "BOOST_LIBRARYDIR",
           "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
-        },
-        {
-          "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
-        },
-        {
-          "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -116,14 +100,6 @@
           "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
         },
         {
-          "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
-        },
-        {
-          "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
-        },
-        {
           "name": "VCPKG_TARGET_TRIPLET",
           "value": "x64-windows-static"
         }
@@ -157,14 +133,6 @@
         {
           "name": "BOOST_LIBRARYDIR",
           "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
-        },
-        {
-          "name": "Qt5Widgets_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5Widgets"
-        },
-        {
-          "name": "Qt5LinguistTools_DIR",
-          "value": "C:\\Projects\\Qt\\5.12.5\\msvc2017_64\\lib\\cmake\\Qt5LinguistTools"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",

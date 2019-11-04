@@ -46,9 +46,6 @@ addons:
         key_url: 'https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation'
     packages:
       - doxygen
-      - qt5-default
-      - qttools5-dev
-      - qttools5-dev-tools
       - libcrypto++-dev
       - libcurl4-openssl-dev
       - libpbc-dev

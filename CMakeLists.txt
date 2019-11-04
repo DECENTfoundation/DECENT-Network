@@ -30,9 +30,6 @@ set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
-include( cotire )
-
 if( MSVC )
     option( USE_PCH "Use precompiled header" ON )
 else()
@@ -68,7 +65,6 @@ else() # Apple and Linux
             message( STATUS "Homebrew prefix: ${HOMEBREW_PREFIX}")
             list( APPEND CMAKE_PREFIX_PATH
                   "${HOMEBREW_PREFIX}/opt/openssl@1.1"
-                  "${HOMEBREW_PREFIX}/opt/qt"
                 )
         endif()
     else()
