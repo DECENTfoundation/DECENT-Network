@@ -1065,8 +1065,8 @@ void application::set_program_options(boost::program_options::options_descriptio
                                       boost::program_options::options_description& configuration_file_options)
 {
    command_line_options.add_options()
-      ("help,h", "Print this help message and exit.")
-      ("version,v", "Print version information and exit.")
+      ("help,h", "Print this help message and exit")
+      ("version,v", "Print version information and exit")
       ;
 
    configuration_file_options.add_options()
@@ -1084,7 +1084,7 @@ void application::set_program_options(boost::program_options::options_descriptio
          ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this websocket server")
          ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this websocket server")
          ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this websocket server")
-         ("server-cert-password", bpo::value<string>(), "Password for TLC certificate file (private key) for this websocket server")
+         ("server-cert-password", bpo::value<string>(), "Password for TLS certificate file (private key) for this websocket server")
          ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
          ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")
