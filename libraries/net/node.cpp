@@ -5410,12 +5410,18 @@ namespace graphene { namespace net { namespace detail {
       , BOOST_PP_CAT(_, BOOST_PP_CAT(method_name, _delay_before_accumulator))(boost::accumulators::tag::rolling_window::window_size = ROLLING_WINDOW_SIZE) \
       , BOOST_PP_CAT(_, BOOST_PP_CAT(method_name, _delay_after_accumulator))(boost::accumulators::tag::rolling_window::window_size = ROLLING_WINDOW_SIZE)
 
-
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#endif
     statistics_gathering_node_delegate_wrapper::statistics_gathering_node_delegate_wrapper(node_delegate* delegate, fc::thread* thread_for_delegate_calls) :
       _node_delegate(delegate),
       _thread(thread_for_delegate_calls)
       BOOST_PP_SEQ_FOR_EACH(INITIALIZE_ACCUMULATOR, unused, NODE_DELEGATE_METHOD_NAMES)
     {}
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 #undef INITIALIZE_ACCUMULATOR
 
     fc::variant_object statistics_gathering_node_delegate_wrapper::get_call_statistics()

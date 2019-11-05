@@ -474,11 +474,16 @@ namespace decent { namespace package {
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         PACKAGE_INFO_CHANGE_MANIPULATION_STATE(UNPACKING);
 
-                        using namespace boost::iostreams;
-
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4242)
+#endif
                         boost::iostreams::filtering_istream istr;
-                        istr.push(gzip_decompressor());
-                        istr.push(file_source(archive_file_path.string(), std::ios::in | std::ios::binary));
+                        istr.push(boost::iostreams::gzip_decompressor());
+                        istr.push(boost::iostreams::file_source(archive_file_path.string(), std::ios::in | std::ios::binary));
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
                         detail::Dearchiver dearchiver(istr);
                         dearchiver.extract(_target_dir);
