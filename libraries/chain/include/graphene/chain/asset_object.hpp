@@ -29,8 +29,6 @@
 #include <graphene/db/generic_index.hpp>
 
 namespace graphene { namespace chain {
-   class account_object;
-   class database;
 
    /**
     *  @brief tracks the asset information that changes frequently
@@ -107,8 +105,6 @@ namespace graphene { namespace chain {
          /// Current supply, fee pool, and collected fees are stored in a separate object as they change frequently.
          asset_dynamic_data_id_type  dynamic_asset_data_id;
 
-         void validate()const {}
-
          /*
           * converts asset of ID type to core asset or vice versa. Pools are adjusted accordingly.
           *
@@ -147,8 +143,8 @@ namespace graphene { namespace chain {
                core_pool_diff = -to;
                asset_pool_diff = from;
 
-               ilog("changes in core pool: ${c}",("c", -to));
-               ilog("changes in asset pool: ${c}",("c", from));
+               dlog("changes in core pool: ${c}",("c", -to));
+               dlog("changes in asset pool: ${c}",("c", from));
             }else{
                FC_ASSERT(from.asset_id == asset_id_type(), "Unsupported conversion");
 
@@ -157,8 +153,8 @@ namespace graphene { namespace chain {
 
                core_pool_diff = from;
                asset_pool_diff = -to;
-               ilog("changes in core pool: ${c}",("c", from));
-               ilog("changes in asset pool: ${c}",("c", -to));
+               dlog("changes in core pool: ${c}",("c", from));
+               dlog("changes in asset pool: ${c}",("c", -to));
             }
 
             FC_ASSERT( add.asset_pool + asset_pool_diff.amount >= share_type(0), "Insufficient funds in asset pool to perform conversion" );
@@ -228,7 +224,6 @@ namespace graphene { namespace chain {
             }
 
             return true;
-
          };
 
          template<class DB>
@@ -236,7 +231,7 @@ namespace graphene { namespace chain {
          { return db.get(dynamic_asset_data_id); }
 
          /**
-          *  The total amount of an asset that is reserved for future issuance. 
+          *  The total amount of an asset that is reserved for future issuance.
           */
          template<class DB>
          share_type reserved( const DB& db )const
