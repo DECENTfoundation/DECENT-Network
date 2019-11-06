@@ -7,7 +7,7 @@
       "inheritEnvironments": [
         "msvc_x64_x64"
       ],
-      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\DCore\\${name}",
       "installRoot": "C:\\Projects\\DCore",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
@@ -42,7 +42,7 @@
       "inheritEnvironments": [
         "msvc_x64_x64"
       ],
-      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\DCore\\${name}",
       "installRoot": "C:\\Projects\\DCore\\RelWithDebInfo",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
@@ -77,7 +77,7 @@
       "inheritEnvironments": [
         "msvc_x64_x64"
       ],
-      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\DCore\\${name}",
       "installRoot": "C:\\Projects\\DCore\\MinSizeRel",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
@@ -112,7 +112,7 @@
       "inheritEnvironments": [
         "msvc_x64_x64"
       ],
-      "buildRoot": "C:\\Projects\\CMakeBuilds\\${name}",
+      "buildRoot": "C:\\Projects\\CMakeBuilds\\DCore\\${name}",
       "installRoot": "C:\\Projects\\DCore\\Debug",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
