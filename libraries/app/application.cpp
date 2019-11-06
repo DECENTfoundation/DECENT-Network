@@ -922,11 +922,6 @@ namespace detail {
          return _chain_db->head_block_id();
       }
 
-      virtual uint32_t estimate_last_known_fork_from_git_revision_timestamp(uint32_t unix_timestamp) const override
-      {
-         return 0; // there are no forks in graphene
-      }
-
       virtual void error_encountered(const std::string& message, const fc::optional<fc::exception>& error) override
       {
          // notify GUI or something cool

@@ -164,8 +164,6 @@ namespace graphene { namespace net {
 
          virtual item_hash_t get_head_block_id() const = 0;
 
-         virtual uint32_t estimate_last_known_fork_from_git_revision_timestamp(uint32_t unix_timestamp) const = 0;
-
          virtual void error_encountered(const std::string& message, const fc::optional<fc::exception>& error) = 0;
          virtual uint8_t get_current_block_interval_in_seconds() const = 0;
    };
@@ -193,9 +191,6 @@ namespace graphene { namespace net {
       std::string startingheight;
       std::string banscore;
       std::string syncnode;
-      std::string fc_git_revision_sha;
-      fc::optional<fc::time_point_sec> fc_git_revision_unix_timestamp;
-      std::string fc_git_revision_age;
       fc::optional<std::string> platform;
       graphene::net::item_hash_t current_head_block;
       uint32_t current_head_block_number;
@@ -376,9 +371,6 @@ FC_REFLECT(graphene::net::peer_status_info,
    (startingheight)
    (banscore)
    (syncnode)
-   (fc_git_revision_sha)
-   (fc_git_revision_unix_timestamp)
-   (fc_git_revision_age)
    (platform)
    (current_head_block)
    (current_head_block_number)
