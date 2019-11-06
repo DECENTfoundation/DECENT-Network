@@ -485,7 +485,7 @@ namespace graphene { namespace app {
 
    decent::about_info database_api::about()const
    {
-      return decent::get_about_daemon();
+      return decent::get_about_info();
    }
 
    //////////////////////////////////////////////////////////////////////

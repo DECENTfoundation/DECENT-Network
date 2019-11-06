@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 
-#include <openssl/opensslv.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -41,7 +40,6 @@
 #include <graphene/utilities/dirhelper.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/keys_generator.hpp>
-#include <graphene/utilities/git_revision.hpp>
 #include <graphene/wallet/wallet.hpp>
 
 #include <decent/about.hpp>
@@ -84,7 +82,7 @@ int main( int argc, char** argv )
       bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(opts).allow_unregistered().run();
       bpo::store( optparsed, options );
 
-      if (decent::check_unrecognized(optparsed))
+      if( decent::check_unrecognized(optparsed) )
       {
          return EXIT_FAILURE;
       }
@@ -96,15 +94,7 @@ int main( int argc, char** argv )
       }
       else if( options.count("version") )
       {
-         std::string boost_version_text = decent::get_boost_version();
-         std::string openssl_version_text = decent::get_openssl_version();
-         std::string cryptopp_version_text = decent::get_cryptopp_version();
-
-         std::cout << "CLI Wallet " << graphene::utilities::git_version();
-#ifndef NDEBUG
-         std::cout << " (debug)";
-#endif /* NDEBUG */
-         std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << std::endl;
+         decent::dump_version_info();
          return EXIT_SUCCESS;
       }
       else if( options.count("generate-keys") )

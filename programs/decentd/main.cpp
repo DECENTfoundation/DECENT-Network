@@ -241,7 +241,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 
       bpo::parsed_options optparsed = bpo::command_line_parser(argc, argv).options(app_options).allow_unregistered().run();
       bpo::store(optparsed, options);
-      if (decent::check_unrecognized(optparsed))
+      if( decent::check_unrecognized(optparsed) )
       {
          return EXIT_FAILURE;
       }
@@ -259,27 +259,18 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
    }
    else if( options.count("version") )
    {
-      std::string boost_version_text = decent::get_boost_version();
-      std::string openssl_version_text = decent::get_openssl_version();
-      std::string cryptopp_version_text = decent::get_cryptopp_version();
-
-      std::cout << "DECENT Daemon " << graphene::utilities::git_version();
-#ifndef NDEBUG
-      std::cout << " (debug)";
-#endif /* NDEBUG */
-      std::cout << "\nBoost " << boost_version_text << "\n" << openssl_version_text << "\nCryptopp " << cryptopp_version_text << std::endl;
+      decent::dump_version_info();
       return EXIT_SUCCESS;
    }
-
 #if defined(_MSC_VER)
-   if( options.count("install-win-service") )
+   else if( options.count("install-win-service") )
    {
-	   return install_win_service();
-	}
+      return install_win_service();
+   }
    else if( options.count("remove-win-service") )
    {
       return remove_win_service();
-	}
+   }
 #else
    run_as_daemon = options.count("daemon");
 #endif
