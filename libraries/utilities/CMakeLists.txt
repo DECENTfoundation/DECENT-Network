@@ -1,11 +1,9 @@
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../contrib/fc/GitVersionGen" )
 include( GetGitRevisionDescription )
-get_git_head_revision(GIT_REFSPEC GRAPHENE_GIT_REVISION_SHA)
-get_git_unix_timestamp(GRAPHENE_GIT_REVISION_UNIX_TIMESTAMP)
 git_describe(GRAPHENE_GIT_REVISION_DESCRIPTION --tags)
 if(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
-    set(GRAPHENE_GIT_REVISION_DESCRIPTION "unknown")
-endif(NOT GRAPHENE_GIT_REVISION_DESCRIPTION)
+    message( FATAL_ERROR "Could not get Git revision" )
+endif()
 
 file(GLOB HEADERS "include/decent/*.hpp" "include/graphene/utilities/*.hpp")
 
