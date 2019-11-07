@@ -1,48 +1,9 @@
-#include <windows.h>
-
 #include "winsvc.hpp"
 
 #include <iostream>
-#include <stdio.h>
-#include <strsafe.h>
-#include <shlobj.h>
 #include <vector>
 
-
-enum WinServiceState {
-	WinServiceState_UNKNOWN = 0,
-	WinServiceState_SERVICE_STOPPED,
-	WinServiceState_SERVICE_START_PENDING,
-	WinServiceState_SERVICE_STOP_PENDING,
-	WinServiceState_SERVICE_RUNNING,
-	WinServiceState_SERVICE_CONTINUE_PENDING,
-	WinServiceState_SERVICE_PAUSE_PENDING,
-	WinServiceState_SERVICE_PAUSED,
-	WinServiceState_COUNT,
-};
-
-
-static SERVICE_STATUS          s_SvcStatus;
-static SERVICE_STATUS_HANDLE   s_SvcStatusHandle;
-
-void WINAPI SvcCtrlHandler(DWORD);
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize);
-
-std::string GetAppDataDir()
-{
-	char szPath[MAX_PATH];
-	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
-	return szPath;
-}
-
-bool IsRunningAsSystemService()
-{
-	DWORD sessionId = 0;
-	ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
-	if (sessionId == 0) 
-		return true;
-	return false;
-}
 
 DWORD install_win_service()
 {
@@ -271,105 +232,6 @@ DWORD remove_win_service()
    }
 
 	return err;
-}
-
-DWORD InitializeService()
-{
-	s_SvcStatusHandle = RegisterServiceCtrlHandler(
-		SVCNAME,
-		SvcCtrlHandler);
-
-	if (!s_SvcStatusHandle) {
-		SvcReportEvent((char*)"RegisterServiceCtrlHandler");
-      return GetLastError();
-	}
-
-	// These SERVICE_STATUS members remain as set here
-	s_SvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-	s_SvcStatus.dwServiceSpecificExitCode = 0;
-
-	// Report initial status to the SCM
-	ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
-   
-	return 0;
-}
-
-void
-ReportSvcStatus(
-	DWORD dwCurrentState,
-	DWORD dwWin32ExitCode,
-	DWORD dwWaitHint
-	)
-{
-	static DWORD dwCheckPoint = 1;
-
-	// Fill in the SERVICE_STATUS structure.
-	s_SvcStatus.dwCurrentState = dwCurrentState;
-	s_SvcStatus.dwWin32ExitCode = dwWin32ExitCode;
-	s_SvcStatus.dwWaitHint = dwWaitHint;
-
-	if (dwCurrentState == SERVICE_START_PENDING)
-		s_SvcStatus.dwControlsAccepted = 0;
-	else s_SvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-
-	if ((dwCurrentState == SERVICE_RUNNING) ||
-		(dwCurrentState == SERVICE_STOPPED))
-		s_SvcStatus.dwCheckPoint = 0;
-	else s_SvcStatus.dwCheckPoint = dwCheckPoint++;
-
-	// Report the status of the service to the SCM.
-	SetServiceStatus(s_SvcStatusHandle, &s_SvcStatus);
-}
-
-void WINAPI SvcCtrlHandler(DWORD dwCtrl)
-{
-	// Handle the requested control code. 
-	switch (dwCtrl)
-	{
-	case SERVICE_CONTROL_STOP:
-		ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-
-		StopWinService();
-		ReportSvcStatus(s_SvcStatus.dwCurrentState, NO_ERROR, 0);
-
-		return;
-
-	case SERVICE_CONTROL_INTERROGATE:
-		break;
-
-	default:
-		break;
-	}
-
-}
-
-void SvcReportEvent(LPTSTR szFunction)
-{
-	HANDLE hEventSource;
-	LPCSTR lpszStrings[2];
-	char Buffer[80];
-
-	hEventSource = RegisterEventSource(NULL, SVCNAME);
-
-	if (NULL != hEventSource)
-	{
-		StringCchPrintf(Buffer, 80, "%s failed with %d", szFunction, GetLastError());
-
-		lpszStrings[0] = SVCNAME;
-		lpszStrings[1] = Buffer;
-
-		ReportEvent(hEventSource,        // event log handle
-			EVENTLOG_ERROR_TYPE, // event type
-			0,                   // event category
-         0,                   // event identifier
-			NULL,                // no security identifier
-			2,                   // size of lpszStrings array
-			0,                   // no binary data
-			lpszStrings,         // array of strings
-			NULL);               // no binary data
-
-		DeregisterEventSource(hEventSource);
-	}
 }
 
 LPSTR GetLastErrorText(LPSTR lpszBuf, DWORD dwSize)

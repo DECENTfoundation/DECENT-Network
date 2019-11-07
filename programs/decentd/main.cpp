@@ -46,9 +46,10 @@
 #include <iostream>
 
 #ifdef _MSC_VER
-#include <signal.h>
-#include <windows.h>
 #include "winsvc.hpp"
+#include <signal.h>
+#include <strsafe.h>
+#include <shlobj.h>
 #else
 #include <csignal>
 #include <sys/stat.h>
@@ -59,55 +60,114 @@ namespace bpo = boost::program_options;
 #if defined(_MSC_VER)
 
 // Stopping from GUI and stopping of win service
-static fc::promise<int>::ptr s_exit_promise;
-
-BOOL s_bStop = FALSE;
-HANDLE s_hStopProcess = NULL;
+static fc::promise<int>::ptr exit_promise;
+static SERVICE_STATUS svcStatus;
+static SERVICE_STATUS_HANDLE svcStatusHandle;
 
 void StopWinService()
 {
-   s_exit_promise->set_value(SIGTERM);
+   exit_promise->set_value(SIGTERM);
 }
 
-DWORD WINAPI StopFromGUIThreadProc(void* params)
+bool IsRunningAsSystemService()
 {
-   while (s_bStop == FALSE)
-   {
-      if (WaitForSingleObject(s_hStopProcess, 0) == 0)
-         s_bStop = TRUE;
-      Sleep(50);
-   }
-   CloseHandle(s_hStopProcess);
-   elog("Caught stop from GUI attempting to exit cleanly");
-   s_exit_promise->set_value(SIGTERM);
-   return 0;
+   DWORD sessionId = 0;
+   ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
+   return sessionId == 0;
 }
-BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType) {
+
+void SvcReportEvent(LPTSTR szFunction)
+{
+   HANDLE hEventSource = RegisterEventSource(NULL, SVCNAME);
+   if (NULL != hEventSource)
+   {
+      char Buffer[80];
+      StringCchPrintf(Buffer, 80, "%s failed with %d", szFunction, GetLastError());
+
+      LPCSTR lpszStrings[2];
+      lpszStrings[0] = SVCNAME;
+      lpszStrings[1] = Buffer;
+
+      ReportEvent(hEventSource,        // event log handle
+         EVENTLOG_ERROR_TYPE, // event type
+         0,                   // event category
+         0,                   // event identifier
+         NULL,                // no security identifier
+         2,                   // size of lpszStrings array
+         0,                   // no binary data
+         lpszStrings,         // array of strings
+         NULL);               // no binary data
+
+      DeregisterEventSource(hEventSource);
+   }
+}
+
+void ReportSvcStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
+{
+   static DWORD dwCheckPoint = 1;
+
+   // Report the status of the service to the SCM.
+   svcStatus.dwCurrentState = dwCurrentState;
+   svcStatus.dwWin32ExitCode = dwWin32ExitCode;
+   svcStatus.dwWaitHint = dwWaitHint;
+   svcStatus.dwControlsAccepted = dwCurrentState == SERVICE_START_PENDING || dwCurrentState == SERVICE_STOP_PENDING ? 0 : SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_PRESHUTDOWN;
+   svcStatus.dwCheckPoint = dwCurrentState == SERVICE_RUNNING || dwCurrentState == SERVICE_STOPPED ? 0 : dwCheckPoint++;
+   SetServiceStatus(svcStatusHandle, &svcStatus);
+}
+
+DWORD WINAPI SvcCtrlHandler(DWORD dwCtrl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
+{
+   switch (dwCtrl)
+   {
+   case SERVICE_CONTROL_STOP:
+   case SERVICE_CONTROL_PRESHUTDOWN:
+      ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+      StopWinService();
+      // fall through
+   case SERVICE_CONTROL_INTERROGATE:
+      return NO_ERROR;
+
+   default:
+      break;
+   }
+
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
+{
    switch (dwCtrlType)
    {
    case CTRL_C_EVENT:
       elog("Caught stop by Ctrl+C to exit cleanly");
-      s_exit_promise->set_value(SIGTERM);
+      exit_promise->set_value(SIGTERM);
       return TRUE;
    case CTRL_BREAK_EVENT:
       elog("Caught stop by Ctrl+break to exit cleanly");
-      s_exit_promise->set_value(SIGTERM);
+      exit_promise->set_value(SIGTERM);
       return TRUE;
    case CTRL_CLOSE_EVENT:
       elog("Caught stop by closing console window to exit cleanly");
-      s_exit_promise->set_value(SIGTERM);
+      exit_promise->set_value(SIGTERM);
       return TRUE;
    case CTRL_LOGOFF_EVENT:
       elog("Caught stop by logoff event to exit cleanly");
-      s_exit_promise->set_value(SIGTERM);
+      exit_promise->set_value(SIGTERM);
       return TRUE;
    case CTRL_SHUTDOWN_EVENT:
       elog("Caught stop by shutdown event to exit cleanly");
-      s_exit_promise->set_value(SIGTERM);
+      exit_promise->set_value(SIGTERM);
       return TRUE;
    default:
       return FALSE;
    }
+}
+
+std::string GetAppDataDir()
+{
+   char szPath[MAX_PATH];
+   SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
+   return szPath;
 }
 
 #elif defined(__linux__) || defined(__APPLE__)
@@ -327,21 +387,15 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       node->startup();
       node->startup_plugins();
 
-      fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
 #if defined(_MSC_VER)
-      s_exit_promise = exit_promise;
-      s_hStopProcess = OpenEventA(SYNCHRONIZE, FALSE, "A883EF36-8168-4E45-A08F-97EFFC5B6694");
-      if (s_hStopProcess)
-      {
-         DWORD tid = 0;
-         CreateThread(NULL, 0, StopFromGUIThreadProc, NULL, 0, &tid);
-      }
+      exit_promise = new fc::promise<int>("Windows Event Handler");
 
       if (run_as_daemon)
       {
          ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
       }
 #else
+      fc::promise<int>::ptr exit_promise = new fc::promise<int>("UNIX Signal Handler");
       fc::set_signal_handler([&exit_promise](int signal) {
          dlog( "Caught SIGINT attempting to exit cleanly" );
          exit_promise->set_value(signal);
@@ -371,8 +425,6 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
       {
          ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
       }
-
-      s_bStop = TRUE;
 #endif
       return EXIT_SUCCESS;
    } catch( const fc::exception& e ) {
@@ -383,9 +435,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
    } catch( ... ) {
       unhandled_exception = fc::unhandled_exception(FC_LOG_MESSAGE(error, "unknown"));
    }
-#if defined(_MSC_VER)
-   s_bStop = TRUE;
-#endif
+
    if (unhandled_exception)
    {
       elog("Exiting with error:\n${e}", ("e", unhandled_exception->to_detail_string()));
@@ -401,31 +451,50 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
 void service_main(int argc, char** argv)
 {
    bool is_win_service = IsRunningAsSystemService();
-	if(!is_win_service || InitializeService() == 0)
-      main_internal(argc, argv, is_win_service);
+   if (is_win_service)
+   {
+      svcStatusHandle = RegisterServiceCtrlHandlerEx(SVCNAME, SvcCtrlHandler, NULL);
+      if (!svcStatusHandle)
+      {
+         SvcReportEvent("RegisterServiceCtrlHandler");
+         return;
+      }
+
+      // These SERVICE_STATUS members remain as set here
+      svcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+      svcStatus.dwServiceSpecificExitCode = 0;
+
+      // Report initial status to the SCM
+      ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+   }
+
+   main_internal(argc, argv, is_win_service);
 }
 
 SERVICE_TABLE_ENTRY DispatchTable[] = {
-		{ (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)service_main },
-		{ NULL, NULL }
+   { (LPSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION)service_main },
+   { NULL, NULL }
 };
 #endif
 
 int main(int argc, char** argv)
 {
 #if defined(_MSC_VER)
-	if(IsRunningAsSystemService()) {
-		if(!StartServiceCtrlDispatcher(DispatchTable)) {
+   if (IsRunningAsSystemService())
+   {
+      if (!StartServiceCtrlDispatcher(DispatchTable))
+      {
          int err = GetLastError();
-			SvcReportEvent((LPTSTR)"StartServiceCtrlDispatcher");
+         SvcReportEvent("StartServiceCtrlDispatcher");
          return err;
-		}
+      }
       return EXIT_SUCCESS;
    }
-   else {
-		SetConsoleCtrlHandler(HandlerRoutine, TRUE);
-	}
+   else
+   {
+      SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+   }
 #endif
 
-	return main_internal(argc, argv);
+   return main_internal(argc, argv);
 }
