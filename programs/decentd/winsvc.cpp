@@ -46,7 +46,7 @@ DWORD install_win_service()
 		szPath,                    // path to service's binary 
 		NULL,                      // no load ordering group 
 		NULL,                      // no tag identifier 
-		NULL,                      // no dependencies 
+		"NlaSvc\0",                // network dependency
 		NULL,                      // LocalSystem account 
 		NULL);                     // no password 
 
@@ -139,6 +139,9 @@ DWORD install_win_service()
       SERVICE_DESCRIPTION sd;
       sd.lpDescription = SVCDESCRIPTION;
       ChangeServiceConfig2(schService, SERVICE_CONFIG_DESCRIPTION, &sd);
+      SERVICE_DELAYED_AUTO_START_INFO sdasi;
+      sdasi.fDelayedAutostart = TRUE;
+      ChangeServiceConfig2(schService, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &sdasi);
 		std::cout << "Service " << SVCNAME << " installed successfully. You can start service from control panel or with command: \"net start " << SVCNAME << "\"" << std::endl;
       installed = true;
 		CloseServiceHandle(schService);

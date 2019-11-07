@@ -20,8 +20,11 @@
       <Component Id="decentd" Guid="70da8553-5ccd-4e86-9918-8a09f4d8e45a" Directory="INSTALLFOLDER">
         <File Id='decentd.exe' Name='decentd.exe' DiskId='1' Source='$(var.DCorePath)\bin\decentd.exe' KeyPath='yes' />
         <ServiceControl Id='decentd.service' Name='DCore' Start='install' Stop='both' Remove='uninstall' />
-        <ServiceInstall Name='DCore' DisplayName='DCore Network Node' Description='Fast, powerful and cost-efficient blockchain' 
-                        ErrorControl='normal' Interactive='no' Start='auto' Type='ownProcess' Vital='yes' />
+        <ServiceInstall Name='DCore' DisplayName='DCore Network Node' Description='Fast, powerful and cost-efficient blockchain'
+                        ErrorControl='normal' Interactive='no' Start='auto' Type='ownProcess' Vital='yes'>
+          <ServiceConfig DelayedAutoStart='yes' OnInstall='yes' />
+          <ServiceDependency Id='NlaSvc' />
+        </ServiceInstall>
       </Component>
 
       <Component Id="cli_wallet" Guid="12d8b879-5323-4d91-a995-8141b24e8594" Directory="INSTALLFOLDER">
