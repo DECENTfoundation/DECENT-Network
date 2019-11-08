@@ -4,6 +4,9 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#include <openssl/crypto.h>
+#endif
 #include <cryptopp/config.h>
 
 #include <iostream>
@@ -17,17 +20,18 @@ namespace decent {
 
    std::string get_openssl_version()
    {
-      std::string openssl_version_text = std::string(OPENSSL_VERSION_TEXT);
-      openssl_version_text = openssl_version_text.substr(0, openssl_version_text.length() - 11);
-      return openssl_version_text;
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+      return OpenSSL_version(OPENSSL_VERSION);
+#else
+      return OPENSSL_VERSION_TEXT;
+#endif
    }
 
    std::string get_cryptopp_version()
    {
-      unsigned int cryptopp_major_version = CRYPTOPP_VERSION / 100;
-      unsigned int cryptopp_minor_version = CRYPTOPP_VERSION / 10 - cryptopp_major_version * 10;
-      std::string cryptopp_version_text = std::to_string(cryptopp_major_version) + "." + std::to_string(cryptopp_minor_version) + "." + std::to_string(CRYPTOPP_VERSION % 10);
-      return cryptopp_version_text;
+      return std::to_string(CRYPTOPP_VERSION / 100).append(1, '.')
+            .append(std::to_string(CRYPTOPP_VERSION % 100 / 10)).append(1, '.')
+            .append(std::to_string(CRYPTOPP_VERSION % 10));
    }
 
    about_info get_about_info()
@@ -35,7 +39,7 @@ namespace decent {
       return {
          graphene::utilities::git_version(),
          get_boost_version(),
-         OPENSSL_VERSION_TEXT,
+         get_openssl_version(),
          get_cryptopp_version(),
 #if defined(__APPLE__)
          "osx "
