@@ -14,7 +14,7 @@ namespace decent {
 
    about_info get_about_info();
 
-   void dump_version_info();
+   void dump_version_info(const char *caption);
 
    bool check_unrecognized(const boost::program_options::parsed_options& optparsed);
 

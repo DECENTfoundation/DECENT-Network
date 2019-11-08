@@ -1,7 +1,6 @@
 #include <decent/about.hpp>
 #include <graphene/utilities/git_revision.hpp>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include <openssl/opensslv.h>
@@ -47,13 +46,13 @@ namespace decent {
 #else
          "other "
 #endif
-         + boost::lexical_cast<std::string>(8 * sizeof(int*)) + "-bit"
+         + std::to_string(8 * sizeof(int*)) + "-bit"
       };
    }
 
-   void dump_version_info()
+   void dump_version_info(const char *caption)
    {
-      std::cout << "DECENT Daemon " << graphene::utilities::git_version();
+      std::cout << caption << ' ' << graphene::utilities::git_version();
 #ifndef NDEBUG
       std::cout << " (debug)";
 #endif

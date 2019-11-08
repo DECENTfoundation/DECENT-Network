@@ -57,15 +57,15 @@ int main( int argc, char** argv )
 {
    try {
       decent_path_finder &pf = decent_path_finder::instance();
-      bpo::options_description opts;
+      bpo::options_description opts("CLI Wallet");
       opts.add_options()
-         ("help,h", "Print this help message and exit.")
-         ("version,v", "Print version information and exit.")
-         ("generate-keys,g", "Generate brain, wif private and public keys.")
-         ("wallet-file,w", bpo::value<boost::filesystem::path>()->implicit_value("wallet.json"), "Wallet to load.")
+         ("help,h", "Print this help message and exit")
+         ("version,v", "Print version information and exit")
+         ("generate-keys,g", "Generate brain, wif private and public keys")
+         ("wallet-file,w", bpo::value<boost::filesystem::path>()->implicit_value("wallet.json"), "Wallet to load")
          ("log-level,l", bpo::value<char>()->default_value('I'), "Set minimum log level: (D)ebug, (I)nfo, (W)arning, (E)rror, (O)ff")
-         ("daemon", "Run the wallet in daemon mode.")
-         ("chain-id", bpo::value<std::string>(), "Chain ID to connect to.")
+         ("daemon", "Run the wallet in daemon mode")
+         ("chain-id", bpo::value<std::string>(), "Chain ID to connect to")
          ("packages-path", bpo::value<boost::filesystem::path>()->default_value(pf.get_decent_packages()), "Directory to store submitted packages")
          ("ipfs-api", bpo::value<std::string>()->default_value("127.0.0.1:5001"), "IPFS daemon API")
          ("server-rpc-endpoint,s", bpo::value<std::string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
@@ -94,7 +94,7 @@ int main( int argc, char** argv )
       }
       else if( options.count("version") )
       {
-         decent::dump_version_info();
+         decent::dump_version_info("CLI Wallet");
          return EXIT_SUCCESS;
       }
       else if( options.count("generate-keys") )

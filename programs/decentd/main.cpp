@@ -235,7 +235,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
          ("install-win-service", "Register itself as Windows service")
          ("remove-win-service", "Unregister itself as Windows service")
 #else
-         ("daemon", "Run DECENT as daemon.")
+         ("daemon", "Run DECENT as daemon")
 #endif
       ;
 
@@ -259,7 +259,7 @@ int main_internal(int argc, char** argv, bool run_as_daemon = false)
    }
    else if( options.count("version") )
    {
-      decent::dump_version_info();
+      decent::dump_version_info("DECENT Daemon");
       return EXIT_SUCCESS;
    }
 #if defined(_MSC_VER)
