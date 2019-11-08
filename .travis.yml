@@ -24,7 +24,7 @@ matrix:
           - $HOME/json
 
     - os: osx
-      osx_image: xcode9.4
+      osx_image: xcode10.3
       compiler: clang
       cache:
         directories:
@@ -32,7 +32,7 @@ matrix:
           - $HOME/Library/Caches/Homebrew
 
     - os: osx
-      osx_image: xcode10.3
+      osx_image: xcode11.2
       compiler: clang
       cache:
         directories:
@@ -69,7 +69,7 @@ before_install:
       test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install);
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.7.0.tar.gz && tar xf v3.7.0.tar.gz && cd json-3.7.0 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install);
+      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.7.1.tar.gz && tar xf v3.7.1.tar.gz && cd json-3.7.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install);
     fi
 
 script:
