@@ -3,6 +3,7 @@ file( GLOB HEADERS "*.hpp" "include/decent/package/*.hpp" )
 add_library( package_manager
              package.cpp
              detail.cpp
+             ipfs_check.cpp
              ipfs_transfer.cpp
              local.cpp
              ${HEADERS}
