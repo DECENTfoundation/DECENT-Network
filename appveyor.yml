@@ -1,11 +1,21 @@
 version: 1.5.0.{build}
 
-image: Visual Studio 2017
-
 environment:
-  BOOST: C:\Libraries\boost_1_69_0
   DOXYGEN: 1.8.14
   IPFS: 0.4.22
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
+    VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules\Microsoft_VC141_CRT_x64.msm
+    BOOST: C:\Libraries\boost_1_69_0
+    BOOST_LIB: C:\Libraries\boost_1_69_0\lib64-msvc-14.1
+    QT: C:\Qt\5.12\msvc2017_64
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
+    VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC\14.23.27820\MergeModules\Microsoft_VC142_CRT_x64.msm
+    BOOST: C:\Libraries\boost_1_71_0
+    BOOST_LIB: C:\Libraries\boost_1_71_0\lib64-msvc-14.2
+    QT: C:\Qt\5.12.5\msvc2017_64
 
 install:
 - cmd: >-
@@ -31,13 +41,13 @@ cache: C:\Tools\vcpkg\installed
 
 build_script:
 - cmd: >-
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+    call "%VCVARS%"
 
-    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_PROGRAM_PATH=%APPVEYOR_BUILD_FOLDER%\..\Doxygen.%DOXYGEN%\tools -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -G Ninja .
+    cmake -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\DCore -DCMAKE_PROGRAM_PATH=%APPVEYOR_BUILD_FOLDER%\..\Doxygen.%DOXYGEN%\tools -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST_LIB% -G Ninja .
 
     ninja -j2 install
 
-    msbuild scripts\Windows\DCore.sln /p:Configuration=Release /p:ProductVersion=%APPVEYOR_BUILD_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_BUILD_VERSION%
+    msbuild scripts\Windows\DCore.sln /p:Configuration=Release /p:ProductVersion=%APPVEYOR_BUILD_VERSION% /p:DCorePath=%APPVEYOR_BUILD_FOLDER%\DCore /p:IPFSPath=C:\Tools\vcpkg\installed\x64-windows-static\tools\go-ipfs /p:VCRuntimePath="%VCRUNTIME%" /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_BUILD_VERSION%
 
 artifacts:
 - path: $(APPVEYOR_BUILD_VERSION)\DCore.msi
