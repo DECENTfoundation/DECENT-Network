@@ -322,11 +322,8 @@ void seeding_plugin_impl::generate_por_int(const graphene::chain::seeding_object
 
    if(mso.cd && !package_handle->is_virtual ){
       dlog("seeding plugin_impl: generate_por() - calculating full PoR");
-      fc::ripemd160 b_id = dyn_props.head_block_id;
-      uint32_t b_num = dyn_props.head_block_number;
-      proof.reference_block = b_num;
-      for( int i = 0; i < 5; i++ )
-         proof.seed.data[i] = b_id._hash[i]; //use the block ID as source of entrophy
+      proof.reference_block = dyn_props.head_block_number;
+      proof.seed = dyn_props.head_block_id; //use the block ID as source of entrophy
 
       if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
          package_handle->create_proof_of_custody(*mso.cd, proof);

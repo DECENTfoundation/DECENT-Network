@@ -827,10 +827,8 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
       if (o.proof.valid() )
       {
          auto& proof = *o.proof;
-
          fc::ripemd160 bid = db().get_block_id_for_num(proof.reference_block);
-         for(int i = 0; i < 5; i++)
-            FC_ASSERT(bid._hash[i] == proof.seed.data[i],"Block ID does not match; wrong chain?");
+         FC_ASSERT(bid == proof.seed,"Block ID does not match; wrong chain?");
          FC_ASSERT(db().head_block_num() <= proof.reference_block + 6,"Block reference is too old");
       }
       //

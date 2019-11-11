@@ -78,7 +78,7 @@ public:
    int verify_by_miner(CustodyData cd, CustodyProof proof){
       mpz_t s;
       mpz_init(s);
-      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed._hash);
       int ret=verify_by_miner(cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;
@@ -101,7 +101,7 @@ public:
    int create_proof_of_custody(boost::filesystem::path content, CustodyData cd, CustodyProof& proof){
       mpz_t s;
       mpz_init(s);
-      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed.data);
+      mpz_import(s, 5, 1, sizeof(uint32_t), 0, 0, proof.seed._hash);
       int ret = create_proof_of_custody(content, cd.n, (char*)cd.u_seed.data, cd.pubKey.data, proof.sigma.data, proof.mus, s);
       mpz_clear(s);
       return ret;

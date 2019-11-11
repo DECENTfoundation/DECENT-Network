@@ -41,7 +41,7 @@
 #include <fc/safe.hpp>
 #include <fc/io/raw_fwd.hpp>
 #include <fc/array.hpp>
-
+#include <fc/crypto/ripemd160.hpp>
 
 #define DECENT_SECTORS 20
 #define DECENT_SECTORS_BIG 100
@@ -209,7 +209,7 @@ struct CustodyData{
  */
 struct CustodyProof{
    uint32_t reference_block; //<Block used to get entrophy from. Must be recent
-   fc::array<uint32_t,5> seed; //<ripemd160._hash of the reference block
+   fc::ripemd160 seed; //<Hash of the reference block
    std::vector<std::string> mus; //<Mju-s
    fc::array<uint8_t,DECENT_SIZE_OF_POINT_ON_CURVE_COMPRESSED> sigma; //<sigma
 };
