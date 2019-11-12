@@ -322,10 +322,8 @@ namespace graphene { namespace net {
       VERIFY_CORRECT_THREAD();
 
       _run_loop = false;
-      fc::optional<fc::ip::endpoint> remote_endpoint;
       if (_sock.get_socket().is_open())
-        remote_endpoint = _sock.get_socket().remote_endpoint();
-      ilog( "in destroy_connection() for ${endpoint}", ("endpoint", remote_endpoint) );
+        dlog( "in destroy_connection() for ${endpoint}", ("endpoint", _sock.get_socket().remote_endpoint()));
 
       if (_send_message_in_progress)
         elog("Error: message_oriented_connection is being destroyed while a send_message is in progress.  "

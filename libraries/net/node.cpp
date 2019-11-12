@@ -2198,10 +2198,10 @@ namespace graphene { namespace net { namespace detail {
     void node_impl::on_address_message(peer_connection* originating_peer, const address_message& address_message_received)
     {
       VERIFY_CORRECT_THREAD();
-      dlog("Received an address message containing ${size} addresses", ("size", address_message_received.addresses.size()));
+      ilog("Received an address message from peer ${endpoint}", ("endpoint", originating_peer->get_socket().remote_endpoint()));
       for (const address_info& address : address_message_received.addresses)
       {
-        dlog("    ${endpoint} last seen ${time}", ("endpoint", address.remote_endpoint)("time", address.last_seen_time));
+        ilog("  ${endpoint} last seen ${time}, ${firewalled}", ("endpoint", address.remote_endpoint)("time", address.last_seen_time)("firewalled", address.firewalled));
       }
       std::vector<graphene::net::address_info> updated_addresses = address_message_received.addresses;
       for (address_info& address : updated_addresses)
@@ -4731,19 +4731,18 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
       ilog( "----------------- PEER STATUS UPDATE --------------------" );
-      ilog( " number of peers: ${active} active, ${handshaking}, ${closing} closing.  attempting to maintain ${desired} - ${maximum} peers",
+      ilog( "number of peers: ${active} active, ${handshaking} handshaking and ${closing} closing.  attempting to maintain ${desired} - ${maximum} peers",
            ( "active", _active_connections.size() )("handshaking", _handshaking_connections.size() )("closing",_closing_connections.size() )
            ( "desired", _desired_number_of_connections )("maximum", _maximum_number_of_connections ) );
       for( const peer_connection_ptr& peer : _active_connections )
       {
-        ilog( "       active peer ${endpoint} peer_is_in_sync_with_us:${in_sync_with_us} we_are_in_sync_with_peer:${in_sync_with_them}",
+        ilog( "  active peer ${endpoint} peer_is_in_sync_with_us:${in_sync_with_us} we_are_in_sync_with_peer:${in_sync_with_them}",
              ( "endpoint", peer->get_remote_endpoint() )
              ( "in_sync_with_us", !peer->peer_needs_sync_items_from_us )("in_sync_with_them", !peer->we_need_sync_items_from_peer ) );
         if( peer->we_need_sync_items_from_peer )
           ilog( "              above peer has ${count} sync items we might need", ("count", peer->ids_of_items_to_get.size() ) );
         if (peer->inhibit_fetching_sync_blocks)
           ilog( "              we are not fetching sync blocks from the above peer (inhibit_fetching_sync_blocks == true)" );
-
       }
       for( const peer_connection_ptr& peer : _handshaking_connections )
       {
