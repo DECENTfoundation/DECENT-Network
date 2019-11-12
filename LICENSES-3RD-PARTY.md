@@ -407,20 +407,8 @@ EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARR
  (eay@cryptsoft.com). This product includes software written by Tim
  Hudson (tjh@cryptsoft.com).
  
-# 13 Qt
+# 13 PBC
 
-Qt has been created under the belief of open development and providing freedom and choice to developers. To support that, The Qt Company also licenses Qt under open source licenses, where most of the functionality is available under LGPLv3 or LGPLv2.1. It should be noted that some components are available only under LGPLv3. In order to preserve the true meaning of open development and uphold the spirit of free software, it is imperative that the rules and regulations of open source licenses are followed. If you use Qt under open-source licenses, you need to make sure that you comply with all the licenses of the components you use.
- 
-Qt also contains some 3rd party components that are available under different open-source licenses. Please refer to the documentation for more details on 3rd party licenses used in Qt.
- 
-GPLv3 and LGPLv3
- 
-GNU LESSER GENERAL PUBLIC LICENSE
-The Qt Toolkit is Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-Contact: http://www.qt.io/licensing
- 
-You may use, distribute and copy the Qt GUI Toolkit under the terms of GNU Lesser General Public License version 3, which supplements GNU General Public License Version 3.
- 
 The PBC library is released under the GNU General Public License
  
 # 14 cURL and libcurl

@@ -4,10 +4,6 @@
 [submodule "libraries/contrib/cpp-ipfs-api"]
 	path = libraries/contrib/cpp-ipfs-api
 	url = https://github.com/DECENTfoundation/cpp-ipfs-api.git
-[submodule "scripts/MacOS"]
-	branch = master
-	path = scripts/MacOS
-	url = https://github.com/DECENTfoundation/homebrew-DCore.git
 [submodule "scripts/Docker"]
 	branch = master
 	path = scripts/Docker
