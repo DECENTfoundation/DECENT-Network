@@ -8,7 +8,7 @@
     <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
 
-    <Icon Id='ProductIcon' SourceFile='dcore.ico' />
+    <Icon Id='ProductIcon' SourceFile='DCore.ico' />
 
     <Property Id='ARPPRODUCTICON' Value='ProductIcon' />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
