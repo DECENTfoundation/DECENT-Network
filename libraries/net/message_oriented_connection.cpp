@@ -154,7 +154,7 @@ namespace graphene { namespace net {
     {
       VERIFY_CORRECT_THREAD();
       _max_message_size = block_size + sizeof(message_header);
-      ilog("Set max message size: ${s}", ("s", _max_message_size));
+      dlog("Set max message size: ${s}", ("s", _max_message_size));
     }
 
     void message_oriented_connection_impl::bind(const fc::ip::endpoint& local_endpoint)
