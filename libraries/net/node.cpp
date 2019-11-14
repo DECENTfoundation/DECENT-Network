@@ -83,8 +83,6 @@
 #include <graphene/chain/config.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
-//#define ENABLE_DEBUG_ULOGS
-
 #ifdef DEFAULT_LOGGER
 # undef DEFAULT_LOGGER
 #endif
@@ -111,13 +109,6 @@
         dlog("NEWDEBUG: Leaving " #name ", now ${total} total calls, ${active} active calls", ("total", *total)("active", *active)); \
       } \
     } invocation_logger(&total_ ## name ## _counter, &active_ ## name ## _counter)
-
-//log these messages even at warn level when operating on the test network
-#ifdef GRAPHENE_TEST_NETWORK
-#define testnetlog wlog
-#else
-#define testnetlog(...) do {} while (0)
-#endif
 
 namespace graphene { namespace net {
 
@@ -458,7 +449,6 @@ namespace graphene { namespace net { namespace detail {
       std::list<potential_peer_record> _add_once_node_list; /// list of peers we want to connect to as soon as possible
 
       peer_database             _potential_peer_db;
-      fc::promise<void>::ptr    _retrigger_connect_loop_promise;
       bool                      _potential_peer_database_updated;
       fc::future<void>          _p2p_network_connect_loop_done;
       // @}
@@ -980,30 +970,7 @@ namespace graphene { namespace net { namespace detail {
 
           // if we broke out of the while loop, that means either we have connected to enough nodes, or
           // we don't have any good candidates to connect to right now.
-#if 0
-          try
-          {
-            _retrigger_connect_loop_promise = fc::promise<void>::ptr( new fc::promise<void>("graphene::net::retrigger_connect_loop") );
-            if( is_wanting_new_connections() || !_add_once_node_list.empty() )
-            {
-              if( is_wanting_new_connections() )
-                dlog( "Still want to connect to more nodes, but I don't have any good candidates.  Trying again in 15 seconds" );
-              else
-                dlog( "I still have some \"add once\" nodes to connect to.  Trying again in 15 seconds" );
-              _retrigger_connect_loop_promise->wait_until( fc::time_point::now() + fc::seconds(GRAPHENE_PEER_DATABASE_RETRY_DELAY ) );
-            }
-            else
-            {
-              dlog( "I don't need any more connections, waiting forever until something changes" );
-              _retrigger_connect_loop_promise->wait();
-            }
-          }
-          catch ( fc::timeout_exception& ) //intentionally not logged
-          {
-          }  // catch
-#else
           fc::usleep(fc::seconds(10));
-#endif
         }
         catch (const fc::canceled_exception&)
         {
@@ -1021,8 +988,6 @@ namespace graphene { namespace net { namespace detail {
       VERIFY_CORRECT_THREAD();
       dlog( "Triggering connect loop now" );
       _potential_peer_database_updated = true;
-      //if( _retrigger_connect_loop_promise )
-      //  _retrigger_connect_loop_promise->set_value();
     }
 
     bool node_impl::have_already_received_sync_item( const item_hash_t& item_hash )
@@ -1302,8 +1267,6 @@ namespace graphene { namespace net { namespace detail {
                 items_to_advertise_by_type[item_to_advertise.item_type].push_back(item_to_advertise.item_hash);
                 peer->inventory_advertised_to_peer.insert(peer_connection::timestamped_item_id(item_to_advertise, fc::time_point::now()));
                 ++total_items_to_send_to_this_peer;
-                if (item_to_advertise.item_type == trx_message_type)
-                  testnetlog("advertising transaction ${id} to peer ${endpoint}", ("id", item_to_advertise.item_hash)("endpoint", peer->get_remote_endpoint()));
                 dlog("advertising item ${id} to peer ${endpoint}", ("id", item_to_advertise.item_hash)("endpoint", peer->get_remote_endpoint()));
               }
             }
@@ -1857,7 +1820,6 @@ namespace graphene { namespace net { namespace detail {
       }
     }
 
-
     fc::variant_object node_impl::generate_hello_user_data()
     {
       VERIFY_CORRECT_THREAD();
@@ -1982,9 +1944,6 @@ namespace graphene { namespace net { namespace detail {
             uint32_t head_block_num = _delegate->get_block_number(_delegate->get_head_block_id());
             if (next_fork_block_number < head_block_num)
             {
-#ifdef ENABLE_DEBUG_ULOGS
-              ulog("Rejecting connection from peer because their version is too old.");
-#endif
               wlog("Received hello message from peer running a version of that can only understand blocks up to #${their_hard_fork}, but I'm at head block number #${my_block_number}",
                    ("their_hard_fork", next_fork_block_number)("my_block_number", head_block_num));
               std::ostringstream rejection_message;
@@ -2386,19 +2345,6 @@ namespace graphene { namespace net { namespace detail {
       uint32_t number_of_blocks_after_reference_point = static_cast<uint32_t>(original_ids_of_items_to_get.size());
 
       std::vector<item_hash_t> synopsis = _delegate->get_blockchain_synopsis(reference_point, number_of_blocks_after_reference_point);
-
-#if 0
-      // just for debugging, enable this and set a breakpoint to step through
-      if (synopsis.empty())
-        synopsis = _delegate->get_blockchain_synopsis(reference_point, number_of_blocks_after_reference_point);
-
-      // TODO: it's possible that the returned synopsis is empty if the blockchain is empty (that's fine)
-      // or if the reference point is now past our undo history (that's not).
-      // in the second case, we should mark this peer as one we're unable to sync with and
-      // disconnect them.
-      if (reference_point != item_hash_t() && synopsis.empty())
-        FC_THROW_EXCEPTION(block_older_than_undo_history_exception, "You are on a fork I'm unable to switch to");
-#endif
 
       if( number_of_blocks_after_reference_point )
       {
@@ -2919,7 +2865,6 @@ namespace graphene { namespace net { namespace detail {
           }
         }
       }
-
     }
 
     void node_impl::on_closing_connection_message( peer_connection* originating_peer, const closing_connection_message& closing_connection_message_received )
@@ -3129,9 +3074,6 @@ namespace graphene { namespace net { namespace detail {
                 peers_to_disconnect[peer] = std::make_pair(disconnect_reason_stream.str(),
                                                            fc::optional<fc::exception>(fc::exception(FC_LOG_MESSAGE(error, "You need to upgrade your client due to hard fork at block ${block_number}",
                                                                                                        ("block_number", block_message_to_send.block.block_num())))));
-#ifdef ENABLE_DEBUG_ULOGS
-                ulog("Disconnecting from peer during sync because their version is too old.");
-#endif
                 disconnecting_this_peer = true;
               }
             }
@@ -3247,14 +3189,12 @@ namespace graphene { namespace net { namespace detail {
       }
       dlog("currently ${count} blocks in the process of being handled", ("count", _handle_message_calls_in_progress.size()));
 
-
       if (_suspend_fetching_sync_blocks)
       {
         dlog("resuming processing sync block backlog because we only ${count} blocks in progress",
              ("count", _handle_message_calls_in_progress.size()));
         _suspend_fetching_sync_blocks = false;
       }
-
 
       // when syncing with multiple peers, it's possible that we'll have hundreds of blocks ready to push
       // to the client at once.  This can be slow, and we need to limit the number we push at any given
@@ -3453,9 +3393,6 @@ namespace graphene { namespace net { namespace detail {
                   next_fork_block_number <= block_number)
               {
                 peers_to_disconnect.insert(peer);
-#ifdef ENABLE_DEBUG_ULOGS
-                ulog("Disconnecting from peer because their version is too old.");
-#endif
               }
             }
           }
@@ -3746,7 +3683,6 @@ namespace graphene { namespace net { namespace detail {
       {
         wlog("Received a firewall check reply to a request I never sent");
       }
-
     }
 
     void node_impl::on_get_current_connections_request_message(peer_connection* originating_peer,
@@ -3809,7 +3745,6 @@ namespace graphene { namespace net { namespace detail {
     {
       VERIFY_CORRECT_THREAD();
     }
-
 
     // this handles any message we get that doesn't require any special processing.
     // currently, this is any message other than block messages and p2p-specific
@@ -4082,7 +4017,6 @@ namespace graphene { namespace net { namespace detail {
       {
         wlog( "Exception thrown while terminating Advertise inventory loop, ignoring" );
       }
-
 
       // Next, terminate our existing connections.  First, close all of the connections nicely.
       // This will close the sockets and may result in calls to our "on_connection_closing"
@@ -4448,13 +4382,7 @@ namespace graphene { namespace net { namespace detail {
       if( !node_configuration_loaded )
       {
         _node_configuration = detail::node_configuration();
-
-#ifdef GRAPHENE_TEST_NETWORK
-        uint16_t port = GRAPHENE_NET_TEST_P2P_PORT + GRAPHENE_TEST_NETWORK_VERSION;
-#else
-        uint16_t port = GRAPHENE_NET_DEFAULT_P2P_PORT;
-#endif
-        _node_configuration.listen_endpoint.set_port( port );
+        _node_configuration.listen_endpoint.set_port( GRAPHENE_NET_DEFAULT_P2P_PORT );
         _node_configuration.accept_incoming_connections = true;
         _node_configuration.wait_if_endpoint_is_busy = false;
 
@@ -5277,63 +5205,6 @@ namespace graphene { namespace net { namespace detail {
   void node::close()
   {
     INVOKE_IN_IMPL(close);
-  }
-
-  struct simulated_network::node_info
-  {
-    node_delegate* delegate;
-    fc::future<void> message_sender_task_done;
-    std::queue<message> messages_to_deliver;
-    node_info(node_delegate* delegate) : delegate(delegate) {}
-  };
-
-  simulated_network::~simulated_network()
-  {
-    for( node_info* network_node_info : network_nodes )
-    {
-      network_node_info->message_sender_task_done.cancel_and_wait("~simulated_network()");
-      delete network_node_info;
-    }
-  }
-
-  void simulated_network::message_sender(node_info* destination_node)
-  {
-    while (!destination_node->messages_to_deliver.empty())
-    {
-      try
-      {
-        const message& message_to_deliver = destination_node->messages_to_deliver.front();
-        if (message_to_deliver.msg_type == trx_message_type)
-          destination_node->delegate->handle_transaction(message_to_deliver.as<trx_message>());
-        else if (message_to_deliver.msg_type == block_message_type)
-        {
-          std::vector<fc::uint160_t> contained_transaction_message_ids;
-          destination_node->delegate->handle_block(message_to_deliver.as<block_message>(), false, contained_transaction_message_ids);
-        }
-        else
-          destination_node->delegate->handle_message(message_to_deliver);
-      }
-      catch ( const fc::exception& e )
-      {
-        elog( "${r}", ("r",e) );
-      }
-      destination_node->messages_to_deliver.pop();
-    }
-  }
-
-  void simulated_network::broadcast( const message& item_to_broadcast  )
-  {
-    for (node_info* network_node_info : network_nodes)
-    {
-      network_node_info->messages_to_deliver.emplace(item_to_broadcast);
-      if (!network_node_info->message_sender_task_done.valid() || network_node_info->message_sender_task_done.ready())
-        network_node_info->message_sender_task_done = fc::async([=](){ message_sender(network_node_info); }, "simulated_network_sender");
-    }
-  }
-
-  void simulated_network::add_node_delegate( node_delegate* node_delegate_to_add )
-  {
-    network_nodes.push_back(new node_info(node_delegate_to_add));
   }
 
   namespace detail
