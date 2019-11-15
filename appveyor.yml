@@ -9,13 +9,11 @@ environment:
     VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\MergeModules\Microsoft_VC141_CRT_x64.msm
     BOOST: C:\Libraries\boost_1_69_0
     BOOST_LIB: C:\Libraries\boost_1_69_0\lib64-msvc-14.1
-    QT: C:\Qt\5.12\msvc2017_64
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
     VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC\14.23.27820\MergeModules\Microsoft_VC142_CRT_x64.msm
     BOOST: C:\Libraries\boost_1_71_0
     BOOST_LIB: C:\Libraries\boost_1_71_0\lib64-msvc-14.2
-    QT: C:\Qt\5.12.5\msvc2017_64
 
 install:
 - cmd: >-
@@ -60,7 +58,7 @@ deploy:
     secure: fc8ctUCKj9rzRdCbbz1K3i8rsJ5fACPvdSsvbVlucIZ7Fa5pb8EERHddfsEIhkkq
   subject: decentfoundation
   repo: windows
-  package: DCore-dev
+  package: DCore
   version: $(APPVEYOR_BUILD_VERSION)/dev/$(APPVEYOR_BUILD_VERSION)
   artifact: MSI
   publish: true
