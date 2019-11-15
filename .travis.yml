@@ -69,7 +69,7 @@ before_install:
       test -d $HOME/boost/lib || (wget -nv https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz && tar xf boost_1_65_1.tar.gz && cd boost_1_65_1 && ./bootstrap.sh --prefix=$HOME/boost && ./b2 -j$(nproc) install);
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.7.1.tar.gz && tar xf v3.7.1.tar.gz && cd json-3.7.1 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install);
+      test -d $HOME/json/include || (wget -nv https://github.com/nlohmann/json/archive/v3.7.2.tar.gz && tar xf v3.7.2.tar.gz && cd json-3.7.2 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/json . && make -j$(nproc) install);
     fi
 
 script:
