@@ -5,14 +5,14 @@
 
 namespace graphene { namespace chain {
 
-   map<uint32_t, string> RegionCodes::s_mapCodeToName;
-   map<string, uint32_t> RegionCodes::s_mapNameToCode;
+   std::map<uint32_t, std::string> RegionCodes::s_mapCodeToName;
+   std::map<std::string, uint32_t> RegionCodes::s_mapNameToCode;
 
    bool RegionCodes::bAuxillary = RegionCodes::InitCodeAndName();
 
-   optional<asset> PriceRegions::GetPrice(uint32_t region_code) const
+   fc::optional<asset> PriceRegions::GetPrice(uint32_t region_code) const
    {
-      optional<asset> op_price;
+      fc::optional<asset> op_price;
       auto it_single_price = map_price.find(uint32_t(RegionCodes::OO_none));
       if (it_single_price != map_price.end())
       {
@@ -54,12 +54,12 @@ namespace graphene { namespace chain {
    }
    bool PriceRegions::Valid(uint32_t region_code) const
    {
-      optional<asset> op_price = GetPrice(region_code);
+      fc::optional<asset> op_price = GetPrice(region_code);
       return op_price.valid();
    }
    bool PriceRegions::Valid(string const& region_code) const
    {
-      optional<asset> op_price;
+      fc::optional<asset> op_price;
       auto it = RegionCodes::s_mapNameToCode.find(region_code);
       if (it != RegionCodes::s_mapNameToCode.end())
          return Valid(it->second);
@@ -70,7 +70,7 @@ namespace graphene { namespace chain {
    {
       this->id = string(co.id);
       this->author = ao.name;
-      optional<asset> op_price = co.price.GetPrice(region_code);
+      fc::optional<asset> op_price = co.price.GetPrice(region_code);
       FC_ASSERT(op_price.valid());
       this->price = *op_price;
 
@@ -89,7 +89,7 @@ namespace graphene { namespace chain {
       else
          this->status = "Uploading";
 
-      if(co.expiration <= time_point::now() )
+      if(co.expiration <= fc::time_point::now() )
          this->status = "Expired";
       return *this;
    }

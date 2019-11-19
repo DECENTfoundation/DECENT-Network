@@ -4,9 +4,8 @@
 
 namespace decent { namespace package {
 
-class PackageManagerConfigurator{
-private:
-   explicit PackageManagerConfigurator() { };
+class PackageManagerConfigurator {
+   PackageManagerConfigurator() = default;
    std::string _ipfs_host = "localhost";
    uint32_t    _ipfs_port = 5001;
 
@@ -20,24 +19,15 @@ public:
       return the_configurator;
    }
 
-   void set_ipfs_endpoint(std::string host, uint32_t port){ _ipfs_host = host; _ipfs_port = port; };
+   void set_ipfs_endpoint(const std::string &host, uint32_t port) { _ipfs_host = host; _ipfs_port = port; }
 
-   uint32_t get_ipfs_port(){ return _ipfs_port; };
-   std::string get_ipfs_host(){ return _ipfs_host; };
-
+   uint32_t get_ipfs_port() const { return _ipfs_port; }
+   const std::string& get_ipfs_host() const { return _ipfs_host; }
 
    PackageManagerConfigurator(const PackageManagerConfigurator&)             = delete;
    PackageManagerConfigurator(PackageManagerConfigurator&&)                  = delete;
    PackageManagerConfigurator& operator=(const PackageManagerConfigurator&)  = delete;
    PackageManagerConfigurator& operator=(PackageManagerConfigurator&&)       = delete;
-
-   ~PackageManagerConfigurator() {};
-
-
 };
-
-
-
-
 
 }} //namespace decent::package

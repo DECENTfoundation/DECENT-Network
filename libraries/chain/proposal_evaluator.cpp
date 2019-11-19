@@ -42,14 +42,14 @@ operation_result proposal_create_evaluator::do_evaluate(const operation_type& o)
 
    {
       // If we're dealing with the committee authority, make sure this transaction has a sufficient review period.
-      flat_set<account_id_type> auths;
-      vector<authority> other;
+      boost::container::flat_set<account_id_type> auths;
+      std::vector<authority> other;
       for( auto& op : o.proposed_ops )
       {
          operation_get_required_authorities(op.op, auths, auths, other);
       }
 
-      FC_ASSERT( other.size() == 0 ); // TODO: what about other??? 
+      FC_ASSERT( other.size() == 0 ); // TODO: what about other???
 
       if( auths.find(GRAPHENE_MINER_ACCOUNT) != auths.end() )
       {
@@ -88,9 +88,9 @@ operation_result proposal_create_evaluator::do_apply(const operation_type& o)
          proposal.review_period_time = o.expiration_time - *o.review_period_seconds;
 
       //Populate the required approval sets
-      flat_set<account_id_type> required_active;
-      vector<authority> other;
-      
+      boost::container::flat_set<account_id_type> required_active;
+      std::vector<authority> other;
+
       // TODO: consider caching values from evaluate?
       for( auto& op : _proposed_trx.operations )
          operation_get_required_authorities(op, required_active, proposal.required_owner_approvals, other);

@@ -81,7 +81,7 @@ namespace graphene { namespace chain {
        */
       fc::time_point_sec expiration;
 
-      vector<operation>  operations;
+      std::vector<operation> operations;
       extensions_type    extensions;
 
       /// Calculate the digest for a transaction
@@ -96,23 +96,23 @@ namespace graphene { namespace chain {
 
       /// visit all operations
       template<typename Visitor>
-      vector<typename Visitor::result_type> visit( Visitor&& visitor )
+      std::vector<typename Visitor::result_type> visit( Visitor&& visitor )
       {
-         vector<typename Visitor::result_type> results;
+         std::vector<typename Visitor::result_type> results;
          for( auto& op : operations )
             results.push_back(op.visit( std::forward<Visitor>( visitor ) ));
          return results;
       }
       template<typename Visitor>
-      vector<typename Visitor::result_type> visit( Visitor&& visitor )const
+      std::vector<typename Visitor::result_type> visit( Visitor&& visitor )const
       {
-         vector<typename Visitor::result_type> results;
+         std::vector<typename Visitor::result_type> results;
          for( auto& op : operations )
             results.push_back(op.visit( std::forward<Visitor>( visitor ) ));
          return results;
       }
 
-      void get_required_authorities( flat_set<account_id_type>& active, flat_set<account_id_type>& owner, vector<authority>& other )const;
+      void get_required_authorities( boost::container::flat_set<account_id_type>& active, boost::container::flat_set<account_id_type>& owner, std::vector<authority>& other )const;
    };
 
    /**
@@ -136,16 +136,16 @@ namespace graphene { namespace chain {
        *  signatures, but any non-minimal result will still pass
        *  validation.
        */
-      set<public_key_type> get_required_signatures(
+      std::set<public_key_type> get_required_signatures(
          const chain_id_type& chain_id,
-         const flat_set<public_key_type>& available_keys,
+         const boost::container::flat_set<public_key_type>& available_keys,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
          uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH
          )const;
 
       void verify_authority(
-         const flat_set<public_key_type>& sig_keys,
+         const boost::container::flat_set<public_key_type>& sig_keys,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
          uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH )const;
@@ -157,32 +157,32 @@ namespace graphene { namespace chain {
        * non-minimal set.
        */
 
-      set<public_key_type> minimize_required_signatures(
+      std::set<public_key_type> minimize_required_signatures(
          const chain_id_type& chain_id,
-         const flat_set<public_key_type>& available_keys,
+         const boost::container::flat_set<public_key_type>& available_keys,
          const std::function<const authority*(account_id_type)>& get_active,
          const std::function<const authority*(account_id_type)>& get_owner,
          uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH
          ) const;
 
-      flat_set<public_key_type> get_signature_keys( const chain_id_type& chain_id )const;
+      boost::container::flat_set<public_key_type> get_signature_keys( const chain_id_type& chain_id )const;
 
-      vector<signature_type> signatures;
+      std::vector<signature_type> signatures;
 
       /// Removes all operations and signatures
       void clear() { operations.clear(); signatures.clear(); }
    };
 
-   void verify_authority( const vector<operation>& ops, const flat_set<public_key_type>& sigs,
+   void verify_authority( const std::vector<operation>& ops, const boost::container::flat_set<public_key_type>& sigs,
                           const std::function<const authority*(account_id_type)>& get_active,
                           const std::function<const authority*(account_id_type)>& get_owner,
                           uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH,
                           bool allow_committee = false,
-                          const flat_set<account_id_type>& active_aprovals = flat_set<account_id_type>(),
-                          const flat_set<account_id_type>& owner_approvals = flat_set<account_id_type>());
+                          const boost::container::flat_set<account_id_type>& active_aprovals = boost::container::flat_set<account_id_type>(),
+                          const boost::container::flat_set<account_id_type>& owner_approvals = boost::container::flat_set<account_id_type>());
 
    // optimized version if there is used only one sign
-   void verify_authority1(const vector<operation>& ops, const public_key_type& sigs,
+   void verify_authority1(const std::vector<operation>& ops, const public_key_type& sigs,
       const std::function<const authority*(account_id_type)>& get_active,
       const std::function<const authority*(account_id_type)>& get_owner,
       uint32_t max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH);
@@ -205,7 +205,7 @@ namespace graphene { namespace chain {
       processed_transaction( const signed_transaction& trx = signed_transaction() )
          : signed_transaction(trx){}
 
-      vector<operation_result> operation_results;
+      std::vector<operation_result> operation_results;
 
       digest_type merkle_digest()const;
    };

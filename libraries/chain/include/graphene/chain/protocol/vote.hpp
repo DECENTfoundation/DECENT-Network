@@ -29,7 +29,6 @@
 #include <cstdint>
 #include <string>
 
-#include <fc/container/flat.hpp>
 #include <fc/reflect/reflect.hpp>
 
 namespace graphene { namespace chain {
@@ -145,6 +144,6 @@ void from_variant( const fc::variant& var, graphene::chain::vote_id_type& vo );
 
 } // fc
 
-FC_REFLECT_TYPENAME( fc::flat_set<graphene::chain::vote_id_type> )
+FC_REFLECT_TYPENAME( boost::container::flat_set<graphene::chain::vote_id_type> )
 
 FC_REFLECT( graphene::chain::vote_id_type, (content) )

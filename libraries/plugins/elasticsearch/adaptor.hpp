@@ -48,7 +48,7 @@ fc::mutable_variant_object adapt_monitored_asset_options(const fc::variant &v, c
 fc::mutable_variant_object adapt_non_fungible_token_options(const fc::variant &v, const graphene::chain::database &db);
 fc::mutable_variant_object adapt_account(const fc::variant &id, const graphene::chain::database &db);
 fc::mutable_variant_object adapt_miner(const fc::variant &id, const graphene::chain::database &db);
-fc::variant adapt_votes(const graphene::chain::database &db, const fc::flat_set<graphene::chain::vote_id_type> &votes);
+fc::variant adapt_votes(const graphene::chain::database &db, const boost::container::flat_set<graphene::chain::vote_id_type> &votes);
 void adapt_asset(fc::variant &obj, const graphene::chain::database &db);
 
 struct type_name_visitor : fc::visitor<const char*>

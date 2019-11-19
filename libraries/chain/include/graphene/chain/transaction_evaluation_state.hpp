@@ -35,12 +35,10 @@ namespace graphene { namespace chain {
    class transaction_evaluation_state
    {
       public:
-         transaction_evaluation_state( database* db = nullptr )
-         :_db(db){}
-
+         transaction_evaluation_state( database* db = nullptr ) : _db(db) {}
 
          database& db()const { assert( _db ); return *_db; }
-         vector<operation_result> operation_results;
+         std::vector<operation_result> operation_results;
 
          const signed_transaction*        _trx = nullptr;
          database*                        _db = nullptr;

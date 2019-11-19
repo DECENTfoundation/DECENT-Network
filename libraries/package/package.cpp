@@ -1,34 +1,18 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
-#include <cstddef>
+
+#include <decent/package/package.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
+
 #include "ipfs_transfer.hpp"
 #include "local.hpp"
-
-#include <decent/encrypt/encryptionutils.hpp>
-#include <decent/package/package.hpp>
-
-#include <fc/log/logger.hpp>
-#include <fc/thread/scoped_lock.hpp>
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
-#include <atomic>
-#include <thread>
-#include <vector>
-
-
-using namespace boost;
-using namespace boost::filesystem;
-
 
 namespace decent { namespace package {
-
 
     namespace detail {
 
@@ -94,7 +78,6 @@ namespace decent { namespace package {
             boost::iostreams::filtering_ostream& _out;
         };
 
-
         class Dearchiver {
         public:
             explicit Dearchiver(boost::iostreams::filtering_istream& in)
@@ -118,10 +101,8 @@ namespace decent { namespace package {
                         break;
                     }
 
-                    using namespace boost::filesystem;
-
-                    const path file_path = output_dir / header.name;
-                    const path file_dir = file_path.parent_path();
+                    const auto file_path = output_dir / header.name;
+                    const auto file_dir = file_path.parent_path();
 
                     if (!exists(file_dir) || !is_directory(file_dir)) {
                         try {
@@ -164,12 +145,9 @@ namespace decent { namespace package {
             boost::iostreams::filtering_istream& _in;
         };
 
-
     } // namespace detail
 
-
     namespace detail {
-
 
         class CreatePackageTask : public PackageTask {
         public:
@@ -185,14 +163,9 @@ namespace decent { namespace package {
             {
             }
 
-        private:
-            virtual bool is_base_class()override{return false;};
         protected:
-
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_creation_start, ( ) );
-
-                using namespace boost::filesystem;
 
                 const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
                 bool samples = false;
@@ -218,9 +191,7 @@ namespace decent { namespace package {
                         FC_THROW("Failed to create unique temporary directory ${path}", ("path", temp_dir_path.string()) );
                     }
 
-
 //                  PACKAGE_INFO_GENERATE_EVENT(package_creation_progress, ( ) );
-
 
                     create_directories(temp_dir_path);
                     remove_all(temp_dir_path);
@@ -231,11 +202,9 @@ namespace decent { namespace package {
                     const auto zip_file_path = temp_dir_path / "content.zip";
 
                     {
-                        using namespace boost::iostreams;
-
-                        filtering_ostream out;
-                        out.push(gzip_compressor());
-                        out.push(file_sink(zip_file_path.string(), std::ios::out | std::ios::binary));
+                        boost::iostreams::filtering_ostream out;
+                        out.push(boost::iostreams::gzip_compressor());
+                        out.push(boost::iostreams::file_sink(zip_file_path.string(), std::ios::out | std::ios::binary));
 
                         detail::Archiver archiver(out);
 
@@ -243,7 +212,7 @@ namespace decent { namespace package {
                             PACKAGE_TASK_EXIT_IF_REQUESTED;
                             archiver.put(_content_dir_path.filename().string(), _content_dir_path);
                         } else {
-                            std::vector<path> all_files;
+                            std::vector<boost::filesystem::path> all_files;
                             detail::get_files_recursive(_content_dir_path, all_files);
                             for (auto& file : all_files) {
                                 PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -291,8 +260,8 @@ namespace decent { namespace package {
                         remove_all(temp_samples_dir_path);
                         create_directories(temp_samples_dir_path);
 
-                        for( directory_iterator file(_samples_dir_path); file != directory_iterator(); ++file ){
-                            path current (file->path());
+                        for( boost::filesystem::directory_iterator file(_samples_dir_path); file != boost::filesystem::directory_iterator(); ++file ){
+                            boost::filesystem::path current (file->path());
                             if (is_regular_file(current)){
                                 copy_file(current, temp_samples_dir_path / current.filename() );
                                 size += file_size( temp_samples_dir_path / current.filename() );
@@ -371,15 +340,12 @@ namespace decent { namespace package {
             const fc::sha256               _key;
         };
 
-
         class RemovePackageTask : public PackageTask {
         public:
             explicit RemovePackageTask(PackageInfo& package)
                 : PackageTask(package)
             {
             }
-        private:
-           virtual bool is_base_class() override{return false;};
         protected:
             virtual void task() override {
                 PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -392,7 +358,6 @@ namespace decent { namespace package {
             }
         };
 
-
         class UnpackPackageTask : public PackageTask {
         public:
             explicit UnpackPackageTask(PackageInfo& package,
@@ -404,14 +369,9 @@ namespace decent { namespace package {
             {
             }
 
-
-        private:
-            virtual bool is_base_class() override {return false;};
         protected:
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_extraction_start, ( ) );
-
-                using namespace boost::filesystem;
 
                 const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
 
@@ -426,9 +386,7 @@ namespace decent { namespace package {
                         FC_THROW("Target path ${path} must point to directory", ("path", _target_dir.string()));
                     }
 
-
 //                  PACKAGE_INFO_GENERATE_EVENT(package_extraction_progress, ( ) );
-
 
                     create_directories(temp_dir_path);
                     remove_all(temp_dir_path);
@@ -454,8 +412,6 @@ namespace decent { namespace package {
                         PACKAGE_INFO_CHANGE_MANIPULATION_STATE(DECRYPTING);
 
                         decent::encrypt::AesKey k;
-
-
                         for (int i = 0; i < CryptoPP::AES::MAX_KEYLENGTH; ++i) {
                            k.key_byte[i] = _key.data()[i];
                         }
@@ -468,7 +424,6 @@ namespace decent { namespace package {
 
                         if( AES_decrypt_file(aes_file_path.string(), archive_file_path.string(), k) != decent::encrypt::ok ) {
                            FC_THROW("Error decrypting file");
-
                         };
 
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
@@ -523,17 +478,13 @@ namespace decent { namespace package {
             const fc::sha256 _key;
         };
 
-
         class CheckPackageTask : public PackageTask {
         public:
             explicit CheckPackageTask(PackageInfo& package)
                 : PackageTask(package)
             {
             }
-        private:
-           virtual bool is_base_class()override{return false;};
         protected:
-
             virtual void task() override {
                 PACKAGE_INFO_GENERATE_EVENT(package_check_start, ( ) );
 
@@ -541,9 +492,7 @@ namespace decent { namespace package {
                     PACKAGE_TASK_EXIT_IF_REQUESTED;
                     PACKAGE_INFO_CHANGE_MANIPULATION_STATE(CHECKING);
 
-
 //                  PACKAGE_INFO_GENERATE_EVENT(package_check_progress, ( ) );
-
 
                     const auto aes_file_path = _package.get_content_file();
                     const auto file_hash = detail::calculate_hash(aes_file_path);
@@ -579,9 +528,7 @@ namespace decent { namespace package {
             }
         };
 
-
     } // namespace detail
-
 
     PackageInfo::PackageInfo(PackageManager& manager,
                              const boost::filesystem::path& content_dir_path,
@@ -608,8 +555,6 @@ namespace decent { namespace package {
         PACKAGE_INFO_GENERATE_EVENT(package_restoration_start, ( ) );
 
         try {
-            using namespace boost::filesystem;
-
             if (!exists(get_package_dir()) || !is_directory(get_package_dir())) {
                 FC_THROW("Package directory ${path} does not exist", ("path", get_package_dir().string()) );
             }
@@ -758,13 +703,11 @@ namespace decent { namespace package {
             FC_THROW("seeding protocol of the package must be '${proto}'", ("proto", proto) );
         }
 
-
         _current_task = PackageManager::instance().get_proto_transfer_engine(proto).create_stop_seeding_task(*this);
         _current_task->start(block);
     }
 
     void PackageInfo::check(bool block) {
-
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
         _current_task.reset(new detail::CheckPackageTask(*this));
@@ -843,7 +786,6 @@ namespace decent { namespace package {
         _event_listeners.clear();
     }
 
-
     PackageInfo::DataState PackageInfo::get_data_state() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _data_state;
@@ -858,13 +800,13 @@ namespace decent { namespace package {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _manipulation_state;
     }
-   
+
    uint64_t PackageInfo::get_size() const {
       if(is_virtual)
          return 0;
       size_t size=0;
-      for(recursive_directory_iterator it( get_package_dir() );
-          it != recursive_directory_iterator();
+      for(boost::filesystem::recursive_directory_iterator it( get_package_dir() );
+          it != boost::filesystem::recursive_directory_iterator();
           ++it)
       {
          if(!is_directory(*it))
@@ -872,13 +814,9 @@ namespace decent { namespace package {
       }
       return size;
    }
-   
-   
 
     void PackageInfo::lock_dir() {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-
-        using namespace boost::interprocess;
 
         detail::touch(get_lock_file_path());
 
@@ -976,7 +914,6 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
-
     package_handle_t PackageManager::find_package(const std::string& url)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
@@ -1004,7 +941,6 @@ namespace decent { namespace package {
         return nullptr;
     }
 
-
     package_handle_set_t PackageManager::get_all_known_packages() const {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         return _packages;
@@ -1015,9 +951,7 @@ namespace decent { namespace package {
 
         ilog("reading packages from directory ${path}", ("path", _packages_path.string()) );
 
-        using namespace boost::filesystem;
-
-        for (directory_iterator entry(_packages_path); entry != directory_iterator(); ++entry) {
+        for (boost::filesystem::directory_iterator entry(_packages_path); entry != boost::filesystem::directory_iterator(); ++entry) {
             try {
                 const std::string hash_str = entry->path().filename().string();
 
@@ -1096,6 +1030,5 @@ namespace decent { namespace package {
 
         return *it->second;
     }
-
 
 } } // namespace decent::package

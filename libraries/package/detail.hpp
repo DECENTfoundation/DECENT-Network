@@ -9,9 +9,6 @@
 #include <atomic>
 #include <future>
 #include <memory>
-#include <chrono>
-#include <mutex>
-#include <string>
 
 namespace decent { namespace package {
 
@@ -48,14 +45,13 @@ namespace detail {
         explicit PackageTask(PackageInfo& package);
         class StopRequestedException {};
 
-        virtual void task() {elog("This should never happened!"); std::abort();};
+        virtual void task() = 0;
 
     private:
         std::future<void>   _future;
         std::atomic<bool>   _running;
         std::atomic<bool>   _stop_requested;
         std::exception_ptr  _last_exception;
-        virtual bool is_base_class(){return true;};
 
     protected:
         PackageInfo&                _package;

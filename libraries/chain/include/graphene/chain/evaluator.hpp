@@ -73,7 +73,7 @@ namespace graphene { namespace chain {
       }
 
    private:
-      static fc::flat_set<account_id_type> tracked_accounts;
+      static boost::container::flat_set<account_id_type> tracked_accounts;
 
    protected:
       /**

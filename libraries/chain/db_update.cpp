@@ -152,7 +152,7 @@ void database::update_last_irreversible_block()
       return;
    }
 
-   vector< const miner_object* > wit_objs;
+   std::vector<const miner_object*> wit_objs;
    wit_objs.reserve( gpo.active_miners.size() );
    for( const miner_id_type& wid : gpo.active_miners )
       wit_objs.push_back( &(wid(*this)) );

@@ -81,7 +81,7 @@ struct init_policy_visitor
 operation_result vesting_balance_create_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
-   const time_point_sec now = d.head_block_time();
+   const fc::time_point_sec now = d.head_block_time();
 
    FC_ASSERT( d.get_balance( op.creator, op.amount.asset_id ) >= op.amount );
    d.adjust_balance( op.creator, -op.amount );
@@ -102,7 +102,7 @@ operation_result vesting_balance_create_evaluator::do_apply( const operation_typ
 operation_result vesting_balance_withdraw_evaluator::do_evaluate( const operation_type& op )
 { try {
    const database& d = db();
-   const time_point_sec now = d.head_block_time();
+   const fc::time_point_sec now = d.head_block_time();
 
    const vesting_balance_object& vbo = op.vesting_balance( d );
    FC_ASSERT( op.owner == vbo.owner, "", ("op.owner", op.owner)("vbo.owner", vbo.owner) );
@@ -117,7 +117,7 @@ operation_result vesting_balance_withdraw_evaluator::do_evaluate( const operatio
 operation_result vesting_balance_withdraw_evaluator::do_apply( const operation_type& op )
 { try {
    database& d = db();
-   const time_point_sec now = d.head_block_time();
+   const fc::time_point_sec now = d.head_block_time();
 
    const vesting_balance_object& vbo = op.vesting_balance( d );
 

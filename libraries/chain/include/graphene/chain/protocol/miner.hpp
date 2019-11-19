@@ -27,7 +27,7 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/chain_parameters.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
   /**
     * @brief Create a miner object, as a bid to hold a miner position on the network.
@@ -43,7 +43,7 @@ namespace graphene { namespace chain {
       asset             fee;
       /// The account which owns the miner. This account pays the fee for this operation.
       account_id_type   miner_account;
-      string            url;
+      std::string       url;
       public_key_type   block_signing_key;
 
       account_id_type fee_payer()const { return miner_account; }
@@ -67,14 +67,13 @@ namespace graphene { namespace chain {
       /// The account which owns the miner. This account pays the fee for this operation.
       account_id_type   miner_account;
       /// The new URL.
-      optional< string > new_url;
+      fc::optional<std::string> new_url;
       /// The new block signing key.
-      optional< public_key_type > new_signing_key;
+      fc::optional<public_key_type> new_signing_key;
 
       account_id_type fee_payer()const { return miner_account; }
       void            validate()const;
    };
-
 
    /**
     * @brief Used by miners to update the global parameters of the blockchain.

@@ -1,5 +1,4 @@
-
-vector<proposal_object> wallet_api::get_proposed_transactions(const string& account_or_id ) const
+std::vector<proposal_object> wallet_api::get_proposed_transactions(const std::string& account_or_id ) const
 {
    account_id_type id = get_account(account_or_id).get_id();
    return my->_remote_db->get_proposed_transactions( id );
@@ -11,7 +10,7 @@ signed_transaction_info wallet_api::propose_transfer(const string& proposer,
                                                      const string& amount,
                                                      const string& asset_symbol,
                                                      const string& memo,
-                                                     time_point_sec expiration)
+                                                     fc::time_point_sec expiration)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
@@ -20,7 +19,7 @@ signed_transaction_info wallet_api::propose_transfer(const string& proposer,
 
 signed_transaction_info wallet_api::propose_parameter_change(const string& proposing_account,
                                                              fc::time_point_sec expiration_time,
-                                                             const variant_object& changed_values,
+                                                             const fc::variant_object& changed_values,
                                                              bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -30,7 +29,7 @@ signed_transaction_info wallet_api::propose_parameter_change(const string& propo
 
 signed_transaction_info wallet_api::propose_fee_change(const string& proposing_account,
                                                        fc::time_point_sec expiration_time,
-                                                       const variant_object& changed_fees,
+                                                       const fc::variant_object& changed_fees,
                                                        bool broadcast /* = false */)
 {
    if(my->is_locked())

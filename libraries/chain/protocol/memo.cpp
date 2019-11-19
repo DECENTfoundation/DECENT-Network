@@ -23,6 +23,7 @@
  */
 #include <graphene/chain/protocol/memo.hpp>
 #include <fc/crypto/aes.hpp>
+#include <fc/crypto/sha224.hpp>
 
 namespace graphene { namespace chain {
 
@@ -38,7 +39,7 @@ memo_data::memo_data(const std::string& msg, const private_key_type& priv, const
    else
    {
       auto text = memo_message(0, msg).serialize();
-      message = vector<char>(text.begin(), text.end());
+      message = std::vector<char>(text.begin(), text.end());
    }
 }
 
@@ -59,7 +60,7 @@ memo_data::message_type memo_data::encrypt_message(const std::string &message, c
    auto secret = priv.get_shared_secret(pub);
    auto nonce_plus_secret = fc::sha512::hash(fc::to_string(nonce) + secret.str());
    std::string text = memo_message(static_cast<uint32_t>(digest_type::hash(message)._hash[0]), message).serialize();
-   return fc::aes_encrypt( nonce_plus_secret, vector<char>(text.begin(), text.end()) );
+   return fc::aes_encrypt( nonce_plus_secret, std::vector<char>(text.begin(), text.end()) );
 }
 
 std::string memo_data::decrypt_message(const message_type &message, const private_key_type &priv, const public_key_type &pub, uint64_t nonce)

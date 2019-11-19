@@ -29,7 +29,6 @@
 #include <graphene/chain/protocol/vote.hpp>
 #include <set>
 
-
 namespace graphene { namespace chain {
 
    bool is_valid_name( const string& s );
@@ -63,7 +62,7 @@ namespace graphene { namespace chain {
       uint16_t num_miner = 0;
       /// This is the list of vote IDs this account votes for. The weight of these votes is determined by this
       /// account's balance of core asset.
-      flat_set<vote_id_type> votes;
+      boost::container::flat_set<vote_id_type> votes;
       extensions_type        extensions;
 
       /// True if account (author) allows subscription
@@ -85,7 +84,7 @@ namespace graphene { namespace chain {
    {
       struct ext
       {
-         optional< void_t >            null_ext;
+         fc::optional<void_t> null_ext;
       };
 
       struct fee_parameters_type
@@ -108,7 +107,7 @@ namespace graphene { namespace chain {
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& )const;
 
-      void get_required_active_authorities( flat_set<account_id_type>& a )const
+      void get_required_active_authorities( boost::container::flat_set<account_id_type>& a )const
       {
          // registrar should be required anyway as it is the fee_payer(), but we insert it here just to be sure
          a.insert( registrar );
@@ -126,7 +125,7 @@ namespace graphene { namespace chain {
    {
       struct ext
       {
-         optional< void_t >            null_ext;
+         fc::optional<void_t> null_ext;
       };
 
       struct fee_parameters_type
@@ -139,12 +138,12 @@ namespace graphene { namespace chain {
       account_id_type account;
 
       /// New owner authority. If set, this operation requires owner authority to execute.
-      optional<authority> owner;
+      fc::optional<authority> owner;
       /// New active authority. This can be updated by the current active authority.
-      optional<authority> active;
+      fc::optional<authority> active;
 
       /// New account options
-      optional<account_options> new_options;
+      fc::optional<account_options> new_options;
       extension< ext > extensions;
 
       account_id_type fee_payer()const { return account; }
@@ -154,16 +153,14 @@ namespace graphene { namespace chain {
       bool is_owner_update()const
       { return owner.valid(); }
 
-      void get_required_owner_authorities( flat_set<account_id_type>& a )const
+      void get_required_owner_authorities( boost::container::flat_set<account_id_type>& a )const
       { if( is_owner_update() ) a.insert( account ); }
 
-      void get_required_active_authorities( flat_set<account_id_type>& a )const
+      void get_required_active_authorities( boost::container::flat_set<account_id_type>& a )const
       { if( !is_owner_update() ) a.insert( account ); }
    };
 
-
 } } // graphene::chain
-
 
 FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_miner)(votes)(extensions)
            (allow_subscription)(price_per_subscribe)(subscription_period))

@@ -90,9 +90,9 @@ namespace graphene { namespace chain {
       {
          return params.fee;
       }
-      void get_required_authorities( vector<authority>& )const{}
-      void get_required_active_authorities( flat_set<account_id_type>& )const{}
-      void get_required_owner_authorities( flat_set<account_id_type>& )const{}
+      void get_required_authorities( std::vector<authority>& )const{}
+      void get_required_active_authorities( boost::container::flat_set<account_id_type>& )const{}
+      void get_required_owner_authorities( boost::container::flat_set<account_id_type>& )const{}
       void validate()const{}
 
       bool is_partner_account_id(account_id_type acc_id) const { return false; }
@@ -104,18 +104,18 @@ namespace graphene { namespace chain {
     *  For future expansion many structus include a single member of type
     *  extensions_type that can be changed when updating a protocol.  You can
     *  always add new types to a static_variant without breaking backward
-    *  compatibility.   
+    *  compatibility.
     */
-   typedef static_variant<void_t>      future_extensions;
+   typedef fc::static_variant<void_t> future_extensions;
 
    /**
     *  A flat_set is used to make sure that only one extension of
-    *  each type is added and that they are added in order.  
-    *  
-    *  @note static_variant compares only the type tag and not the 
+    *  each type is added and that they are added in order.
+    *
+    *  @note static_variant compares only the type tag and not the
     *  content.
     */
-   typedef flat_set<future_extensions> extensions_type;
+   typedef boost::container::flat_set<future_extensions> extensions_type;
 
    ///@}
 

@@ -48,7 +48,7 @@ operation_result subscribe_evaluator::do_apply( const operation_type& op )
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
       const auto &subscription = idx2.find(boost::make_tuple(op.from, op.to));
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
-      time_point_sec now = db().head_block_time();
+      fc::time_point_sec now = db().head_block_time();
 
       operation_result result;
       if (subscription != idx2.end())
@@ -118,7 +118,7 @@ operation_result subscribe_by_author_evaluator::do_apply( const operation_type& 
       auto &idx2 = db().get_index_type<subscription_index>().indices().get<by_from_to>();
       const auto &subscription = idx2.find(boost::make_tuple(op.from, op.to));
       uint32_t subscription_period_in_secs = to_account->options.subscription_period * 24 * 3600;
-      time_point_sec now = db().head_block_time();
+      fc::time_point_sec now = db().head_block_time();
 
       operation_result result;
       if (subscription != idx2.end())

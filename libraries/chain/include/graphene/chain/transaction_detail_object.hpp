@@ -21,15 +21,15 @@ namespace graphene { namespace chain {
          subscription,
          non_fungible_token
       };
-   
+
       account_id_type m_from_account;
       account_id_type m_to_account;
       uint8_t m_operation_type;
       asset m_transaction_amount;
       asset m_transaction_fee;
-      optional<non_fungible_token_data_id_type> m_nft_data_id;
+      fc::optional<non_fungible_token_data_id_type> m_nft_data_id;
       std::string m_str_description;
-      optional<memo_data> m_transaction_encrypted_memo;
+      fc::optional<memo_data> m_transaction_encrypted_memo;
       fc::time_point_sec m_timestamp;
 
       share_type get_transaction_amount() const;

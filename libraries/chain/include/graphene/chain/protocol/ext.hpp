@@ -61,7 +61,7 @@ struct graphene_extension_pack_read_visitor
    {
       if( (value.*member).valid() )
       {
-         fc::raw::pack( stream, unsigned_int( which ) );
+         fc::raw::pack( stream, fc::unsigned_int( which ) );
          fc::raw::pack( stream, *(value.*member) );
       }
       ++which;
@@ -77,19 +77,17 @@ void operator<<( Stream& stream, const graphene::chain::extension<T>& value )
 {
    graphene_extension_pack_count_visitor<T> count_vtor( value.value );
    fc::reflector<T>::visit( count_vtor );
-   fc::raw::pack( stream, unsigned_int( count_vtor.count ) );
+   fc::raw::pack( stream, fc::unsigned_int( count_vtor.count ) );
    graphene_extension_pack_read_visitor<Stream,T> read_vtor( stream, value.value );
    fc::reflector<T>::visit( read_vtor );
 }
-
-
 
 template< typename Stream, typename T >
 struct graphene_extension_unpack_visitor
 {
    graphene_extension_unpack_visitor( Stream& s, T& v ) : stream(s), value(v)
    {
-      unsigned_int c;
+      fc::unsigned_int c;
       fc::raw::unpack( stream, c );
       count_left = c.value;
       maybe_read_next_which();
@@ -99,7 +97,7 @@ struct graphene_extension_unpack_visitor
    {
       if( count_left > 0 )
       {
-         unsigned_int w;
+         fc::unsigned_int w;
          fc::raw::unpack( stream, w );
          next_which = w.value;
       }

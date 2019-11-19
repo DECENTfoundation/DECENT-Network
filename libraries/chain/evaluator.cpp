@@ -36,7 +36,7 @@
 
 namespace graphene { namespace chain {
 
-fc::flat_set<account_id_type> generic_evaluator::tracked_accounts;
+boost::container::flat_set<account_id_type> generic_evaluator::tracked_accounts;
 
    operation_result generic_evaluator::start_evaluate( transaction_evaluation_state& eval_state, const operation& op, bool apply )
    { try {

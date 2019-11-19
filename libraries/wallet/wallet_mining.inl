@@ -1,10 +1,9 @@
-
-map<string,miner_id_type> wallet_api::list_miners(const string& lowerbound, uint32_t limit)
+std::map<std::string, miner_id_type> wallet_api::list_miners(const std::string& lowerbound, uint32_t limit) const
 {
    return my->_remote_db->lookup_miner_accounts(lowerbound, limit);
 }
 
-miner_object wallet_api::get_miner(const string& owner_account)
+miner_object wallet_api::get_miner(const std::string& owner_account) const
 {
    return my->get_miner(owner_account);
 }
@@ -28,7 +27,7 @@ signed_transaction_info wallet_api::update_miner(const string& miner_name,
    return my->update_miner(miner_name, url, block_signing_key, broadcast);
 }
 
-vector< vesting_balance_object_with_info > wallet_api::get_vesting_balances( const string& account_name )
+std::vector<vesting_balance_object_with_info> wallet_api::get_vesting_balances(const std::string& account_name) const
 {
    return my->get_vesting_balances( account_name );
 }
@@ -54,7 +53,7 @@ signed_transaction_info wallet_api::vote_for_miner(const string& voting_account,
 }
 
 signed_transaction_info wallet_api::set_voting_proxy(const string& account_to_modify,
-                                                     optional<string> voting_account,
+                                                     fc::optional<string> voting_account,
                                                      bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -71,12 +70,12 @@ signed_transaction_info wallet_api::set_desired_miner_count(const string& accoun
    return my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
 }
 
-vector<miner_voting_info> wallet_api::search_miner_voting(const string& account_id,
-                                                          const string& term,
-                                                          bool only_my_votes,
-                                                          const string& order,
-                                                          const string& id,
-                                                          uint32_t count ) const
+std::vector<miner_voting_info> wallet_api::search_miner_voting(const std::string& account_id,
+                                                               const std::string& term,
+                                                               bool only_my_votes,
+                                                               const std::string& order,
+                                                               const std::string& id,
+                                                               uint32_t count ) const
 {
    return my->search_miner_voting(account_id, term, only_my_votes, order, id, count);
 }

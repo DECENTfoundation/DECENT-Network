@@ -28,7 +28,6 @@
 
 namespace graphene { namespace db {
 
-   using fc::flat_set;
    class object_database;
 
    struct undo_state

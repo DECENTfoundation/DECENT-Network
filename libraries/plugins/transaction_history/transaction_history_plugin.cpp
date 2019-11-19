@@ -54,7 +54,7 @@ namespace graphene { namespace transaction_history {
       uint16_t tx_num = 0;
       for( const auto& tx : b.transactions )
       {
-         fc::flat_set<graphene::chain::account_id_type> impacted;
+         boost::container::flat_set<graphene::chain::account_id_type> impacted;
          std::vector<graphene::chain::authority> other;
 
          for( const auto& op : tx.operations )

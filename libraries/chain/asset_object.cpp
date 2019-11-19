@@ -29,21 +29,21 @@
 
 #include <cmath>
 
-using namespace graphene::chain;
+namespace graphene { namespace chain {
 
 namespace {
 
-   void remove_trailing_zeros(std::string& str) { 
+   void remove_trailing_zeros(std::string& str) {
       if (str.find('.') == std::string::npos) {
          return;
       }
-      
-      int offset = 1; 
-      if (str.find_last_not_of('0') == str.find('.')) { 
-         offset = 0; 
-      } 
-      str.erase(str.find_last_not_of('0') + offset, std::string::npos); 
-   } 
+
+      int offset = 1;
+      if (str.find_last_not_of('0') == str.find('.')) {
+         offset = 0;
+      }
+      str.erase(str.find_last_not_of('0') + offset, std::string::npos);
+   }
 
 }
 
@@ -96,7 +96,7 @@ void graphene::chain::asset_bitasset_data_object::update_median_feeds(time_point
 */
 
 asset asset_object::amount_from_string(string amount_string) const
-{ 
+{
 
    try {
       remove_trailing_zeros(amount_string);
@@ -152,7 +152,7 @@ asset asset_object::amount_from_string(string amount_string) const
          satoshis *= -1;
 
       return amount(satoshis);
-   } FC_CAPTURE_AND_RETHROW( (amount_string) ) 
+   } FC_CAPTURE_AND_RETHROW( (amount_string) )
 
 }
 
@@ -170,14 +170,14 @@ string asset_object::amount_to_string(share_type amount) const
    return result;
 }
 
-void graphene::chain::monitored_asset_options::update_median_feeds(time_point_sec current_time)
+void graphene::chain::monitored_asset_options::update_median_feeds(fc::time_point_sec current_time)
 {
    current_feed_publication_time = current_time;
-   vector<std::reference_wrapper<const price_feed>> current_feeds;
-   for( const pair<account_id_type, pair<time_point_sec,price_feed>>& f : feeds )
+   std::vector<std::reference_wrapper<const price_feed>> current_feeds;
+   for( const std::pair<account_id_type, std::pair<fc::time_point_sec, price_feed>>& f : feeds )
    {
       if( (current_time - f.second.first).to_seconds() < feed_lifetime_sec &&
-          f.second.first != time_point_sec() )
+          f.second.first != fc::time_point_sec() )
       {
          current_feeds.emplace_back(f.second.second);
          current_feed_publication_time = std::min(current_feed_publication_time, f.second.first);
@@ -229,3 +229,5 @@ void graphene::chain::monitored_asset_options::update_median_feeds(time_point_se
 
 //template<class DB>
 //bool asset_object::can_convert( asset from, asset& to, const DB& db ) const
+
+} } // graphene::chain

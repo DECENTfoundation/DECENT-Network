@@ -55,7 +55,7 @@ void     fork_database::start_block(signed_block b)
  * Pushes the block into the fork database and caches it if it doesn't link
  *
  */
-shared_ptr<fork_item>  fork_database::push_block(const signed_block& b)
+std::shared_ptr<fork_item> fork_database::push_block(const signed_block& b)
 {
    auto item = std::make_shared<fork_item>(b);
    try {
@@ -76,7 +76,7 @@ void  fork_database::_push_block(const item_ptr& item)
    if( _head ) // make sure the block is within the range that we are caching
    {
       FC_ASSERT( item->num > std::max<int64_t>( 0, int64_t(_head->num) - (_max_size) ),
-                 "attempting to push a block that is too old", 
+                 "attempting to push a block that is too old",
                  ("item->num",item->num)("head",_head->num)("max_size",_max_size));
    }
 
@@ -99,7 +99,7 @@ void  fork_database::_push_block(const item_ptr& item)
       auto& num_idx = _index.get<block_num>();
       while( num_idx.size() && (*num_idx.begin())->num < min_num )
          num_idx.erase( num_idx.begin() );
-      
+
       _unlinked_index.get<block_num>().erase(_head->num - _max_size);
    }
    //_push_next( item );
@@ -181,9 +181,9 @@ item_ptr fork_database::fetch_block(const block_id_type& id)const
    return item_ptr();
 }
 
-vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
+std::vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
 {
-   vector<item_ptr> result;
+   std::vector<item_ptr> result;
    auto itr = _index.get<block_num>().find(num);
    while( itr != _index.get<block_num>().end() )
    {
@@ -196,12 +196,12 @@ vector<item_ptr> fork_database::fetch_block_by_number(uint32_t num)const
    return result;
 }
 
-pair<fork_database::branch_type,fork_database::branch_type>
+std::pair<fork_database::branch_type,fork_database::branch_type>
   fork_database::fetch_branch_from(block_id_type first, block_id_type second)const
 { try {
    // This function gets a branch (i.e. vector<fork_item>) leading
    // back to the most recent common ancestor.
-   pair<branch_type,branch_type> result;
+   std::pair<branch_type,branch_type> result;
    auto first_branch_itr = _index.get<block_id>().find(first);
    FC_ASSERT(first_branch_itr != _index.get<block_id>().end());
    auto first_branch = *first_branch_itr;
@@ -240,7 +240,7 @@ pair<fork_database::branch_type,fork_database::branch_type>
    return result;
 } FC_CAPTURE_AND_RETHROW( (first)(second) ) }
 
-void fork_database::set_head(shared_ptr<fork_item> h)
+void fork_database::set_head(std::shared_ptr<fork_item> h)
 {
    _head = h;
 }

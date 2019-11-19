@@ -148,7 +148,7 @@ fc::mutable_variant_object adapt_authority(const fc::variant &v, const graphene:
    return auth;
 }
 
-fc::variant adapt_votes(const graphene::chain::database &db, const fc::flat_set<graphene::chain::vote_id_type> &votes)
+fc::variant adapt_votes(const graphene::chain::database &db, const boost::container::flat_set<graphene::chain::vote_id_type> &votes)
 {
    fc::variants v;
    const auto& miner_idx = db.get_index_type<graphene::chain::miner_index>().indices().get<graphene::chain::by_vote_id>();

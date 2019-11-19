@@ -32,8 +32,6 @@
 
 #include <algorithm>
 
-
-
 namespace graphene { namespace chain {
 
    struct vesting_policy_context
@@ -159,7 +157,7 @@ namespace graphene { namespace chain {
          /**
           * Get amount of allowed withdrawal.
           */
-         asset get_allowed_withdraw(const time_point_sec& now)const;
+         asset get_allowed_withdraw(const fc::time_point_sec& now)const;
    };
 
    using namespace boost::multi_index;

@@ -1,16 +1,14 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 
-
 #include "local.hpp"
 #include "detail.hpp"
 
 #include <decent/package/package.hpp>
 
-
-
 namespace decent { namespace package {
 
-void LocalDownloadPackageTask::task() {
+void LocalDownloadPackageTask::task()
+{
    PACKAGE_INFO_GENERATE_EVENT(package_download_start, ( ) );
 
    PACKAGE_INFO_CHANGE_TRANSFER_STATE(DOWNLOADING);
@@ -22,7 +20,4 @@ void LocalDownloadPackageTask::task() {
    PACKAGE_INFO_GENERATE_EVENT(package_download_complete, ( ) );
 }
 
-}} //namespace
-
-
-
+} } // namespace decent::package

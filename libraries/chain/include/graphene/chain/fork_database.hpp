@@ -41,7 +41,7 @@ namespace graphene { namespace chain {
 
       block_id_type previous_id()const { return data.previous; }
 
-      weak_ptr< fork_item > prev;
+      std::weak_ptr< fork_item > prev;
       uint32_t              num;    // initialized in ctor
       /**
        * Used to flag a block as invalid and prevent other blocks from
@@ -51,8 +51,8 @@ namespace graphene { namespace chain {
       block_id_type         id;
       signed_block          data;
    };
-   typedef shared_ptr<fork_item> item_ptr;
 
+   typedef std::shared_ptr<fork_item> item_ptr;
 
    /**
     *  As long as blocks are pushed in order the fork
@@ -67,7 +67,7 @@ namespace graphene { namespace chain {
    class fork_database
    {
       public:
-         typedef vector<item_ptr> branch_type;
+         typedef std::vector<item_ptr> branch_type;
          /// The maximum number of blocks that may be skipped in an out-of-order push
          const static int MAX_BLOCK_REORDERING = 1024;
 
@@ -76,24 +76,23 @@ namespace graphene { namespace chain {
 
          void                             start_block(signed_block b);
          void                             remove(block_id_type b);
-         void                             set_head(shared_ptr<fork_item> h);
+         void                             set_head(std::shared_ptr<fork_item> h);
          bool                             is_known_block(const block_id_type& id)const;
-         shared_ptr<fork_item>            fetch_block(const block_id_type& id)const;
-         vector<item_ptr>                 fetch_block_by_number(uint32_t n)const;
+         std::shared_ptr<fork_item>       fetch_block(const block_id_type& id)const;
+         std::vector<item_ptr>            fetch_block_by_number(uint32_t n)const;
 
          /**
           *  @return the new head block ( the longest fork )
           */
-         shared_ptr<fork_item>            push_block(const signed_block& b);
-         shared_ptr<fork_item>            head()const { return _head; }
+         std::shared_ptr<fork_item>       push_block(const signed_block& b);
+         std::shared_ptr<fork_item>       head()const { return _head; }
          void                             pop_block();
 
          /**
           *  Given two head blocks, return two branches of the fork graph that
           *  end with a common ancestor (same prior block)
           */
-         pair< branch_type, branch_type >  fetch_branch_from(block_id_type first,
-                                                             block_id_type second)const;
+         std::pair<branch_type, branch_type> fetch_branch_from(block_id_type first, block_id_type second)const;
 
          struct block_id;
          struct block_num;
@@ -118,6 +117,7 @@ namespace graphene { namespace chain {
 
          fork_multi_index_type    _unlinked_index;
          fork_multi_index_type    _index;
-         shared_ptr<fork_item>    _head;
+         std::shared_ptr<fork_item> _head;
    };
+
 } } // graphene::chain

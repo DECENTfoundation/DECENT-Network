@@ -30,12 +30,7 @@
 
 #include <fc/crypto/sha256.hpp>
 
-#include <string>
-#include <vector>
-
 namespace graphene { namespace chain {
-using std::string;
-using std::vector;
 
 struct genesis_state_type {
    struct initial_account_type {
@@ -49,13 +44,13 @@ struct genesis_state_type {
       {}
       string name;
       public_key_type owner_key;
-      optional<public_key_type> owner_key2;
-      optional<public_key_type> owner_key3;
-      optional<uint32_t> owner_threshold;
+      fc::optional<public_key_type> owner_key2;
+      fc::optional<public_key_type> owner_key3;
+      fc::optional<uint32_t> owner_threshold;
       public_key_type active_key;
-      optional<public_key_type> active_key2;
-      optional<public_key_type> active_key3;
-      optional<uint32_t> active_threshold;
+      fc::optional<public_key_type> active_key2;
+      fc::optional<public_key_type> active_key3;
+      fc::optional<uint32_t> active_threshold;
    };
    struct initial_asset_type {
 
@@ -81,15 +76,15 @@ struct genesis_state_type {
       public_key_type block_signing_key;
    };
 
-   time_point_sec                           initial_timestamp;
+   fc::time_point_sec                       initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
    chain_parameters                         initial_parameters;
    immutable_chain_parameters               immutable_parameters;
-   vector<initial_account_type>             initial_accounts;
-   vector<initial_asset_type>               initial_assets;
-   vector<initial_balance_type>             initial_balances;
+   std::vector<initial_account_type>        initial_accounts;
+   std::vector<initial_asset_type>          initial_assets;
+   std::vector<initial_balance_type>        initial_balances;
    uint64_t                                 initial_active_miners = GRAPHENE_DEFAULT_MIN_MINER_COUNT;
-   vector<initial_miner_type>             initial_miner_candidates;
+   std::vector<initial_miner_type>          initial_miner_candidates;
 
    /**
     * Temporary, will be moved elsewhere.

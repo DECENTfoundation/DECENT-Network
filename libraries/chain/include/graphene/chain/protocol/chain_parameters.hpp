@@ -37,11 +37,11 @@ namespace fc {
 
 namespace graphene { namespace chain {
 
-   typedef static_variant<>  parameter_extension; 
+   typedef fc::static_variant<> parameter_extension;
    struct chain_parameters
    {
       /** using a smart ref breaks the circular dependency created between operations and the fee schedule */
-      smart_ref<fee_schedule> current_fees;                       ///< current schedule of fees
+      fc::smart_ref<fee_schedule> current_fees;                       ///< current schedule of fees
       uint8_t                 block_interval                      = GRAPHENE_DEFAULT_BLOCK_INTERVAL; ///< interval in seconds between blocks
       uint32_t                maintenance_interval                = GRAPHENE_DEFAULT_MAINTENANCE_INTERVAL; ///< interval in sections between blockchain maintenance events
       uint8_t                 maintenance_skip_slots              = GRAPHENE_DEFAULT_MAINTENANCE_SKIP_SLOTS; ///< number of block_intervals to skip at maintenance time

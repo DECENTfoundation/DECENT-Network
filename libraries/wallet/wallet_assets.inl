@@ -1,5 +1,4 @@
-
-vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit) const
+std::vector<asset_object> wallet_api::list_assets(const std::string& lowerbound, uint32_t limit) const
 {
    return my->_remote_db->list_assets( lowerbound, limit );
 }
@@ -9,7 +8,7 @@ asset_object wallet_api::get_asset(const string& asset_name_or_id) const
    auto a = my->find_asset(asset_name_or_id);
    if(!a)
       FC_THROW_EXCEPTION(asset_not_found_exception, "");
-   
+
    return *a;
 }
 
@@ -18,7 +17,7 @@ monitored_asset_options wallet_api::get_monitored_asset_data(const string& asset
    auto asset = get_asset(asset_name_or_id);
    if(!asset.is_monitored_asset())
       FC_THROW_EXCEPTION(asset_not_monitored_exception, "");
-   
+
    return *asset.monitored_asset_opts;
 }
 
@@ -33,7 +32,7 @@ signed_transaction_info wallet_api::create_monitored_asset(const string& issuer,
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-   
+
    return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
 }
 
@@ -109,9 +108,9 @@ signed_transaction_info wallet_api::reserve_asset(const string& from,
    return my->reserve_asset(from, amount, symbol, broadcast);
 }
 
-string wallet_api::price_to_dct(const string& amount, const string& asset_symbol_or_id)
+string wallet_api::price_to_dct(const string& amount, const string& asset_symbol_or_id) const
 {
-   return my->price_to_dct(amount, asset_symbol_or_id );
+   return my->price_to_dct(amount, asset_symbol_or_id);
 }
 
 signed_transaction_info wallet_api::claim_fees(const string& uia_amount,
@@ -125,9 +124,9 @@ signed_transaction_info wallet_api::claim_fees(const string& uia_amount,
    return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
 }
 
-signed_transaction_info wallet_api::publish_asset_feed(const string& publishing_account,
-                                                       const string& symbol,
-                                                       price_feed feed,
+signed_transaction_info wallet_api::publish_asset_feed(const std::string& publishing_account,
+                                                       const std::string& symbol,
+                                                       const price_feed& feed,
                                                        bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -135,8 +134,7 @@ signed_transaction_info wallet_api::publish_asset_feed(const string& publishing_
    return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
 }
 
-multimap<time_point_sec, price_feed> wallet_api::get_feeds_by_miner(const string& account_name_or_id,
-                                                                    const uint32_t count)
+std::multimap<fc::time_point_sec, price_feed> wallet_api::get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const
 {
    account_id_type account_id = get_account( account_name_or_id ).id;
    return my->_remote_db->get_feeds_by_miner( account_id, count );

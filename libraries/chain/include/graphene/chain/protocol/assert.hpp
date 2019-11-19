@@ -26,7 +26,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    /**
     *  Used to verify that account_id->name is equal to the given string literal.
@@ -56,7 +56,6 @@ namespace graphene { namespace chain {
        *  valid asset symbol.
        */
       bool validate()const;
-
    };
 
    /**
@@ -76,12 +75,11 @@ namespace graphene { namespace chain {
     *  When defining predicates do not make the protocol dependent upon
     *  implementation details.
     */
-   typedef static_variant<
+   typedef fc::static_variant<
       account_name_eq_lit_predicate,
       asset_symbol_eq_lit_predicate,
       block_id_predicate
      > predicate;
-
 
    /**
     *  @brief assert that some conditions are true.
@@ -96,8 +94,8 @@ namespace graphene { namespace chain {
 
       asset                      fee;
       account_id_type            fee_paying_account;
-      vector<predicate>          predicates;
-      flat_set<account_id_type>  required_auths;
+      std::vector<predicate>     predicates;
+      boost::container::flat_set<account_id_type> required_auths;
       extensions_type            extensions;
 
       account_id_type fee_payer()const { return fee_paying_account; }
@@ -113,4 +111,3 @@ FC_REFLECT( graphene::chain::asset_symbol_eq_lit_predicate, (asset_id)(symbol) )
 FC_REFLECT( graphene::chain::block_id_predicate, (id) )
 FC_REFLECT_TYPENAME( graphene::chain::predicate )
 FC_REFLECT( graphene::chain::assert_operation, (fee)(fee_paying_account)(predicates)(required_auths)(extensions) )
- 

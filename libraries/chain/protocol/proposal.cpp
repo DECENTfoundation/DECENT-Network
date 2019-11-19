@@ -76,7 +76,7 @@ share_type proposal_update_operation::calculate_fee(const fee_parameters_type& k
    return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
 
-void proposal_update_operation::get_required_authorities( vector<authority>& o )const
+void proposal_update_operation::get_required_authorities( std::vector<authority>& o )const
 {
    authority auth;
    for( const auto& k : key_approvals_to_add )
@@ -88,13 +88,13 @@ void proposal_update_operation::get_required_authorities( vector<authority>& o )
    o.emplace_back( std::move(auth) );
 }
 
-void proposal_update_operation::get_required_active_authorities( flat_set<account_id_type>& a )const
+void proposal_update_operation::get_required_active_authorities( boost::container::flat_set<account_id_type>& a )const
 {
    for( const auto& i : active_approvals_to_add )    a.insert(i);
    for( const auto& i : active_approvals_to_remove ) a.insert(i);
 }
 
-void proposal_update_operation::get_required_owner_authorities( flat_set<account_id_type>& a )const
+void proposal_update_operation::get_required_owner_authorities( boost::container::flat_set<account_id_type>& a )const
 {
    for( const auto& i : owner_approvals_to_add )    a.insert(i);
    for( const auto& i : owner_approvals_to_remove ) a.insert(i);

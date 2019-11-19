@@ -60,7 +60,7 @@ block_id_type  database::get_block_id_for_num( uint32_t block_num )const
    return _block_id_to_block.fetch_block_id( block_num );
 } FC_CAPTURE_AND_RETHROW( (block_num) ) }
 
-optional<signed_block> database::fetch_block_by_id( const block_id_type& id )const
+fc::optional<signed_block> database::fetch_block_by_id( const block_id_type& id )const
 {
    auto b = _fork_db.fetch_block( id );
    if( !b )
@@ -68,7 +68,7 @@ optional<signed_block> database::fetch_block_by_id( const block_id_type& id )con
    return b->data;
 }
 
-optional<signed_block> database::fetch_block_by_number( uint32_t num )const
+fc::optional<signed_block> database::fetch_block_by_number( uint32_t num )const
 {
    auto results = _fork_db.fetch_block_by_number(num);
    if( results.size() == 1 )
@@ -79,7 +79,7 @@ optional<signed_block> database::fetch_block_by_number( uint32_t num )const
 
 std::vector<block_id_type> database::get_block_ids_on_fork(block_id_type head_of_fork) const
 {
-  pair<fork_database::branch_type, fork_database::branch_type> branches = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
+  std::pair<fork_database::branch_type, fork_database::branch_type> branches = _fork_db.fetch_branch_from(head_block_id(), head_of_fork);
   if( !((branches.first.back()->previous_id() == branches.second.back()->previous_id())) )
   {
      edump( (head_of_fork)
@@ -145,7 +145,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
       /// TODO: if the block is greater than the head block and before the next maitenance interval
       // verify that the block signer is in the current set of active miners.
 
-      shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
+      std::shared_ptr<fork_item> new_head = _fork_db.push_block(new_block);
       //If the head block from the longest chain does not build off of the current head, we need to switch forks.
       if( new_head->data.previous != head_block_id() )
       {
@@ -164,7 +164,7 @@ bool database::_push_block(const signed_block &new_block, bool sync_mode)
             for( auto ritr = branches.first.rbegin(); ritr != branches.first.rend(); ++ritr )
             {
                 ilog( "pushing blocks from fork ${n} ${id}", ("n",(*ritr)->data.block_num())("id",(*ritr)->data.id()) );
-                optional<fc::exception> except;
+                fc::optional<fc::exception> except;
                 try {
                    graphene::db::undo_database::session session = _undo_db.start_undo_session();
                    apply_block( (*ritr)->data, skip, sync_mode );
@@ -447,7 +447,7 @@ void database::pop_block()
 { try {
    _pending_tx_session.reset();
    auto head_id = head_block_id();
-   optional<signed_block> head_block = fetch_block_by_id( head_id );
+   fc::optional<signed_block> head_block = fetch_block_by_id( head_id );
    FC_VERIFY_AND_THROW( head_block.valid(), pop_empty_chain_exception, "there are no blocks to pop" );
 
    _fork_db.pop_block();
@@ -563,7 +563,7 @@ void database::notify_changed_objects(bool sync_mode)
    if( _undo_db.enabled() )
    {
       const auto& head_undo = _undo_db.head();
-      vector<graphene::db::object_id_type> changed_ids;
+      std::vector<graphene::db::object_id_type> changed_ids;
       changed_ids.reserve(head_undo.old_values.size() + head_undo.new_ids.size() + head_undo.removed.size());
       for( const auto& item : head_undo.old_values ) changed_ids.push_back(item.first);
       for( const auto& item : head_undo.new_ids ) changed_ids.push_back(item);
@@ -659,7 +659,7 @@ operation_result database::apply_operation(transaction_evaluation_state& eval_st
       assert( "Negative operation tag" && false );
    if( u_which >= _operation_evaluators.size() )
       assert( "No registered evaluator for this operation" && false );
-   unique_ptr<op_evaluator>& eval = _operation_evaluators[ u_which ];
+   std::unique_ptr<op_evaluator>& eval = _operation_evaluators[ u_which ];
    if( !eval )
       assert( "No registered evaluator for this operation" && false );
    auto op_id = push_applied_operation( op );
@@ -699,7 +699,7 @@ void database::create_block_summary(const signed_block& next_block)
    });
 }
 
-void database::add_checkpoints( const flat_map<uint32_t,block_id_type>& checkpts )
+void database::add_checkpoints( const boost::container::flat_map<uint32_t,block_id_type>& checkpts )
 {
    for( const auto& i : checkpts )
       _checkpoints[i.first] = i.second;

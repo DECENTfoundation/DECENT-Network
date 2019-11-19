@@ -58,7 +58,7 @@ namespace graphene { namespace chain {
       asset            amount;
 
       /// User provided data encrypted to the memo key of the "to" account
-      optional<memo_data> memo;
+      fc::optional<memo_data> memo;
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return from; }
@@ -98,7 +98,7 @@ namespace graphene { namespace chain {
       asset            amount;
 
       /// User provided data encrypted to the memo key of the "to" account
-      optional<memo_data> memo;
+      fc::optional<memo_data> memo;
       extensions_type   extensions;
 
       account_id_type fee_payer()const { return from; }

@@ -80,7 +80,7 @@ database_fixture::database_fixture()
 
      boost::program_options::variables_map options;
 
-     genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
+     genesis_state.initial_timestamp = fc::time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
      genesis_state.initial_active_miners = 10;
      for( int i = 0; i < (int)genesis_state.initial_active_miners; ++i )
@@ -145,8 +145,8 @@ void database_fixture::verify_asset_supplies( const database& db )
   const simple_index<account_statistics_object>& statistics_index = db.get_index_type<simple_index<account_statistics_object>>();
   const auto& balance_index = db.get_index_type<account_balance_index>().indices();
   const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_id>();
-  map<asset_id_type,share_type> total_balances;
-  map<asset_id_type,share_type> total_debts;
+  std::map<asset_id_type, share_type> total_balances;
+  std::map<asset_id_type, share_type> total_debts;
   share_type core_in_orders;
   share_type reported_core_in_orders;
 
@@ -278,13 +278,13 @@ account_create_operation database_fixture::make_account(
      auto& active_miners = db.get_global_properties().active_miners;
      if( active_miners.size() > 0 )
      {
-        set<vote_id_type> votes;
+        std::set<vote_id_type> votes;
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
-        create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
+        create_account.options.votes = boost::container::flat_set<vote_id_type>(votes.begin(), votes.end());
      }
      create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
@@ -317,13 +317,13 @@ account_create_operation database_fixture::make_account(
      const vector<miner_id_type>& active_miners = db.get_global_properties().active_miners;
      if( active_miners.size() > 0 )
      {
-        set<vote_id_type> votes;
+        std::set<vote_id_type> votes;
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
         votes.insert(active_miners[rand() % active_miners.size()](db).vote_id);
-        create_account.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
+        create_account.options.votes = boost::container::flat_set<vote_id_type>(votes.begin(), votes.end());
      }
      create_account.options.num_miner = static_cast<uint16_t>(create_account.options.votes.size());
 
@@ -630,7 +630,7 @@ void database_fixture::publish_feed( const asset_object& mia, const account_obje
   verify_asset_supplies(db);
 }
 
-void database_fixture::create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors)
+void database_fixture::create_content(account_id_type by, string url, asset price, std::map<account_id_type, uint32_t> co_authors)
 {
    set_expiration( db, trx );
    trx.operations.clear();

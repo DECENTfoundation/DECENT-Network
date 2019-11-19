@@ -43,10 +43,10 @@ namespace graphene { namespace chain {
    {
       public:
          chain_parameters           parameters;
-         optional<chain_parameters> pending_parameters;
+         fc::optional<chain_parameters> pending_parameters;
 
          uint32_t                           next_available_vote_id = 0;
-         vector<miner_id_type>          active_miners; // updated once per maintenance interval
+         std::vector<miner_id_type>         active_miners; // updated once per maintenance interval
          // n.b. miner scheduling is done by miner_schedule object
    };
 
@@ -64,10 +64,10 @@ namespace graphene { namespace chain {
       public:
          uint32_t          head_block_number = 0;
          block_id_type     head_block_id;
-         time_point_sec    time;
+         fc::time_point_sec time;
          miner_id_type   current_miner;
-         time_point_sec    next_maintenance_time;
-         time_point_sec    last_budget_time;
+         fc::time_point_sec next_maintenance_time;
+         fc::time_point_sec last_budget_time;
          share_type        miner_budget_from_fees;
          share_type        unspent_fee_budget;
          share_type        mined_rewards;

@@ -61,16 +61,14 @@
 namespace graphene { namespace app {
 
       using graphene::db::object_id_type;
-      using namespace graphene::chain;
-      using namespace std;
 
       class database_api_impl;
 
       struct miner_voting_info
       {
-         miner_id_type id;
-         string name;
-         string url;
+         chain::miner_id_type id;
+         std::string name;
+         std::string url;
          uint64_t total_votes;
          bool voted;
       };
@@ -78,12 +76,11 @@ namespace graphene { namespace app {
       struct operation_info
       {
           int id = 0;
-          string name;
-          fee_parameters current_fees;
+          std::string name;
+          chain::fee_parameters current_fees;
           operation_info() { }
-          operation_info(int32_t id, string name, fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) { }
+          operation_info(int32_t id, std::string name, chain::fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) {}
       };
-
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -110,7 +107,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Globals
           * @throw invalid_space_id_exception, invalid_type_id_exception
           */
-         fc::variants get_objects(const vector<object_id_type>& ids)const;
+         fc::variants get_objects(const std::vector<object_id_type>& ids)const;
 
          ///////////////////
          // Subscriptions //
@@ -121,14 +118,14 @@ namespace graphene { namespace app {
           * @param cb
           * @ingroup DatabaseAPI_Subscription
           */
-         void set_pending_transaction_callback( std::function<void(const variant&)> cb );
+         void set_pending_transaction_callback( std::function<void(const fc::variant&)> cb );
 
          /**
           *
           * @param cb
           * @ingroup DatabaseAPI_Subscription
           */
-         void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
+         void set_block_applied_callback( std::function<void(const fc::variant& block_id)> cb );
 
          /**
           *
@@ -136,7 +133,7 @@ namespace graphene { namespace app {
           * @param cb callback
           * @ingroup DatabaseAPI_Subscription
           */
-         void set_content_update_callback( std::function<void()>cb, const string & URI );
+         void set_content_update_callback( std::function<void()>cb, const std::string & URI );
 
          /////////////////////////////
          // Blocks and transactions //
@@ -148,7 +145,7 @@ namespace graphene { namespace app {
           * @return header of the referenced block, or \c null if no matching block was found
           * @ingroup DatabaseAPI_BlockTx
           */
-         optional<block_header> get_block_header(uint32_t block_num)const;
+         fc::optional<chain::block_header> get_block_header(uint32_t block_num) const;
 
          /**
           * @brief Retrieve a list of block headers.
@@ -157,7 +154,7 @@ namespace graphene { namespace app {
           * @return headers of the referenced blocks
           * @ingroup DatabaseAPI_BlockTx
           */
-         vector<optional<block_header>> get_block_headers(uint32_t block_num, uint32_t count)const;
+         std::vector<fc::optional<chain::block_header>> get_block_headers(uint32_t block_num, uint32_t count) const;
 
          /**
           * @brief Retrieve a full, signed block.
@@ -165,7 +162,7 @@ namespace graphene { namespace app {
           * @return the referenced block, or \c null if no matching block was found
           * @ingroup DatabaseAPI_BlockTx
           */
-         optional<signed_block_with_info> get_block(uint32_t block_num)const;
+         fc::optional<chain::signed_block_with_info> get_block(uint32_t block_num) const;
 
          /**
           * @brief Retrieve a list of full, signed blocks.
@@ -174,7 +171,7 @@ namespace graphene { namespace app {
           * @return the referenced blocks
           * @ingroup DatabaseAPI_BlockTx
           */
-         vector<optional<signed_block_with_info>> get_blocks(uint32_t block_num, uint32_t count)const;
+         std::vector<fc::optional<chain::signed_block_with_info>> get_blocks(uint32_t block_num, uint32_t count) const;
 
          /**
           * @brief Used to fetch an individual transaction.
@@ -184,7 +181,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_BlockTx
           * @throw block_not_found_exception, block_does_not_contain_requested_trx_exception
           */
-         processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+         chain::processed_transaction get_transaction(uint32_t block_num, uint32_t trx_in_block) const;
 
          /**
           * @brief Query the last local block.
@@ -203,7 +200,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_BlockTx
           * @throw block_not_found_exception, block_does_not_contain_requested_trx_exception
           */
-         optional<processed_transaction> get_transaction_by_id( const transaction_id_type& id )const;
+         fc::optional<chain::processed_transaction> get_transaction_by_id(chain::transaction_id_type id) const;
 
          /**
           * @brief This method is used to convert a JSON transaction to its transaction ID.
@@ -211,7 +208,7 @@ namespace graphene { namespace app {
           * @return The transaction ID
           * @ingroup DatabaseAPI_BlockTx
           */
-         transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
+         chain::transaction_id_type get_transaction_id(const chain::signed_transaction& trx) const;
 
          /**
           * @brief Get the set of proposed transactions relevant to the specified account id.
@@ -219,7 +216,7 @@ namespace graphene { namespace app {
           * @return a set of proposed transactions
           * @ingroup DatabaseAPI_BlockTx
           */
-         vector<proposal_object> get_proposed_transactions( account_id_type id )const;
+         std::vector<chain::proposal_object> get_proposed_transactions(chain::account_id_type id) const;
 
          /////////////
          // Globals //
@@ -244,7 +241,7 @@ namespace graphene { namespace app {
           * @return chain id and immutable chain parameters
           * @ingroup DatabaseAPI_Globals
           */
-         chain_property_object get_chain_properties()const;
+         chain::chain_property_object get_chain_properties() const;
 
          /**
           * @brief Retrieve the current \c global_property_object. This object contains all of the properties
@@ -253,21 +250,21 @@ namespace graphene { namespace app {
           * @return the global properties
           * @ingroup DatabaseAPI_Globals
           */
-         global_property_object get_global_properties()const;
+         chain::global_property_object get_global_properties() const;
 
          /**
           * @brief Retrieve compile-time constants.
           * @return configured constants
           * @ingroup DatabaseAPI_Globals
           */
-         configuration get_configuration()const;
+         chain::configuration get_configuration() const;
 
          /**
           * @brief Get the chain ID
           * @return the chain ID identifying blockchain network
           * @ingroup DatabaseAPI_Globals
           */
-         chain_id_type get_chain_id()const;
+         chain::chain_id_type get_chain_id() const;
 
          /**
           * @brief Retrieve the current dynamic_global_property_object. The returned object contains information
@@ -275,7 +272,7 @@ namespace graphene { namespace app {
           * @return the dynamic properties
           * @ingroup DatabaseAPI_Globals
           */
-         dynamic_global_property_object get_dynamic_global_properties()const;
+         chain::dynamic_global_property_object get_dynamic_global_properties() const;
 
          /**
           * @brief Listing all operations available.
@@ -284,7 +281,7 @@ namespace graphene { namespace app {
           * @return a vector of operation_info struct instances containing operation ids, names and fee parameters
           * @ingroup DatabaseAPI_Globals
           */
-         vector<operation_info> list_operations()const;
+         std::vector<operation_info> list_operations() const;
 
          /**
           * @brief Get remaining time to next maintenance interval from given time.
@@ -292,7 +289,7 @@ namespace graphene { namespace app {
           * @return remaining time to next maintenance interval along with some additional data
           * @ingroup DatabaseAPI_Globals
           */
-         miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
+         chain::miner_reward_input get_time_to_maint_by_block_time(fc::time_point_sec block_time) const;
 
          //////////////
          // Accounts //
@@ -304,14 +301,14 @@ namespace graphene { namespace app {
           * @return list of lists of account IDs. One list of account IDs per public key
           * @ingroup DatabaseAPI_Account
           */
-         vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
+         std::vector<std::vector<chain::account_id_type>> get_key_references(const std::vector<chain::public_key_type>& key) const;
 
          /**
           * @brief Get the total number of accounts registered on the blockchain.
           * @return the total number of registered accounts
           * @ingroup DatabaseAPI_Account
           */
-         uint64_t get_account_count()const;
+         uint64_t get_account_count() const;
 
          /**
           * @brief Get a list of accounts by ID.
@@ -320,7 +317,7 @@ namespace graphene { namespace app {
           * @return the accounts corresponding to the provided IDs
           * @ingroup DatabaseAPI_Account
           */
-         vector<optional<account_object>> get_accounts(const vector<account_id_type>& account_ids)const;
+         std::vector<fc::optional<chain::account_object>> get_accounts(const std::vector<chain::account_id_type>& account_ids) const;
 
          /**
           * @brief Fetch all objects relevant to the specified accounts and subscribe to updates.
@@ -332,7 +329,7 @@ namespace graphene { namespace app {
           * @return map of \c string from \c names_or_ids to the corresponding account
           * @ingroup DatabaseAPI_Account
           */
-         std::map<string,full_account> get_full_accounts( const vector<string>& names_or_ids, bool subscribe );
+         std::map<std::string, full_account> get_full_accounts(const std::vector<std::string>& names_or_ids, bool subscribe) const;
 
          /**
           * @brief Get an account by name.
@@ -340,7 +337,7 @@ namespace graphene { namespace app {
           * @return the \c account_object corresponding to the provided \c name, or \c null if no matching content was found
           * @ingroup DatabaseAPI_Account
           */
-         optional<account_object> get_account_by_name( string name )const;
+         fc::optional<chain::account_object> get_account_by_name(const std::string& name) const;
 
          /**
           * @brief Get all accounts that refer to the account id in their owner or active authorities.
@@ -348,7 +345,7 @@ namespace graphene { namespace app {
           * @return a list of account IDs
           * @ingroup DatabaseAPI_Account
           */
-         vector<account_id_type> get_account_references( account_id_type account_id )const;
+         std::vector<chain::account_id_type> get_account_references(chain::account_id_type account_id) const;
 
          /**
           * @brief Get a list of accounts by name.
@@ -357,7 +354,7 @@ namespace graphene { namespace app {
           * @return the accounts holding the provided names
           * @ingroup DatabaseAPI_Account
           */
-         vector<optional<account_object>> lookup_account_names(const vector<string>& account_names)const;
+         std::vector<fc::optional<chain::account_object>> lookup_account_names(const std::vector<std::string>& account_names) const;
 
          /**
           * @brief Get names and IDs for registered accounts.
@@ -367,7 +364,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Account
           * @throw limit_exceeded_exception
           */
-         map<string,account_id_type> lookup_accounts(const string& lower_bound_name, uint32_t limit)const;
+         std::map<std::string, chain::account_id_type> lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const;
 
          /**
           * @brief Get names and IDs for registered accounts that match search term.
@@ -379,7 +376,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Account
           * @throw limit_exceeded_exception
           */
-         vector<account_object> search_accounts(const string& search_term, const string order, const object_id_type& id, uint32_t limit) const;
+         std::vector<chain::account_object> search_accounts(const std::string& search_term, const std::string& order, object_id_type id, uint32_t limit) const;
 
          /**
           * @brief Get a list of account statistics by ID.
@@ -388,7 +385,7 @@ namespace graphene { namespace app {
           * @return the account statistics corresponding to the provided IDs
           * @ingroup DatabaseAPI_Account
           */
-         vector<optional<account_statistics_object>> get_account_statistics(const vector<account_statistics_id_type>& account_statistics_ids)const;
+         std::vector<fc::optional<chain::account_statistics_object>> get_account_statistics(const std::vector<chain::account_statistics_id_type>& account_statistics_ids) const;
 
          /**
           * @brief Returns the operations on the named account.
@@ -400,10 +397,7 @@ namespace graphene { namespace app {
           * @return a list of transaction detail objects
           * @ingroup DatabaseAPI_Account
           */
-         vector<transaction_detail_object> search_account_history(account_id_type const& account,
-                                                                  string const& order,
-                                                                  object_id_type const& id,
-                                                                  int limit) const;
+         std::vector<chain::transaction_detail_object> search_account_history(chain::account_id_type account, const std::string& order, object_id_type id, int limit) const;
 
          //////////////
          // Balances //
@@ -416,7 +410,7 @@ namespace graphene { namespace app {
           * @return a list of the given account's balances
           * @ingroup DatabaseAPI_Balance
           */
-         vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+         std::vector<chain::asset> get_account_balances(chain::account_id_type id, const boost::container::flat_set<chain::asset_id_type>& assets) const;
 
          /**
           * @brief Semantically equivalent to \c get_account_balances(), but takes a name instead of an ID.
@@ -426,7 +420,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Balance
           * @throw account_does_not_exist_exception
           */
-         vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
+         std::vector<chain::asset> get_named_account_balances(const std::string& name, const boost::container::flat_set<chain::asset_id_type>& assets) const;
 
          /**
           * @brief Get information about a vesting balance object.
@@ -434,7 +428,7 @@ namespace graphene { namespace app {
           * @return a list of vesting balances with additional information
           * @ingroup DatabaseAPI_Balance
           */
-         vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+         std::vector<chain::vesting_balance_object> get_vesting_balances(chain::account_id_type account_id) const;
 
          /**
           * @brief Get account's summary of various non fungible tokens.
@@ -442,7 +436,7 @@ namespace graphene { namespace app {
           * @return a summary of non fungible token ids
           * @ingroup DatabaseAPI_Balance
           */
-         map<non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(account_id_type account_id)const;
+         std::map<chain::non_fungible_token_id_type, uint32_t> get_non_fungible_token_summary(chain::account_id_type account_id) const;
 
          /**
           * @brief Get account's balances in various non fungible tokens.
@@ -451,8 +445,7 @@ namespace graphene { namespace app {
           * @return a list of non fungible token data objects
           * @ingroup DatabaseAPI_Balance
           */
-         vector<non_fungible_token_data_object> get_non_fungible_token_balances(account_id_type account_id,
-                                                                                const set<non_fungible_token_id_type>& ids)const;
+         std::vector<chain::non_fungible_token_data_object> get_non_fungible_token_balances(chain::account_id_type account_id, const std::set<chain::non_fungible_token_id_type>& ids) const;
 
          ////////////
          // Assets //
@@ -472,7 +465,7 @@ namespace graphene { namespace app {
           * @return the assets corresponding to the provided IDs
           * @ingroup DatabaseAPI_Asset
           */
-         vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
+         std::vector<fc::optional<chain::asset_object>> get_assets(const std::vector<chain::asset_id_type>& asset_ids) const;
 
          /**
           * @brief Get assets alphabetically by symbol name.
@@ -481,7 +474,7 @@ namespace graphene { namespace app {
           * @return the assets found
           * @ingroup DatabaseAPI_Asset
           */
-         vector<asset_object> list_assets(const string& lower_bound_symbol, uint32_t limit)const;
+         std::vector<chain::asset_object> list_assets(const std::string& lower_bound_symbol, uint32_t limit) const;
 
          /**
           * @brief Get a list of assets by symbol.
@@ -490,7 +483,7 @@ namespace graphene { namespace app {
           * @return the assets corresponding to the provided symbols or IDs
           * @ingroup DatabaseAPI_Asset
           */
-         vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+         std::vector<fc::optional<chain::asset_object>> lookup_asset_symbols(const std::vector<std::string>& symbols_or_ids) const;
 
         /**
          * @brief Get a list of asset dynamic data objects by ID.
@@ -499,7 +492,7 @@ namespace graphene { namespace app {
          * @return the asset dynamic data objects corresponding to the provided IDs
          * @ingroup DatabaseAPI_Asset
          */
-        vector<optional<asset_dynamic_data_object>> get_asset_dynamic_data(const vector<asset_dynamic_data_id_type>& asset_dynamic_data_ids)const;
+        std::vector<fc::optional<chain::asset_dynamic_data_object>> get_asset_dynamic_data(const std::vector<chain::asset_dynamic_data_id_type>& asset_dynamic_data_ids) const;
 
          /**
           * @brief Converts asset into DCT, using actual price feed.
@@ -507,14 +500,14 @@ namespace graphene { namespace app {
           * @return price in DCT
           * @ingroup DatabaseAPI_Asset
           */
-         asset price_to_dct( asset price )const;
+         chain::asset price_to_dct(const chain::asset& price) const;
 
          /**
           * @brief Return current core asset supply.
           * @return current supply
           * @ingroup DatabaseAPI_Asset
           */
-         real_supply get_real_supply()const;
+         chain::real_supply get_real_supply() const;
 
          /////////////////////////
          // Non Fungible Tokens //
@@ -525,7 +518,7 @@ namespace graphene { namespace app {
           * @return the total number of registered non fungible tokens
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         uint64_t get_non_fungible_token_count()const;
+         uint64_t get_non_fungible_token_count() const;
 
          /**
           * @brief Get a list of non fungible tokens by ID.
@@ -534,7 +527,7 @@ namespace graphene { namespace app {
           * @return the non fungible tokens corresponding to the provided IDs
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<optional<non_fungible_token_object>> get_non_fungible_tokens(const vector<non_fungible_token_id_type>& nft_ids)const;
+         std::vector<fc::optional<chain::non_fungible_token_object>> get_non_fungible_tokens(const std::vector<chain::non_fungible_token_id_type>& nft_ids) const;
 
          /**
           * @brief Get non fungible tokens alphabetically by symbol name.
@@ -544,7 +537,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_NonFungibleToken
           * @throw limit_exceeded_exception
           */
-         vector<non_fungible_token_object> list_non_fungible_tokens(const string& lower_bound_symbol, uint32_t limit)const;
+         std::vector<chain::non_fungible_token_object> list_non_fungible_tokens(const std::string& lower_bound_symbol, uint32_t limit) const;
 
          /**
           * @brief Get a list of non fungible tokens by symbol.
@@ -553,14 +546,14 @@ namespace graphene { namespace app {
           * @return the non fungible tokens corresponding to the provided symbols
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<optional<non_fungible_token_object>> get_non_fungible_tokens_by_symbols(const vector<string>& symbols)const;
+         std::vector<fc::optional<chain::non_fungible_token_object>> get_non_fungible_tokens_by_symbols(const std::vector<std::string>& symbols) const;
 
          /**
           * @brief Get the total number of non fungible token data objects issued on the blockchain.
           * @return the total number of issued non fungible token data objects
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         uint64_t get_non_fungible_token_data_count()const;
+         uint64_t get_non_fungible_token_data_count() const;
 
          /**
           * @brief Get a list of non fungible token data objects by ID.
@@ -569,7 +562,7 @@ namespace graphene { namespace app {
           * @return the non fungible token data objects corresponding to the provided IDs
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<optional<non_fungible_token_data_object>> get_non_fungible_token_data(const vector<non_fungible_token_data_id_type>& nft_data_ids)const;
+         std::vector<fc::optional<chain::non_fungible_token_data_object>> get_non_fungible_token_data(const std::vector<chain::non_fungible_token_data_id_type>& nft_data_ids) const;
 
          /**
           * @brief Get non fungible token data objects by registered token id.
@@ -577,7 +570,7 @@ namespace graphene { namespace app {
           * @return the non fungible token data objects found
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<non_fungible_token_data_object> list_non_fungible_token_data(non_fungible_token_id_type nft_id)const;
+         std::vector<chain::non_fungible_token_data_object> list_non_fungible_token_data(chain::non_fungible_token_id_type nft_id) const;
 
          /**
           * @brief Get non fungible token data object transfer history.
@@ -585,7 +578,7 @@ namespace graphene { namespace app {
           * @return a list of transaction detail objects
           * @ingroup DatabaseAPI_NonFungibleToken
           */
-         vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id)const;
+         std::vector<chain::transaction_detail_object> search_non_fungible_token_history(chain::non_fungible_token_data_id_type nft_data_id) const;
 
          ///////////////
          // Miners //
@@ -598,7 +591,7 @@ namespace graphene { namespace app {
           * @return the miners corresponding to the provided IDs
           * @ingroup DatabaseAPI_Mining
           */
-         vector<optional<miner_object>> get_miners(const vector<miner_id_type>& miner_ids)const;
+         std::vector<fc::optional<chain::miner_object>> get_miners(const std::vector<chain::miner_id_type>& miner_ids) const;
 
          /**
           * @brief Get the miner owned by a given account.
@@ -606,7 +599,7 @@ namespace graphene { namespace app {
           * @return the miner object, or \c null if the account does not have a miner
           * @ingroup DatabaseAPI_Mining
           */
-         fc::optional<miner_object> get_miner_by_account(account_id_type account)const;
+         fc::optional<chain::miner_object> get_miner_by_account(chain::account_id_type account) const;
 
          /**
           * @brief Get names and IDs for registered miners.
@@ -616,14 +609,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Mining
           * @throw limit_exceeded_exception
           */
-         map<string, miner_id_type> lookup_miner_accounts(const string& lower_bound_name, uint32_t limit)const;
+         std::map<std::string, chain::miner_id_type> lookup_miner_accounts(const std::string& lower_bound_name, uint32_t limit) const;
 
          /**
           * @brief Get the total number of miners registered with the blockchain.
           * @return the total number of registered miners
           * @ingroup DatabaseAPI_Mining
           */
-         uint64_t get_miner_count()const;
+         uint64_t get_miner_count() const;
 
          /**
           * @brief Get a list of published price feeds by a miner.
@@ -633,8 +626,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Mining
           * @throw limit_exceeded_exception
           */
-         multimap< time_point_sec, price_feed> get_feeds_by_miner(const account_id_type account_id,
-                                                                  const uint32_t count)const;
+         std::multimap<fc::time_point_sec, chain::price_feed> get_feeds_by_miner(chain::account_id_type account_id, const uint32_t count) const;
 
          /**
           * @brief Get miner pay from accumulated fees from given time.
@@ -642,14 +634,14 @@ namespace graphene { namespace app {
           * @return miner pay from accumulated fees
           * @ingroup DatabaseAPI_Mining
           */
-         share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
+         chain::share_type get_miner_pay_from_fees_by_block_time(fc::time_point_sec block_time) const;
 
          /**
           * @brief Returns a reward for a miner from the most recent block.
           * @return amount of newly generated DCT
           * @ingroup DatabaseAPI_Mining
           */
-         share_type get_new_asset_per_block() const;
+         chain::share_type get_new_asset_per_block() const;
 
          /**
           * @brief Returns a reward for a miner from a specified block.
@@ -658,7 +650,7 @@ namespace graphene { namespace app {
           * @return amount of newly generated DCT
           * @ingroup DatabaseAPI_Mining
           */
-         share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
+         chain::share_type get_asset_per_block_by_block_num(uint32_t block_num) const;
 
          /**
           * @brief Given a set of votes, return the objects they are voting for.
@@ -668,15 +660,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Mining
           * @throw limit_exceeded_exception
           */
-         vector<optional<miner_object>> lookup_vote_ids( const vector<vote_id_type>& votes )const;
-
+         std::vector<fc::optional<chain::miner_object>> lookup_vote_ids( const std::vector<chain::vote_id_type>& votes ) const;
 
          /**
           * @brief Get the number of votes each miner actually has.
           * @return a list mapping account names to the number of votes
           * @ingroup DatabaseAPI_Mining
           */
-         vector<database::votes_gained> get_actual_votes() const;
+         std::vector<chain::database::votes_gained> get_actual_votes() const;
 
          /**
           * @brief Get miner voting info list by account that match search term.
@@ -689,12 +680,9 @@ namespace graphene { namespace app {
           * @return the list of miner voting info found
           * @ingroup DatabaseAPI_Mining
           */
-         vector<miner_voting_info> search_miner_voting(const string& account_id,
-                                                       const string& term,
-                                                       bool only_my_votes,
-                                                       const string& order,
-                                                       const string& id,
-                                                       uint32_t count ) const;
+         std::vector<miner_voting_info> search_miner_voting(
+            const std::string& account_id, const std::string& term, bool only_my_votes, const std::string& order, const std::string& id, uint32_t count) const;
+
          ////////////////////////////
          // Authority / validation //
          ////////////////////////////
@@ -705,7 +693,7 @@ namespace graphene { namespace app {
           * @return hexadecimal string
           * @ingroup DatabaseAPI_AuthValidation
           */
-         std::string get_transaction_hex(const signed_transaction& trx)const;
+         std::string get_transaction_hex(const chain::signed_transaction& trx) const;
 
          /**
           *  @brief This API will take a partially signed transaction and a set of public keys that the owner has the ability to sign for
@@ -714,7 +702,7 @@ namespace graphene { namespace app {
           *  @param available_keys set of available public keys
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
+         std::set<chain::public_key_type> get_required_signatures(const chain::signed_transaction& trx, const boost::container::flat_set<chain::public_key_type>& available_keys) const;
 
          /**
           *  @brief This method will return the set of all public keys that could possibly sign for a given transaction. This call can
@@ -723,7 +711,7 @@ namespace graphene { namespace app {
           *  @param trx the signed transaction
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         set<public_key_type> get_potential_signatures( const signed_transaction& trx )const;
+         std::set<chain::public_key_type> get_potential_signatures(const chain::signed_transaction& trx) const;
 
          /**
           * @brief Verifies required signatures of a transaction.
@@ -732,7 +720,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_AuthValidation
           * @throw account_does_not_exist_exception, tx_missing_other_auth_exception, invalid_committee_approval_exception, tx_irrelevant_sig_exception
           */
-         bool           verify_authority( const signed_transaction& trx )const;
+         bool verify_authority(const chain::signed_transaction& trx) const;
 
          /**
           * @brief Verifies if the signers have enough authority to authorize an account.
@@ -742,14 +730,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_AuthValidation
           * @throw account_does_not_exist_exception
           */
-         bool           verify_account_authority( const string& name_or_id, const flat_set<public_key_type>& signers )const;
+         bool verify_account_authority(const std::string& name_or_id, const boost::container::flat_set<chain::public_key_type>& signers) const;
 
          /**
           *  @brief Validates a transaction against the current state without broadcasting it on the network.
           *  @param trx the signed transaction
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         processed_transaction validate_transaction( const signed_transaction& trx )const;
+         chain::processed_transaction validate_transaction(const chain::signed_transaction& trx) const;
 
          /**
           *  @brief For each operation calculates the required fee in the specified asset type.
@@ -758,7 +746,7 @@ namespace graphene { namespace app {
           *  @return the required fees
           *  @ingroup DatabaseAPI_AuthValidation
           */
-         fc::variants get_required_fees( const vector<operation>& ops, asset_id_type id )const;
+         fc::variants get_required_fees(const std::vector<chain::operation>& ops, chain::asset_id_type id) const;
 
          /////////////
          // Content //
@@ -773,14 +761,14 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw account_does_not_exist_exception
           */
-         vector<account_id_type> list_publishing_managers( const string& lower_bound_name, uint32_t limit  )const;
+         std::vector<chain::account_id_type> list_publishing_managers(const std::string& lower_bound_name, uint32_t limit) const;
 
          /**
           * @brief Get a list of open buyings.
           * @return a list of buying objects
           * @ingroup DatabaseAPI_Content
           */
-         vector<buying_object> get_open_buyings()const;
+         std::vector<chain::buying_object> get_open_buyings() const;
 
          /**
           * @brief Get a list of open buyings by URI.
@@ -789,7 +777,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw object_not_found_code
           */
-         vector<buying_object> get_open_buyings_by_URI( const string& URI )const;
+         std::vector<chain::buying_object> get_open_buyings_by_URI(const std::string& URI) const;
 
          /**
           * @brief Get a list of open buyings by consumer.
@@ -797,7 +785,7 @@ namespace graphene { namespace app {
           * @return a list of buyings corresponding to the provided consumer
           * @ingroup DatabaseAPI_Content
           */
-         vector<buying_object> get_open_buyings_by_consumer( const account_id_type& consumer )const;
+         std::vector<chain::buying_object> get_open_buyings_by_consumer(chain::account_id_type consumer) const;
 
          /**
           * @brief Get history buying objects by consumer.
@@ -805,7 +793,7 @@ namespace graphene { namespace app {
           * @return history buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI_Content
           */
-         vector<buying_object> get_buying_history_objects_by_consumer( const account_id_type& consumer )const;
+         std::vector<chain::buying_object> get_buying_history_objects_by_consumer(chain::account_id_type consumer) const;
 
          /**
           * @brief Get buying objects (open or history) by consumer.
@@ -817,11 +805,8 @@ namespace graphene { namespace app {
           * @return buying objects corresponding to the provided consumer
           * @ingroup DatabaseAPI_Content
           */
-         vector<buying_object> get_buying_objects_by_consumer(const account_id_type& consumer,
-                                                              const string& order,
-                                                              const object_id_type& id,
-                                                              const string& term,
-                                                              uint32_t count)const;
+         std::vector<chain::buying_object> get_buying_objects_by_consumer(
+            chain::account_id_type consumer, const std::string& order, object_id_type id, const std::string& term, uint32_t count) const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI.
@@ -830,7 +815,7 @@ namespace graphene { namespace app {
           * @return buying object corresponding to the provided consumer and URI
           * @ingroup DatabaseAPI_Content
           */
-         optional<buying_object> get_buying_by_consumer_URI( const account_id_type& consumer, const string& URI )const;
+         fc::optional<chain::buying_object> get_buying_by_consumer_URI(chain::account_id_type consumer, const std::string& URI) const;
 
          /**
           * @brief Search for term in contents (author, title and description).
@@ -841,10 +826,7 @@ namespace graphene { namespace app {
           * @return the feedback found
           * @ingroup DatabaseAPI_Content
           */
-         vector<buying_object> search_feedback(const string& user,
-                                               const string& URI,
-                                               const object_id_type& id,
-                                               uint32_t count) const;
+         std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, object_id_type id, uint32_t count) const;
 
          /**
           * @brief Get a content by URI.
@@ -853,7 +835,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw object_not_found_exception
           */
-         optional<content_object> get_content( const string& URI )const;
+         fc::optional<chain::content_object> get_content(const std::string& URI) const;
 
          /**
           * @brief Generate keys for new content submission.
@@ -862,7 +844,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw seeder_not_found_exception
           */
-         content_keys generate_content_keys(vector<account_id_type> const& seeders)const;
+         chain::content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
 
          /**
           * @brief Restores encryption key from key parts stored in buying object.
@@ -872,7 +854,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw object_not_found_exception, buying_object_does_not_exist_exception, content_object_does_not_exist_exception, decryption_of_key_particle_failed_exception
           */
-         fc::sha256 restore_encryption_key(DIntegerString el_gamal_priv_key_string, buying_id_type buying ) const;
+         fc::sha256 restore_encryption_key(decent::encrypt::DIntegerString el_gamal_priv_key_string, chain::buying_id_type buying) const;
 
          /**
           * @brief Search for term in contents (author, title and description).
@@ -887,13 +869,8 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<content_summary> search_content(const string& term,
-                                                const string& order,
-                                                const string& user,
-                                                const string& region_code,
-                                                const object_id_type& id,
-                                                const string& type,
-                                                uint32_t count )const;
+         std::vector<chain::content_summary> search_content(
+            const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, object_id_type id, const std::string& type, uint32_t count) const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order.
@@ -902,7 +879,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<seeder_object> list_seeders_by_price( uint32_t count )const;
+         std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
 
          /**
           * @brief Get a list of seeders by total upload, in decreasing order.
@@ -911,7 +888,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<seeder_object> list_seeders_by_upload( const uint32_t count )const;
+         std::vector<chain::seeder_object> list_seeders_by_upload(uint32_t count) const;
 
          /**
           * @brief Get a list of seeders by region code.
@@ -919,7 +896,7 @@ namespace graphene { namespace app {
           * @return the seeders found
           * @ingroup DatabaseAPI_Content
           */
-         vector<seeder_object> list_seeders_by_region( const string region_code )const;
+         std::vector<chain::seeder_object> list_seeders_by_region(const std::string& region_code) const;
 
          /**
           * @brief Get a list of seeders by rating, in decreasing order.
@@ -928,7 +905,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<seeder_object> list_seeders_by_rating( const uint32_t count )const;
+         std::vector<chain::seeder_object> list_seeders_by_rating(uint32_t count) const;
 
          /**
           * @brief Get a seeder by ID.
@@ -936,7 +913,7 @@ namespace graphene { namespace app {
           * @return the seeder corresponding to the provided ID or \c null if no matching content was found
           * @ingroup DatabaseAPI_Content
           */
-         optional<seeder_object> get_seeder( const account_id_type& account ) const;
+         fc::optional<chain::seeder_object> get_seeder(chain::account_id_type account) const;
 
          /**
           * @brief Get a subscription object by ID.
@@ -944,7 +921,7 @@ namespace graphene { namespace app {
           * @return the subscription object corresponding to the provided ID or null if no matching subscription was found
           * @ingroup DatabaseAPI_Content
           */
-         optional<subscription_object> get_subscription( const subscription_id_type& sid)const;
+         fc::optional<chain::subscription_object> get_subscription(chain::subscription_id_type sid) const;
 
          /**
           * @brief Get a list of active (not expired) subscriptions subscribed by account (consumer).
@@ -954,7 +931,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<subscription_object> list_active_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+         std::vector<chain::subscription_object> list_active_subscriptions_by_consumer(chain::account_id_type account, uint32_t count) const;
 
          /**
           * @brief Get a list of subscriptions subscribed by account (consumer).
@@ -964,7 +941,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<subscription_object> list_subscriptions_by_consumer( const account_id_type& account, const uint32_t count )const;
+         std::vector<chain::subscription_object> list_subscriptions_by_consumer(chain::account_id_type account, uint32_t count) const;
 
          /**
           * @brief Get a list of active (not expired) subscriptions to account (author).
@@ -974,7 +951,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<subscription_object> list_active_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+         std::vector<chain::subscription_object> list_active_subscriptions_by_author(chain::account_id_type account, uint32_t count) const;
 
          /**
           * @brief Get a list of  subscriptions subscribed to account (author).
@@ -984,10 +961,10 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         vector<subscription_object> list_subscriptions_by_author( const account_id_type& account, const uint32_t count )const;
+         std::vector<chain::subscription_object> list_subscriptions_by_author(chain::account_id_type account, uint32_t count) const;
 
       private:
-         std::shared_ptr< database_api_impl > my;
+         std::shared_ptr<database_api_impl> my;
       };
 
    } }
@@ -1116,5 +1093,4 @@ FC_API(graphene::app::database_api,
           (list_subscriptions_by_consumer)
           (list_active_subscriptions_by_author)
           (list_subscriptions_by_author)
-
 )

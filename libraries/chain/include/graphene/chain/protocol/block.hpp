@@ -52,14 +52,14 @@ namespace graphene { namespace chain {
    struct signed_block : public signed_block_header
    {
       checksum_type calculate_merkle_root()const;
-      vector<processed_transaction> transactions;
+      std::vector<processed_transaction> transactions;
    };
 
    struct signed_block_with_info : public signed_block
    {
       block_id_type block_id;
       public_key_type signing_key;
-      vector<transaction_id_type> transaction_ids;
+      std::vector<transaction_id_type> transaction_ids;
       share_type miner_reward = 0;
    };
 

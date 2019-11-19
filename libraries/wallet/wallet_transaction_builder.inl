@@ -1,4 +1,3 @@
-
 transaction_handle_type wallet_api::begin_builder_transaction()
 {
    return my->begin_builder_transaction();
@@ -32,7 +31,7 @@ signed_transaction_info wallet_api::sign_builder_transaction(transaction_handle_
 }
 
 signed_transaction_info wallet_api::propose_builder_transaction(transaction_handle_type handle,
-                                                                time_point_sec expiration,
+                                                                fc::time_point_sec expiration,
                                                                 uint32_t review_period_seconds,
                                                                 bool broadcast)
 {
@@ -43,7 +42,7 @@ signed_transaction_info wallet_api::propose_builder_transaction(transaction_hand
 
 signed_transaction_info wallet_api::propose_builder_transaction2(transaction_handle_type handle,
                                                                  const string& account_name_or_id,
-                                                                 time_point_sec expiration,
+                                                                 fc::time_point_sec expiration,
                                                                  uint32_t review_period_seconds,
                                                                  bool broadcast)
 {
@@ -71,7 +70,7 @@ signed_transaction_info wallet_api::sign_transaction(signed_transaction tx, bool
     } FC_CAPTURE_AND_RETHROW( (tx) )
 }
 
-operation wallet_api::get_prototype_operation(const string& operation_name)
+operation wallet_api::get_prototype_operation(const std::string& operation_name) const
 {
    return my->get_prototype_operation( operation_name );
 }

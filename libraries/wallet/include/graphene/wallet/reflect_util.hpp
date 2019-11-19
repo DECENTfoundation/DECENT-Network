@@ -31,8 +31,8 @@ namespace graphene { namespace wallet {
 
 struct static_variant_map
 {
-   flat_map< string, int > name_to_which;
-   vector< string > which_to_name;
+   boost::container::flat_map<std::string, int> name_to_which;
+   std::vector<std::string> which_to_name;
 };
 
 namespace impl {
@@ -85,15 +85,15 @@ struct from_which_visitor
       return result;    // converted from StaticVariant to Result automatically due to return type
    }
 
-   const variant& v;
+   const fc::variant& v;
 
-   from_which_visitor( const variant& _v ) : v(_v) {}
+   from_which_visitor( const fc::variant& _v ) : v(_v) {}
 };
 
 } // namespace impl
 
 template< typename T >
-T from_which_variant( int which, const variant& v )
+T from_which_variant( int which, const fc::variant& v )
 {
    // Parse a variant for a known which()
    T dummy;

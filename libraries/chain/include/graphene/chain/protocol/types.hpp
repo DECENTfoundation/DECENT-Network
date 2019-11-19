@@ -23,59 +23,21 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <fc/container/flat_fwd.hpp>
 #include <fc/io/varint.hpp>
-#include <fc/io/enum_type.hpp>
-#include <fc/crypto/sha224.hpp>
 #include <fc/crypto/elliptic.hpp>
-#include <fc/reflect/reflect.hpp>
-#include <fc/reflect/variant.hpp>
-#include <fc/optional.hpp>
-#include <fc/safe.hpp>
-#include <fc/container/flat.hpp>
-#include <fc/string.hpp>
-#include <fc/io/raw.hpp>
-#include <fc/uint128.hpp>
-#include <fc/static_variant.hpp>
-#include <fc/smart_ref_fwd.hpp>
 #include <fc/crypto/ripemd160.hpp>
+#include <fc/reflect/variant.hpp>
+#include <fc/safe.hpp>
+#include <fc/io/raw.hpp>
 #include <decent/encrypt/crypto_types.hpp>
 
 #include <memory>
-#include <vector>
-#include <deque>
-#include <cstdint>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/config.hpp>
 
 namespace graphene { namespace chain {
 
-   using                               std::map;
-   using                               std::vector;
    using                               std::string;
-   using                               std::deque;
-   using                               std::shared_ptr;
-   using                               std::weak_ptr;
-   using                               std::unique_ptr;
-   using                               std::set;
-   using                               std::pair;
-   using                               std::enable_shared_from_this;
-   using                               std::tie;
-   using                               std::make_pair;
-
-   using                               fc::smart_ref;
-   using                               fc::variant_object;
-   using                               fc::variant;
-   using                               fc::enum_type;
-   using                               fc::optional;
-   using                               fc::unsigned_int;
-   using                               fc::signed_int;
-   using                               fc::time_point_sec;
-   using                               fc::time_point;
-   using                               fc::safe;
-   using                               fc::flat_map;
-   using                               fc::flat_set;
-   using                               fc::static_variant;
 
    enum reserved_spaces
    {
@@ -217,7 +179,7 @@ namespace graphene { namespace chain {
    typedef fc::ripemd160                                        transaction_id_type;
    typedef fc::sha256                                           digest_type;
    typedef fc::ecc::compact_signature                           signature_type;
-   typedef safe<int64_t>                                        share_type;
+   typedef fc::safe<int64_t>                                    share_type;
    typedef uint16_t                                             weight_type;
    typedef fc::ecc::private_key                                 private_key_type;
    typedef fc::ecc::public_key                                  public_key_type;

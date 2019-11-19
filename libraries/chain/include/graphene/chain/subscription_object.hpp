@@ -18,7 +18,7 @@ namespace graphene { namespace chain {
    public:
       account_id_type from;
       account_id_type to;
-      time_point_sec expiration;
+      fc::time_point_sec expiration;
       bool automatic_renewal;
    };
 
@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
                member<subscription_object, account_id_type, &subscription_object::to>
             >,
             ordered_non_unique< tag< by_expiration>,
-               member<subscription_object, time_point_sec, &subscription_object::expiration>, std::greater< time_point_sec >
+               member<subscription_object, fc::time_point_sec, &subscription_object::expiration>, std::greater<fc::time_point_sec>
             >,
             ordered_unique< tag< by_from_to>,
                composite_key< subscription_object,
@@ -55,21 +55,21 @@ namespace graphene { namespace chain {
             ordered_non_unique< tag< by_from_expiration>,
                composite_key< subscription_object,
                   member<subscription_object, account_id_type, &subscription_object::from>,
-                  member<subscription_object, time_point_sec, &subscription_object::expiration>
+                  member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
                >,
                composite_key_compare<
-                  std::less< account_id_type >,
-                  std::greater< time_point_sec >
+                  std::less<account_id_type>,
+                  std::greater<fc::time_point_sec>
                >
             >,
             ordered_non_unique< tag< by_to_expiration>,
                composite_key< subscription_object,
                   member<subscription_object, account_id_type, &subscription_object::to>,
-                  member<subscription_object, time_point_sec, &subscription_object::expiration>
+                  member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
                >,
                composite_key_compare<
-                  std::less< account_id_type >,
-                  std::greater< time_point_sec >
+                  std::less<account_id_type>,
+                  std::greater<fc::time_point_sec>
                   >
             >,
             ordered_non_unique< tag< by_renewal>,

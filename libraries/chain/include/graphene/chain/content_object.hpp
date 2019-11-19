@@ -1,25 +1,16 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
-#include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/decent.hpp>
 
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 
-#include <fc/crypto/ripemd160.hpp>
-#include <fc/reflect/reflect.hpp>
 #include <fc/io/json.hpp>
 
-#include <stdint.h>
-#include <vector>
 #include <utility>
 
-
-
 namespace graphene { namespace chain {
-using namespace decent::encrypt;
-
 
    template <typename basic_type, typename Derived>
    class ContentObjectPropertyBase
@@ -97,7 +88,7 @@ using namespace decent::encrypt;
       }
       void save(string& str_synopsis) const
       {
-         vector<value_type> arrValues = m_arrValues;
+         std::vector<value_type> arrValues = m_arrValues;
 
          if (is_unique(0) &&
              1 < arrValues.size())
@@ -115,7 +106,7 @@ using namespace decent::encrypt;
          if (arrValues.empty())
             return;
 
-         variant variant_value;
+         fc::variant variant_value;
          if (1 == arrValues.size())
          {
             value_type const& item = arrValues[0];
@@ -215,7 +206,7 @@ using namespace decent::encrypt;
       }
 
    public:
-      vector<value_type> m_arrValues;
+      std::vector<value_type> m_arrValues;
    };
 
    enum class EContentObjectApplication
@@ -413,8 +404,8 @@ using namespace decent::encrypt;
       string URI;
       uint32_t AVG_rating = 0;
       uint64_t size = 0;
-      time_point_sec expiration;
-      time_point_sec created;
+      fc::time_point_sec expiration;
+      fc::time_point_sec created;
       uint32_t times_bought = 0;
 
       content_summary& set( const content_object& co, const account_object& ao, uint32_t region_code );
@@ -423,7 +414,7 @@ using namespace decent::encrypt;
 
    struct content_keys {
        fc::sha256                 key;
-       vector<ciphertext_type>    parts;
+       std::vector<ciphertext_type> parts;
        uint32_t                   quorum = 2;
    };
 
@@ -433,19 +424,19 @@ using namespace decent::encrypt;
       account_id_type author;
       // If co_authors map is not empty, payout will be splitted.
       // Maps co-authors to split based on basis points.
-      map<account_id_type, uint32_t> co_authors;
+      std::map<account_id_type, uint32_t> co_authors;
 
-      time_point_sec expiration;
-      time_point_sec created;
+      fc::time_point_sec expiration;
+      fc::time_point_sec created;
       PriceRegions price;
 
       string synopsis;
       uint64_t size;
       uint32_t quorum;
       string URI;
-      map<account_id_type, CiphertextString> key_parts;
-      map<account_id_type, time_point_sec> last_proof;
-      map<account_id_type, share_type> seeder_price;
+      std::map<account_id_type, decent::encrypt::CiphertextString> key_parts;
+      std::map<account_id_type, fc::time_point_sec> last_proof;
+      std::map<account_id_type, share_type> seeder_price;
       bool is_blocked = false;
 
       fc::ripemd160 _hash;
@@ -466,7 +457,7 @@ using namespace decent::encrypt;
          // (at least one price will be defined)
          // corresponding code that uses the index "by_price" will check
          // for such wrongly placed content items and skip those
-         optional<asset> region_price = price.GetPrice(code);
+         fc::optional<asset> region_price = price.GetPrice(code);
          if (false == region_price.valid())
          {
             FC_ASSERT(false == price.map_price.empty());
@@ -547,7 +538,7 @@ using namespace decent::encrypt;
    template <>
    struct key_extractor<by_expiration, content_object>
    {
-      static time_point_sec get(content_object const& ob)
+      static fc::time_point_sec get(content_object const& ob)
       {
          return ob.expiration;
       }
@@ -556,7 +547,7 @@ using namespace decent::encrypt;
    template <>
    struct key_extractor<by_created, content_object>
    {
-      static time_point_sec get(content_object const& ob)
+      static fc::time_point_sec get(content_object const& ob)
       {
          return ob.created;
       }
@@ -589,11 +580,11 @@ using namespace decent::encrypt;
             >,
 
             ordered_non_unique<tag<by_expiration>,
-               member<content_object, time_point_sec, &content_object::expiration>
+               member<content_object, fc::time_point_sec, &content_object::expiration>
             >,
 
             ordered_non_unique<tag<by_created>,
-               member<content_object, time_point_sec, &content_object::created>
+               member<content_object, fc::time_point_sec, &content_object::created>
             >
 
          >

@@ -57,7 +57,7 @@ const fee_schedule&  database::current_fee_schedule()const
    return get_global_properties().parameters.current_fees;
 }
 
-time_point_sec database::head_block_time()const
+fc::time_point_sec database::head_block_time()const
 {
    return get( dynamic_global_property_id_type() ).time;
 }

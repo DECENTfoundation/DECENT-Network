@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/operations.hpp>
+#include <fc/uint128.hpp>
 
 namespace graphene { namespace chain {
 
@@ -48,21 +49,21 @@ struct operation_get_required_auth
 {
    typedef void result_type;
 
-   flat_set<account_id_type>& active;
-   flat_set<account_id_type>& owner;
-   vector<authority>&         other;
+   boost::container::flat_set<account_id_type>& active;
+   boost::container::flat_set<account_id_type>& owner;
+   std::vector<authority>& other;
 
 
-   operation_get_required_auth( flat_set<account_id_type>& a,
-     flat_set<account_id_type>& own,
-     vector<authority>&  oth ):active(a),owner(own),other(oth){}
+   operation_get_required_auth( boost::container::flat_set<account_id_type>& a,
+     boost::container::flat_set<account_id_type>& own,
+     std::vector<authority>&  oth ):active(a),owner(own),other(oth){}
 
    template<typename T>
-   void operator()( const T& v )const 
-   { 
+   void operator()( const T& v )const
+   {
       active.insert( v.fee_payer() );
-      v.get_required_active_authorities( active ); 
-      v.get_required_owner_authorities( owner ); 
+      v.get_required_active_authorities( active );
+      v.get_required_owner_authorities( owner );
       v.get_required_authorities( other );
    }
 };
@@ -72,10 +73,10 @@ void operation_validate( const operation& op )
    op.visit( operation_validator() );
 }
 
-void operation_get_required_authorities( const operation& op, 
-                                         flat_set<account_id_type>& active,
-                                         flat_set<account_id_type>& owner,
-                                         vector<authority>&  other )
+void operation_get_required_authorities( const operation& op,
+                                         boost::container::flat_set<account_id_type>& active,
+                                         boost::container::flat_set<account_id_type>& owner,
+                                         std::vector<authority>& other )
 {
    op.visit( operation_get_required_auth( active, owner, other ) );
 }

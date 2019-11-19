@@ -245,7 +245,7 @@ struct database_fixture {
 
    void fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool);
 
-   void create_content(account_id_type by, string url, asset price, map<account_id_type, uint32_t> co_authors={});
+   void create_content(account_id_type by, string url, asset price, std::map<account_id_type, uint32_t> co_authors={});
    void buy_content(account_id_type by, string url, asset price);
 
 
@@ -264,8 +264,7 @@ struct database_fixture {
    account_id_type miner_account;
    uint32_t anon_acct_count;
 
-   optional<fc::temp_directory> data_dir;
-
+   fc::optional<fc::temp_directory> data_dir;
 
 #if 0  //OLD CODE..
 

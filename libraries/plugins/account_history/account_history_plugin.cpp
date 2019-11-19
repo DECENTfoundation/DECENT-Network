@@ -55,7 +55,7 @@ void account_history_plugin::impl::update_account_histories( const graphene::cha
    for( const auto& o_op : db.get_applied_operations() )
    {
       // get the set of accounts this operation applies to
-      fc::flat_set<graphene::chain::account_id_type> impacted;
+      boost::container::flat_set<graphene::chain::account_id_type> impacted;
       std::vector<graphene::chain::authority> other;
       operation_get_required_authorities( o_op.op, impacted, impacted, other );
 

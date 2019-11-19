@@ -10,20 +10,14 @@
 #include <fc/network/url.hpp>
 
 #include <boost/filesystem.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <set>
-#include <string>
 
-
-
-
-namespace decent {
+namespace decent { namespace package {
 /**
  * @package PackageManager
  * Quick package manager user guide
@@ -49,11 +43,7 @@ namespace decent {
  `get_package()`
  * 11. `recover_all_packages()` called at package manager instance tries to create handles for each package that it will
  be able to detect in current package root folder
-
  */
-namespace package {
-
-
 
     class PackageManager;
     class PackageInfo;
@@ -65,9 +55,7 @@ namespace package {
     class IPFSStopSeedingPackageTask;
     class LocalDownloadPackageTask;
 
-
     namespace detail {
-
 
         class PackageTask;
         class CreatePackageTask;
@@ -75,9 +63,7 @@ namespace package {
         class UnpackPackageTask;
         class CheckPackageTask;
 
-
     } // namespace detail
-
 
     typedef std::shared_ptr<PackageInfo>                package_handle_t;
     typedef std::set<package_handle_t>                  package_handle_set_t;
@@ -99,6 +85,7 @@ namespace package {
             UNCHECKED,
             CHECKED
         };
+
         /**
          * Enum holding possible transfer states
          */
@@ -170,7 +157,6 @@ namespace package {
 
         ~PackageInfo();
 
-    public:
         /** Add an event listener, that will be called on state changes */
         void add_event_listener(const event_listener_handle_t& event_listener);
         /** Remove the event listener */
@@ -254,7 +240,6 @@ namespace package {
         uint64_t                get_total_size() const         { return _size; }
         decent::encrypt::CustodyData get_custody_data() const  { return _custody_data; };
 
-
     private:
         mutable std::recursive_mutex  _mutex;
 
@@ -283,7 +268,6 @@ namespace package {
         std::shared_ptr<detail::PackageTask>          _download_task;
         std::shared_ptr<detail::PackageTask>          _current_task;
     };
-
 
     class TransferListenerInterface {
     public:
@@ -408,7 +392,6 @@ namespace package {
         package_handle_t find_package(const std::string& url);
         package_handle_t find_package(const fc::ripemd160& hash);
 
-
         package_handle_set_t get_all_known_packages() const;
         void recover_all_packages(const event_listener_handle_t& event_listener = event_listener_handle_t());
         bool release_all_packages();
@@ -426,10 +409,5 @@ namespace package {
         package_handle_set_t            _packages;
         proto_to_transfer_engine_map_t  _proto_transfer_engines;
     };
-
-
-
-
-
 
 } } // namespace decent::package

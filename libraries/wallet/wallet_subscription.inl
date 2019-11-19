@@ -1,4 +1,3 @@
-
 signed_transaction_info wallet_api::subscribe_to_author(const string& from,
                                                         const string& to,
                                                         const string& price_amount,
@@ -41,26 +40,22 @@ signed_transaction_info wallet_api::set_automatic_renewal_of_subscription(const 
    return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
 }
 
-vector< subscription_object > wallet_api::list_active_subscriptions_by_consumer( const string& account_id_or_name, const uint32_t count) const
+std::vector<subscription_object> wallet_api::list_active_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const
 {
-   account_id_type account = get_account( account_id_or_name ).id;
-   return my->_remote_db->list_active_subscriptions_by_consumer( account, count);
+   return my->_remote_db->list_active_subscriptions_by_consumer(get_account(account_id_or_name).id, count);
 }
 
-vector< subscription_object > wallet_api::list_subscriptions_by_consumer( const string& account_id_or_name, const uint32_t count) const
+std::vector<subscription_object> wallet_api::list_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const
 {
-   account_id_type account = get_account( account_id_or_name ).id;
-   return my->_remote_db->list_subscriptions_by_consumer( account, count);
+   return my->_remote_db->list_subscriptions_by_consumer(get_account(account_id_or_name).id, count);
 }
 
-vector< subscription_object > wallet_api::list_active_subscriptions_by_author( const string& account_id_or_name, const uint32_t count) const
+std::vector<subscription_object> wallet_api::list_active_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const
 {
-   account_id_type account = get_account( account_id_or_name ).id;
-   return my->_remote_db->list_active_subscriptions_by_author( account, count);
+   return my->_remote_db->list_active_subscriptions_by_author(get_account(account_id_or_name).id, count);
 }
 
-vector< subscription_object > wallet_api::list_subscriptions_by_author( const string& account_id_or_name, const uint32_t count) const
+std::vector<subscription_object> wallet_api::list_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const
 {
-   account_id_type account = get_account( account_id_or_name ).id;
-   return my->_remote_db->list_subscriptions_by_author( account, count);
+   return my->_remote_db->list_subscriptions_by_author(get_account(account_id_or_name).id, count);
 }

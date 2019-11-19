@@ -26,7 +26,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/chain_parameters.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
    /**
      * @defgroup proposed_transactions  The Graphene Transaction Proposal Protocol
      * @ingroup operations
@@ -70,16 +70,16 @@ namespace graphene { namespace chain {
     */
    struct proposal_create_operation : public base_operation<false>
    {
-       struct fee_parameters_type { 
+       struct fee_parameters_type {
           uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
           uint32_t price_per_kbyte = 10;
        };
 
        asset              fee;
        account_id_type    fee_paying_account;
-       vector<op_wrapper> proposed_ops;
-       time_point_sec     expiration_time;
-       optional<uint32_t> review_period_seconds;
+       std::vector<op_wrapper> proposed_ops;
+       fc::time_point_sec expiration_time;
+       fc::optional<uint32_t> review_period_seconds;
        extensions_type    extensions;
 
        /**
@@ -119,7 +119,7 @@ namespace graphene { namespace chain {
     */
    struct proposal_update_operation : public base_operation<false>
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          uint64_t fee            = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
          uint32_t price_per_kbyte = 10;
       };
@@ -127,20 +127,20 @@ namespace graphene { namespace chain {
       account_id_type            fee_paying_account;
       asset                      fee;
       proposal_id_type           proposal;
-      flat_set<account_id_type>  active_approvals_to_add;
-      flat_set<account_id_type>  active_approvals_to_remove;
-      flat_set<account_id_type>  owner_approvals_to_add;
-      flat_set<account_id_type>  owner_approvals_to_remove;
-      flat_set<public_key_type>  key_approvals_to_add;
-      flat_set<public_key_type>  key_approvals_to_remove;
+      boost::container::flat_set<account_id_type>  active_approvals_to_add;
+      boost::container::flat_set<account_id_type>  active_approvals_to_remove;
+      boost::container::flat_set<account_id_type>  owner_approvals_to_add;
+      boost::container::flat_set<account_id_type>  owner_approvals_to_remove;
+      boost::container::flat_set<public_key_type>  key_approvals_to_add;
+      boost::container::flat_set<public_key_type>  key_approvals_to_remove;
       extensions_type            extensions;
 
       account_id_type fee_payer()const { return fee_paying_account; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const;
-      void get_required_authorities( vector<authority>& )const;
-      void get_required_active_authorities( flat_set<account_id_type>& )const;
-      void get_required_owner_authorities( flat_set<account_id_type>& )const;
+      void get_required_authorities( std::vector<authority>& )const;
+      void get_required_active_authorities( boost::container::flat_set<account_id_type>& )const;
+      void get_required_owner_authorities( boost::container::flat_set<account_id_type>& )const;
    };
 
    /**
@@ -168,7 +168,7 @@ namespace graphene { namespace chain {
       void       validate()const;
    };
    ///@}
-   
+
 }} // graphene::chain
 
 FC_REFLECT( graphene::chain::proposal_create_operation::fee_parameters_type, (fee)(price_per_kbyte) )

@@ -23,17 +23,17 @@ namespace graphene { namespace chain {
       asset paid_price_before_exchange; //< initialized by request_to_buy_operation.price
       asset paid_price_after_exchange;
       std::string synopsis;   //< initialized by content.synopsis
-      vector<account_id_type> seeders_answered;
-      vector<ciphertext_type> key_particles;
+      std::vector<account_id_type> seeders_answered;
+      std::vector<ciphertext_type> key_particles;
       bigint_type pubKey;
-      time_point_sec expiration_time;
+      fc::time_point_sec expiration_time;
       bool expired = false;
       bool delivered = false;
-      time_point_sec expiration_or_delivery_time;
+      fc::time_point_sec expiration_or_delivery_time;
       // User can't add rating and comment in two time-separated steps. For example, if content is already rated by user, he is not
       // allowed to add comment later. If user wants to add both rating and comment, he has to do it in one step.
       bool rated_or_commented = false;
-      time_point_sec created; //< initialized by content.created
+      fc::time_point_sec created; //< initialized by content.created
       uint32_t region_code_from;
 
       bool is_open() const { return !( expired || delivered ); }
@@ -79,7 +79,7 @@ namespace graphene { namespace chain {
    template <>
    struct key_extractor<by_created, buying_object>
    {
-      static time_point_sec get(buying_object const& ob)
+      static fc::time_point_sec get(buying_object const& ob)
       {
          return ob.created;
       }
@@ -88,7 +88,7 @@ namespace graphene { namespace chain {
    template<>
    struct key_extractor<by_purchased, buying_object>
    {
-      static time_point_sec get(buying_object const& ob)
+      static fc::time_point_sec get(buying_object const& ob)
       {
          return ob.expiration_or_delivery_time;
       }
@@ -129,12 +129,12 @@ namespace graphene { namespace chain {
                >
             >,
             ordered_non_unique<tag<by_expiration_time>,
-               member<buying_object, time_point_sec, &buying_object::expiration_time>
+               member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
             >,
             ordered_non_unique< tag< by_consumer_time>,
                composite_key< buying_object,
                   member<buying_object, account_id_type, &buying_object::consumer>,
-                  member<buying_object, time_point_sec, &buying_object::expiration_or_delivery_time>
+                  member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
                >
             >,
             ordered_non_unique< tag< by_URI_open>,
@@ -152,7 +152,7 @@ namespace graphene { namespace chain {
             ordered_non_unique< tag< by_open_expiration>,
                composite_key< buying_object,
                   const_mem_fun<buying_object, bool, &buying_object::is_open>,
-                  member<buying_object, time_point_sec, &buying_object::expiration_time>
+                  member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
                >
             >,
             ordered_non_unique< tag< by_consumer_open>,
@@ -168,10 +168,10 @@ namespace graphene { namespace chain {
                   const_mem_fun<buying_object, share_type, &buying_object::get_price_before_exchange>
             >,
             ordered_non_unique< tag< by_created>,
-                  member<buying_object, time_point_sec, &buying_object::created>
+                  member<buying_object, fc::time_point_sec, &buying_object::created>
             >,
             ordered_non_unique< tag< by_purchased>,
-                  member<buying_object, time_point_sec, &buying_object::expiration_or_delivery_time>
+                  member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
             >
          >
    >buying_object_multi_index_type;

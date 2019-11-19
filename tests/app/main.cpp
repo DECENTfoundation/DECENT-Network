@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       auto cfg2 = cfg;
       cfg2.erase("p2p-endpoint");
       cfg2.emplace("p2p-endpoint", boost::program_options::variable_value(string("127.0.0.1:4040"), false));
-      cfg2.emplace("seed-node", boost::program_options::variable_value(vector<string>{"127.0.0.1:3939"}, false));
+      cfg2.emplace("seed-node", boost::program_options::variable_value(std::vector<std::string>{"127.0.0.1:3939"}, false));
       app2.initialize(app2_dir.path(), cfg2);
 
       BOOST_TEST_MESSAGE( "Starting app1 and waiting 500 ms" );

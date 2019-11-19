@@ -24,16 +24,13 @@
 #pragma once
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/db/object.hpp>
-#include <graphene/db/generic_index.hpp>
 
 namespace graphene { namespace chain {
-
-class miner_schedule_object;
 
 class miner_schedule_object : public graphene::db::abstract_object<implementation_ids, impl_miner_schedule_object_type, miner_schedule_object>
 {
    public:
-      vector< miner_id_type > current_shuffled_miners;
+      std::vector<miner_id_type> current_shuffled_miners;
 };
 
 } }

@@ -28,23 +28,22 @@
 #include <graphene/chain/vesting_balance_object.hpp>
 
 namespace graphene { namespace app {
-   using namespace graphene::chain;
 
    struct full_account
    {
-      account_object                   account;
-      account_statistics_object        statistics;
-      string                           registrar_name;
-      vector<optional<miner_object>>   votes;
-      optional<vesting_balance_object> cashback_balance;
-      vector<account_balance_object>   balances;
-      vector<vesting_balance_object>   vesting_balances;
-      vector<proposal_object>          proposals;
+      chain::account_object account;
+      chain::account_statistics_object statistics;
+      std::string registrar_name;
+      std::vector<fc::optional<chain::miner_object>> votes;
+      fc::optional<chain::vesting_balance_object> cashback_balance;
+      std::vector<chain::account_balance_object>  balances;
+      std::vector<chain::vesting_balance_object>  vesting_balances;
+      std::vector<chain::proposal_object>         proposals;
    };
 
 } }
 
-FC_REFLECT( graphene::app::full_account, 
+FC_REFLECT( graphene::app::full_account,
             (account)
             (statistics)
             (registrar_name)

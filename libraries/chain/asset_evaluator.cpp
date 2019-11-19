@@ -323,7 +323,7 @@ operation_result asset_publish_feeds_evaluator::do_apply(const operation_type& o
    //auto old_feed =  asset_to_update.monitored_asset_opts->current_feed; DEBUG
    // Store medians for this asset
    d.modify(asset_to_update , [&o,&d](asset_object& a) {
-      a.monitored_asset_opts->feeds[o.publisher] = make_pair(d.head_block_time(), o.feed);
+      a.monitored_asset_opts->feeds[o.publisher] = std::make_pair(d.head_block_time(), o.feed);
       a.monitored_asset_opts->update_median_feeds(d.head_block_time());
    });
 
@@ -347,7 +347,7 @@ operation_result update_user_issued_asset_advanced_evaluator::do_evaluate(const 
       const auto& itr = idx.equal_range( o.asset_to_update );
       FC_ASSERT( itr.first == itr.second, "The asset was already distributed." );
    }
-   
+
    const auto& itr2 = asset_to_update->options.extensions.find( asset_options::fixed_max_supply_struct() );
    bool is_fixed_max_supply = false;
    if( itr2 != asset_to_update->options.extensions.end() )

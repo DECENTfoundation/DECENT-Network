@@ -88,9 +88,9 @@ namespace graphene { namespace chain {
 
       asset                     fee;
       account_id_type           payer;
-      flat_set<account_id_type> required_auths;
+      boost::container::flat_set<account_id_type> required_auths;
       uint16_t                  id = 0;
-      vector<char>              data;
+      std::vector<char>         data;
 
       account_id_type   fee_payer()const { return payer; }
       void              validate()const;
@@ -99,13 +99,13 @@ namespace graphene { namespace chain {
       void get_messaging_payload(message_payload& pl) const
       {
          FC_ASSERT(data.size());
-         variant tmp = fc::json::from_string(std::string(data.begin(), data.end()));
+         fc::variant tmp = fc::json::from_string(std::string(data.begin(), data.end()));
          fc::from_variant(tmp, pl);
       }
 
       void set_messaging_payload(const message_payload& pl)
       {
-         variant tmp;
+         fc::variant tmp;
          fc::to_variant(pl, tmp);
          std::string s = fc::json::to_string(tmp);
          data = std::vector<char>(s.begin(), s.end());

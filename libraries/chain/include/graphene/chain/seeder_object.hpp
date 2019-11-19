@@ -16,16 +16,16 @@ namespace graphene { namespace chain {
       account_id_type seeder;
       uint64_t free_space;
       asset price;
-      time_point_sec expiration;
+      fc::time_point_sec expiration;
       decent::encrypt::DIntegerString pubKey;
 
-      string ipfs_ID;
+      std::string ipfs_ID;
       // seeding stats used to compute seeder's rating
       seeding_statistics_id_type stats;
       // seeder's rating
       uint32_t rating = 0;
       // optional ISO 3166-1 alpha-2 two-letter region code
-      string region_code;
+      std::string region_code;
    };
 
    struct by_seeder;
@@ -49,10 +49,10 @@ namespace graphene { namespace chain {
                member<seeder_object, asset, &seeder_object::price>
             >,
             ordered_non_unique< tag<by_expiration>,
-               member<seeder_object, time_point_sec, &seeder_object::expiration>
+               member<seeder_object, fc::time_point_sec, &seeder_object::expiration>
             >,
             ordered_non_unique< tag<by_region>,
-               member<seeder_object, string, &seeder_object::region_code>
+               member<seeder_object, std::string, &seeder_object::region_code>
             >,
             ordered_non_unique< tag<by_rating>,
                member<seeder_object, uint32_t, &seeder_object::rating>,std::greater<uint32_t>

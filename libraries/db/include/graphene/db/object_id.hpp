@@ -30,7 +30,6 @@ namespace graphene { namespace db {
    using  std::shared_ptr;
    using  std::unique_ptr;
    using  std::vector;
-   using  fc::flat_map;
    using  fc::variant;
 
    struct object_id_type

@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE( payment_splitting_test )
       };
 
       //create content
-      map<account_id_type, uint32_t> co_authors;
+      std::map<account_id_type, uint32_t> co_authors;
       // bobian 70%
       co_authors[cecil_id]=2000; // 20%
       co_authors[david_id]=1000; // 10%

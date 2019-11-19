@@ -1,10 +1,9 @@
-
 wallet_about wallet_api::about() const
 {
-    return my->about();
+   return my->about();
 }
 
-optional<signed_block_with_info> wallet_api::get_block(uint32_t num)
+fc::optional<signed_block_with_info> wallet_api::get_block(uint32_t num) const
 {
    return my->_remote_db->get_block(num);
 }
@@ -19,21 +18,20 @@ dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
    return my->get_dynamic_global_properties();
 }
 
-variant wallet_api::get_object( object_id_type id ) const
+fc::variant wallet_api::get_object( object_id_type id ) const
 {
    return my->_remote_db->get_objects({id});
 }
 
-wallet_info wallet_api::info()
+wallet_info wallet_api::info() const
 {
    return my->info();
 }
 
-string wallet_api::help() const
+std::string wallet_api::help() const
 {
-   std::vector<std::string> method_names = my->method_documentation.get_method_names();
    std::stringstream ss;
-   for (const std::string method_name : method_names)
+   for (const std::string& method_name : my->method_documentation.get_method_names())
    {
       try
       {
@@ -47,7 +45,7 @@ string wallet_api::help() const
    return ss.str();
 }
 
-string wallet_api::get_help(const string& method)const
+std::string wallet_api::get_help(const std::string& method) const
 {
    std::stringstream ss;
    ss << "\n";
@@ -73,7 +71,6 @@ string wallet_api::get_help(const string& method)const
       ss << "This method should be used if you would like the wallet to generate new keys derived from the brain key.\n";
       ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";
       ss << "register_account if you already know the keys you know the public keys that you would like to register.\n";
-
    }
    else if( method == "register_account" )
    {
@@ -110,17 +107,15 @@ fc::time_point_sec wallet_api::head_block_time() const
    return my->head_block_time();
 }
 
-
-void wallet_api::network_add_nodes( const vector<string>& nodes )
+void wallet_api::network_add_nodes(const std::vector<std::string>& nodes) const
 {
    my->network_add_nodes( nodes );
 }
 
-vector< variant > wallet_api::network_get_connected_peers()
+fc::variants wallet_api::network_get_connected_peers() const
 {
    return my->network_get_connected_peers();
 }
-
 
 std::string wallet_api::sign_buffer(const std::string& str_buffer,
                                     const std::string& str_brainkey) const
@@ -137,7 +132,6 @@ std::string wallet_api::sign_buffer(const std::string& str_buffer,
 
    return fc::to_hex((const char*)sign.begin(), sign.size());
 }
-
 
 bool wallet_api::verify_signature(const std::string& str_buffer,
                                   const std::string& str_publickey,
@@ -163,17 +157,17 @@ transaction_id_type wallet_api::get_transaction_id( const signed_transaction& tr
    return trx.id();
 }
 
-optional<processed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
+fc::optional<processed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
 {
    return my->_remote_db->get_transaction_by_id( id );
 }
 
-vector<operation_info> wallet_api::list_operations()
+std::vector<operation_info> wallet_api::list_operations() const
 {
    return my->list_operations();
 }
 
-string wallet_api::from_command_file( const std::string& command_file_name ) const
+std::string wallet_api::from_command_file( const std::string& command_file_name ) const
 {
    return my->from_command_file( command_file_name );
 }

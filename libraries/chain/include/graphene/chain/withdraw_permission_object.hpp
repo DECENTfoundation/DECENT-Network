@@ -50,9 +50,9 @@ namespace graphene { namespace chain {
         /// The duration of a withdrawal period in seconds
         uint32_t           withdrawal_period_sec = 0;
         /// The beginning of the next withdrawal period
-        time_point_sec     period_start_time;
+        fc::time_point_sec period_start_time;
         /// The time at which this withdraw permission expires
-        time_point_sec     expiration;
+        fc::time_point_sec expiration;
 
         /// tracks the total amount
         share_type         claimed_this_period;
@@ -91,7 +91,7 @@ namespace graphene { namespace chain {
          >,
          ordered_unique< tag<by_expiration>,
             composite_key< withdraw_permission_object,
-               member<withdraw_permission_object, time_point_sec, &withdraw_permission_object::expiration>,
+               member<withdraw_permission_object, fc::time_point_sec, &withdraw_permission_object::expiration>,
                graphene::db::object_id_member
             >
          >

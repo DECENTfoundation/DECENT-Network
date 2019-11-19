@@ -132,8 +132,8 @@ namespace graphene { namespace chain {
          bool                       is_known_block( const block_id_type& id )const;
          bool                       is_known_transaction( const transaction_id_type& id )const;
          block_id_type              get_block_id_for_num( uint32_t block_num )const;
-         optional<signed_block>     fetch_block_by_id( const block_id_type& id )const;
-         optional<signed_block>     fetch_block_by_number( uint32_t num )const;
+         fc::optional<signed_block> fetch_block_by_id( const block_id_type& id )const;
+         fc::optional<signed_block> fetch_block_by_number( uint32_t num )const;
          std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
          signed_block_with_info     get_signed_block_with_info(const signed_block& block) const;
 
@@ -143,8 +143,8 @@ namespace graphene { namespace chain {
           */
          uint32_t miner_participation_rate()const;
 
-         void                              add_checkpoints( const flat_map<uint32_t,block_id_type>& checkpts );
-         const flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
+         void add_checkpoints( const boost::container::flat_map<uint32_t,block_id_type>& checkpts );
+         const boost::container::flat_map<uint32_t,block_id_type> get_checkpoints()const { return _checkpoints; }
          bool before_last_checkpoint()const;
 
          bool push_block(const signed_block &b, uint32_t skip = skip_nothing, bool sync_mode = false );
@@ -197,7 +197,7 @@ namespace graphene { namespace chain {
             operation_result result;
          };
 
-         const vector<applied_operation>& get_applied_operations() const { return _applied_ops; }
+         const std::vector<applied_operation>& get_applied_operations() const { return _applied_ops; }
          string to_pretty_string( const asset& a )const;
 
          /**
@@ -226,7 +226,7 @@ namespace graphene { namespace chain {
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
           */
-         boost::signals2::signal<void(const vector<graphene::db::object_id_type>&, bool sync_mode)> changed_objects;
+         boost::signals2::signal<void(const std::vector<graphene::db::object_id_type>&, bool sync_mode)> changed_objects;
 
          /**
           * This signal is emitted to report database reindexing progress in percent (0 - 100).
@@ -283,7 +283,7 @@ namespace graphene { namespace chain {
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
 
-         time_point_sec   head_block_time()const;
+         fc::time_point_sec head_block_time()const;
          uint32_t         head_block_num()const;
          block_id_type    head_block_id()const;
          miner_id_type    head_block_miner()const;
@@ -308,7 +308,7 @@ namespace graphene { namespace chain {
                operation::tag<typename EvaluatorType::operation_type>::value].reset( new op_evaluator_impl<EvaluatorType>() );
          }
 
-         const vector< unique_ptr<op_evaluator> > & get_operation_evaluators() const
+         const std::vector<std::unique_ptr<op_evaluator>>& get_operation_evaluators() const
          {
             return _operation_evaluators;
          }
@@ -345,8 +345,8 @@ namespace graphene { namespace chain {
           *
           * @return ID of newly created VBO, but only if VBO was created.
           */
-         optional< vesting_balance_id_type > deposit_lazy_vesting(
-            const optional< vesting_balance_id_type >& ovbid,
+         fc::optional<vesting_balance_id_type> deposit_lazy_vesting(
+            const fc::optional<vesting_balance_id_type>& ovbid,
             share_type amount,
             uint32_t req_vesting_seconds,
             account_id_type req_owner,
@@ -413,7 +413,7 @@ namespace graphene { namespace chain {
             string account_name;
             uint64_t votes;
          };
-         vector<votes_gained> get_actual_votes() const;
+         std::vector<votes_gained> get_actual_votes() const;
 
          uint64_t get_voting_stake(const account_object& acct) const;
 
@@ -441,11 +441,11 @@ namespace graphene { namespace chain {
          void notify_changed_objects(bool sync_mode);
 
       private:
-         optional<db::undo_database::session>   _pending_tx_session;
-         vector< unique_ptr<op_evaluator> >     _operation_evaluators;
+         fc::optional<db::undo_database::session>   _pending_tx_session;
+         std::vector<std::unique_ptr<op_evaluator>> _operation_evaluators;
 
          template<class Index>
-         vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(const vector<uint64_t> &vote_tally_buffer) const;
+         std::vector<std::reference_wrapper<const typename Index::object_type>> sort_votable_objects(const std::vector<uint64_t> &vote_tally_buffer) const;
 
          //////////////////// db_block.cpp ////////////////////
 
@@ -486,7 +486,7 @@ namespace graphene { namespace chain {
          ///@}
          ///@}
 
-         vector< processed_transaction >        _pending_tx;
+         std::vector< processed_transaction >   _pending_tx;
          fork_database                          _fork_db;
 
          /**
@@ -506,10 +506,10 @@ namespace graphene { namespace chain {
           * order they occur and is cleared after the applied_block signal is
           * emited.
           */
-         vector<applied_operation> _applied_ops;
+         std::vector<applied_operation> _applied_ops;
          operation_info            _current_op_info;
 
-         flat_map<uint32_t,block_id_type>  _checkpoints;
+         boost::container::flat_map<uint32_t,block_id_type> _checkpoints;
 
          node_property_object              _node_property_object;
    };

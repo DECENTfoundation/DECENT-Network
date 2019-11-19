@@ -42,11 +42,11 @@
 namespace graphene { namespace chain {
 
 template<class Index>
-vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects(const vector<uint64_t> &vote_tally_buffer) const
+std::vector<std::reference_wrapper<const typename Index::object_type>> database::sort_votable_objects(const std::vector<uint64_t> &vote_tally_buffer) const
 {
    using ObjectType = typename Index::object_type;
    const auto& all_objects = get_index_type<Index>().indices();
-   vector<std::reference_wrapper<const ObjectType>> refs;
+   std::vector<std::reference_wrapper<const ObjectType>> refs;
    refs.reserve(all_objects.size());
    std::transform(all_objects.begin(), all_objects.end(),
                   std::back_inserter(refs),
@@ -161,9 +161,9 @@ uint64_t database::get_voting_stake(const account_object& acct) const
 void database::perform_chain_maintenance(const signed_block& next_block)
 {
    const global_property_object& gpo = get_global_properties();
-   vector<uint64_t> vote_tally_buffer(gpo.next_available_vote_id);
-   vector<uint64_t> miner_count_histogram_buffer(gpo.parameters.maximum_miner_count / 2 + 1);
-   map<vote_id_type, vector<pair<account_id_type, uint64_t>>> miner_votes_gained;
+   std::vector<uint64_t> vote_tally_buffer(gpo.next_available_vote_id);
+   std::vector<uint64_t> miner_count_histogram_buffer(gpo.parameters.maximum_miner_count / 2 + 1);
+   std::map<vote_id_type, std::vector<std::pair<account_id_type, uint64_t>>> miner_votes_gained;
    uint64_t total_voting_stake = 0;
 
    for( const account_object& a : get_index_type<account_index>().indices().get<by_name>() ) {
@@ -270,7 +270,7 @@ void database::perform_chain_maintenance(const signed_block& next_block)
    if( next_maintenance_time <= next_block.timestamp )
    {
       if( next_block.block_num() == 1 )
-         next_maintenance_time = time_point_sec() +
+         next_maintenance_time = fc::time_point_sec() +
                (((next_block.timestamp.sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
       else
       {

@@ -57,16 +57,17 @@ namespace bpo = boost::program_options;
 
 namespace detail {
 
-   genesis_state_type create_example_genesis() {
+   chain::genesis_state_type create_example_genesis()
+   {
       //TODO_DECENT - replace with super trooper private key
       //auto decent_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("decent")));
       //dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(decent_key)));
-      public_key_type decent_pub_key (std::string("DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"));
+      chain::public_key_type decent_pub_key (std::string("DCT82MTCQVa9TDFmz3ZwaLzsFAmCLoJzrtFugpF72vsbuE1CpCwKy"));
 
-      genesis_state_type initial_state;
-      initial_state.initial_parameters.current_fees = fee_schedule::get_non_virtual_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
+      chain::genesis_state_type initial_state;
+      initial_state.initial_parameters.current_fees = chain::fee_schedule::get_non_virtual_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
       initial_state.initial_active_miners = GRAPHENE_DEFAULT_MIN_MINER_COUNT;
-      initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
+      initial_state.initial_timestamp = fc::time_point_sec(fc::time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
       for( uint64_t i = 0; i < initial_state.initial_active_miners; ++i )
@@ -109,11 +110,11 @@ namespace detail {
          _p2p_network->load_configuration(data_dir / "p2p");
          _p2p_network->set_node_delegate(this, _chain_db->get_global_properties().parameters.maximum_block_size);
 
-         vector<string> seeds;
+         std::vector<std::string> seeds;
          if( _options->count("seed-node") )
          {
-             vector<string> seeds_list = _options->at("seed-node").as<vector<string>>();
-             for(const string& seed_string : seeds_list) {
+             std::vector<std::string> seeds_list = _options->at("seed-node").as<std::vector<std::string>>();
+             for(const std::string& seed_string : seeds_list) {
                  if (std::find(seeds.begin(), seeds.end(), seed_string) != seeds.end())
                      continue;
 
@@ -133,7 +134,7 @@ namespace detail {
             };
          }
 
-         for( const string& seed : seeds ) {
+         for( const std::string& seed : seeds ) {
             try {
                ilog("Adding seed node ${seed}", ("seed", seed));
                for (const fc::ip::endpoint& endpoint : fc::ip::endpoint::resolve_string(seed)) {
@@ -148,7 +149,7 @@ namespace detail {
          }
 
          if( _options->count("p2p-endpoint") )
-            _p2p_network->listen_on_endpoint(fc::ip::endpoint::resolve_string(_options->at("p2p-endpoint").as<string>()).back(), true);
+            _p2p_network->listen_on_endpoint(fc::ip::endpoint::resolve_string(_options->at("p2p-endpoint").as<std::string>()).back(), true);
          else
             _p2p_network->listen_on_port(0, false);
          _p2p_network->listen_to_p2p_network();
@@ -231,8 +232,8 @@ namespace detail {
             register_apis( wsc );
             c->set_session_data( wsc );
          });
-         ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<string>()));
-         _websocket_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-endpoint").as<string>()).back() );
+         ilog("Configured websocket rpc to listen on ${ip}", ("ip",_options->at("rpc-endpoint").as<std::string>()));
+         _websocket_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-endpoint").as<std::string>()).back() );
          _websocket_server->start_accept();
       } FC_RETHROW() }
 
@@ -247,11 +248,11 @@ namespace detail {
             return;
          }
 
-         string password = _options->count("server-cert-password") ? _options->at("server-cert-password").as<string>() : string();
-         string cert_chain_file = _options->count("server-cert-chain-file") ? _options->at("server-cert-chain-file").as<string>() : string();
+         std::string password = _options->count("server-cert-password") ? _options->at("server-cert-password").as<std::string>() : std::string();
+         std::string cert_chain_file = _options->count("server-cert-chain-file") ? _options->at("server-cert-chain-file").as<std::string>() : std::string();
          bool enable_deflate_compression = _options->count("enable-permessage-deflate") != 0;
-         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-cert-file").as<string>(),
-                                                                                   _options->at("server-cert-key-file").as<string>(),
+         _websocket_tls_server = std::make_shared<fc::http::websocket_tls_server>( _options->at("server-cert-file").as<std::string>(),
+                                                                                   _options->at("server-cert-key-file").as<std::string>(),
                                                                                    cert_chain_file,
                                                                                    password,
                                                                                    enable_deflate_compression );
@@ -271,15 +272,15 @@ namespace detail {
             register_apis( wsc );
             c->set_session_data( wsc );
          });
-         ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip",_options->at("rpc-tls-endpoint").as<string>()));
-         _websocket_tls_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-tls-endpoint").as<string>()).back() );
+         ilog("Configured websocket TLS rpc to listen on ${ip}", ("ip",_options->at("rpc-tls-endpoint").as<std::string>()));
+         _websocket_tls_server->listen( fc::ip::endpoint::resolve_string(_options->at("rpc-tls-endpoint").as<std::string>()).back() );
          _websocket_tls_server->start_accept();
 
       } FC_RETHROW() }
 
       application_impl(application* self)
          : _self(self),
-         _chain_db(std::make_shared<chain::database>(std::vector<uint8_t>{ local_object_type_count, protocol_object_type_count, impl_object_type_count }))
+         _chain_db(std::make_shared<chain::database>(std::vector<uint8_t>{ chain::local_object_type_count, chain::protocol_object_type_count, chain::impl_object_type_count }))
       {
       }
 
@@ -314,7 +315,7 @@ namespace detail {
             {
                std::string genesis_str;
                fc::read_file_contents( _options->at("genesis-json").as<boost::filesystem::path>(), genesis_str );
-               genesis_state_type genesis = fc::json::from_string( genesis_str ).as<genesis_state_type>();
+               chain::genesis_state_type genesis = fc::json::from_string( genesis_str ).as<chain::genesis_state_type>();
                if( _options->count("genesis-timestamp") )
                {
                   genesis.initial_timestamp = fc::time_point_sec(_options->at("genesis-timestamp").as<uint32_t>());
@@ -323,9 +324,9 @@ namespace detail {
                }
                if( _options->count("dbg-init-key") )
                {
-                  std::string init_key = _options->at( "dbg-init-key" ).as<string>();
+                  std::string init_key = _options->at( "dbg-init-key" ).as<std::string>();
                   FC_ASSERT( genesis.initial_miner_candidates.size() >= genesis.initial_active_miners );
-                  public_key_type init_pubkey( init_key );
+                  chain::public_key_type init_pubkey( init_key );
                   for( uint64_t i=0; i<genesis.initial_active_miners; i++ )
                      genesis.initial_miner_candidates[i].block_signing_key = init_pubkey;
                   std::cerr << "Set init miner key to " << init_key << "\n";
@@ -343,7 +344,7 @@ namespace detail {
                graphene::egenesis::compute_egenesis_json( egenesis_json );
                FC_ASSERT( egenesis_json != "" );
                FC_ASSERT( graphene::egenesis::get_egenesis_json_hash() == fc::sha256::hash( egenesis_json ) );
-               auto genesis = fc::json::from_string( egenesis_json ).as<genesis_state_type>();
+               auto genesis = fc::json::from_string( egenesis_json ).as<chain::genesis_state_type>();
                genesis.initial_chain_id = fc::sha256::hash( egenesis_json );
 
                return genesis;
@@ -353,10 +354,10 @@ namespace detail {
          if( _options->count("resync-blockchain") )
             _chain_db->wipe(_data_dir / "blockchain", true);
 
-         flat_map<uint32_t,block_id_type> loaded_checkpoints;
+         boost::container::flat_map<uint32_t,block_id_type> loaded_checkpoints;
          if( _options->count("checkpoint") )
          {
-            auto cps = _options->at("checkpoint").as<vector<string>>();
+            auto cps = _options->at("checkpoint").as<std::vector<std::string>>();
             loaded_checkpoints.reserve( cps.size() );
             for( auto cp : cps )
             {
@@ -432,7 +433,7 @@ namespace detail {
             elog("Detected old database. Nuking and starting over.");
             _chain_db->wipe(_data_dir / "blockchain", true);
             _chain_db.reset();
-            _chain_db = std::make_shared<chain::database>(std::vector<uint8_t>{local_object_type_count, protocol_object_type_count, impl_object_type_count});
+            _chain_db = std::make_shared<chain::database>(std::vector<uint8_t>{ chain::local_object_type_count, chain::protocol_object_type_count, chain::impl_object_type_count });
             _chain_db->add_checkpoints(loaded_checkpoints);
             _chain_db->open(_data_dir / "blockchain", initial_state);
          }
@@ -496,9 +497,9 @@ namespace detail {
          }
       } FC_LOG_AND_RETHROW() }
 
-      optional< api_access_info > get_api_access_info(const string& username)const
+      fc::optional<api_access_info> get_api_access_info(const std::string& username)const
       {
-         optional< api_access_info > result;
+         fc::optional<api_access_info> result;
          auto it = _apiaccess.permission_map.find(username);
          if( it == _apiaccess.permission_map.end() )
          {
@@ -509,7 +510,7 @@ namespace detail {
          return it->second;
       }
 
-      void set_api_access_info(const string& username, api_access_info&& permissions)
+      void set_api_access_info(const std::string& username, api_access_info&& permissions)
       {
          _apiaccess.permission_map.insert(std::make_pair(username, std::move(permissions)));
       }
@@ -558,8 +559,8 @@ namespace detail {
             // when the net code sees that, it will stop trying to push blocks from that chain, but
             // leave that peer connected so that they can get sync blocks from us
             _chain_db->push_block(blk_msg.block,
-                                                (_is_block_producer | _force_validate) ? database::skip_nothing
-                                                                                       : database::skip_transaction_signatures,
+                                                (_is_block_producer | _force_validate) ? chain::database::skip_nothing
+                                                                                       : chain::database::skip_transaction_signatures,
                                                 sync_mode);
 
             // the block was accepted, so we now know all of the transactions contained in the block
@@ -570,7 +571,7 @@ namespace detail {
                // happens, there's no reason to fetch the transactions, so  construct a list of the
                // transaction message ids we no longer need.
                // during sync, it is unlikely that we'll see any old
-               for (const processed_transaction& transaction : blk_msg.block.transactions)
+               for (const chain::processed_transaction& transaction : blk_msg.block.transactions)
                {
                   graphene::net::trx_message transaction_message(transaction);
                   contained_transaction_message_ids.push_back(graphene::net::message(transaction_message).id());
@@ -630,7 +631,7 @@ namespace detail {
                                                      uint32_t& remaining_item_count,
                                                      uint32_t limit) override
       { try {
-         vector<block_id_type> result;
+         std::vector<block_id_type> result;
          remaining_item_count = 0;
          if( _chain_db->head_block_num() == 0 )
             return result;
@@ -692,7 +693,7 @@ namespace detail {
          FC_THROW_EXCEPTION(fc::key_not_found_exception, "");
       } FC_CAPTURE_AND_RETHROW( (id) ) }
 
-      virtual chain_id_type get_chain_id()const override
+      virtual chain::chain_id_type get_chain_id() const override
       {
          return _chain_db->get_chain_id();
       }
@@ -944,7 +945,7 @@ namespace detail {
       std::shared_ptr<fc::http::websocket_server>      _websocket_server;
       std::shared_ptr<fc::http::websocket_tls_server>  _websocket_tls_server;
 
-      std::map<string, std::shared_ptr<abstract_plugin>> _plugins;
+      std::map<std::string, std::shared_ptr<abstract_plugin>> _plugins;
    };
 
 } // namespace detail
@@ -1065,23 +1066,23 @@ void application::set_program_options(boost::program_options::options_descriptio
       ;
 
    configuration_file_options.add_options()
-         ("p2p-endpoint", bpo::value<string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
-         ("p2p-cert-authority-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-authority-file")), "The TLS certificate authority file")
-         ("p2p-cert-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-file")), "The TLS certificate file (public) for this P2P node")
-         ("p2p-cert-key-file", bpo::value<string>()->notifier(param_validator_app("p2p-cert-key-file")), "The TLS certificate file (private key) for this P2P node")
-         ("p2p-cert-key-password", bpo::value<string>(), "Password for TLS certificate file (private key) for this P2P node")
-         ("seed-node,s", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
-         ("checkpoint,c", bpo::value<vector<string>>()->composing()->notifier(param_validator_app("checkpoint")), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
-         ("rpc-endpoint", bpo::value<string>()->default_value("127.0.0.1:8090")->notifier(param_validator_app("rpc-endpoint")), "Endpoint for websocket RPC to listen on")
-         ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
+         ("p2p-endpoint", bpo::value<std::string>()->notifier(param_validator_app("p2p-endpoint")), "Endpoint for P2P node to listen on")
+         ("p2p-cert-authority-file", bpo::value<std::string>()->notifier(param_validator_app("p2p-cert-authority-file")), "The TLS certificate authority file")
+         ("p2p-cert-file", bpo::value<std::string>()->notifier(param_validator_app("p2p-cert-file")), "The TLS certificate file (public) for this P2P node")
+         ("p2p-cert-key-file", bpo::value<std::string>()->notifier(param_validator_app("p2p-cert-key-file")), "The TLS certificate file (private key) for this P2P node")
+         ("p2p-cert-key-password", bpo::value<std::string>(), "Password for TLS certificate file (private key) for this P2P node")
+         ("seed-node,s", bpo::value<std::vector<std::string>>()->composing()->notifier(param_validator_app("seed-node")),"P2P nodes to connect to on startup (may specify multiple times)")
+         ("checkpoint,c", bpo::value<std::vector<std::string>>()->composing()->notifier(param_validator_app("checkpoint")), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
+         ("rpc-endpoint", bpo::value<std::string>()->default_value("127.0.0.1:8090")->notifier(param_validator_app("rpc-endpoint")), "Endpoint for websocket RPC to listen on")
+         ("rpc-tls-endpoint", bpo::value<std::string>()->implicit_value("127.0.0.1:8089")->notifier(param_validator_app("rpc-tls-endpoint")), "Endpoint for TLS websocket RPC to listen on")
          ("enable-permessage-deflate", "Enable support for per-message deflate compression in the websocket servers (--rpc-endpoint and --rpc-tls-endpoint), disabled by default")
          ("server-allowed-domains", "List of allowed domains to communicate with or asterix for all domains")
-         ("server-cert-file", bpo::value<string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this websocket server")
-         ("server-cert-key-file", bpo::value<string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this websocket server")
-         ("server-cert-chain-file", bpo::value<string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this websocket server")
-         ("server-cert-password", bpo::value<string>(), "Password for TLS certificate file (private key) for this websocket server")
+         ("server-cert-file", bpo::value<std::string>()->notifier(param_validator_app("server-cert-file")), "The TLS certificate file (public) for this websocket server")
+         ("server-cert-key-file", bpo::value<std::string>()->notifier(param_validator_app("server-cert-key-file")), "The TLS certificate file (private key) for this websocket server")
+         ("server-cert-chain-file", bpo::value<std::string>()->notifier(param_validator_app("server-cert-chain-file")), "The TLS certificate chain file for this websocket server")
+         ("server-cert-password", bpo::value<std::string>(), "Password for TLS certificate file (private key) for this websocket server")
          ("genesis-json", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("genesis-json")), "File to read Genesis State from")
-         ("dbg-init-key", bpo::value<string>(), "Block signing key to use for init miners, overrides genesis file")
+         ("dbg-init-key", bpo::value<std::string>(), "Block signing key to use for init miners, overrides genesis file")
          ("api-access", bpo::value<boost::filesystem::path>()->notifier(param_validator_app("api-access")), "JSON file specifying API permissions")
          ("track-account", bpo::value<std::vector<std::string>>()->composing()->multitoken(), "Account ID to track history for (may specify multiple times)")
          ;
@@ -1110,7 +1111,7 @@ void application::set_program_options(boost::program_options::options_descriptio
 
    // hidden settings only in config file
    configuration_file_options.add_options()
-         ("fork-times", bpo::value<string>()->notifier([](const string& args) {
+         ("fork-times", bpo::value<std::string>()->notifier([](const std::string& args) {
                std::size_t fork = 0;
                for(std::size_t i = 0, j = 0; i != std::string::npos; i = j) {
                   FC_ASSERT(fork < graphene::chain::fork_times.size(), "Too many fork times, should be ${n}", ("n", graphene::chain::fork_times.size()));
@@ -1130,11 +1131,11 @@ void application::initialize(const boost::filesystem::path& data_dir, const boos
    if( options.count("create-genesis-json") )
    {
       boost::filesystem::path genesis_out = options.at("create-genesis-json").as<boost::filesystem::path>();
-      genesis_state_type genesis_state = detail::create_example_genesis();
+      chain::genesis_state_type genesis_state = detail::create_example_genesis();
       if( exists(genesis_out) )
       {
          try {
-            genesis_state = fc::json::from_file(genesis_out).as<genesis_state_type>();
+            genesis_state = fc::json::from_file(genesis_out).as<chain::genesis_state_type>();
          } catch(const fc::exception& e) {
             std::cerr << "Unable to parse existing genesis file:\n" << e.to_string()
                       << "\nWould you like to replace it? [y/N] ";
@@ -1169,7 +1170,7 @@ void application::startup()
    my->startup();
 }
 
-std::shared_ptr<abstract_plugin> application::get_plugin(const string& name) const
+std::shared_ptr<abstract_plugin> application::get_plugin(const std::string& name) const
 {
    return my->_plugins[name];
 }
@@ -1189,12 +1190,12 @@ void application::set_block_production(bool producing_blocks)
    my->_is_block_producer = producing_blocks;
 }
 
-optional< api_access_info > application::get_api_access_info( const string& username )const
+fc::optional<api_access_info> application::get_api_access_info( const std::string& username )const
 {
    return my->get_api_access_info( username );
 }
 
-void application::set_api_access_info(const string& username, api_access_info&& permissions)
+void application::set_api_access_info(const std::string& username, api_access_info&& permissions)
 {
    my->set_api_access_info(username, std::move(permissions));
 }
@@ -1204,7 +1205,7 @@ uint64_t application::get_processed_transactions()
    return my->_processed_transactions;
 }
 
-void graphene::app::application::add_plugin(const string& name, std::shared_ptr<graphene::app::abstract_plugin> p)
+void graphene::app::application::add_plugin(const std::string& name, std::shared_ptr<graphene::app::abstract_plugin> p)
 {
    my->_plugins[name] = p;
 }
@@ -1213,7 +1214,6 @@ void application::shutdown_plugins()
 {
    for( auto& entry : my->_plugins )
       entry.second->plugin_shutdown();
-   return;
 }
 
 void application::shutdown()
@@ -1225,14 +1225,12 @@ void application::initialize_plugins( const boost::program_options::variables_ma
 {
    for( auto& entry : my->_plugins )
       entry.second->plugin_initialize( options );
-   return;
 }
 
 void application::startup_plugins()
 {
    for( auto& entry : my->_plugins )
       entry.second->plugin_startup();
-   return;
 }
 
 } } // graphene::app

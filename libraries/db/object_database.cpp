@@ -26,7 +26,6 @@
 #include <graphene/db/exceptions.hpp>
 #include <boost/filesystem.hpp>
 #include <fc/io/raw.hpp>
-#include <fc/container/flat.hpp>
 #include <fc/uint128.hpp>
 #include <fc/filesystem.hpp>
 
@@ -71,7 +70,7 @@ const index& object_database::get_index(uint8_t space_id, uint8_t type_id)const
 index& object_database::get_mutable_index(uint8_t space_id, uint8_t type_id)
 {
    if(_index.size() <= space_id)
-      FC_THROW_EXCEPTION(invalid_space_id_exception, "space id: ${sid}", ("sid", space_id));  
+      FC_THROW_EXCEPTION(invalid_space_id_exception, "space id: ${sid}", ("sid", space_id));
    if(_index[space_id].size() <= type_id)
       FC_THROW_EXCEPTION(invalid_type_id_exception, "type id: ${tid}", ("tid", type_id));
 

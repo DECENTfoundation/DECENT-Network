@@ -105,7 +105,7 @@ void database::renew_subscription(const subscription_object& subscription, const
       so.expiration += subscription_period * 24 * 3600 ;
    });
 
-   time_point_sec time = head_block_time();
+   fc::time_point_sec time = head_block_time();
    create<transaction_detail_object>([&](transaction_detail_object& obj)
       {
          obj.m_operation_type = (uint8_t)transaction_detail_object::subscription;
@@ -245,7 +245,7 @@ void database::decent_housekeeping()
 
    // we need to know the next_maintenance_time
    const auto& dpo = get_dynamic_global_properties();
-   time_point_sec next_maintenance_time = dpo.next_maintenance_time;
+   fc::time_point_sec next_maintenance_time = dpo.next_maintenance_time;
 
    const auto& gpo = get_global_properties();
    uint32_t maintenance_interval;
@@ -255,7 +255,7 @@ void database::decent_housekeeping()
       maintenance_interval = gpo.parameters.maintenance_interval;
 
    if( dpo.head_block_number == 1 )
-      next_maintenance_time = time_point_sec() +
+      next_maintenance_time = fc::time_point_sec() +
          (((head_block_time().sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
    else
    {
@@ -412,10 +412,10 @@ real_supply database::get_real_supply()const
    return total;
 }
 
-vector<database::votes_gained> database::get_actual_votes() const
+std::vector<database::votes_gained> database::get_actual_votes() const
 {
-   vector<uint64_t> vote_tally_buffer;
-   vector<votes_gained> res;
+   std::vector<uint64_t> vote_tally_buffer;
+   std::vector<votes_gained> res;
    const auto& props = get_global_properties();
    vote_tally_buffer.resize(props.next_available_vote_id);
    const auto& aidx = get_index_type<account_index>().indices().get<graphene::db::by_id>();

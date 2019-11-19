@@ -61,7 +61,7 @@ void database::adjust_balance(account_id_type account, asset delta )
    auto itr = index.find(boost::make_tuple(account, delta.asset_id));
    if(itr == index.end())
    {
-      FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}", 
+      FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
                  ("b",to_pretty_string(asset(0,delta.asset_id)))
                  ("r",to_pretty_string(-delta)));
@@ -80,14 +80,14 @@ void database::adjust_balance(account_id_type account, asset delta )
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
-optional< vesting_balance_id_type > database::deposit_lazy_vesting(
-   const optional< vesting_balance_id_type >& ovbid,
+fc::optional<vesting_balance_id_type> database::deposit_lazy_vesting(
+   const fc::optional<vesting_balance_id_type>& ovbid,
    share_type amount, uint32_t req_vesting_seconds,
    account_id_type req_owner,
    bool require_vesting )
 {
    if( amount == 0 )
-      return optional< vesting_balance_id_type >();
+      return {};
 
    fc::time_point_sec now = head_block_time();
 
@@ -109,7 +109,7 @@ optional< vesting_balance_id_type > database::deposit_lazy_vesting(
          else
             _vbo.deposit_vested(now, amount);
       } );
-      return optional< vesting_balance_id_type >();
+      return {};
    }
 
    const vesting_balance_object& vbo = create< vesting_balance_object >( [&]( vesting_balance_object& _vbo )
@@ -146,7 +146,7 @@ void database::deposit_cashback(const account_object& acct, share_type amount, b
       return;
    }
 
-   optional< vesting_balance_id_type > new_vbid = deposit_lazy_vesting(
+   fc::optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
       acct.cashback_vb,
       amount,
       get_global_properties().parameters.cashback_vesting_period_seconds,
@@ -169,7 +169,7 @@ void database::deposit_miner_pay(const miner_object& wit, share_type amount)
    if( amount == 0 )
       return;
 
-   optional< vesting_balance_id_type > new_vbid = deposit_lazy_vesting(
+   fc::optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
       wit.pay_vb,
       amount,
       get_global_properties().parameters.miner_pay_vesting_seconds,

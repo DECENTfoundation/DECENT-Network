@@ -2,17 +2,11 @@
 
 #include "ipfs_transfer.hpp"
 
-#include <decent/package/package.hpp>
 #include <decent/package/package_config.hpp>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#include <vector>
-#include <regex>
-
 namespace decent { namespace package {
-
 
     namespace detail {
 
@@ -45,8 +39,6 @@ namespace decent { namespace package {
             ipfs::Json links = nested_object.at("Links");
 
             for (auto link : links) {
-               
-            
                 if((int) link.at("Type") == 1 ) //directory
                 {
                     size += ipfs_recursive_get_size(link.at("Hash"));
@@ -56,7 +48,6 @@ namespace decent { namespace package {
                 {
                     size += (uint64_t) link.at("Size");
                 }
-
             }
         }
         return size;
@@ -101,8 +92,6 @@ namespace decent { namespace package {
     void IPFSDownloadPackageTask::task() {
         PACKAGE_INFO_GENERATE_EVENT(package_download_start, ( ) );
 
-        using namespace boost::filesystem;
-
         const auto temp_dir_path = unique_path(graphene::utilities::decent_path_finder::instance().get_decent_temp() / "%%%%-%%%%-%%%%-%%%%");
 
         try {
@@ -122,7 +111,7 @@ namespace decent { namespace package {
 
             _package._size = ipfs_recursive_get_size( obj_id );
             _package._downloaded_size = 0;
-            
+
             ipfs_recursive_get( obj_id, temp_dir_path );
 
             const auto content_file = temp_dir_path / "content.zip.aes";
@@ -216,7 +205,6 @@ namespace decent { namespace package {
                 }
  
                 const auto file_rel_path = detail::get_relative(package_base_path, file.lexically_normal());
-                
                 std::string file_relPath_UnixPathDelim = file_rel_path.string();
                 iter = file_relPath_UnixPathDelim.begin();
                 while (iter != file_relPath_UnixPathDelim.end())
@@ -231,8 +219,6 @@ namespace decent { namespace package {
                files_to_add.push_back({ file_rel_path.string(), ipfs::http::FileUpload::Type::kFileName, file.string() });
 #endif
             }
-
-
 
             PACKAGE_INFO_CHANGE_TRANSFER_STATE(SEEDING);
 
@@ -328,7 +314,4 @@ namespace decent { namespace package {
         return std::make_shared<IPFSStopSeedingPackageTask>(package);
     }
 
-
 } } // namespace decent::package
-
-

@@ -58,7 +58,7 @@ void transaction::validate() const
 {
    if(operations.size() == 0)
       FC_THROW_EXCEPTION(trx_must_have_at_least_one_op_exception, "Trx: ${trx}", ("trx", *this));
-  
+
    int index = 0;
    try {
       for(const auto& op : operations) {
@@ -102,19 +102,18 @@ void transaction::set_reference_block( const block_id_type& reference_block )
    ref_block_prefix = reference_block._hash[1];
 }
 
-void transaction::get_required_authorities( flat_set<account_id_type>& active, flat_set<account_id_type>& owner, vector<authority>& other )const
+void transaction::get_required_authorities( boost::container::flat_set<account_id_type>& active,
+                                            boost::container::flat_set<account_id_type>& owner,
+                                            std::vector<authority>& other )const
 {
    for( const auto& op : operations )
       operation_get_required_authorities( op, active, owner, other );
 }
 
-
-
-
 struct sign_state
 {
-      /** returns true if we have a signature for this key or can 
-       * produce a signature for this key, else returns false. 
+      /** returns true if we have a signature for this key or can
+       * produce a signature for this key, else returns false.
        */
       bool signed_by( const public_key_type& k )
       {
@@ -129,7 +128,7 @@ struct sign_state
          return itr->second = true;
       }
 
-    
+
       bool check_authority( account_id_type id )
       {
          if( approved_by.find(id) != approved_by.end() ) return true;
@@ -138,7 +137,7 @@ struct sign_state
 
       /**
        *  Checks to see if we have signatures of the active authorites of
-       *  the accounts specified in authority or the keys specified. 
+       *  the accounts specified in authority or the keys specified.
        */
       bool check_authority( const authority* au, uint32_t depth = 0 )
       {
@@ -181,7 +180,7 @@ struct sign_state
 
       bool remove_unused_signatures()
       {
-         vector<public_key_type> remove_sigs;
+         std::vector<public_key_type> remove_sigs;
          for( const auto& sig : provided_signatures )
             if( !sig.second ) remove_sigs.push_back( sig.first );
 
@@ -191,7 +190,7 @@ struct sign_state
          return remove_sigs.size() != 0;
       }
 
-      sign_state( const flat_set<public_key_type>& sigs,
+      sign_state( const boost::container::flat_set<public_key_type>& sigs,
                   const std::function<const authority*(account_id_type)>& a )
       :get_active(a)
       {
@@ -202,9 +201,9 @@ struct sign_state
 
       const std::function<const authority*(account_id_type)>& get_active;
 
-      flat_set<public_key_type>        available_keys;
-      flat_map<public_key_type,bool>   provided_signatures;
-      flat_set<account_id_type>        approved_by;
+      boost::container::flat_set<public_key_type>        available_keys;
+      boost::container::flat_map<public_key_type,bool>   provided_signatures;
+      boost::container::flat_set<account_id_type>        approved_by;
       uint32_t                         max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH;
 };
 
@@ -226,7 +225,7 @@ struct sign_state1
       if (approved_by.find(id) != approved_by.end()) return true;
          return check_authority(get_active(id));
    }
-   
+
    /**
     *  Checks to see if we have signatures of the active authorites of
     *  the accounts specified in authority or the keys specified.
@@ -280,27 +279,27 @@ struct sign_state1
       provided_signature = false;
       approved_by.insert(GRAPHENE_TEMP_ACCOUNT);
    }
-  
+
    const std::function<const authority*(account_id_type)>& get_active;
 
    const public_key_type&           provided_signature_key;
    bool                             provided_signature;
-   flat_set<account_id_type>        approved_by;
+   boost::container::flat_set<account_id_type> approved_by;
    uint32_t                         max_recursion = GRAPHENE_MAX_SIG_CHECK_DEPTH;
 };
 
-
-void verify_authority( const vector<operation>& ops, const flat_set<public_key_type>& sigs, 
+void verify_authority( const std::vector<operation>& ops,
+                       const boost::container::flat_set<public_key_type>& sigs,
                        const std::function<const authority*(account_id_type)>& get_active,
                        const std::function<const authority*(account_id_type)>& get_owner,
                        uint32_t max_recursion_depth,
                        bool  allow_committee,
-                       const flat_set<account_id_type>& active_aprovals,
-                       const flat_set<account_id_type>& owner_approvals )
+                       const boost::container::flat_set<account_id_type>& active_aprovals,
+                       const boost::container::flat_set<account_id_type>& owner_approvals )
 { try {
-   flat_set<account_id_type> required_active;
-   flat_set<account_id_type> required_owner;
-   vector<authority> other;
+   boost::container::flat_set<account_id_type> required_active;
+   boost::container::flat_set<account_id_type> required_owner;
+   std::vector<authority> other;
 
    for( const auto& op : ops )
       operation_get_required_authorities( op, required_active, required_owner, other );
@@ -332,7 +331,7 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
    for( auto id : required_owner )
    {
       FC_VERIFY_AND_THROW( owner_approvals.find(id) != owner_approvals.end() ||
-                       s.check_authority(get_owner(id)), 
+                       s.check_authority(get_owner(id)),
                        tx_missing_owner_auth_exception, "Missing Owner Authority ${id}", ("id",id) );
    }
 
@@ -343,27 +342,27 @@ void verify_authority( const vector<operation>& ops, const flat_set<public_key_t
       );
 } FC_CAPTURE_AND_RETHROW( (ops)(sigs) ) }
 
-void verify_authority1(const vector<operation>& ops, const public_key_type& sigs,
+void verify_authority1(const std::vector<operation>& ops, const public_key_type& sigs,
   const std::function<const authority*(account_id_type)>& get_active,
    const std::function<const authority*(account_id_type)>& get_owner,
    uint32_t max_recursion_depth)
 {
    try {
-      flat_set<account_id_type> required_active;
-      flat_set<account_id_type> required_owner;
-      vector<authority> other;
-      
+      boost::container::flat_set<account_id_type> required_active;
+      boost::container::flat_set<account_id_type> required_owner;
+      std::vector<authority> other;
+
       for (const auto& op : ops)
           operation_get_required_authorities(op, required_active, required_owner, other);
-      
+
       sign_state1 s(sigs, get_active);
       s.max_recursion = max_recursion_depth;
-      
+
       for (const auto& auth : other)
       {
          FC_VERIFY_AND_THROW(s.check_authority(&auth), tx_missing_other_auth_exception, "Missing Authority", ("auth", auth));
       }
-      
+
       // fetch all of the top level authorities
       for (auto id : required_active)
       {
@@ -371,7 +370,7 @@ void verify_authority1(const vector<operation>& ops, const public_key_type& sigs
             s.check_authority(get_owner(id)),
             tx_missing_active_auth_exception, "Missing Active Authority ${id}", ("id", id));
       }
-      
+
       for (auto id : required_owner)
       {
          FC_VERIFY_AND_THROW(
@@ -381,10 +380,10 @@ void verify_authority1(const vector<operation>& ops, const public_key_type& sigs
    } FC_CAPTURE_AND_RETHROW((ops)(sigs))
 }
 
-flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id_type& chain_id )const
+boost::container::flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id_type& chain_id )const
 { try {
    auto d = sig_digest( chain_id );
-   flat_set<public_key_type> result;
+   boost::container::flat_set<public_key_type> result;
    for( const auto&  sig : signatures )
    {
       FC_VERIFY_AND_THROW(
@@ -395,16 +394,16 @@ flat_set<public_key_type> signed_transaction::get_signature_keys( const chain_id
    return result;
 } FC_RETHROW() }
 
-set<public_key_type> signed_transaction::get_required_signatures(
+std::set<public_key_type> signed_transaction::get_required_signatures(
    const chain_id_type& chain_id,
-   const flat_set<public_key_type>& available_keys,
+   const boost::container::flat_set<public_key_type>& available_keys,
    const std::function<const authority*(account_id_type)>& get_active,
    const std::function<const authority*(account_id_type)>& get_owner,
    uint32_t max_recursion_depth )const
 {
-   flat_set<account_id_type> required_active;
-   flat_set<account_id_type> required_owner;
-   vector<authority> other;
+   boost::container::flat_set<account_id_type> required_active;
+   boost::container::flat_set<account_id_type> required_owner;
+   std::vector<authority> other;
    get_required_authorities( required_active, required_owner, other );
 
    sign_state s(get_signature_keys( chain_id ),get_active);
@@ -420,7 +419,7 @@ set<public_key_type> signed_transaction::get_required_signatures(
 
    s.remove_unused_signatures();
 
-   set<public_key_type> result;
+   std::set<public_key_type> result;
 
    for( auto& provided_sig : s.provided_signatures )
       if( available_keys.find( provided_sig.first ) != available_keys.end() )
@@ -429,16 +428,16 @@ set<public_key_type> signed_transaction::get_required_signatures(
    return result;
 }
 
-set<public_key_type> signed_transaction::minimize_required_signatures(
+std::set<public_key_type> signed_transaction::minimize_required_signatures(
    const chain_id_type& chain_id,
-   const flat_set<public_key_type>& available_keys,
+   const boost::container::flat_set<public_key_type>& available_keys,
    const std::function<const authority*(account_id_type)>& get_active,
    const std::function<const authority*(account_id_type)>& get_owner,
    uint32_t max_recursion
    ) const
 {
-   set< public_key_type > s = get_required_signatures( chain_id, available_keys, get_active, get_owner, max_recursion );
-   flat_set< public_key_type > result( s.begin(), s.end() );
+   std::set<public_key_type> s = get_required_signatures( chain_id, available_keys, get_active, get_owner, max_recursion );
+   boost::container::flat_set<public_key_type> result( s.begin(), s.end() );
 
    for( const public_key_type& k : s )
    {
@@ -453,11 +452,11 @@ set<public_key_type> signed_transaction::minimize_required_signatures(
       catch( const tx_missing_other_auth_exception& ) {}
       result.insert( k );
    }
-   return set<public_key_type>( result.begin(), result.end() );
+   return std::set<public_key_type>( result.begin(), result.end() );
 }
 
 void signed_transaction::verify_authority(
-   const flat_set<public_key_type>& sig_keys,
+   const boost::container::flat_set<public_key_type>& sig_keys,
    const std::function<const authority*(account_id_type)>& get_active,
    const std::function<const authority*(account_id_type)>& get_owner,
    uint32_t max_recursion )const

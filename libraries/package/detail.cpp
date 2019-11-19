@@ -6,7 +6,6 @@
 
 namespace decent { namespace package { namespace detail {
 
-
     bool is_nested(boost::filesystem::path nested, boost::filesystem::path base)
     {
         nested = nested.lexically_normal();
@@ -257,10 +256,6 @@ namespace decent { namespace package { namespace detail {
 
     void PackageTask::start(const bool block) {
         stop();
-        if(is_base_class()){
-            elog("calling packagetask::start from base class!!!");
-            std::abort();
-        }
         _running = true;
         _stop_requested = false;
         _last_exception = nullptr;
@@ -311,9 +306,6 @@ namespace decent { namespace package { namespace detail {
         return last_exception;
     }
 
-
-}//namespace detail
-
-
+} //namespace detail
 
 } } // namespace decent::package

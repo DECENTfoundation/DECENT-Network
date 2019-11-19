@@ -1,4 +1,3 @@
-
 std::string wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
 {
    fc::ecc::private_key private_key = graphene::utilities::derive_private_key( prefix_string, sequence_number );
@@ -19,32 +18,32 @@ uint64_t wallet_api::get_account_count() const
    return my->_remote_db->get_account_count();
 }
 
-map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, uint32_t limit)
+std::map<std::string, account_id_type> wallet_api::list_accounts(const std::string& lowerbound, uint32_t limit) const
 {
     return my->_remote_db->lookup_accounts(lowerbound, limit);
 }
 
-vector<account_object> wallet_api::search_accounts(const string& term, const string& order, const string& id, uint32_t limit)
+std::vector<account_object> wallet_api::search_accounts(const std::string& term, const std::string& order, const std::string& id, uint32_t limit) const
 {
    return my->_remote_db->search_accounts(term, order, object_id_type(id), limit);
 }
 
-vector<extended_asset> wallet_api::list_account_balances(const string& id)
+std::vector<extended_asset> wallet_api::list_account_balances(const std::string& id) const
 {
-   vector<asset> assets;
+   std::vector<asset> assets;
    if( auto real_id = detail::maybe_id<account_id_type>(id) )
-      assets = my->_remote_db->get_account_balances(*real_id, flat_set<asset_id_type>());
-   assets = my->_remote_db->get_account_balances(get_account(id).id, flat_set<asset_id_type>());
+      assets = my->_remote_db->get_account_balances(*real_id, boost::container::flat_set<asset_id_type>());
+   assets = my->_remote_db->get_account_balances(get_account(id).id, boost::container::flat_set<asset_id_type>());
 
-   vector<extended_asset> result;
-   vector<asset_id_type> asset_ids;
+   std::vector<extended_asset> result;
+   std::vector<asset_id_type> asset_ids;
    result.reserve( assets.size() );
    asset_ids.reserve( assets.size() );
 
    for( const asset& element : assets )
       asset_ids.push_back( element.asset_id );
 
-   vector<optional<asset_object>> asset_objs = my->_remote_db->get_assets( asset_ids ) ;
+   std::vector<fc::optional<asset_object>> asset_objs = my->_remote_db->get_assets( asset_ids ) ;
 
    for( size_t i = 0; i < assets.size(); i++ )
       result.emplace_back( assets[i], asset_objs[i]->amount_to_pretty_string( assets[i].amount ) );
@@ -53,13 +52,13 @@ vector<extended_asset> wallet_api::list_account_balances(const string& id)
    return result;
 }
 
-vector<operation_detail> wallet_api::get_account_history(const string& name, int limit)const
+std::vector<operation_detail> wallet_api::get_account_history(const std::string& name, int limit) const
 {
-   vector<operation_detail> result;
+   std::vector<operation_detail> result;
    auto account_id = get_account(name).get_id();
 
    while( limit > 0 )
-   {
+      {
       operation_history_id_type start;
       if( result.size() )
       {
@@ -67,8 +66,7 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
          start = start + 1;
       }
 
-
-      vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
+      std::vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
       for( auto& o : current ) {
          std::stringstream ss;
          auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
@@ -82,19 +80,19 @@ vector<operation_detail> wallet_api::get_account_history(const string& name, int
    return result;
 }
 
-vector<balance_change_result_detail> wallet_api::search_account_balance_history(const string& account_name,
-                                                                                const flat_set<string>& assets_list,
-                                                                                const string& partner_account,
-                                                                                uint32_t from_block, uint32_t to_block,
-                                                                                uint32_t start_offset,
-                                                                                int limit) const
+std::vector<balance_change_result_detail> wallet_api::search_account_balance_history(const std::string& account_name,
+                                                                                     const boost::container::flat_set<string>& assets_list,
+                                                                                     const std::string& partner_account,
+                                                                                     uint32_t from_block, uint32_t to_block,
+                                                                                     uint32_t start_offset,
+                                                                                     int limit) const
 {
-    vector<balance_change_result_detail> result;
+    std::vector<balance_change_result_detail> result;
     auto account_id = get_account(account_name).get_id();
 
     if( limit > 0 )
     {
-       flat_set<asset_id_type> asset_id_list;
+       boost::container::flat_set<asset_id_type> asset_id_list;
        if (!assets_list.empty()) {
            for( const auto& item : assets_list) {
               asset_id_list.insert( get_asset(item).get_id() );
@@ -106,7 +104,7 @@ vector<balance_change_result_detail> wallet_api::search_account_balance_history(
           partner_id = get_account(partner_account).get_id();
        }
 
-       vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
+       std::vector<balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
        result.reserve( current.size() );
        for(const auto& item : current) {
           balance_change_result_detail info;
@@ -126,8 +124,7 @@ vector<balance_change_result_detail> wallet_api::search_account_balance_history(
     return result;
 }
 
-fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const string& account_name,
-                                                                                           operation_history_id_type operation_history_id)
+fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const string& account_name, operation_history_id_type operation_history_id) const
 {
    auto account_id = get_account(account_name).get_id();
 
@@ -148,15 +145,15 @@ fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_t
    return info;
 }
 
-vector<operation_detail> wallet_api::get_relative_account_history(const string& name,
-                                                                  uint32_t stop,
-                                                                  int limit,
-                                                                  uint32_t start)const
+std::vector<operation_detail> wallet_api::get_relative_account_history(const std::string& name,
+                                                                       uint32_t stop,
+                                                                       int limit,
+                                                                       uint32_t start) const
 {
-   vector<operation_detail> result;
+   std::vector<operation_detail> result;
    auto account_id = get_account(name).get_id();
 
-   vector<operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, limit, start);
+   std::vector<operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, limit, start);
    for( auto& o : current ) {
       std::stringstream ss;
       auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
@@ -166,12 +163,12 @@ vector<operation_detail> wallet_api::get_relative_account_history(const string& 
    return result;
 }
 
-vector<transaction_detail_object> wallet_api::search_account_history(string const& account_name,
-                                                                     string const& order,
-                                                                     string const& id,
-                                                                     int limit) const
+std::vector<transaction_detail_object> wallet_api::search_account_history(std::string const& account_name,
+                                                                          std::string const& order,
+                                                                          std::string const& id,
+                                                                          int limit) const
 {
-   vector<transaction_detail_object> result;
+   std::vector<transaction_detail_object> result;
    try
    {
       account_object account = get_account(account_name);
@@ -216,11 +213,11 @@ brain_key_info wallet_api::suggest_brain_key() const
    return result;
 }
 
-signed_transaction_info wallet_api::register_account_with_keys(const string& name,
-                                                               public_key_type owner,
-                                                               public_key_type active,
-                                                               public_key_type memo,
-                                                               const string& registrar_account,
+signed_transaction_info wallet_api::register_account_with_keys(const std::string& name,
+                                                               const public_key_type& owner,
+                                                               const public_key_type& active,
+                                                               const public_key_type& memo,
+                                                               const std::string& registrar_account,
                                                                bool broadcast /* = false */)
 {
    if(is_locked())
@@ -228,10 +225,10 @@ signed_transaction_info wallet_api::register_account_with_keys(const string& nam
    return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
-signed_transaction_info wallet_api::register_account(const string& name,
-                                                     public_key_type owner,
-                                                     public_key_type active,
-                                                     const string& registrar_account,
+signed_transaction_info wallet_api::register_account(const std::string& name,
+                                                     const public_key_type& owner,
+                                                     const public_key_type& active,
+                                                     const std::string& registrar_account,
                                                      bool broadcast /* = false */)
 {
    if(is_locked())
@@ -239,11 +236,11 @@ signed_transaction_info wallet_api::register_account(const string& name,
    return my->register_account( name, owner, active, active, registrar_account, broadcast );
 }
 
-signed_transaction_info wallet_api::register_multisig_account(const string& name,
-                                                              authority owner,
-                                                              authority active,
-                                                              public_key_type memo,
-                                                              const string& registrar_account,
+signed_transaction_info wallet_api::register_multisig_account(const std::string& name,
+                                                              const authority& owner,
+                                                              const authority& active,
+                                                              const public_key_type& memo,
+                                                              const std::string& registrar_account,
                                                               bool broadcast /* = false */)
 {
    if(is_locked())
@@ -285,10 +282,10 @@ signed_transaction_info wallet_api::update_account_keys(const string& name,
    return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
-signed_transaction_info wallet_api::update_account_keys_to_multisig(const string& name,
-                                                                    authority owner,
-                                                                    authority active,
-                                                                    public_key_type memo,
+signed_transaction_info wallet_api::update_account_keys_to_multisig(const std::string& name,
+                                                                    const authority& owner,
+                                                                    const authority& active,
+                                                                    const public_key_type& memo,
                                                                     bool broadcast /* = false */)
 {
    fc::optional<authority> new_owner, new_active;
@@ -328,20 +325,20 @@ el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) cons
       account_object consumer_account = get_account( consumer );
       el_gamal_key_pair_str res;
 
-      res.private_key = generate_private_el_gamal_key_from_secret ( my->get_private_key_for_account(consumer_account).get_secret() );
+      res.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( my->get_private_key_for_account(consumer_account).get_secret() );
       res.public_key = decent::encrypt::get_public_el_gamal_key( res.private_key );
       return res;
    } FC_CAPTURE_AND_RETHROW( (consumer) )
 }
 
-pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_key() const
+std::pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_key() const
 {
-   pair<brain_key_info, el_gamal_key_pair> ret;
+   std::pair<brain_key_info, el_gamal_key_pair> ret;
    ret.first = suggest_brain_key();
 
    fc::optional<fc::ecc::private_key> op_private_key = wif_to_key(ret.first.wif_priv_key);
    FC_ASSERT(op_private_key);
-   ret.second.private_key = generate_private_el_gamal_key_from_secret ( op_private_key->get_secret() );
+   ret.second.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( op_private_key->get_secret() );
    ret.second.public_key = decent::encrypt::get_public_el_gamal_key( ret.second.private_key );
 
    return ret;

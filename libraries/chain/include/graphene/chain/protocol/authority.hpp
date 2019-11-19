@@ -71,9 +71,9 @@ namespace graphene { namespace chain {
          add_authorities(auths...);
       }
 
-      vector<public_key_type> get_keys() const
+      std::vector<public_key_type> get_keys() const
       {
-         vector<public_key_type> result;
+         std::vector<public_key_type> result;
          result.reserve( key_auths.size() );
          for( const auto& k : key_auths )
             result.push_back(k.first);
@@ -108,18 +108,10 @@ namespace graphene { namespace chain {
       }
 
       uint32_t                              weight_threshold = 0;
-      flat_map<account_id_type,weight_type> account_auths;
-      flat_map<public_key_type,weight_type> key_auths;
+      boost::container::flat_map<account_id_type,weight_type> account_auths;
+      boost::container::flat_map<public_key_type,weight_type> key_auths;
       /** needed for backward compatibility only */
    };
-
-/**
- * Add all account members of the given authority to the given flat_set.
- */
-void add_authority_accounts(
-   flat_set<account_id_type>& result,
-   const authority& a
-   );
 
 } } // namespace graphene::chain
 

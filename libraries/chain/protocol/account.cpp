@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/account.hpp>
+#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 
@@ -160,7 +161,6 @@ void account_options::validate() const
       FC_ASSERT( subscription_period > 0 && subscription_period <= DECENT_MAX_SUBSCRIPTION_PERIOD,"maximal length of subscription period is exceeded");
       FC_ASSERT( price_per_subscribe.amount > 0 );
    }
-
 }
 
 bool operator == (const graphene::chain::account_options &a, const graphene::chain::account_options &b)
@@ -198,12 +198,9 @@ void account_create_operation::validate()const
    options.validate();
 }
 
-
-
-
 share_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
 {
-   auto core_fee_required = k.fee;  
+   auto core_fee_required = k.fee;
    return core_fee_required;
 }
 
@@ -235,7 +232,5 @@ void account_update_operation::validate()const
    if( new_options )
       new_options->validate();
 }
-
-
 
 } } // graphene::chain

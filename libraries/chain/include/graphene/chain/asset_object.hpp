@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
          string description;
 
          /// set for monitored assets
-         optional<monitored_asset_options> monitored_asset_opts;
+         fc::optional<monitored_asset_options> monitored_asset_opts;
 
          /// set for user issued asset
          asset_options options;

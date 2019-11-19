@@ -24,8 +24,9 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <fc/static_variant.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    struct linear_vesting_policy_initializer
    {
@@ -44,8 +45,6 @@ namespace graphene { namespace chain {
    };
 
    typedef fc::static_variant<linear_vesting_policy_initializer, cdd_vesting_policy_initializer> vesting_policy_initializer;
-
-
 
    /**
     * @brief Create a vesting balance.

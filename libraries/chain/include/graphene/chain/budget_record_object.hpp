@@ -51,7 +51,7 @@ struct budget_record
    share_type supply_delta = 0;
 
    real_supply _real_supply;
-   time_point_sec next_maintenance_time;
+   fc::time_point_sec next_maintenance_time;
    int8_t block_interval;
 };
 
@@ -70,7 +70,7 @@ typedef multi_index_container<
    budget_record_object,
    indexed_by<
       graphene::db::object_id_index,
-      ordered_unique< tag<by_time>, member< budget_record_object, time_point_sec, &budget_record_object::time > >
+      ordered_unique< tag<by_time>, member< budget_record_object, fc::time_point_sec, &budget_record_object::time > >
    >
 > budget_record_object_multi_index_type;
 

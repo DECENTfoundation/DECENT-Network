@@ -45,32 +45,30 @@
  * @defgroup LoginAPI Login API
  */
 namespace graphene { namespace app {
-   using namespace graphene::chain;
-   using namespace std;
 
    class application;
 
    struct asset_array
    {
-      asset asset0;
-      asset asset1;
+      chain::asset asset0;
+      chain::asset asset1;
    };
 
     struct balance_change_result
     {
-       operation_history_object hist_object;
+       chain::operation_history_object hist_object;
        asset_array balance;
-       asset fee;
+       chain::asset fee;
        fc::time_point_sec timestamp;
-       transaction_id_type transaction_id;
+       chain::transaction_id_type transaction_id;
     };
 
     struct network_node_info
     {
        fc::ip::endpoint listening_on;
-       graphene::net::node_id_t node_public_key;
-       graphene::net::node_id_t node_id;
-       graphene::net::firewalled_state firewalled;
+       net::node_id_t node_public_key;
+       net::node_id_t node_id;
+       net::firewalled_state firewalled;
        uint32_t connection_count;
     };
 
@@ -99,7 +97,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup HistoryAPI
           */
-         string info() { return get_api_name();}
+         std::string info() const { return get_api_name(); }
 
          /**
           * @brief Get operations relevant to the specificed account.
@@ -110,10 +108,9 @@ namespace graphene { namespace app {
           * @return a list of operations performed by account, ordered from most recent to oldest
           * @ingroup HistoryAPI
           */
-         vector<operation_history_object> get_account_history(account_id_type account,
-                                                              operation_history_id_type stop = operation_history_id_type(),
-                                                              unsigned limit = 100,
-                                                              operation_history_id_type start = operation_history_id_type())const;
+         std::vector<chain::operation_history_object> get_account_history(
+            chain::account_id_type account, chain::operation_history_id_type stop, unsigned limit, chain::operation_history_id_type start) const;
+
          /**
           * @brief Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
@@ -129,10 +126,7 @@ namespace graphene { namespace app {
           * @return A list of operations performed by account, ordered from most recent to oldest
           * @ingroup HistoryAPI
           */
-         vector<operation_history_object> get_relative_account_history( account_id_type account,
-                                                                        uint32_t stop = 0,
-                                                                        unsigned limit = 100,
-                                                                        uint32_t start = 0) const;
+         std::vector<chain::operation_history_object> get_relative_account_history(chain::account_id_type account, uint32_t stop, unsigned limit, uint32_t start) const;
 
          /**
           * @brief Returns the most recent balance operations on the named account.
@@ -147,12 +141,9 @@ namespace graphene { namespace app {
           * @return a list of balance operation history objects
           * @ingroup HistoryAPI
           */
-         vector<balance_change_result>  search_account_balance_history(account_id_type account_id,
-                                                                       const flat_set<asset_id_type>& assets_list,
-                                                                       fc::optional<account_id_type> partner_account_id,
-                                                                       uint32_t from_block, uint32_t to_block,
-                                                                       uint32_t start_offset,
-                                                                       unsigned limit) const;
+         std::vector<balance_change_result> search_account_balance_history(
+            chain::account_id_type account_id, const boost::container::flat_set<chain::asset_id_type>& assets_list, fc::optional<chain::account_id_type> partner_account_id,
+            uint32_t from_block, uint32_t to_block, uint32_t start_offset, unsigned limit) const;
 
          /**
           * @brief Returns balance operation on the named account and transaction_id.
@@ -161,8 +152,7 @@ namespace graphene { namespace app {
           * @return balance operation history object or empty when not found
           * @ingroup HistoryAPI
           */
-         fc::optional<balance_change_result> get_account_balance_for_transaction(account_id_type account_id,
-                                                                                 operation_history_id_type operation_history_id);
+         fc::optional<balance_change_result> get_account_balance_for_transaction(chain::account_id_type account_id, chain::operation_history_id_type operation_history_id) const;
 
       private:
            application& _app;
@@ -178,20 +168,20 @@ namespace graphene { namespace app {
 
          struct transaction_confirmation
          {
-            transaction_id_type   id;
+            chain::transaction_id_type   id;
             uint32_t              block_num;
             uint32_t              trx_num;
-            processed_transaction trx;
+            chain::processed_transaction trx;
          };
 
-         typedef std::function<void(variant/*transaction_confirmation*/)> confirmation_callback;
+         typedef std::function<void(fc::variant/*transaction_confirmation*/)> confirmation_callback;
 
          /**
           * @brief Get the name of the API.
           * @return the name of the API
           * @ingroup Network_broadcastAPI
           */
-         string info() { return get_api_name();}
+         std::string info() const { return get_api_name(); }
 
          /**
           * @brief Broadcast a transaction to the network.
@@ -200,7 +190,7 @@ namespace graphene { namespace app {
           * apply locally, an error will be thrown and the transaction will not be broadcast
           * @ingroup Network_broadcastAPI
           */
-         void broadcast_transaction(const signed_transaction& trx);
+         void broadcast_transaction(const chain::signed_transaction& trx) const;
 
          /**
           * @brief This version of broadcast transaction registers a callback method that will be called when the transaction is
@@ -210,14 +200,14 @@ namespace graphene { namespace app {
           * @param trx the transaction to broadcast
           * @ingroup Network_broadcastAPI
           */
-         void broadcast_transaction_with_callback( confirmation_callback cb, const signed_transaction& trx);
+         void broadcast_transaction_with_callback(confirmation_callback cb, const chain::signed_transaction& trx);
 
          /**
           * @brief Broadcast a block to the network.
           * @param block the signed block to broadcast
           * @ingroup Network_broadcastAPI
           */
-         void broadcast_block( const signed_block& block );
+         void broadcast_block(const chain::signed_block& block) const;
 
       private:
          /**
@@ -229,10 +219,10 @@ namespace graphene { namespace app {
           * @param b the signed block
           * @ingroup Network_broadcastAPI
           */
-         void on_applied_block( const signed_block& b );
+         void on_applied_block(const chain::signed_block& b);
 
          boost::signals2::scoped_connection             _applied_block_connection;
-         map<transaction_id_type,confirmation_callback> _callbacks;
+         std::map<chain::transaction_id_type, confirmation_callback> _callbacks;
          application&                                   _app;
    };
 
@@ -249,7 +239,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup Network_NodeAPI
           */
-         string info() { return get_api_name();}
+         std::string info() const { return get_api_name(); }
 
          /**
           * @brief Returns general network information, such as p2p port.
@@ -263,7 +253,7 @@ namespace graphene { namespace app {
           * @param ep the IP/Port of the peer to connect to
           * @ingroup Network_NodeAPI
           */
-         void add_node(const fc::ip::endpoint& ep);
+         void add_node(const fc::ip::endpoint& ep) const;
 
          /**
           * @brief Get status of all current connections to peers.
@@ -284,7 +274,7 @@ namespace graphene { namespace app {
           * @param params a JSON object containing the name/value pairs for the parameters to set
           * @ingroup Network_NodeAPI
           */
-         void set_advanced_node_parameters(const advanced_node_parameters& params);
+         void set_advanced_node_parameters(const advanced_node_parameters& params) const;
 
          /**
           * @brief Get a list of potential peers we can connect to.
@@ -310,7 +300,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup CryptoAPI
           */
-         string info() { return get_api_name();}
+         std::string info() const { return get_api_name(); }
 
          /**
           * @brief Convert wif key to public key.
@@ -318,7 +308,7 @@ namespace graphene { namespace app {
           * @return corresponding public key
           * @ingroup CryptoAPI
           */
-         public_key_type wif_to_public_key(const string &wif);
+         chain::public_key_type wif_to_public_key(const std::string &wif) const;
 
          /**
           * @brief Convert wif key to private key.
@@ -326,7 +316,7 @@ namespace graphene { namespace app {
           * @return private key
           * @ingroup CryptoAPI
           */
-         private_key_type wif_to_private_key(const string &wif);
+         chain::private_key_type wif_to_private_key(const std::string &wif) const;
 
          /**
           * @brief Sign transaction with given private key.
@@ -335,7 +325,7 @@ namespace graphene { namespace app {
           * @return signed transaction
           * @ingroup CryptoAPI
           */
-         signed_transaction sign_transaction(signed_transaction trx, const private_key_type &key);
+         chain::signed_transaction sign_transaction(const chain::signed_transaction& trx, const chain::private_key_type &key) const;
 
          /**
           * @brief Encrypt message.
@@ -346,10 +336,7 @@ namespace graphene { namespace app {
           * @return encrypted memo data
           * @ingroup CryptoAPI
           */
-         memo_data encrypt_message(const std::string &message,
-                                   const private_key_type &key,
-                                   const public_key_type &pub,
-                                   uint64_t nonce = 0) const;
+         chain::memo_data encrypt_message(const std::string &message, const chain::private_key_type &key, const chain::public_key_type &pub, uint64_t nonce) const;
 
          /**
           * @brief Decrypt message.
@@ -360,10 +347,7 @@ namespace graphene { namespace app {
           * @return decrypted message
           * @ingroup CryptoAPI
           */
-         std::string decrypt_message(const memo_data::message_type &message,
-                                     const private_key_type &key,
-                                     const public_key_type &pub,
-                                     uint64_t nonce) const;
+         std::string decrypt_message(const chain::memo_data::message_type &message, const chain::private_key_type &key, const chain::public_key_type &pub, uint64_t nonce) const;
 
       private:
          application& _app;
@@ -382,7 +366,7 @@ namespace graphene { namespace app {
        * @return the name of the API
        * @ingroup MessagingAPI
        */
-      string info() { return get_api_name();}
+      std::string info() const { return get_api_name(); }
 
       /**
        * @brief Receives message objects by sender and/or receiver.
@@ -393,7 +377,7 @@ namespace graphene { namespace app {
        * @return a vector of message objects
        * @ingroup MessagingAPI
        */
-      vector<message_object> get_message_objects(optional<account_id_type> sender, optional<account_id_type> receiver, uint32_t max_count) const;
+      std::vector<chain::message_object> get_message_objects(fc::optional<chain::account_id_type> sender, fc::optional<chain::account_id_type> receiver, uint32_t max_count) const;
 
       /**
        * @brief Get a list of messages by ID.
@@ -402,7 +386,8 @@ namespace graphene { namespace app {
        * @return the messages corresponding to the provided IDs
        * @ingroup MessagingAPI
        */
-      vector<optional<message_object>> get_messages(const vector<message_id_type>& message_ids)const;
+      std::vector<fc::optional<chain::message_object>> get_messages(const std::vector<chain::message_id_type>& message_ids) const;
+
    private:
       application& _app;
    };
@@ -414,18 +399,21 @@ namespace graphene { namespace app {
    {
    public:
       monitoring_api();
+
       /**
       * @brief Get the name of the API.
       * @return the name of the API
       * @ingroup MonitoringAPI
       */
-      std::string info() const;
+      std::string info() const { return get_api_name(); }
+
       /**
       * @brief Reset persistent monitoring counters by names. It has not impact on non-persistent counters.
       * @param names Counter names. Pass empty vector to reset all counters.
       * @ingroup MonitoringAPI
       */
-      void reset_counters(const std::vector<std::string>& names);
+      void reset_counters(const std::vector<std::string>& names) const;
+
       /**
       * @brief Retrieves monitoring counters by names.
       * @param names Counter names. Pass epmty vector to retrieve all counters.
@@ -451,7 +439,7 @@ namespace graphene { namespace app {
           * @return the name of the API
           * @ingroup LoginAPI
           */
-         string info() { return get_api_name();}
+         std::string info() const { return get_api_name(); }
 
          /**
           * @brief Authenticate to the RPC server.
@@ -462,43 +450,49 @@ namespace graphene { namespace app {
           * @return \c true if logged in successfully, \c false otherwise
           * @ingroup LoginAPI
           */
-         bool login(const string& user, const string& password);
+         bool login(const std::string& user, const std::string& password);
 
          /**
           * @brief Retrieve the network broadcast API.
           * @ingroup LoginAPI
           */
-         fc::api<network_broadcast_api> network_broadcast()const;
+         fc::api<network_broadcast_api> network_broadcast() const;
+
          /**
           * @brief Retrieve the database API.
           * @ingroup LoginAPI
           */
-         fc::api<database_api> database()const;
+         fc::api<database_api> database() const;
+
          /**
           * @brief Retrieve the history API.
           * @ingroup LoginAPI
           */
-         fc::api<history_api> history()const;
+         fc::api<history_api> history() const;
+
          /**
           * @brief Retrieve the network node API.
           * @ingroup LoginAPI
           */
-         fc::api<network_node_api> network_node()const;
+         fc::api<network_node_api> network_node() const;
+
          /**
           * @brief Retrieve the cryptography API.
           * @ingroup LoginAPI
           */
-         fc::api<crypto_api> crypto()const;
+         fc::api<crypto_api> crypto() const;
+
          /**
          * @brief Retrieve the messaging API.
          * @ingroup LoginAPI
          */
-         fc::api<messaging_api> messaging()const;
+         fc::api<messaging_api> messaging() const;
+
          /**
          * @brief Retrieve the monitoring API.
          * @ingroup LoginAPI
          */
-         fc::api<monitoring_api> monitoring()const;
+         fc::api<monitoring_api> monitoring() const;
 
       private:
          /**
@@ -506,16 +500,16 @@ namespace graphene { namespace app {
           * @param api_name name of the API we are trying to enable
           * @ingroup LoginAPI
           */
-         void enable_api( const string& api_name );
+         void enable_api(const std::string& api_name);
 
          application& _app;
-         optional< fc::api<database_api> > _database_api;
-         optional< fc::api<network_broadcast_api> > _network_broadcast_api;
-         optional< fc::api<network_node_api> > _network_node_api;
-         optional< fc::api<history_api> >  _history_api;
-         optional< fc::api<crypto_api> > _crypto_api;
-         optional< fc::api<messaging_api> > _messaging_api;
-         optional< fc::api<monitoring_api> > _monitoring_api;
+         fc::optional<fc::api<database_api>> _database_api;
+         fc::optional<fc::api<network_broadcast_api>> _network_broadcast_api;
+         fc::optional<fc::api<network_node_api>> _network_node_api;
+         fc::optional<fc::api<history_api>>  _history_api;
+         fc::optional<fc::api<crypto_api>> _crypto_api;
+         fc::optional<fc::api<messaging_api>> _messaging_api;
+         fc::optional<fc::api<monitoring_api>> _monitoring_api;
    };
 
 }}  // graphene::app

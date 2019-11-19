@@ -104,15 +104,12 @@ namespace graphene { namespace db {
          }
          virtual variant to_variant()const { return variant( static_cast<const DerivedClass&>(*this) ); }
          virtual vector<char> pack()const  { return fc::raw::pack( static_cast<const DerivedClass&>(*this) ); }
-         virtual fc::uint128  hash()const  {  
+         virtual fc::uint128  hash()const  {
              auto tmp = this->pack();
              return fc::city_hash_crc_128( tmp.data(), tmp.size() );
          }
    };
 
-   typedef flat_map<uint8_t, object_id_type> annotation_map;
-
 } } // graphene::db
 
-FC_REFLECT_TYPENAME( graphene::db::annotation_map )
 FC_REFLECT( graphene::db::object, (id) )

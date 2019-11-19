@@ -168,7 +168,7 @@ void database::initialize_indexes()
 
 void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
-   FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
+   FC_ASSERT( genesis_state.initial_timestamp != fc::time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
               "Genesis timestamp must be divisible by GRAPHENE_DEFAULT_BLOCK_INTERVAL." );
    FC_ASSERT(genesis_state.initial_miner_candidates.size() > 0,
@@ -401,8 +401,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       apply_operation(genesis_eval_state, top);
    }
 
-   map<asset_id_type, share_type> total_supplies;
-   map<asset_id_type, share_type> total_debts;
+   std::map<asset_id_type, share_type> total_supplies;
+   std::map<asset_id_type, share_type> total_debts;
 
    // Create initial assets. Only monitored assets are supported in decent genesis
    for( const genesis_state_type::initial_asset_type& asset : genesis_state.initial_assets )

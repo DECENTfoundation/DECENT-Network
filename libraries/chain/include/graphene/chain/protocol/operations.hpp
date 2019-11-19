@@ -102,14 +102,14 @@ namespace graphene { namespace chain {
 
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
-    *  same as those returned by get_required_auth 
+    *  same as those returned by get_required_auth
     *
     *  @return a set of required authorities for \c op
     */
-   void operation_get_required_authorities( const operation& op, 
-                                            flat_set<account_id_type>& active,
-                                            flat_set<account_id_type>& owner,
-                                            vector<authority>&  other );
+   void operation_get_required_authorities( const operation& op,
+                                            boost::container::flat_set<account_id_type>& active,
+                                            boost::container::flat_set<account_id_type>& owner,
+                                            std::vector<authority>&  other );
 
    void operation_validate( const operation& op );
 

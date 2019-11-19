@@ -5,7 +5,6 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <boost/preprocessor/seq/seq.hpp>
 
-
 #include <fc/reflect/reflect.hpp>
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/time.hpp>
@@ -27,13 +26,13 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type from;
-      vector<account_id_type> to;
+      std::vector<account_id_type> to;
       bool can_create_publishers;
 
       account_id_type fee_payer()const { return from; }
       void validate()const;
 
-      void get_required_active_authorities( flat_set<account_id_type>& a )const { a.insert( account_id_type(15) ); }
+      void get_required_active_authorities( boost::container::flat_set<account_id_type>& a )const { a.insert( account_id_type(15) ); }
    };
 
    /**
@@ -46,7 +45,7 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type from;
-      vector<account_id_type> to;
+      std::vector<account_id_type> to;
       bool is_publisher;
 
       account_id_type fee_payer()const { return from; }
@@ -69,21 +68,21 @@ namespace graphene { namespace chain {
       asset fee;
       account_id_type author; ///<author of the content. If co-authors is not filled, this account will receive full payout
 
-      map<account_id_type, uint32_t> co_authors; ///<Optional parameter. If map is not empty, payout will be splitted - the parameter maps co-authors to basis points split, e.g. author1:9000 (bp), auhtor2:1000 (bp)
-      string URI; ///<URI where the content can be found
-      vector<regional_price> price; ///<list of regional prices
+      std::map<account_id_type, uint32_t> co_authors; ///<Optional parameter. If map is not empty, payout will be splitted - the parameter maps co-authors to basis points split, e.g. author1:9000 (bp), auhtor2:1000 (bp)
+      std::string URI; ///<URI where the content can be found
+      std::vector<regional_price> price; ///<list of regional prices
 
       uint64_t size; ///<Size of content, including samples, in megabytes
       fc::ripemd160 hash; ///<hash of the content
 
-      vector<account_id_type> seeders; ///<List of selected seeders
-      vector<ciphertext_type> key_parts; ///< Key particles, each assigned to one of the seeders, encrypted with his key
+      std::vector<account_id_type> seeders; ///<List of selected seeders
+      std::vector<ciphertext_type> key_parts; ///< Key particles, each assigned to one of the seeders, encrypted with his key
       /// Defines number of seeders needed to restore the encryption key
       uint32_t quorum; ///< How many seeders needs to cooperate to recover the key
       fc::time_point_sec expiration;
       asset publishing_fee; ///< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
       string synopsis; ///<JSON formatted structure containing content information
-      optional<custody_data_type> cd; ///< if cd.n == 0 then no custody is submitted, and simplified verification is done.
+      fc::optional<custody_data_type> cd; ///< if cd.n == 0 then no custody is submitted, and simplified verification is done.
 
       account_id_type fee_payer()const { return author; }
       void validate()const;
@@ -121,7 +120,7 @@ namespace graphene { namespace chain {
                        (PN)(PR)(PS)(PT)(PW)(PY)(QA)(RE)(RO)(RS)(RU)(RW)(SA)(SB)(SC)(SD)(SE)(SG)(SH)(SI) \
                        (SJ)(SK)(SL)(SM)(SN)(SO)(SR)(SS)(ST)(SV)(SX)(SY)(SZ)(TC)(TD)(TF)(TG)(TH)(TJ)(TK) \
                        (TL)(TM)(TN)(TO)(TR)(TT)(TV)(TW)
-   
+
 #define COUNTRY_CODES2 (TZ)(UA)(UG)(UM)(US)(UY)(UZ)(VA)(VC)(VE)(VG)(VI) \
                        (VN)(VU)(WF)(WS)(YE)(YT)(ZA)(ZM)(ZW)
 
@@ -135,7 +134,7 @@ enum ENUM{ \
  BOOST_PP_SEQ_FOR_EACH(INNER_MACRO, _, FIELDS2) \
 }; \
 static bool InitCodeAndName() { \
-   vector<pair<uint32_t, string>> arr { \
+   std::vector<std::pair<uint32_t, string>> arr { \
       std::make_pair(uint32_t(RegionCodes::OO_none), ""), \
       std::make_pair(uint32_t(RegionCodes::OO_all), "default"), \
       BOOST_PP_SEQ_FOR_EACH(INNER_MACRO2, _, FIELDS1) \
@@ -154,15 +153,15 @@ static bool InitCodeAndName() { \
    public:
       MY_MACRO( RegionCode, COUNTRY_CODES1, COUNTRY_CODES2 ) // enum + InitCodeAndName
       static bool bAuxillary;
-      static map<uint32_t, string> s_mapCodeToName;
-      static map<string, uint32_t> s_mapNameToCode;
+      static std::map<uint32_t, std::string> s_mapCodeToName;
+      static std::map<std::string, uint32_t> s_mapNameToCode;
    };
 
    struct PriceRegions
    {
-      map<uint32_t, asset> map_price;
+      std::map<uint32_t, asset> map_price;
 
-      optional<asset> GetPrice(uint32_t region_code) const;
+      fc::optional<asset> GetPrice(uint32_t region_code) const;
       void ClearPrices();
       void SetSimplePrice(asset const& price);
       void SetRegionPrice(uint32_t region_code, asset const& price);
@@ -177,7 +176,7 @@ static bool InitCodeAndName() { \
    struct request_to_buy_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
-      
+
       asset fee;
       string URI; ///<Reference to the content beuing bought
       account_id_type consumer; ///< Who is buying (and paying)
@@ -186,7 +185,7 @@ static bool InitCodeAndName() { \
 
       /// Consumer's public key
       bigint_type pubKey;
-      
+
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
@@ -204,7 +203,7 @@ static bool InitCodeAndName() { \
       account_id_type consumer;
       uint64_t rating; ///<1-5 stars
       string comment; /// DECENT_MAX_COMMENT_SIZE
-      
+
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
    };
@@ -217,7 +216,7 @@ static bool InitCodeAndName() { \
    struct ready_to_publish_obsolete_operation : public base_operation<false>
    {
       struct fee_parameters_type { uint64_t fee = 0; };
-      
+
       asset fee;
       account_id_type seeder;
       bigint_type pubKey;
@@ -225,7 +224,7 @@ static bool InitCodeAndName() { \
       uint64_t space;
       /// The price charged to author for seeding 1 MB per day
       uint32_t price_per_MByte;
-      string ipfs_ID;
+      std::string ipfs_ID;
 
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
@@ -246,9 +245,9 @@ static bool InitCodeAndName() { \
       uint64_t space;
       /// The price charged to author for seeding 1 MB per day
       uint32_t price_per_MByte;
-      string ipfs_ID;
+      std::string ipfs_ID;
       /// Optional ISO 3166-1 alpha-2 two-letter region code
-      optional<string> region_code;
+      fc::optional<string> region_code;
       extensions_type extensions;
 
       account_id_type fee_payer()const { return seeder; }
@@ -265,7 +264,7 @@ static bool InitCodeAndName() { \
 
       asset fee;
       account_id_type seeder;
-      string URI;
+      std::string URI;
       fc::optional<custody_proof_type> proof;
 
       account_id_type fee_payer()const { return seeder; }
@@ -286,7 +285,7 @@ static bool InitCodeAndName() { \
 
       delivery_proof_type proof;
       ciphertext_type key;
-      
+
       account_id_type fee_payer()const { return seeder; }
       void validate()const;
    };
@@ -335,7 +334,7 @@ static bool InitCodeAndName() { \
 
       asset fee;
       /// Map of seeders to amount they uploaded
-      map<account_id_type,uint64_t> stats;
+      std::map<account_id_type,uint64_t> stats;
       account_id_type consumer;
 
       account_id_type fee_payer()const { return consumer; }
@@ -373,7 +372,7 @@ static bool InitCodeAndName() { \
       asset payout;
       // do we need here region_code_from?
       account_id_type author;
-      map<account_id_type, uint32_t> co_authors;
+      std::map<account_id_type, uint32_t> co_authors;
       account_id_type consumer;
       buying_id_type buying;
 

@@ -24,6 +24,7 @@
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/account.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
+#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 
@@ -65,6 +66,5 @@ share_type  assert_operation::calculate_fee(const fee_parameters_type& k)const
 {
    return k.fee * predicates.size();
 }
-
 
 } }  // namespace graphene::chain

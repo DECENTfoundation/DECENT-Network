@@ -51,7 +51,7 @@ namespace graphene { namespace chain {
          /**
           * The most recent votes cast.
           */
-         flat_set<vote_id_type> votes;
+         boost::container::flat_set<vote_id_type> votes;
 
          /**
           * Keep the most recent operation as a root pointer to a linked list of the transaction history.
@@ -138,7 +138,7 @@ namespace graphene { namespace chain {
          /**
           * Vesting balance which receives cashback_reward deposits.
           */
-         optional<vesting_balance_id_type> cashback_vb;
+         fc::optional<vesting_balance_id_type> cashback_vb;
 
          /**
           * This flag is set when the top_n logic sets both authorities,
@@ -169,18 +169,17 @@ namespace graphene { namespace chain {
          virtual void about_to_modify( const graphene::db::object& before ) override;
          virtual void object_modified( const graphene::db::object& after  ) override;
 
-
          /** given an account or key, map it to the set of accounts that reference it in an active or owner authority */
-         map< account_id_type, set<account_id_type> > account_to_account_memberships;
-         map< public_key_type, set<account_id_type> > account_to_key_memberships;
+         std::map<account_id_type, std::set<account_id_type>> account_to_account_memberships;
+         std::map<public_key_type, std::set<account_id_type>> account_to_key_memberships;
          /** some accounts use address authorities in the genesis block */
 
       protected:
-         set<account_id_type>  get_account_members( const account_object& a )const;
-         set<public_key_type>  get_key_members( const account_object& a )const;
+         std::set<account_id_type>  get_account_members( const account_object& a )const;
+         std::set<public_key_type>  get_key_members( const account_object& a )const;
 
-         set<account_id_type>  before_account_members;
-         set<public_key_type>  before_key_members;
+         std::set<account_id_type>  before_account_members;
+         std::set<public_key_type>  before_key_members;
    };
 
    using namespace boost::multi_index;

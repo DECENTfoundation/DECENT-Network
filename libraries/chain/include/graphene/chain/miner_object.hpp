@@ -34,14 +34,14 @@ namespace graphene { namespace chain {
          account_id_type  miner_account;
          uint64_t         last_aslot = 0;
          public_key_type  signing_key;
-         optional< vesting_balance_id_type > pay_vb;
+         fc::optional<vesting_balance_id_type> pay_vb;
          vote_id_type     vote_id;
          uint64_t         total_votes = 0;
          string           url;
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
          uint32_t         vote_ranking = std::numeric_limits<uint32_t>::max();
-         vector<pair<account_id_type, uint64_t>> votes_gained;
+         std::vector<std::pair<account_id_type, uint64_t>> votes_gained;
 
          miner_object() : vote_id(vote_id_type::miner) {}
    };

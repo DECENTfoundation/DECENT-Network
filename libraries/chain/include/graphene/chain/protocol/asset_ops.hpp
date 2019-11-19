@@ -27,7 +27,7 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/memo.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    bool is_valid_symbol( const string& symbol );
 
@@ -58,8 +58,8 @@ namespace graphene { namespace chain {
          fixed_max_supply_struct(bool is_fixed=false) : is_fixed_max_supply{ is_fixed } {};
       };
 
-      typedef static_variant<void_t, fixed_max_supply_struct>     asset_options_extensions;
-      typedef flat_set<asset_options_extensions> asset_options_extensions_type;
+      typedef fc::static_variant<void_t, fixed_max_supply_struct> asset_options_extensions;
+      typedef boost::container::flat_set<asset_options_extensions> asset_options_extensions_type;
       asset_options_extensions_type extensions;
 
       /// Perform internal consistency checks.
@@ -72,24 +72,24 @@ namespace graphene { namespace chain {
       /// Feeds published for this asset. If issuer is not committee, the keys in this map are the feed publishing
       /// accounts; otherwise, the feed publishers are the currently active committee_members and miners and this map
       /// should be treated as an implementation detail. The timestamp on each feed is the time it was published.
-      flat_map<account_id_type, pair<time_point_sec, price_feed>> feeds;
+      boost::container::flat_map<account_id_type, std::pair<fc::time_point_sec, price_feed>> feeds;
       /// This is the currently active price feed, calculated as the median of values from the currently active
       /// feeds.
       price_feed current_feed;
       /// This is the publication time of the oldest feed which was factored into current_feed.
-      time_point_sec current_feed_publication_time;
+      fc::time_point_sec current_feed_publication_time;
 
       /// Time before a price feed expires
       uint32_t feed_lifetime_sec = GRAPHENE_DEFAULT_PRICE_FEED_LIFETIME;
       /// Minimum number of unexpired feeds required to extract a median feed from
       uint8_t minimum_feeds = 1;
 
-      time_point_sec feed_expiration_time()const
+      fc::time_point_sec feed_expiration_time()const
          { return current_feed_publication_time + feed_lifetime_sec; }
-      bool feed_is_expired(time_point_sec current_time)const
+      bool feed_is_expired(fc::time_point_sec current_time)const
          { return feed_expiration_time() <= current_time; }
-      void update_median_feeds(time_point_sec current_time);
-      bool feed_is_valid(time_point_sec current_time) const{
+      void update_median_feeds(fc::time_point_sec current_time);
+      bool feed_is_valid(fc::time_point_sec current_time) const{
          if(feed_is_expired(current_time))
             return false;
          if(current_feed.core_exchange_rate.is_null())
@@ -108,7 +108,6 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type {
          uint64_t basic_fee      = 1*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
-
       };
 
       asset                   fee;
@@ -127,7 +126,7 @@ namespace graphene { namespace chain {
 
       asset_options options;
 
-      optional<monitored_asset_options> monitored_asset_opts;
+      fc::optional<monitored_asset_options> monitored_asset_opts;
 
       /// WARNING! Duplicate variable. Do no use it. It does not have any effect.
       bool is_exchangeable = true;
@@ -153,9 +152,8 @@ namespace graphene { namespace chain {
       asset            asset_to_issue;
       account_id_type  issue_to_account;
 
-
       /** user provided data encrypted to the memo key of the "to" account */
-      optional<memo_data>  memo;
+      fc::optional<memo_data>  memo;
       extensions_type      extensions;
 
       account_id_type fee_payer()const { return issuer; }
@@ -186,7 +184,7 @@ namespace graphene { namespace chain {
 
       string new_description;
       /// If the asset is to be given a new issuer, specify his ID here.
-      optional<account_id_type>   new_issuer;
+      fc::optional<account_id_type>   new_issuer;
       uint64_t max_supply;
       price core_exchange_rate;
       /// True to allow implicit conversion of this asset to/from core asset.

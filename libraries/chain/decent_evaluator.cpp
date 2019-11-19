@@ -290,7 +290,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
          });
 
          db().modify<content_object>(*content_itr,[&](content_object& co) {
-                                        map<uint32_t, asset> prices;
+                                        std::map<uint32_t, asset> prices;
                                         for (auto const& item : o.price)
                                         {
                                            prices[item.region] = item.price;
@@ -336,7 +336,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
                                      {  //create new content object and store all values from the operation
                                         co.author = o.author;
                                         co.co_authors = o.co_authors;
-                                        map<uint32_t, asset> prices;
+                                        std::map<uint32_t, asset> prices;
                                         for (auto const& item : o.price)
                                         {
                                            prices[item.region] = item.price;
@@ -457,7 +457,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
       FC_ASSERT( o.price <= d.get_balance( o.consumer, o.price.asset_id ) );
       FC_ASSERT( content->expiration > db().head_block_time() );
 
-      optional<asset> content_price_got = content->price.GetPrice(o.region_code_from);
+      fc::optional<asset> content_price_got = content->price.GetPrice(o.region_code_from);
 
       FC_ASSERT( content_price_got.valid(), "content is not available for this region" );
       content_price = *content_price_got;

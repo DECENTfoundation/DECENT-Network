@@ -1,7 +1,6 @@
-
-vector<account_object> wallet_api::list_my_accounts()
+std::vector<account_object> wallet_api::list_my_accounts() const
 {
-   return vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
+   return std::vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
 }
 
 path wallet_api::get_wallet_filename() const
@@ -14,7 +13,7 @@ void wallet_api::set_wallet_filename( const path& wallet_filename )
    return my->set_wallet_filename( wallet_filename );
 }
 
-string wallet_api::get_private_key( public_key_type pubkey )const
+std::string wallet_api::get_private_key(const public_key_type& pubkey) const
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
@@ -60,7 +59,7 @@ bool wallet_api::unlock(const string& password)
       FC_THROW_EXCEPTION(password_cannot_be_empty_exception, "");
 
    auto pw = fc::sha512::hash(password.c_str(), password.size());
-   vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
+   std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
    plain_ec_and_el_gamal_keys pk;
    bool update_wallet_file = false;
 
@@ -81,7 +80,7 @@ bool wallet_api::unlock(const string& password)
          for( const auto& element : pk.ec_keys )
          {
             el_gamal_key_pair_str el_gamal_keys_str;
-            el_gamal_keys_str.private_key = generate_private_el_gamal_key_from_secret( wif_to_key( element.second )->get_secret() );
+            el_gamal_keys_str.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret( wif_to_key( element.second )->get_secret() );
             el_gamal_keys_str.public_key = get_public_el_gamal_key( el_gamal_keys_str.private_key );
             pk.el_gamal_keys.push_back( el_gamal_keys_str );
          }
@@ -107,7 +106,7 @@ bool wallet_api::unlock(const string& password)
       std::transform(pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(),
                      std::inserter(my->_el_gamal_keys, my->_el_gamal_keys.end()),
                      [](const el_gamal_key_pair_str el_gamal_pair) {
-                         return std::make_pair(DInteger(el_gamal_pair.public_key), DInteger(el_gamal_pair.private_key));
+                         return std::make_pair(decent::encrypt::DInteger(el_gamal_pair.public_key), decent::encrypt::DInteger(el_gamal_pair.private_key));
                      });
    }
    my->_checksum = pk.checksum;
@@ -163,7 +162,7 @@ bool wallet_api::import_single_key(const string& account_name_or_id, const strin
    return result;
 }
 
-variant wallet_api::dump_private_keys()
+fc::variant wallet_api::dump_private_keys() const
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");

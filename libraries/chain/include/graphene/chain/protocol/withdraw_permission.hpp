@@ -27,7 +27,7 @@
 #include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/memo.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    /**
     * @brief Create a new withdrawal permission
@@ -64,7 +64,7 @@ namespace graphene { namespace chain {
       /// The number of withdrawal periods this permission is valid for
       uint32_t          periods_until_expiration = 0;
       /// Time at which the first withdrawal period begins; must be in the future
-      time_point_sec    period_start_time;
+      fc::time_point_sec period_start_time;
 
       account_id_type fee_payer()const { return withdraw_from_account; }
       void            validate()const;
@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
       /// New length of the period between withdrawals
       uint32_t                      withdrawal_period_sec = 0;
       /// New beginning of the next withdrawal period; must be in the future
-      time_point_sec                period_start_time;
+      fc::time_point_sec            period_start_time;
       /// The new number of withdrawal periods for which this permission will be valid
       uint32_t                      periods_until_expiration = 0;
 
@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
     */
    struct withdraw_permission_claim_operation : public base_operation<false>
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
          uint32_t price_per_kbyte = 10;
       };
@@ -136,7 +136,7 @@ namespace graphene { namespace chain {
       /// Amount to withdraw. Must not exceed withdraw_permission->withdrawal_limit
       asset                       amount_to_withdraw;
       /// Memo for withdraw_from_account. Should generally be encrypted with withdraw_from_account->memo_key
-      optional<memo_data>         memo;
+      fc::optional<memo_data>     memo;
 
       account_id_type fee_payer()const { return withdraw_to_account; }
       void            validate()const;

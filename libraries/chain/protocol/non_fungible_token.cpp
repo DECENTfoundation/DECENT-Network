@@ -1,6 +1,7 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/protocol/non_fungible_token.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
+#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 
@@ -80,7 +81,7 @@ void non_fungible_token_issue_operation::validate() const
 share_type non_fungible_token_issue_operation::calculate_fee(const fee_parameters_type& param) const
 {
    share_type fee = param.fee;
-   std::for_each(data.begin(), data.end(), [&](const variant &v) { fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte); } );
+   std::for_each(data.begin(), data.end(), [&](const fc::variant &v) { fee += calculate_data_fee(fc::raw::pack_size(v), param.price_per_kbyte); } );
    fee += calculate_data_fee(fc::raw::pack_size(memo), param.price_per_kbyte);
    return fee;
 }

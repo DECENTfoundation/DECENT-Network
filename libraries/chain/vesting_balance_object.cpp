@@ -167,7 +167,7 @@ struct NAME ## _visitor                                       \
                                                               \
    NAME ## _visitor(                                          \
       const asset& balance,                                   \
-      const time_point_sec& now,                              \
+      const fc::time_point_sec& now,                          \
       const asset& amount                                     \
      )                                                        \
    : ctx(balance, now, amount) {}                             \
@@ -190,12 +190,12 @@ VESTING_VISITOR(is_deposit_vested_allowed, const);
 VESTING_VISITOR(is_withdraw_allowed, const);
 VESTING_VISITOR(get_allowed_withdraw, const);
 
-bool vesting_balance_object::is_deposit_allowed(const time_point_sec& now, const asset& amount)const
+bool vesting_balance_object::is_deposit_allowed(const fc::time_point_sec& now, const asset& amount)const
 {
    return policy.visit(is_deposit_allowed_visitor(balance, now, amount));
 }
 
-bool vesting_balance_object::is_withdraw_allowed(const time_point_sec& now, const asset& amount)const
+bool vesting_balance_object::is_withdraw_allowed(const fc::time_point_sec& now, const asset& amount)const
 {
    bool result = policy.visit(is_withdraw_allowed_visitor(balance, now, amount));
    // if some policy allows you to withdraw more than your balance,
@@ -204,26 +204,26 @@ bool vesting_balance_object::is_withdraw_allowed(const time_point_sec& now, cons
    return result;
 }
 
-void vesting_balance_object::deposit(const time_point_sec& now, const asset& amount)
+void vesting_balance_object::deposit(const fc::time_point_sec& now, const asset& amount)
 {
    on_deposit_visitor vtor(balance, now, amount);
    policy.visit(vtor);
    balance += amount;
 }
 
-void vesting_balance_object::deposit_vested(const time_point_sec& now, const asset& amount)
+void vesting_balance_object::deposit_vested(const fc::time_point_sec& now, const asset& amount)
 {
    on_deposit_vested_visitor vtor(balance, now, amount);
    policy.visit(vtor);
    balance += amount;
 }
 
-bool vesting_balance_object::is_deposit_vested_allowed(const time_point_sec& now, const asset& amount) const
+bool vesting_balance_object::is_deposit_vested_allowed(const fc::time_point_sec& now, const asset& amount) const
 {
    return policy.visit(is_deposit_vested_allowed_visitor(balance, now, amount));
 }
 
-void vesting_balance_object::withdraw(const time_point_sec& now, const asset& amount)
+void vesting_balance_object::withdraw(const fc::time_point_sec& now, const asset& amount)
 {
    assert(amount <= balance);
    on_withdraw_visitor vtor(balance, now, amount);
@@ -231,7 +231,7 @@ void vesting_balance_object::withdraw(const time_point_sec& now, const asset& am
    balance -= amount;
 }
 
-asset vesting_balance_object::get_allowed_withdraw(const time_point_sec& now)const
+asset vesting_balance_object::get_allowed_withdraw(const fc::time_point_sec& now)const
 {
    asset amount = asset();
    return policy.visit(get_allowed_withdraw_visitor(balance, now, amount));
