@@ -53,7 +53,7 @@ typedef uint16_t transaction_handle_type;
  * of the given type, with the new operator.
  */
 
-graphene::db::object* create_object( const fc::variant& v );
+db::object* create_object( const fc::variant& v );
 
 struct server_data
 {
@@ -69,9 +69,9 @@ struct wallet_data
    chain_id_type chain_id;
    account_multi_index_type my_accounts;
    /// @return IDs of all accounts in @ref my_accounts
-   std::vector<object_id_type> my_account_ids()const
+   std::vector<db::object_id_type> my_account_ids()const
    {
-      std::vector<object_id_type> ids;
+      std::vector<db::object_id_type> ids;
       ids.reserve(my_accounts.size());
       std::transform(my_accounts.begin(), my_accounts.end(), std::back_inserter(ids),
                      [](const account_object& ao) { return ao.id; });
@@ -81,7 +81,7 @@ struct wallet_data
    /// @return \c true if the account was newly inserted; \c false if it was only updated
    bool update_account(const account_object& acct)
    {
-      auto& idx = my_accounts.get<graphene::db::by_id>();
+      auto& idx = my_accounts.get<db::by_id>();
       auto itr = idx.find(acct.get_id());
       if( itr != idx.end() )
       {
@@ -379,7 +379,7 @@ public:
     * @return the requested object
     * @ingroup WalletAPI_General
     */
-   fc::variant get_object(object_id_type id) const;
+   fc::variant get_object(db::object_id_type id) const;
 
    /**
     * @brief Query the last local block.
@@ -764,7 +764,7 @@ public:
     * @return corresponding public key
     * @ingroup WalletAPI_Account
     */
-   graphene::chain::public_key_type get_public_key( const std::string& wif_private_key ) const;
+   public_key_type get_public_key( const std::string& wif_private_key ) const;
 
    /**
     * @brief Suggests a safe brain key to use for creating your account.

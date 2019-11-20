@@ -158,7 +158,7 @@ private:
    struct result_visitor : fc::visitor<std::string>
    {
       std::string operator()(const void_result& x) const;
-      std::string operator()(const object_id_type& oid) const;
+      std::string operator()(const db::object_id_type& oid) const;
    };
 
    std::ostream& out;
@@ -1652,7 +1652,7 @@ public:
 
    signed_transaction burn_non_fungible_token_data(non_fungible_token_data_id_type nft_data_id, bool broadcast /* = false */)
    {
-      return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
+      return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<db::object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
    }
 
    signed_transaction update_non_fungible_token_data(const std::string& modifier,
@@ -2084,13 +2084,13 @@ public:
       asset_object asset_obj = get_asset(asset_symbol);
 
       account_object to_account;
-      object_id_type to_obj_id;
+      db::object_id_type to_obj_id;
 
       bool is_account = true;
 
       try {
          to_account = get_account(to);
-         to_obj_id = object_id_type(to_account.id);
+         to_obj_id = db::object_id_type(to_account.id);
       }
       catch ( const fc::exception& )
       {
@@ -2099,7 +2099,7 @@ public:
 
       if( !is_account )
       {
-         to_obj_id = object_id_type(to);
+         to_obj_id = db::object_id_type(to);
          content_id_type content_id = to_obj_id.as<content_id_type>();
          const content_object content_obj = get_object<content_object>(content_id);
          to_account = get_account( content_obj.author);
@@ -3395,7 +3395,7 @@ signed_transaction content_cancellation(const string& author,
       const auto& to_account = wallet.get_account(op.to);
       const auto& nft_data = wallet.get_non_fungible_token_data(op.nft_data_id);
       out << "Transfer non fungible token " << wallet.get_non_fungible_token(nft_data.nft_id).symbol <<
-         " (" << std::string(object_id_type(nft_data.get_id())) << ") from " << from_account.name << " to " << to_account.name;
+         " (" << std::string(db::object_id_type(nft_data.get_id())) << ") from " << from_account.name << " to " << to_account.name;
       fee(op.fee);
       return memo(op.memo, from_account, to_account);
    }
@@ -3550,7 +3550,7 @@ signed_transaction content_cancellation(const string& author,
       return std::string();
    }
 
-   std::string operation_printer::result_visitor::operator()(const object_id_type& oid) const
+   std::string operation_printer::result_visitor::operator()(const db::object_id_type& oid) const
    {
       return std::string(oid);
    }

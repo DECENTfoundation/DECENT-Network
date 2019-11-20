@@ -25,7 +25,7 @@ std::map<std::string, account_id_type> wallet_api::list_accounts(const std::stri
 
 std::vector<account_object> wallet_api::search_accounts(const std::string& term, const std::string& order, const std::string& id, uint32_t limit) const
 {
-   return my->_remote_db->search_accounts(term, order, object_id_type(id), limit);
+   return my->_remote_db->search_accounts(term, order, db::object_id_type(id), limit);
 }
 
 std::vector<extended_asset> wallet_api::list_account_balances(const std::string& id) const
@@ -172,7 +172,7 @@ std::vector<transaction_detail_object> wallet_api::search_account_history(std::s
    try
    {
       account_object account = get_account(account_name);
-      result = my->_remote_db->search_account_history(account.id, order, object_id_type(id), limit);
+      result = my->_remote_db->search_account_history(account.id, order, db::object_id_type(id), limit);
 
       for (auto& item : result)
       {

@@ -105,28 +105,28 @@ namespace graphene { namespace db {
          {
             public:
                const_iterator(){}
-               const_iterator( const typename vector<T>::const_iterator& a ):_itr(a){}
+               const_iterator( const typename std::vector<T>::const_iterator& a ):_itr(a){}
                friend bool operator==( const const_iterator& a, const const_iterator& b ) { return a._itr == b._itr; }
                friend bool operator!=( const const_iterator& a, const const_iterator& b ) { return a._itr != b._itr; }
                const T* operator*()const { return static_cast<const T*>(&*_itr); }
                const_iterator& operator++(int){ ++_itr; return *this; }
                const_iterator& operator++()   { ++_itr; return *this; }
             private:
-               typename vector<T>::const_iterator _itr;
+               typename std::vector<T>::const_iterator _itr;
          };
          const_iterator begin()const { return const_iterator(_objects.begin()); }
          const_iterator end()const   { return const_iterator(_objects.end());   }
 
          size_t size()const{ return _objects.size(); }
 
-         void resize( uint32_t s ) { 
-            _objects.resize(s); 
+         void resize( uint32_t s ) {
+            _objects.resize(s);
             for( uint32_t i = 0; i < s; ++i )
                _objects[i].id = object_id_type(object_type::space_id,object_type::type_id,i);
          }
 
       private:
-         vector< T > _objects;
+         std::vector<T> _objects;
    };
 
 } } // graphene::db

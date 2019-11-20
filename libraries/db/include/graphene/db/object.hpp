@@ -68,10 +68,10 @@ namespace graphene { namespace db {
          object_id_type          id;
 
          /// these methods are implemented for derived classes by inheriting abstract_object<DerivedClass>
-         virtual unique_ptr<object> clone()const = 0;
+         virtual std::unique_ptr<object> clone()const = 0;
          virtual void               move_from( object& obj ) = 0;
-         virtual variant            to_variant()const  = 0;
-         virtual vector<char>       pack()const = 0;
+         virtual fc::variant        to_variant()const  = 0;
+         virtual std::vector<char>  pack()const = 0;
          virtual fc::uint128        hash()const = 0;
    };
 
@@ -93,17 +93,17 @@ namespace graphene { namespace db {
 
          object_id<SpaceID, TypeID, DerivedClass> get_id() const { return id; }
 
-         virtual unique_ptr<object> clone()const
+         virtual std::unique_ptr<object> clone()const
          {
-            return unique_ptr<object>(new DerivedClass( *static_cast<const DerivedClass*>(this) ));
+            return std::unique_ptr<object>(new DerivedClass( *static_cast<const DerivedClass*>(this) ));
          }
 
          virtual void    move_from( object& obj )
          {
             static_cast<DerivedClass&>(*this) = std::move( static_cast<DerivedClass&>(obj) );
          }
-         virtual variant to_variant()const { return variant( static_cast<const DerivedClass&>(*this) ); }
-         virtual vector<char> pack()const  { return fc::raw::pack( static_cast<const DerivedClass&>(*this) ); }
+         virtual fc::variant to_variant()const { return fc::variant( static_cast<const DerivedClass&>(*this) ); }
+         virtual std::vector<char> pack()const  { return fc::raw::pack( static_cast<const DerivedClass&>(*this) ); }
          virtual fc::uint128  hash()const  {
              auto tmp = this->pack();
              return fc::city_hash_crc_128( tmp.data(), tmp.size() );

@@ -18,7 +18,7 @@ dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
    return my->get_dynamic_global_properties();
 }
 
-fc::variant wallet_api::get_object( object_id_type id ) const
+fc::variant wallet_api::get_object(db::object_id_type id) const
 {
    return my->_remote_db->get_objects({id});
 }

@@ -27,10 +27,6 @@
 #define GRAPHENE_DB_MAX_INSTANCE_ID  (uint64_t(-1)>>16)
 
 namespace graphene { namespace db {
-   using  std::shared_ptr;
-   using  std::unique_ptr;
-   using  std::vector;
-   using  fc::variant;
 
    struct object_id_type
    {
@@ -195,7 +191,6 @@ struct reflector<graphene::db::object_id<SpaceID,TypeID,T> >
     }
 };
 
-
  inline void to_variant( const graphene::db::object_id_type& var,  fc::variant& vo )
  {
     vo = std::string( var );
@@ -217,11 +212,13 @@ struct reflector<graphene::db::object_id<SpaceID,TypeID,T> >
     FC_ASSERT( type_id <= 0xff );
     vo.number |= (space_id << 56) | (type_id << 48);
  } FC_CAPTURE_AND_RETHROW( (var) ) }
+
  template<uint8_t SpaceID, uint8_t TypeID, typename T>
  void to_variant( const graphene::db::object_id<SpaceID,TypeID,T>& var,  fc::variant& vo )
  {
     vo = fc::to_string(SpaceID) + "." + fc::to_string(TypeID) + "." + fc::to_string(var.instance.value);
  }
+
  template<uint8_t SpaceID, uint8_t TypeID, typename T>
  void from_variant( const fc::variant& var,  graphene::db::object_id<SpaceID,TypeID,T>& vo )
  { try {

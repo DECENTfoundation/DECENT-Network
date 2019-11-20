@@ -136,7 +136,7 @@ namespace graphene { namespace db {
 
          virtual void               inspect_all_objects(std::function<void(const object&)> inspector)const = 0;
          virtual fc::uint128        hash()const = 0;
-         virtual void               add_observer( const shared_ptr<index_observer>& ) = 0;
+         virtual void               add_observer( const std::shared_ptr<index_observer>& ) = 0;
 
          virtual void               object_from_variant( const fc::variant& var, object& obj )const = 0;
          virtual void               object_default( object& obj )const = 0;
@@ -190,13 +190,12 @@ namespace graphene { namespace db {
          }
 
       protected:
-         vector< shared_ptr<index_observer> >   _observers;
-         vector< unique_ptr<secondary_index> >  _sindex;
+         std::vector<std::shared_ptr<index_observer>>   _observers;
+         std::vector<std::unique_ptr<secondary_index>>  _sindex;
 
       private:
          object_database& _db;
    };
-
 
    /**
     * @class primary_index
@@ -265,7 +264,7 @@ namespace graphene { namespace db {
             on_modify( obj );
          }
 
-         virtual void add_observer( const shared_ptr<index_observer>& o ) override
+         virtual void add_observer( const std::shared_ptr<index_observer>& o ) override
          {
             _observers.emplace_back( o );
          }

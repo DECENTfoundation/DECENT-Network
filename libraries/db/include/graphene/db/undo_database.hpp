@@ -32,12 +32,11 @@ namespace graphene { namespace db {
 
    struct undo_state
    {
-      std::unordered_map<object_id_type, unique_ptr<object> > old_values;
+      std::unordered_map<object_id_type, std::unique_ptr<object>> old_values;
       std::unordered_map<object_id_type, object_id_type>      old_index_next_ids;
       std::unordered_set<object_id_type>                      new_ids;
-      std::unordered_map<object_id_type, unique_ptr<object> > removed;
+      std::unordered_map<object_id_type, std::unique_ptr<object>> removed;
    };
-
 
    /**
     * @class undo_database

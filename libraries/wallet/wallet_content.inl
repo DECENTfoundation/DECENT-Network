@@ -142,7 +142,7 @@ std::vector<buying_object_ex> wallet_api::search_my_purchases(const std::string&
                                                               uint32_t count) const
 {
    account_id_type consumer = get_account( account_id_or_name ).id;
-   std::vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, object_id_type(id), term, count );
+   std::vector<buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, db::object_id_type(id), term, count );
    std::vector<buying_object_ex> result;
 
    for (size_t i = 0; i < bobjects.size(); ++i)
@@ -176,10 +176,10 @@ fc::optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string
 std::vector<rating_object_ex> wallet_api::search_feedback(const std::string& user, const std::string& URI, const std::string& id, uint32_t count) const
 {
     std::vector<rating_object_ex> result;
-    std::vector<buying_object> temp = my->_remote_db->search_feedback(user, URI, object_id_type(id), count);
+    std::vector<buying_object> temp = my->_remote_db->search_feedback(user, URI, db::object_id_type(id), count);
 
     for (auto const& item : temp)
-       result.push_back(rating_object_ex( item, get_account(string(object_id_type(item.consumer))).name ));
+       result.push_back(rating_object_ex( item, get_account(string(db::object_id_type(item.consumer))).name ));
 
     return result;
 }
@@ -197,7 +197,7 @@ std::vector<content_summary> wallet_api::search_content(const std::string& term,
                                                         const std::string& type,
                                                         uint32_t count)const
 {
-   return my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
+   return my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
 }
 
 std::vector<content_summary> wallet_api::search_user_content(const std::string& user,
@@ -208,7 +208,7 @@ std::vector<content_summary> wallet_api::search_user_content(const std::string& 
                                                              const std::string& type,
                                                              uint32_t count)const
 {
-  std::vector<content_summary> result = my->_remote_db->search_content(term, order, user, region_code, object_id_type(id), type, count);
+  std::vector<content_summary> result = my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
 
   auto packages = decent::package::PackageManager::instance().get_all_known_packages();
   for (auto package: packages)

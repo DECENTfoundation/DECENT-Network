@@ -303,7 +303,6 @@ account_create_operation database_fixture::make_account(
   try
   {
      account_create_operation          create_account;
-
      create_account.registrar          = registrar.id;
      //create_account.referrer           = referrer.id;
      //create_account.referrer_percent   = referrer_percent;
@@ -314,7 +313,7 @@ account_create_operation database_fixture::make_account(
      create_account.options.memo_key = key;
      create_account.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
 
-     const vector<miner_id_type>& active_miners = db.get_global_properties().active_miners;
+     const std::vector<miner_id_type>& active_miners = db.get_global_properties().active_miners;
      if( active_miners.size() > 0 )
      {
         std::set<vote_id_type> votes;

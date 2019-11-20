@@ -130,19 +130,20 @@ namespace graphene { namespace db {
          }
 
          template<typename ObjectType>
-         vector<fc::optional<ObjectType>> get_objects(const vector<object_id<ObjectType::space_id,ObjectType::type_id,ObjectType>>& ids)const
+         std::vector<fc::optional<ObjectType>> get_objects(const std::vector<object_id<ObjectType::space_id, ObjectType::type_id, ObjectType>>& ids) const
          {
-               vector<fc::optional<ObjectType>> result; result.reserve(ids.size());
-               std::transform(ids.begin(), ids.end(), std::back_inserter(result),
-                              [this](object_id<ObjectType::space_id,ObjectType::type_id,ObjectType> id) -> fc::optional<ObjectType> {
-                                 if(auto o = find(id))
-                                 {
-                                    return *o;
-                                 }
-                                 return {};
-                              });
-               return result;
-            }
+            std::vector<fc::optional<ObjectType>> result;
+            result.reserve(ids.size());
+            std::transform(ids.begin(), ids.end(), std::back_inserter(result),
+                           [this](object_id<ObjectType::space_id, ObjectType::type_id, ObjectType> id) -> fc::optional<ObjectType> {
+                              if(auto o = find(id))
+                              {
+                                 return *o;
+                              }
+                              return {};
+                           });
+            return result;
+         }
 
          template<uint8_t SpaceID, uint8_t TypeID, typename T>
          const T* find( object_id<SpaceID,TypeID,T> id )const { return find<T>(id); }
@@ -156,7 +157,7 @@ namespace graphene { namespace db {
             typedef typename IndexType::object_type ObjectType;
             if(_index[ObjectType::space_id].size() <= ObjectType::type_id)
                FC_ASSERT(false, "Index for type ${t} is not allocated", ("t", static_cast<uint8_t>(ObjectType::type_id)));
-            unique_ptr<index> indexptr( new IndexType(*this) );
+            std::unique_ptr<index> indexptr( new IndexType(*this) );
             _index[ObjectType::space_id][ObjectType::type_id] = std::move(indexptr);
             return static_cast<IndexType*>(_index[ObjectType::space_id][ObjectType::type_id].get());
          }
@@ -187,8 +188,8 @@ namespace graphene { namespace db {
          void save_undo_remove( const object& obj );
 
          boost::filesystem::path                                   _data_dir;
-         vector< vector< unique_ptr<index> > >                     _index;
-         std::vector< uint8_t >                                    _object_type_count;   // second level of two-dimensional array of indexes,
+         std::vector<std::vector<std::unique_ptr<index>>>          _index;
+         std::vector<uint8_t>                                      _object_type_count;   // second level of two-dimensional array of indexes,
    };                                                                                    // first level is size of this vector
 
 } } // graphene::db

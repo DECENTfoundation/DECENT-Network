@@ -60,8 +60,6 @@
  */
 namespace graphene { namespace app {
 
-      using graphene::db::object_id_type;
-
       class database_api_impl;
 
       struct miner_voting_info
@@ -92,7 +90,7 @@ namespace graphene { namespace app {
    class database_api : public fc::api_base<database_api>
       {
       public:
-         database_api(graphene::chain::database& db);
+         database_api(chain::database& db);
          ~database_api();
 
          /////////////
@@ -107,7 +105,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Globals
           * @throw invalid_space_id_exception, invalid_type_id_exception
           */
-         fc::variants get_objects(const std::vector<object_id_type>& ids)const;
+         fc::variants get_objects(const std::vector<db::object_id_type>& ids) const;
 
          ///////////////////
          // Subscriptions //
@@ -376,7 +374,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Account
           * @throw limit_exceeded_exception
           */
-         std::vector<chain::account_object> search_accounts(const std::string& search_term, const std::string& order, object_id_type id, uint32_t limit) const;
+         std::vector<chain::account_object> search_accounts(const std::string& search_term, const std::string& order, db::object_id_type id, uint32_t limit) const;
 
          /**
           * @brief Get a list of account statistics by ID.
@@ -397,7 +395,7 @@ namespace graphene { namespace app {
           * @return a list of transaction detail objects
           * @ingroup DatabaseAPI_Account
           */
-         std::vector<chain::transaction_detail_object> search_account_history(chain::account_id_type account, const std::string& order, object_id_type id, int limit) const;
+         std::vector<chain::transaction_detail_object> search_account_history(chain::account_id_type account, const std::string& order, db::object_id_type id, int limit) const;
 
          //////////////
          // Balances //
@@ -806,7 +804,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           */
          std::vector<chain::buying_object> get_buying_objects_by_consumer(
-            chain::account_id_type consumer, const std::string& order, object_id_type id, const std::string& term, uint32_t count) const;
+            chain::account_id_type consumer, const std::string& order, db::object_id_type id, const std::string& term, uint32_t count) const;
 
          /**
           * @brief Get buying (open or history) by consumer and URI.
@@ -826,7 +824,7 @@ namespace graphene { namespace app {
           * @return the feedback found
           * @ingroup DatabaseAPI_Content
           */
-         std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, object_id_type id, uint32_t count) const;
+         std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, db::object_id_type id, uint32_t count) const;
 
          /**
           * @brief Get a content by URI.
@@ -870,7 +868,7 @@ namespace graphene { namespace app {
           * @throw limit_exceeded_exception
           */
          std::vector<chain::content_summary> search_content(
-            const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, object_id_type id, const std::string& type, uint32_t count) const;
+            const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order.

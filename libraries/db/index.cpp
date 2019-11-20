@@ -49,7 +49,7 @@ namespace graphene { namespace db {
       fc::raw::unpack(ds, open_ver);
       FC_ASSERT( open_ver == get_object_version(), "Incompatible Version, the serialization of objects in this index has changed" );
       try {
-         vector<char> tmp;
+         std::vector<char> tmp;
          while( true )
          {
             fc::raw::unpack( ds, tmp );

@@ -75,7 +75,7 @@ namespace graphene { namespace app {
       ~database_api_impl();
 
       // Objects
-      fc::variants get_objects(const std::vector<object_id_type>& ids)const;
+      fc::variants get_objects(const std::vector<db::object_id_type>& ids) const;
 
       // Subscriptions
       void set_content_update_callback( const std::string & URI, std::function<void()> cb );
@@ -111,9 +111,9 @@ namespace graphene { namespace app {
       std::vector<chain::account_id_type> get_account_references(chain::account_id_type account_id) const;
       std::vector<fc::optional<chain::account_object>> lookup_account_names(const std::vector<std::string>& account_names) const;
       std::map<std::string, chain::account_id_type> lookup_accounts(const std::string& lower_bound_name, uint32_t limit) const;
-      std::vector<chain::account_object> search_accounts(const std::string& search_term, const std::string& order, object_id_type id, uint32_t limit) const;
+      std::vector<chain::account_object> search_accounts(const std::string& search_term, const std::string& order, db::object_id_type id, uint32_t limit) const;
       std::vector<fc::optional<chain::account_statistics_object>> get_account_statistics(const std::vector<chain::account_statistics_id_type>& account_statistics_ids) const;
-      std::vector<chain::transaction_detail_object> search_account_history(chain::account_id_type account, const std::string& order, object_id_type id, int limit) const;
+      std::vector<chain::transaction_detail_object> search_account_history(chain::account_id_type account, const std::string& order, db::object_id_type id, int limit) const;
       uint64_t get_account_count() const;
 
       // Balances
@@ -171,10 +171,10 @@ namespace graphene { namespace app {
       std::vector<chain::buying_object> get_open_buyings_by_consumer(chain::account_id_type consumer) const;
       fc::optional<chain::buying_object> get_buying_by_consumer_URI(chain::account_id_type consumer, const std::string& URI) const;
       std::vector<chain::buying_object> get_buying_history_objects_by_consumer(chain::account_id_type consumer ) const;
-      std::vector<chain::buying_object> get_buying_objects_by_consumer(chain::account_id_type consumer, const std::string& order, object_id_type id, const std::string& term, uint32_t count) const;
-      std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, object_id_type id, uint32_t count) const;
+      std::vector<chain::buying_object> get_buying_objects_by_consumer(chain::account_id_type consumer, const std::string& order, db::object_id_type id, const std::string& term, uint32_t count) const;
+      std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, db::object_id_type id, uint32_t count) const;
       fc::optional<chain::content_object> get_content(const std::string& URI) const;
-      std::vector<chain::content_summary> search_content(const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, object_id_type id, const std::string& type, uint32_t count) const;
+      std::vector<chain::content_summary> search_content(const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
       std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
       fc::optional<chain::seeder_object> get_seeder(chain::account_id_type account ) const;
       std::vector<chain::seeder_object> list_seeders_by_upload(uint32_t count) const;
@@ -189,7 +189,7 @@ namespace graphene { namespace app {
       //private:
 
       /** called every time a block is applied to report the objects that were changed */
-      void on_objects_changed(const std::vector<object_id_type>& ids, bool sync_mode);
+      void on_objects_changed(const std::vector<db::object_id_type>& ids, bool sync_mode);
       void on_applied_block();
 
       std::function<void(const fc::variant&)> _pending_trx_callback;
@@ -199,7 +199,7 @@ namespace graphene { namespace app {
       boost::signals2::scoped_connection   _applied_block_connection;
       boost::signals2::scoped_connection   _pending_trx_connection;
       std::map<std::string, std::function<void()> > _content_subscriptions;
-      graphene::chain::database& _db;
+      chain::database& _db;
    };
 
    //////////////////////////////////////////////////////////////////////
@@ -208,15 +208,15 @@ namespace graphene { namespace app {
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   database_api::database_api( graphene::chain::database& db )
+   database_api::database_api( chain::database& db )
    : my( new database_api_impl( db ) ) {}
 
    database_api::~database_api() {}
 
-   database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
+   database_api_impl::database_api_impl( chain::database& db ):_db(db)
    {
       dlog("creating database api ${x}", ("x",int64_t(this)) );
-      _change_connection = _db.changed_objects.connect([this](const std::vector<object_id_type>& ids, bool sync_mode){ on_objects_changed(ids, sync_mode); });
+      _change_connection = _db.changed_objects.connect([this](const std::vector<db::object_id_type>& ids, bool sync_mode){ on_objects_changed(ids, sync_mode); });
       _applied_block_connection = _db.applied_block.connect([this](const chain::signed_block&){ on_applied_block(); });
 
       _pending_trx_connection = _db.on_pending_transaction.connect([this](const chain::signed_transaction& trx ){
@@ -235,18 +235,18 @@ namespace graphene { namespace app {
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   fc::variants database_api::get_objects(const std::vector<object_id_type>& ids)const
+   fc::variants database_api::get_objects(const std::vector<db::object_id_type>& ids) const
    {
       return my->get_objects( ids );
    }
 
-   fc::variants database_api_impl::get_objects(const std::vector<object_id_type>& ids)const
+   fc::variants database_api_impl::get_objects(const std::vector<db::object_id_type>& ids) const
    {
       fc::variants result;
       result.reserve(ids.size());
 
       std::transform(ids.begin(), ids.end(), std::back_inserter(result),
-                     [this](object_id_type id) -> fc::variant {
+                     [this](db::object_id_type id) -> fc::variant {
                         if(auto obj = _db.find_object(id))
                            return obj->to_variant();
                         return {};
@@ -445,7 +445,7 @@ namespace graphene { namespace app {
 
    chain::configuration database_api::get_configuration() const
    {
-      return graphene::chain::get_configuration();
+      return chain::get_configuration();
    }
 
    chain::chain_id_type database_api::get_chain_id() const
@@ -496,7 +496,7 @@ namespace graphene { namespace app {
       for( auto& key : keys )
       {
          const auto& idx = _db.get_index_type<chain::account_index>();
-         const auto& aidx = dynamic_cast<const graphene::db::primary_index<chain::account_index>&>(idx);
+         const auto& aidx = dynamic_cast<const db::primary_index<chain::account_index>&>(idx);
          const auto& refs = aidx.get_secondary_index<chain::account_member_index>();
          auto itr = refs.account_to_key_memberships.find(key);
          std::vector<chain::account_id_type> result;
@@ -574,7 +574,7 @@ namespace graphene { namespace app {
             }
             // Add the account's proposals
             const auto& proposal_idx = _db.get_index_type<chain::proposal_index>();
-            const auto& pidx = dynamic_cast<const graphene::db::primary_index<chain::proposal_index>&>(proposal_idx);
+            const auto& pidx = dynamic_cast<const db::primary_index<chain::proposal_index>&>(proposal_idx);
             const auto& proposals_by_account = pidx.get_secondary_index<chain::required_approval_index>();
             auto  required_approvals_itr = proposals_by_account._account_to_proposals.find( account->id );
             if( required_approvals_itr != proposals_by_account._account_to_proposals.end() )
@@ -628,7 +628,7 @@ namespace graphene { namespace app {
    std::vector<chain::account_id_type> database_api_impl::get_account_references(chain::account_id_type account_id) const
    {
       const auto& idx = _db.get_index_type<chain::account_index>();
-      const auto& aidx = dynamic_cast<const graphene::db::primary_index<chain::account_index>&>(idx);
+      const auto& aidx = dynamic_cast<const db::primary_index<chain::account_index>&>(idx);
       const auto& refs = aidx.get_secondary_index<chain::account_member_index>();
       auto itr = refs.account_to_account_memberships.find(account_id);
       std::vector<chain::account_id_type> result;
@@ -659,12 +659,12 @@ namespace graphene { namespace app {
       return result;
    }
 
-   std::vector<chain::account_object> database_api::search_accounts(const std::string& search_term, const std::string& order, object_id_type id, uint32_t limit) const
+   std::vector<chain::account_object> database_api::search_accounts(const std::string& search_term, const std::string& order, db::object_id_type id, uint32_t limit) const
    {
       return my->search_accounts( search_term, order, id, limit );
    }
 
-   std::vector<chain::transaction_detail_object> database_api::search_account_history(chain::account_id_type account, const std::string& order, object_id_type id, int limit) const
+   std::vector<chain::transaction_detail_object> database_api::search_account_history(chain::account_id_type account, const std::string& order, db::object_id_type id, int limit) const
    {
       return my->search_account_history(account, order, id, limit);
    }
@@ -681,11 +681,11 @@ namespace graphene { namespace app {
       typename _t_sort_tag,
       typename _t_iterator,
       bool is_ascending>
-      void correct_iterator(graphene::chain::database& db,
-                            const object_id_type& id,
+      void correct_iterator(chain::database& db,
+                            db::object_id_type id,
                             _t_iterator& itr_begin)
       {
-         const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<graphene::db::by_id>();
+         const auto& idx_by_id = db.get_index_type<_t_object_index>().indices().template get<db::by_id>();
          auto itr_id = idx_by_id.find(id);
 
          const auto& idx_by_sort_tag = db.get_index_type<_t_object_index>().indices().template get<_t_sort_tag>();
@@ -713,7 +713,7 @@ namespace graphene { namespace app {
       }
 
       template <bool is_ascending, class sort_tag>
-      void search_accounts_template(chain::database& db, const std::string& term, uint32_t count, object_id_type id, std::vector<chain::account_object>& result)
+      void search_accounts_template(chain::database& db, const std::string& term, uint32_t count, db::object_id_type id, std::vector<chain::account_object>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<chain::account_index>().indices().get<sort_tag>();
 
@@ -747,16 +747,16 @@ namespace graphene { namespace app {
       }
    }
 
-   std::vector<chain::account_object> database_api_impl::search_accounts(const std::string& term, const std::string& order, object_id_type id, uint32_t limit) const
+   std::vector<chain::account_object> database_api_impl::search_accounts(const std::string& term, const std::string& order, db::object_id_type id, uint32_t limit) const
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
          FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
       std::vector<chain::account_object> result;
 
       if (order == "+id")
-         search_accounts_template<true, graphene::db::by_id>(_db, term, limit, id, result);
+         search_accounts_template<true, db::by_id>(_db, term, limit, id, result);
       else if (order == "-id")
-         search_accounts_template<false, graphene::db::by_id>(_db, term, limit, id, result);
+         search_accounts_template<false, db::by_id>(_db, term, limit, id, result);
       else if (order == "-name")
          search_accounts_template<false, chain::by_name>(_db, term, limit, id, result);
       else
@@ -768,7 +768,7 @@ namespace graphene { namespace app {
    namespace
    {
       template <bool is_ascending, class sort_tag>
-      void search_account_history_template(chain::database& db, chain::account_id_type account, uint32_t count, object_id_type id, std::vector<chain::transaction_detail_object>& result)
+      void search_account_history_template(chain::database& db, chain::account_id_type account, uint32_t count, db::object_id_type id, std::vector<chain::transaction_detail_object>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<chain::transaction_detail_index>().indices().get<sort_tag>();
 
@@ -802,7 +802,7 @@ namespace graphene { namespace app {
       return _db.get_objects(account_statistics_ids);
    }
 
-   std::vector<chain::transaction_detail_object> database_api_impl::search_account_history(chain::account_id_type account, const std::string& order, object_id_type id, int limit) const
+   std::vector<chain::transaction_detail_object> database_api_impl::search_account_history(chain::account_id_type account, const std::string& order, db::object_id_type id, int limit) const
    {
       std::vector<chain::transaction_detail_object> result;
 
@@ -1229,7 +1229,7 @@ namespace graphene { namespace app {
    {
       if(limit > CURRENT_OUTPUT_LIMIT_1000)
          FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_1000));
-      const auto& miners_by_id = _db.get_index_type<chain::miner_index>().indices().get<graphene::db::by_id>();
+      const auto& miners_by_id = _db.get_index_type<chain::miner_index>().indices().get<db::by_id>();
 
       // we want to order miners by account name, but that name is in the account object
       // so the miner_index doesn't have a quick way to access it.
@@ -1359,7 +1359,7 @@ namespace graphene { namespace app {
       // miner searching helper struct
       struct miner_search
       {
-         object_id_type search_id_;
+         db::object_id_type search_id_;
 
          miner_search(const std::string& search_id) : search_id_(search_id) {}
 
@@ -1681,7 +1681,7 @@ namespace graphene { namespace app {
       const auto& idx = _db.get_index_type<chain::proposal_index>();
       std::vector<chain::proposal_object> result;
 
-      idx.inspect_all_objects( [&](const graphene::db::object& obj){
+      idx.inspect_all_objects( [&](const db::object& obj){
          const chain::proposal_object& p = static_cast<const chain::proposal_object&>(obj);
          if( p.required_active_approvals.find( id ) != p.required_active_approvals.end() )
             result.push_back(p);
@@ -1728,9 +1728,9 @@ namespace graphene { namespace app {
 
        try
        {
-          graphene::chain::operation op;
+          chain::operation op;
 
-          for( std::size_t i = 0; i < graphene::chain::operation::type_info::count; ++i )
+          for( std::size_t i = 0; i < chain::operation::type_info::count; ++i )
           {
              op.set_which(i);
              op.visit( operation_info_visitor(op_names_ptr) );
@@ -1876,7 +1876,7 @@ namespace graphene { namespace app {
    }
 
    std::vector<chain::buying_object> database_api::get_buying_objects_by_consumer(
-      chain::account_id_type consumer, const std::string& order, object_id_type id, const std::string& term, uint32_t count) const
+      chain::account_id_type consumer, const std::string& order, db::object_id_type id, const std::string& term, uint32_t count) const
    {
       return my->get_buying_objects_by_consumer( consumer, order, id, term, count );
    }
@@ -1884,7 +1884,7 @@ namespace graphene { namespace app {
 namespace
 {
    template <bool is_ascending, class sort_tag>
-   void search_buying_template(chain::database& db, chain::account_id_type consumer, const std::string& term, object_id_type id, uint32_t count, std::vector<chain::buying_object>& result)
+   void search_buying_template(chain::database& db, chain::account_id_type consumer, const std::string& term, db::object_id_type id, uint32_t count, std::vector<chain::buying_object>& result)
    {
       const auto& idx_by_sort_tag = db.get_index_type<chain::buying_index>().indices().get<sort_tag>();
 
@@ -1926,7 +1926,7 @@ namespace
 }
 
    std::vector<chain::buying_object> database_api_impl::get_buying_objects_by_consumer(
-      chain::account_id_type consumer, const std::string& order, object_id_type id, const std::string& term, uint32_t count) const
+      chain::account_id_type consumer, const std::string& order, db::object_id_type id, const std::string& term, uint32_t count) const
    {
       try {
          std::vector<chain::buying_object> result;
@@ -2043,7 +2043,7 @@ namespace
       return {};
    }
 
-   std::vector<chain::buying_object> database_api::search_feedback(const std::string& user, const std::string& URI, object_id_type id, uint32_t count) const
+   std::vector<chain::buying_object> database_api::search_feedback(const std::string& user, const std::string& URI, db::object_id_type id, uint32_t count) const
    {
       return my->search_feedback(user, URI, id, count);
    }
@@ -2051,7 +2051,7 @@ namespace
    namespace {
 
       template <bool is_ascending, class sort_tag>
-      void search_rating_template(chain::database& db, uint32_t count, const std::string& URI, object_id_type id, std::vector<chain::buying_object>& result)
+      void search_rating_template(chain::database& db, uint32_t count, const std::string& URI, db::object_id_type id, std::vector<chain::buying_object>& result)
       {
          const auto& range_equal = db.get_index_type<chain::buying_index>().indices().get<sort_tag>().equal_range(std::make_tuple( URI, true ));
          auto range_begin = range_equal.first;
@@ -2073,7 +2073,7 @@ namespace
       }
    }
 
-   std::vector<chain::buying_object> database_api_impl::search_feedback(const std::string& user, const std::string& URI, object_id_type id, uint32_t count) const
+   std::vector<chain::buying_object> database_api_impl::search_feedback(const std::string& user, const std::string& URI, db::object_id_type id, uint32_t count) const
    {
       std::vector<chain::buying_object> result;
 
@@ -2136,7 +2136,7 @@ namespace
 
    fc::optional<chain::subscription_object> database_api_impl::get_subscription(chain::subscription_id_type sid) const
    {
-      const auto& idx = _db.get_index_type<chain::subscription_index>().indices().get<graphene::db::by_id>();
+      const auto& idx = _db.get_index_type<chain::subscription_index>().indices().get<db::by_id>();
       auto itr = idx.find(sid);
       if (itr != idx.end())
          return *itr;
@@ -2244,7 +2244,7 @@ namespace
    }
 
    std::vector<chain::content_summary> database_api::search_content(
-      const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, object_id_type id, const std::string& type, uint32_t count) const
+      const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
    {
       return my->search_content(term, order, user, region_code, id, type, count);
    }
@@ -2253,7 +2253,7 @@ namespace
 
       template <bool is_ascending, class sort_tag>
       void search_content_template(chain::database& db, const std::string& search_term, uint32_t count, const std::string& user, const std::string& region_code,
-         object_id_type id, const std::string& type, std::vector<chain::content_summary>& result)
+         db::object_id_type id, const std::string& type, std::vector<chain::content_summary>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<chain::content_index>().indices().get<sort_tag>();
 
@@ -2263,7 +2263,7 @@ namespace
          correct_iterator<chain::content_index, chain::content_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
 
          chain::content_summary content;
-         const auto& idx_account = db.get_index_type<chain::account_index>().indices().get<graphene::db::by_id>();
+         const auto& idx_account = db.get_index_type<chain::account_index>().indices().get<db::by_id>();
 
          chain::ContentObjectTypeValue filter_type;
          filter_type.from_string(type);
@@ -2319,7 +2319,7 @@ namespace
    }
 
    std::vector<chain::content_summary> database_api_impl::search_content(
-      const std::string& search_term, const std::string& order, const std::string& user, const std::string& region_code, object_id_type id, const std::string& type, uint32_t count) const
+      const std::string& search_term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
          FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
@@ -2470,13 +2470,13 @@ namespace
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   void database_api_impl::on_objects_changed(const std::vector<object_id_type>& ids, bool sync_mode)
+   void database_api_impl::on_objects_changed(const std::vector<db::object_id_type>& ids, bool sync_mode)
    {
       std::vector<std::string> content_update_queue;
 
       for(auto id : ids)
       {
-         const graphene::db::object* obj = nullptr;
+         const db::object* obj = nullptr;
 
          if( _content_subscriptions.size() )
          {
