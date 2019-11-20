@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
    struct account_name_eq_lit_predicate
    {
       account_id_type account_id;
-      string          name;
+      std::string     name;
 
       /**
        *  Perform state-independent checks.  Verify
@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
    struct asset_symbol_eq_lit_predicate
    {
       asset_id_type   asset_id;
-      string          symbol;
+      std::string     symbol;
 
       /**
        *  Perform state independent checks.  Verify symbol is a

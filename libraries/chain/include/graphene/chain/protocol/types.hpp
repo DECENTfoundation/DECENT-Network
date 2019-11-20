@@ -37,8 +37,6 @@
 
 namespace graphene { namespace chain {
 
-   using                               std::string;
-
    enum reserved_spaces
    {
       local_ids             = 0,
@@ -58,7 +56,7 @@ namespace graphene { namespace chain {
       local_object_type_count    // added due to know count
    };
 
-   typedef graphene::db::object_id<local_ids, local_seeding_object_type, seeding_object> seeding_id_type;
+   typedef db::object_id<local_ids, local_seeding_object_type, seeding_object> seeding_id_type;
 
    /**
     *  List all object types from all namespaces here so they can
@@ -121,15 +119,15 @@ namespace graphene { namespace chain {
    class non_fungible_token_object;
    class non_fungible_token_data_object;
 
-   typedef graphene::db::object_id<protocol_ids, account_object_type, account_object>                         account_id_type;
-   typedef graphene::db::object_id<protocol_ids, asset_object_type, asset_object>                             asset_id_type;
-   typedef graphene::db::object_id<protocol_ids, miner_object_type, miner_object>                             miner_id_type;
-   typedef graphene::db::object_id<protocol_ids, proposal_object_type, proposal_object>                       proposal_id_type;
-   typedef graphene::db::object_id<protocol_ids, operation_history_object_type, operation_history_object>     operation_history_id_type;
-   typedef graphene::db::object_id<protocol_ids, withdraw_permission_object_type,withdraw_permission_object>  withdraw_permission_id_type;
-   typedef graphene::db::object_id<protocol_ids, vesting_balance_object_type, vesting_balance_object>         vesting_balance_id_type;
-   typedef graphene::db::object_id<protocol_ids, non_fungible_token_object_type, non_fungible_token_object>   non_fungible_token_id_type;
-   typedef graphene::db::object_id<protocol_ids, non_fungible_token_data_object_type, non_fungible_token_data_object> non_fungible_token_data_id_type;
+   typedef db::object_id<protocol_ids, account_object_type, account_object>                         account_id_type;
+   typedef db::object_id<protocol_ids, asset_object_type, asset_object>                             asset_id_type;
+   typedef db::object_id<protocol_ids, miner_object_type, miner_object>                             miner_id_type;
+   typedef db::object_id<protocol_ids, proposal_object_type, proposal_object>                       proposal_id_type;
+   typedef db::object_id<protocol_ids, operation_history_object_type, operation_history_object>     operation_history_id_type;
+   typedef db::object_id<protocol_ids, withdraw_permission_object_type,withdraw_permission_object>  withdraw_permission_id_type;
+   typedef db::object_id<protocol_ids, vesting_balance_object_type, vesting_balance_object>         vesting_balance_id_type;
+   typedef db::object_id<protocol_ids, non_fungible_token_object_type, non_fungible_token_object>   non_fungible_token_id_type;
+   typedef db::object_id<protocol_ids, non_fungible_token_data_object_type, non_fungible_token_data_object> non_fungible_token_data_id_type;
 
    // implementation types
    class global_property_object;
@@ -152,25 +150,25 @@ namespace graphene { namespace chain {
    class message_object;
    class transaction_history_object;
 
-   typedef graphene::db::object_id<implementation_ids, impl_global_property_object_type, global_property_object>                   global_property_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_dynamic_global_property_object_type, dynamic_global_property_object>   dynamic_global_property_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_asset_dynamic_data_type, asset_dynamic_data_object>                    asset_dynamic_data_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_account_balance_object_type, account_balance_object>                   account_balance_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_account_statistics_object_type, account_statistics_object>             account_statistics_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_transaction_object_type, transaction_object>                           transaction_obj_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_block_summary_object_type, block_summary_object>                       block_summary_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_account_transaction_history_object_type, account_transaction_history_object> account_transaction_history_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_chain_property_object_type, chain_property_object>                     chain_property_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_miner_schedule_object_type, miner_schedule_object>                     miner_schedule_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_budget_record_object_type, budget_record_object>                       budget_record_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_buying_object_type, buying_object>                                     buying_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_content_object_type, content_object>                                   content_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_publisher_object_type, seeder_object>                                  publisher_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_subscription_object_type, subscription_object>                         subscription_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object>             seeding_statistics_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_transaction_detail_object_type, transaction_detail_object>             transaction_detail_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_messaging_object_type, message_object>                                 message_id_type;
-   typedef graphene::db::object_id<implementation_ids, impl_transaction_history_object_type, transaction_history_object>           transaction_history_id_type;
+   typedef db::object_id<implementation_ids, impl_global_property_object_type, global_property_object>                   global_property_id_type;
+   typedef db::object_id<implementation_ids, impl_dynamic_global_property_object_type, dynamic_global_property_object>   dynamic_global_property_id_type;
+   typedef db::object_id<implementation_ids, impl_asset_dynamic_data_type, asset_dynamic_data_object>                    asset_dynamic_data_id_type;
+   typedef db::object_id<implementation_ids, impl_account_balance_object_type, account_balance_object>                   account_balance_id_type;
+   typedef db::object_id<implementation_ids, impl_account_statistics_object_type, account_statistics_object>             account_statistics_id_type;
+   typedef db::object_id<implementation_ids, impl_transaction_object_type, transaction_object>                           transaction_obj_id_type;
+   typedef db::object_id<implementation_ids, impl_block_summary_object_type, block_summary_object>                       block_summary_id_type;
+   typedef db::object_id<implementation_ids, impl_account_transaction_history_object_type, account_transaction_history_object> account_transaction_history_id_type;
+   typedef db::object_id<implementation_ids, impl_chain_property_object_type, chain_property_object>                     chain_property_id_type;
+   typedef db::object_id<implementation_ids, impl_miner_schedule_object_type, miner_schedule_object>                     miner_schedule_id_type;
+   typedef db::object_id<implementation_ids, impl_budget_record_object_type, budget_record_object>                       budget_record_id_type;
+   typedef db::object_id<implementation_ids, impl_buying_object_type, buying_object>                                     buying_id_type;
+   typedef db::object_id<implementation_ids, impl_content_object_type, content_object>                                   content_id_type;
+   typedef db::object_id<implementation_ids, impl_publisher_object_type, seeder_object>                                  publisher_id_type;
+   typedef db::object_id<implementation_ids, impl_subscription_object_type, subscription_object>                         subscription_id_type;
+   typedef db::object_id<implementation_ids, impl_seeding_statistics_object_type, seeding_statistics_object>             seeding_statistics_id_type;
+   typedef db::object_id<implementation_ids, impl_transaction_detail_object_type, transaction_detail_object>             transaction_detail_id_type;
+   typedef db::object_id<implementation_ids, impl_messaging_object_type, message_object>                                 message_id_type;
+   typedef db::object_id<implementation_ids, impl_transaction_history_object_type, transaction_history_object>           transaction_history_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::sha256                                           chain_id_type;

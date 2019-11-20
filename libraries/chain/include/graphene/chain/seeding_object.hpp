@@ -11,7 +11,7 @@ namespace graphene { namespace chain {
 class seeding_object : public graphene::db::abstract_object<local_ids, local_seeding_object_type, seeding_object>
 {
 public:
-   string URI; //<Content address
+   std::string URI; //<Content address
    fc::ripemd160 _hash; //<Content hash
    fc::time_point_sec expiration; //<Content expiration
    fc::optional<decent::encrypt::CustodyData> cd; //<Content custody data
@@ -31,7 +31,7 @@ typedef multi_index_container<
       indexed_by<
             graphene::db::object_id_index,
             ordered_unique< tag<by_URI>,
-               member<seeding_object, string, &seeding_object::URI>
+               member<seeding_object, std::string, &seeding_object::URI>
             >
       >
 >seeding_object_multi_index_type;

@@ -8,7 +8,7 @@ fc::optional<std::vector<seeder_object>> wallet_api::list_seeders_by_upload( con
    return my->_remote_db->list_seeders_by_upload( count );
 }
 
-std::vector<seeder_object> wallet_api::list_seeders_by_region( const string& region_code )const
+std::vector<seeder_object> wallet_api::list_seeders_by_region( const std::string& region_code )const
 {
    return my->_remote_db->list_seeders_by_region( region_code );
 }

@@ -48,7 +48,7 @@ bool wallet_api::lock()
    return true;
 } FC_RETHROW() }
 
-bool wallet_api::unlock(const string& password)
+bool wallet_api::unlock(const std::string& password)
 { try {
    if(!is_locked()) {
       std::cout << "Wallet is already unlocked" << std::endl;
@@ -67,7 +67,7 @@ bool wallet_api::unlock(const string& password)
 
       // supporting backward compatibility of wallet json file
       try {
-         string data;
+         std::string data;
          data.reserve(decrypted.size());
          std::copy(decrypted.begin(), decrypted.end(), back_inserter(data));
          pk = fc::json::from_string(data).as<plain_ec_and_el_gamal_keys>();
@@ -90,7 +90,7 @@ bool wallet_api::unlock(const string& password)
    else {
 
       try {
-         string data;
+         std::string data;
          data.reserve(decrypted.size());
          std::copy(decrypted.begin(), decrypted.end(), back_inserter(data));
          pk = fc::json::from_string(data).as<plain_ec_and_el_gamal_keys>();
@@ -118,7 +118,7 @@ bool wallet_api::unlock(const string& password)
    return true;
 } FC_RETHROW() }
 
-void wallet_api::set_password(const string& password )
+void wallet_api::set_password(const std::string& password )
 {
    if(!is_new()) {
       if(my->is_locked())
@@ -142,7 +142,7 @@ void wallet_api::save_wallet_file(const path& wallet_filename )
    my->save_wallet_file( wallet_filename );
 }
 
-bool wallet_api::import_key(const string& account_name_or_id, const string& wif_key)
+bool wallet_api::import_key(const std::string& account_name_or_id, const std::string& wif_key)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
@@ -152,7 +152,7 @@ bool wallet_api::import_key(const string& account_name_or_id, const string& wif_
    return result;
 }
 
-bool wallet_api::import_single_key(const string& account_name_or_id, const string& wif_key)
+bool wallet_api::import_single_key(const std::string& account_name_or_id, const std::string& wif_key)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");

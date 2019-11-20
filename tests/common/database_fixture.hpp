@@ -150,18 +150,18 @@ struct database_fixture {
    database_fixture();
    ~database_fixture() noexcept(false);
 
-   static fc::ecc::private_key generate_private_key(string seed);
+   static fc::ecc::private_key generate_private_key(const std::string& seed);
    static void verify_asset_supplies( const database& db );
 
    digest_type digest( const transaction& tx );
 
    const account_object& create_account(
-         const string& name,
+         const std::string& name,
          const public_key_type& key = public_key_type()
    );
 
    const account_object& create_account(
-         const string& name,
+         const std::string& name,
          const account_object& registrar,
          const account_object& referrer,
          uint8_t referrer_percent = 100,
@@ -169,7 +169,7 @@ struct database_fixture {
    );
 
    const account_object& create_account(
-         const string& name,
+         const std::string& name,
          const private_key_type& key,
          const account_id_type& registrar_id = account_id_type(),
          const account_id_type& referrer_id = account_id_type(),
@@ -208,10 +208,10 @@ struct database_fixture {
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
 
 
-   const asset_object& create_user_issued_asset( const string& name );
-   const asset_object& create_user_issued_asset( const string& name,
+   const asset_object& create_user_issued_asset( const std::string& name );
+   const asset_object& create_user_issued_asset( const std::string& name,
                                                  const account_object& issuer );
-   const asset_object& create_monitored_asset(const string& name,
+   const asset_object& create_monitored_asset(const std::string& name,
                                               account_id_type issuer = GRAPHENE_MINER_ACCOUNT );
 
    void transfer( account_id_type from, account_id_type to, const asset& amount, const asset& fee = asset() );
@@ -226,15 +226,15 @@ struct database_fixture {
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
 
-   const asset_object& get_asset( const string& symbol )const;
-   const account_object& get_account( const string& name )const;
+   const asset_object& get_asset( const std::string& symbol )const;
+   const account_object& get_account( const std::string& name )const;
    const account_object& get_account_by_id(account_id_type id)const;
    const miner_object& get_miner(account_id_type id)const;
 
    void enable_fees();
 
    uint64_t fund( const account_object& account, const asset& amount = asset(500000) );
-   string generate_anon_acct_name();
+   std::string generate_anon_acct_name();
 
    void issue_uia( const account_object& recipient, asset amount );
    void issue_uia( account_id_type recipient_id, asset amount );
@@ -245,8 +245,8 @@ struct database_fixture {
 
    void fill_pools(asset_id_type uia, account_id_type by, asset to_core_pool, asset to_asset_pool);
 
-   void create_content(account_id_type by, string url, asset price, std::map<account_id_type, uint32_t> co_authors={});
-   void buy_content(account_id_type by, string url, asset price);
+   void create_content(account_id_type by, const std::string& url, asset price, std::map<account_id_type, uint32_t> co_authors={});
+   void buy_content(account_id_type by, const std::string& url, asset price);
 
 
    // the reason we use an app is to exercise the indexes of built-in
@@ -257,7 +257,7 @@ struct database_fixture {
    signed_transaction trx;
    signed_transaction trx2;
    fc::ecc::private_key private_key = fc::ecc::private_key::generate();
-   fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
+   fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("null_key")) );
    public_key_type init_account_pub_key;
 
    public_key_type miner_key;

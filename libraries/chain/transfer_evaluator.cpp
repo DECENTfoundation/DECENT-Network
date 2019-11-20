@@ -45,7 +45,7 @@ operation_result transfer_obsolete_evaluator::do_evaluate( const operation_type&
 
       bool sufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
       FC_ASSERT( sufficient_balance,
-                 "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'", 
+                 "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                  ("a",from_account.name)("t",to_account.name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
 
       return void_result();
@@ -124,7 +124,7 @@ operation_result transfer_evaluator::do_apply( const operation_type& o )
       account_id_type to_acc;
 
       d.adjust_balance( o.from, -o.amount );
-      string suffix;
+      std::string suffix;
 
       if( o.to.is<account_id_type>() )
       {

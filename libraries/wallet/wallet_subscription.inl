@@ -1,7 +1,7 @@
-signed_transaction_info wallet_api::subscribe_to_author(const string& from,
-                                                        const string& to,
-                                                        const string& price_amount,
-                                                        const string& price_asset_symbol,
+signed_transaction_info wallet_api::subscribe_to_author(const std::string& from,
+                                                        const std::string& to,
+                                                        const std::string& price_amount,
+                                                        const std::string& price_asset_symbol,
                                                         bool broadcast/* = false */)
 {
    if(my->is_locked())
@@ -9,8 +9,8 @@ signed_transaction_info wallet_api::subscribe_to_author(const string& from,
    return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
 }
 
-signed_transaction_info wallet_api::subscribe_by_author(const string& from,
-                                                        const string& to,
+signed_transaction_info wallet_api::subscribe_by_author(const std::string& from,
+                                                        const std::string& to,
                                                         bool broadcast/* = false */)
 {
    if(my->is_locked())
@@ -18,11 +18,11 @@ signed_transaction_info wallet_api::subscribe_by_author(const string& from,
    return my->subscribe_by_author(from, to, broadcast);
 }
 
-signed_transaction_info wallet_api::set_subscription(const string& account,
+signed_transaction_info wallet_api::set_subscription(const std::string& account,
                                                      bool allow_subscription,
                                                      uint32_t subscription_period,
-                                                     const string& price_amount,
-                                                     const string& price_asset_symbol,
+                                                     const std::string& price_amount,
+                                                     const std::string& price_asset_symbol,
                                                      bool broadcast/* = false */)
 {
    if(my->is_locked())
@@ -30,7 +30,7 @@ signed_transaction_info wallet_api::set_subscription(const string& account,
    return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
 }
 
-signed_transaction_info wallet_api::set_automatic_renewal_of_subscription(const string& account_id_or_name,
+signed_transaction_info wallet_api::set_automatic_renewal_of_subscription(const std::string& account_id_or_name,
                                                                           subscription_id_type subscription_id,
                                                                           bool automatic_renewal,
                                                                           bool broadcast/* = false */)

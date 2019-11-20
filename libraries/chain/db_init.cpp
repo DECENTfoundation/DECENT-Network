@@ -193,7 +193,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    bsi.resize(0xffff+1);
 
    // Create blockchain accounts
-   fc::ecc::private_key null_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
+   fc::ecc::private_key null_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("null_key")));
    create<account_balance_object>([](account_balance_object& b) {
       b.balance = GRAPHENE_INITIAL_SHARE_SUPPLY;
    });
@@ -364,7 +364,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Helper function to get account ID by name
    const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();
-   auto get_account_id = [&accounts_by_name](const string& name) {
+   auto get_account_id = [&accounts_by_name](const std::string& name) {
       auto itr = accounts_by_name.find(name);
       FC_ASSERT(itr != accounts_by_name.end(),
                 "Unable to find account '${acct}'. Did you forget to add a record for it to initial_accounts?",
@@ -374,7 +374,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Helper function to get asset ID by symbol
    const auto& assets_by_symbol = get_index_type<asset_index>().indices().get<by_symbol>();
-   const auto get_asset_id = [&assets_by_symbol](const string& symbol) {
+   const auto get_asset_id = [&assets_by_symbol](const std::string& symbol) {
       auto itr = assets_by_symbol.find(symbol);
 
       // TODO: This is temporary for handling BTS snapshot
@@ -423,7 +423,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.symbol = asset.symbol;
          a.description = asset.description;
          a.precision = asset.precision;
-         string issuer_name = asset.issuer_name;
+         std::string issuer_name = asset.issuer_name;
          a.issuer = get_account_id(issuer_name);
          a.options.max_supply = 0;
          a.dynamic_asset_data_id = dynamic_data_id;

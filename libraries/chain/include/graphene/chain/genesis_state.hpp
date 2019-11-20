@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
 
 struct genesis_state_type {
    struct initial_account_type {
-      initial_account_type(const string& name = string(),
+      initial_account_type(const std::string& name = std::string(),
                            const public_key_type& owner_key = public_key_type(),
                            const public_key_type& active_key = public_key_type()
                            )
@@ -42,7 +42,7 @@ struct genesis_state_type {
            owner_key(owner_key),
            active_key(active_key == public_key_type()? owner_key : active_key)
       {}
-      string name;
+      std::string name;
       public_key_type owner_key;
       fc::optional<public_key_type> owner_key2;
       fc::optional<public_key_type> owner_key3;
@@ -53,11 +53,9 @@ struct genesis_state_type {
       fc::optional<uint32_t> active_threshold;
    };
    struct initial_asset_type {
-
-      string symbol;
-      string issuer_name;
-
-      string description;
+      std::string symbol;
+      std::string issuer_name;
+      std::string description;
       uint8_t precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
 
       share_type max_supply;
@@ -66,13 +64,13 @@ struct genesis_state_type {
       bool is_monitored_asset = false;
    };
    struct initial_balance_type {
-      string owner;
-      string asset_symbol;
+      std::string owner;
+      std::string asset_symbol;
       share_type amount;
    };
    struct initial_miner_type {
       /// Must correspond to one of the initial accounts
-      string owner_name;
+      std::string owner_name;
       public_key_type block_signing_key;
    };
 

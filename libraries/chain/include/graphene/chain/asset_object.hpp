@@ -64,7 +64,7 @@ namespace graphene { namespace chain {
          /// This function does not check if any registered asset has this symbol or not; it simply checks whether the
          /// symbol would be valid.
          /// @return true if symbol is a valid ticker symbol; false otherwise.
-         static bool is_valid_symbol( const string& symbol );
+         static bool is_valid_symbol( const std::string& symbol );
 
          /// @return true if this is monitored asset; false otherwise.
          bool is_monitored_asset()const { return monitored_asset_opts.valid(); }
@@ -73,28 +73,28 @@ namespace graphene { namespace chain {
          asset amount(share_type a)const { return asset(a, id); }
          /// Convert a string amount (i.e. "123.45") to an asset object with this asset's type
          /// The string may have a decimal and/or a negative sign.
-         asset amount_from_string(string amount_string)const;
+         asset amount_from_string(std::string amount_string) const;
          /// Convert an asset to a textual representation, i.e. "123.45"
-         string amount_to_string(share_type amount)const;
+         std::string amount_to_string(share_type amount) const;
          /// Convert an asset to a textual representation, i.e. "123.45"
-         string amount_to_string(const asset& amount)const
+         std::string amount_to_string(const asset& amount) const
          { FC_ASSERT(amount.asset_id == id); return amount_to_string(amount.amount); }
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
-         string amount_to_pretty_string(share_type amount)const
+         std::string amount_to_pretty_string(share_type amount) const
          { return amount_to_string(amount) + " " + symbol; }
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
-         string amount_to_pretty_string(const asset &amount)const
+         std::string amount_to_pretty_string(const asset &amount) const
          { FC_ASSERT(amount.asset_id == id); return amount_to_pretty_string(amount.amount); }
 
          /// Ticker symbol for this asset, i.e. "USD"
-         string symbol;
+         std::string symbol;
          /// Maximum number of digits after the decimal point (must be <= 12)
          uint8_t precision = 0;
          /// ID of the account which issued this asset.
          account_id_type issuer;
 
          /// The meaning/purpose of this asset
-         string description;
+         std::string description;
 
          /// set for monitored assets
          fc::optional<monitored_asset_options> monitored_asset_opts;
@@ -246,7 +246,7 @@ namespace graphene { namespace chain {
       asset_object,
       indexed_by<
          graphene::db::object_id_index,
-         ordered_unique< tag<by_symbol>, member<asset_object, string, &asset_object::symbol> >,
+         ordered_unique< tag<by_symbol>, member<asset_object, std::string, &asset_object::symbol> >,
             ordered_unique< tag<by_type>,
                composite_key< asset_object,
                   const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,

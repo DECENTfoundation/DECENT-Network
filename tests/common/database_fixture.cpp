@@ -129,9 +129,9 @@ database_fixture::~database_fixture() noexcept(false)
 
 
 
-fc::ecc::private_key database_fixture::generate_private_key(string seed)
+fc::ecc::private_key database_fixture::generate_private_key(const std::string& seed)
 {
-  static const fc::ecc::private_key committee = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
+  static const fc::ecc::private_key committee = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("null_key")));
   if( seed == "null_key" )
      return committee;
   return fc::ecc::private_key::regenerate(fc::sha256::hash(seed));
@@ -193,7 +193,7 @@ void database_fixture::verify_asset_supplies( const database& db )
 }
 
 const account_object& database_fixture::create_account(
-     const string& name,
+     const std::string& name,
      const public_key_type& key /* = public_key_type() */
 )
 {
@@ -206,7 +206,7 @@ const account_object& database_fixture::create_account(
 }
 
 const account_object& database_fixture::create_account(
-     const string& name,
+     const std::string& name,
      const account_object& registrar,
      const account_object& referrer,
      uint8_t referrer_percent /* = 100 */,
@@ -227,7 +227,7 @@ const account_object& database_fixture::create_account(
 }
 
 const account_object& database_fixture::create_account(
-     const string& name,
+     const std::string& name,
      const private_key_type& key,
      const account_id_type& registrar_id /* = account_id_type() */,
      const account_id_type& referrer_id /* = account_id_type() */,
@@ -392,7 +392,7 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
 }
 
 const asset_object& database_fixture::create_monitored_asset(
-     const string& name,
+     const std::string& name,
      account_id_type issuer /* = GRAPHENE_MINER_ACCOUNT */ )
 { try {
   asset_create_operation creator;
@@ -410,7 +410,7 @@ const asset_object& database_fixture::create_monitored_asset(
   return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 } FC_CAPTURE_AND_RETHROW( (name) ) }
 
-const asset_object& database_fixture::create_user_issued_asset( const string& name )
+const asset_object& database_fixture::create_user_issued_asset( const std::string& name )
 {
   asset_create_operation creator;
   creator.issuer = account_id_type();
@@ -427,7 +427,7 @@ const asset_object& database_fixture::create_user_issued_asset( const string& na
   return db.get<asset_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-const asset_object& database_fixture::create_user_issued_asset( const string& name, const account_object& issuer )
+const asset_object& database_fixture::create_user_issued_asset( const std::string& name, const account_object& issuer )
 {
   asset_create_operation creator;
   creator.issuer = issuer.id;
@@ -475,7 +475,7 @@ int64_t database_fixture::get_balance( const account_object& account, const asse
   return db.get_balance(account.get_id(), a.get_id()).amount.value;
 }
 
-const asset_object& database_fixture::get_asset( const string& symbol )const
+const asset_object& database_fixture::get_asset( const std::string& symbol )const
 {
   const auto& idx = db.get_index_type<asset_index>().indices().get<by_symbol>();
   const auto itr = idx.find(symbol);
@@ -483,7 +483,7 @@ const asset_object& database_fixture::get_asset( const string& symbol )const
   return *itr;
 }
 
-const account_object& database_fixture::get_account( const string& name )const
+const account_object& database_fixture::get_account( const std::string& name )const
 {
   const auto& idx = db.get_index_type<account_index>().indices().get<by_name>();
   const auto itr = idx.find(name);
@@ -572,7 +572,7 @@ uint64_t database_fixture::fund(
   return get_balance(account, amount.asset_id(db));
 }
 
-string database_fixture::generate_anon_acct_name()
+std::string database_fixture::generate_anon_acct_name()
 {
   // names of the form "anon-acct-x123" ; the "x" is necessary
   //    to workaround issue #46
@@ -629,7 +629,7 @@ void database_fixture::publish_feed( const asset_object& mia, const account_obje
   verify_asset_supplies(db);
 }
 
-void database_fixture::create_content(account_id_type by, string url, asset price, std::map<account_id_type, uint32_t> co_authors)
+void database_fixture::create_content(account_id_type by, const std::string& url, asset price, std::map<account_id_type, uint32_t> co_authors)
 {
    set_expiration( db, trx );
    trx.operations.clear();
@@ -651,7 +651,7 @@ void database_fixture::create_content(account_id_type by, string url, asset pric
    trx.operations.clear();
 }
 
-void database_fixture::buy_content(account_id_type by, string url, asset price)
+void database_fixture::buy_content(account_id_type by, const std::string& url, asset price)
 {
    set_expiration( db, trx );
    trx.operations.clear();

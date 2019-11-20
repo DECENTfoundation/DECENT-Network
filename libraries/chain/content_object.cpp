@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
       fc::optional<asset> op_price = GetPrice(region_code);
       return op_price.valid();
    }
-   bool PriceRegions::Valid(string const& region_code) const
+   bool PriceRegions::Valid(const std::string& region_code) const
    {
       fc::optional<asset> op_price;
       auto it = RegionCodes::s_mapNameToCode.find(region_code);
@@ -68,7 +68,7 @@ namespace graphene { namespace chain {
    //
    content_summary& content_summary::set( const content_object& co, const account_object& ao, uint32_t region_code )
    {
-      this->id = string(co.id);
+      this->id = std::string(co.id);
       this->author = ao.name;
       fc::optional<asset> op_price = co.price.GetPrice(region_code);
       FC_ASSERT(op_price.valid());
@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
          this->status = "Expired";
       return *this;
    }
-   content_summary& content_summary::set( const content_object& co, const account_object& ao, string const& region_code )
+   content_summary& content_summary::set( const content_object& co, const account_object& ao, const std::string& region_code )
    {
       auto it = RegionCodes::s_mapNameToCode.find(region_code);
       FC_ASSERT(it != RegionCodes::s_mapNameToCode.end());

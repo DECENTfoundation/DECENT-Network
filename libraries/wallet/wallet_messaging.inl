@@ -1,7 +1,6 @@
-
 signed_transaction_info wallet_api::send_message(const std::string& from,
-                                                 const std::vector<string>& to,
-                                                 const string& text,
+                                                 const std::vector<std::string>& to,
+                                                 const std::string& text,
                                                  bool broadcast)
 {
    if(my->is_locked())
@@ -10,8 +9,8 @@ signed_transaction_info wallet_api::send_message(const std::string& from,
 }
 
 signed_transaction_info wallet_api::send_unencrypted_message(const std::string& from,
-                                                             const std::vector<string>& to,
-                                                             const string& text,
+                                                             const std::vector<std::string>& to,
+                                                             const std::string& text,
                                                              bool broadcast)
 {
    if(my->is_locked())

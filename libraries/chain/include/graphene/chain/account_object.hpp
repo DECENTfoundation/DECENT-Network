@@ -115,7 +115,7 @@ namespace graphene { namespace chain {
          account_id_type registrar;
 
          /// The account's name. This name must be unique among all account names on the graph. May not be empty.
-         string name;
+         std::string name;
 
          /**
           * The owner authority represents absolute control over the account. Usually the keys in this authority will
@@ -256,7 +256,7 @@ namespace graphene { namespace chain {
          ordered_unique< tag< by_publishing_manager_and_name>,
             composite_key< account_object,
                const_mem_fun<account_object, bool, &account_object::is_publishing_manager>,
-               member<account_object, string, &account_object::name>
+               member<account_object, std::string, &account_object::name>
             >
          >
       >

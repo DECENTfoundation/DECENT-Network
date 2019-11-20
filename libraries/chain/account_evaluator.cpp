@@ -126,7 +126,7 @@ operation_result account_create_evaluator::do_apply( const operation_type& o )
                                              obj.m_to_account = new_acnt_object.id;
                                              obj.m_transaction_amount = asset();
                                              obj.m_transaction_fee = o.fee;
-                                             obj.m_str_description = string();
+                                             obj.m_str_description = std::string();
                                              obj.m_timestamp = d.head_block_time();
                                           });
 

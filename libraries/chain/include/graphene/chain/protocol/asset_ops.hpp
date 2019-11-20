@@ -29,7 +29,7 @@
 
 namespace graphene { namespace chain {
 
-   bool is_valid_symbol( const string& symbol );
+   bool is_valid_symbol( const std::string& symbol );
 
    /**
     * @brief The asset_options struct contains options available on all assets in the network
@@ -114,7 +114,7 @@ namespace graphene { namespace chain {
       /// This account must sign and pay the fee for this operation. Later, this account may update the asset
       account_id_type         issuer;
       /// The ticker symbol of this asset
-      string                  symbol;
+      std::string             symbol;
       /// Number of digits to the right of decimal point, must be less than or equal to 12
       uint8_t                 precision = 0;
 
@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
        * data that describes the meaning/purpose of this asset, fee will be charged proportional to
        * size of description.
        */
-      string description;
+      std::string description;
 
       asset_options options;
 
@@ -182,7 +182,7 @@ namespace graphene { namespace chain {
       account_id_type issuer;
       asset_id_type   asset_to_update;
 
-      string new_description;
+      std::string new_description;
       /// If the asset is to be given a new issuer, specify his ID here.
       fc::optional<account_id_type>   new_issuer;
       uint64_t max_supply;
@@ -274,7 +274,7 @@ namespace graphene { namespace chain {
       account_id_type issuer;
       asset_id_type   asset_to_update;
 
-      string new_description;
+      std::string new_description;
       /// Time before a price feed expires
       uint32_t new_feed_lifetime_sec = 0;
       /// Minimum number of unexpired feeds required to extract a median feed from

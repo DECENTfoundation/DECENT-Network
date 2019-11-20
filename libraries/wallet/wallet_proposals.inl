@@ -4,12 +4,12 @@ std::vector<proposal_object> wallet_api::get_proposed_transactions(const std::st
    return my->_remote_db->get_proposed_transactions( id );
 }
 
-signed_transaction_info wallet_api::propose_transfer(const string& proposer,
-                                                     const string& from,
-                                                     const string& to,
-                                                     const string& amount,
-                                                     const string& asset_symbol,
-                                                     const string& memo,
+signed_transaction_info wallet_api::propose_transfer(const std::string& proposer,
+                                                     const std::string& from,
+                                                     const std::string& to,
+                                                     const std::string& amount,
+                                                     const std::string& asset_symbol,
+                                                     const std::string& memo,
                                                      fc::time_point_sec expiration)
 {
    if(my->is_locked())
@@ -17,7 +17,7 @@ signed_transaction_info wallet_api::propose_transfer(const string& proposer,
    return my->propose_transfer(proposer, from, to, amount, asset_symbol, memo, expiration);
 }
 
-signed_transaction_info wallet_api::propose_parameter_change(const string& proposing_account,
+signed_transaction_info wallet_api::propose_parameter_change(const std::string& proposing_account,
                                                              fc::time_point_sec expiration_time,
                                                              const fc::variant_object& changed_values,
                                                              bool broadcast /* = false */)
@@ -27,7 +27,7 @@ signed_transaction_info wallet_api::propose_parameter_change(const string& propo
    return my->propose_parameter_change( proposing_account, expiration_time, changed_values, broadcast );
 }
 
-signed_transaction_info wallet_api::propose_fee_change(const string& proposing_account,
+signed_transaction_info wallet_api::propose_fee_change(const std::string& proposing_account,
                                                        fc::time_point_sec expiration_time,
                                                        const fc::variant_object& changed_fees,
                                                        bool broadcast /* = false */)
@@ -37,8 +37,8 @@ signed_transaction_info wallet_api::propose_fee_change(const string& proposing_a
    return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
 }
 
-signed_transaction_info wallet_api::approve_proposal(const string& fee_paying_account,
-                                                     const string& proposal_id,
+signed_transaction_info wallet_api::approve_proposal(const std::string& fee_paying_account,
+                                                     const std::string& proposal_id,
                                                      const approval_delta& delta,
                                                      bool broadcast /* = false */)
 {

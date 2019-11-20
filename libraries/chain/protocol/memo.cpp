@@ -84,14 +84,14 @@ uint64_t memo_data::generate_nonce()
    return (fc::time_point::now().time_since_epoch().count()   &  0x00ffffffffffffff) | entropy;
 }
 
-string memo_message::serialize() const
+std::string memo_message::serialize() const
 {
-   auto serial_checksum = string(sizeof(checksum), ' ');
+   auto serial_checksum = std::string(sizeof(checksum), ' ');
    (uint32_t&)(*serial_checksum.data()) = checksum;
    return serial_checksum + text;
 }
 
-memo_message memo_message::deserialize(const string& serial)
+memo_message memo_message::deserialize(const std::string& serial)
 {
    if( serial.empty() )
       return memo_message();

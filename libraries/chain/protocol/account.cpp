@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
  * - All letters are lowercase
  * - Length is between (inclusive) GRAPHENE_MIN_ACCOUNT_NAME_LENGTH and GRAPHENE_MAX_ACCOUNT_NAME_LENGTH
  */
-bool is_valid_name( const string& name )
+bool is_valid_name( const std::string& name )
 {
 #if GRAPHENE_MIN_ACCOUNT_NAME_LENGTH < 3
 #error This is_valid_name implementation implicitly enforces minimum name length of 3.
@@ -123,7 +123,7 @@ bool is_valid_name( const string& name )
     return true;
 }
 
-bool is_cheap_name( const string& n )
+bool is_cheap_name( const std::string& n )
 {
    bool v = false;
    for( auto c : n )

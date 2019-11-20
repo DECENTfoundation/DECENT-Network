@@ -81,7 +81,7 @@ namespace graphene { namespace chain {
       uint32_t quorum; ///< How many seeders needs to cooperate to recover the key
       fc::time_point_sec expiration;
       asset publishing_fee; ///< Fee must be greater than the sum of seeders' publishing prices * number of days. Is paid by author
-      string synopsis; ///<JSON formatted structure containing content information
+      std::string synopsis; ///<JSON formatted structure containing content information
       fc::optional<custody_data_type> cd; ///< if cd.n == 0 then no custody is submitted, and simplified verification is done.
 
       account_id_type fee_payer()const { return author; }
@@ -99,7 +99,7 @@ namespace graphene { namespace chain {
 
       asset fee;
       account_id_type author;
-      string URI;
+      std::string URI;
 
       account_id_type fee_payer()const { return author; }
       void validate()const { FC_ASSERT( URI != "" ); };
@@ -134,7 +134,7 @@ enum ENUM{ \
  BOOST_PP_SEQ_FOR_EACH(INNER_MACRO, _, FIELDS2) \
 }; \
 static bool InitCodeAndName() { \
-   std::vector<std::pair<uint32_t, string>> arr { \
+   std::vector<std::pair<uint32_t, std::string>> arr { \
       std::make_pair(uint32_t(RegionCodes::OO_none), ""), \
       std::make_pair(uint32_t(RegionCodes::OO_all), "default"), \
       BOOST_PP_SEQ_FOR_EACH(INNER_MACRO2, _, FIELDS1) \
@@ -166,7 +166,7 @@ static bool InitCodeAndName() { \
       void SetSimplePrice(asset const& price);
       void SetRegionPrice(uint32_t region_code, asset const& price);
       bool Valid(uint32_t region_code) const;
-      bool Valid(string const& region_code) const;
+      bool Valid(const std::string& region_code) const;
    };
 
    /**
@@ -178,7 +178,7 @@ static bool InitCodeAndName() { \
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-      string URI; ///<Reference to the content beuing bought
+      std::string URI; ///<Reference to the content beuing bought
       account_id_type consumer; ///< Who is buying (and paying)
       asset price; ///< Has to be equal or greater than the price defined in content
       uint32_t region_code_from = RegionCodes::OO_none; ///< Location of the consumer
@@ -199,10 +199,10 @@ static bool InitCodeAndName() { \
       struct fee_parameters_type { uint64_t fee = 0; };
 
       asset fee;
-      string URI;
+      std::string URI;
       account_id_type consumer;
       uint64_t rating; ///<1-5 stars
-      string comment; /// DECENT_MAX_COMMENT_SIZE
+      std::string comment; /// DECENT_MAX_COMMENT_SIZE
 
       account_id_type fee_payer()const { return consumer; }
       void validate()const;
@@ -247,7 +247,7 @@ static bool InitCodeAndName() { \
       uint32_t price_per_MByte;
       std::string ipfs_ID;
       /// Optional ISO 3166-1 alpha-2 two-letter region code
-      fc::optional<string> region_code;
+      fc::optional<std::string> region_code;
       extensions_type extensions;
 
       account_id_type fee_payer()const { return seeder; }

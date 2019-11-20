@@ -42,7 +42,7 @@ namespace graphene { namespace wallet {
          WalletAPIConnection() {}
          virtual ~WalletAPIConnection() {}
 
-         virtual fc::variant send_call(fc::api_id_type api_id, string method_name, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
+         virtual fc::variant send_call(fc::api_id_type api_id, std::string method_name, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
          virtual fc::variant send_callback(uint64_t callback_id, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
          virtual void send_notice(uint64_t callback_id, fc::variants args = fc::variants() ) {FC_ASSERT(false);}
       };
@@ -120,7 +120,7 @@ namespace graphene { namespace wallet {
          std::shared_ptr<fc_remote_api> m_ptr_remote_api;
          std::shared_ptr<wallet_api> m_ptr_wallet_api;
          WalletAPIConnectionPtr m_ptr_fc_api_connection;
-         std::map<string, std::function<string(fc::variant,const fc::variants&)> > m_result_formatters;
+         std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > m_result_formatters;
          std::map<graphene::chain::asset_id_type, std::pair<std::string, uint8_t>> m_asset_symbols;
       };
 
@@ -143,8 +143,8 @@ namespace graphene { namespace wallet {
 
       std::lock_guard<std::mutex> lock(m_mutex);
 
-      fc::future<string> future_connect =
-      m_pthread->async([this, &wallet_file, &ws] () -> string
+      fc::future<std::string> future_connect =
+      m_pthread->async([this, &wallet_file, &ws] () -> std::string
                        {
                            try
                            {
@@ -163,14 +163,14 @@ namespace graphene { namespace wallet {
                               return ex.what();
                            }
 
-                          return string();
+                          return std::string();
                        });
-      string str_result = future_connect.wait();
+      std::string str_result = future_connect.wait();
       if (!str_result.empty())
          throw wallet_exception(str_result);
    }
 
-   string WalletAPI::RunTask(string const& str_command)
+   std::string WalletAPI::RunTask(const std::string& str_command)
    {
       if (!is_connected())
          throw wallet_exception("not yet connected");
@@ -178,8 +178,8 @@ namespace graphene { namespace wallet {
       std::lock_guard<std::mutex> lock(m_mutex);
       auto& pimpl = m_pimpl;
 
-      fc::future<string> future_run =
-      m_pthread->async([&pimpl, &str_command] () -> string
+      fc::future<std::string> future_run =
+      m_pthread->async([&pimpl, &str_command] () -> std::string
                        {
                           std::string line = str_command;
                           line += char(EOF);
@@ -196,7 +196,7 @@ namespace graphene { namespace wallet {
                              }
                              auto it = pimpl->m_result_formatters.find(method);
 
-                             string str_result;
+                             std::string str_result;
                              if (it == pimpl->m_result_formatters.end())
                                 str_result = fc::json::to_pretty_string(result);
                              else
@@ -206,7 +206,7 @@ namespace graphene { namespace wallet {
                           }
                           // may as well throw an exception?
 
-                          return string();
+                          return std::string();
                        });
       return future_run.wait();
    }

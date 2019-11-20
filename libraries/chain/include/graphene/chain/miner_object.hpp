@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
          fc::optional<vesting_balance_id_type> pay_vb;
          vote_id_type     vote_id;
          uint64_t         total_votes = 0;
-         string           url;
+         std::string      url;
          int64_t          total_missed = 0;
          uint32_t         last_confirmed_block_num = 0;
          uint32_t         vote_ranking = std::numeric_limits<uint32_t>::max();

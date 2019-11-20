@@ -83,7 +83,7 @@ operation_result subscribe_evaluator::do_apply( const operation_type& op )
                                                 obj.m_to_account = op.to;
                                                 obj.m_transaction_amount = op.price;
                                                 obj.m_transaction_fee = op.fee;
-                                                string subscription_period = std::to_string(to_account->options.subscription_period) + " day";
+                                                std::string subscription_period = std::to_string(to_account->options.subscription_period) + " day";
                                                 if( to_account->options.subscription_period > 1 )
                                                    subscription_period += "s";
                                                 obj.m_str_description = subscription_period;
@@ -150,7 +150,7 @@ operation_result subscribe_by_author_evaluator::do_apply( const operation_type& 
                                                 obj.m_to_account = op.to;
                                                 obj.m_transaction_amount = asset();
                                                 obj.m_transaction_fee = op.fee;
-                                                string subscription_period = std::to_string(to_account->options.subscription_period) + " day";
+                                                std::string subscription_period = std::to_string(to_account->options.subscription_period) + " day";
                                                 if( to_account->options.subscription_period > 1 )
                                                    subscription_period += "s";
                                                 obj.m_str_description = subscription_period;

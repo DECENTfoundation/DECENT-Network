@@ -127,8 +127,8 @@ namespace graphene { namespace chain {
       uint32_t    checksum = 0;
       std::string text;
 
-      string serialize() const;
-      static memo_message deserialize(const string& serial);
+      std::string serialize() const;
+      static memo_message deserialize(const std::string& serial);
    };
 
 } } // namespace graphene::chain

@@ -18,7 +18,7 @@ namespace graphene { namespace chain {
    public:
       using value_type = basic_type;
 
-      void load(string const& str_synopsis)
+      void load(const std::string& str_synopsis)
       {
          m_arrValues.clear();
          fc::variant variant_synopsis;
@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
 
          if (variant_synopsis.is_object())
          {
-            string str_name = Derived::name();
+            std::string str_name = Derived::name();
 
             if (variant_synopsis.get_object().contains(str_name.c_str()))
                variant_value = variant_synopsis[str_name.c_str()];
@@ -49,7 +49,7 @@ namespace graphene { namespace chain {
             for (size_t iIndex = 0; iIndex < variant_value.size(); ++iIndex)
             {
                fc::variant const& variant_item = variant_value[iIndex];
-               string str_value = variant_item.as_string();
+               std::string str_value = variant_item.as_string();
                value_type item;
                ContentObjectPropertyBase::convert_from_string(str_value, item);
                m_arrValues.push_back(item);
@@ -57,7 +57,7 @@ namespace graphene { namespace chain {
          }
          else if (false == variant_value.is_null())
          {
-            string str_value = variant_value.as_string();
+            std::string str_value = variant_value.as_string();
             value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
             m_arrValues.push_back(item);
@@ -74,7 +74,7 @@ namespace graphene { namespace chain {
          if (is_default(0) &&
              m_arrValues.empty())
          {
-            string str_value;
+            std::string str_value;
             value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
             m_arrValues.push_back(item);
@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
             m_arrValues.resize(1);
          }
       }
-      void save(string& str_synopsis) const
+      void save(std::string& str_synopsis) const
       {
          std::vector<value_type> arrValues = m_arrValues;
 
@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
          if (is_default(0) &&
              arrValues.empty())
          {
-            string str_value;
+            std::string str_value;
             value_type item;
             ContentObjectPropertyBase::convert_from_string(str_value, item);
             arrValues.push_back(item);
@@ -110,7 +110,7 @@ namespace graphene { namespace chain {
          if (1 == arrValues.size())
          {
             value_type const& item = arrValues[0];
-            string str_value;
+            std::string str_value;
             ContentObjectPropertyBase::convert_to_string(item, str_value);
             variant_value = str_value;
          }
@@ -119,7 +119,7 @@ namespace graphene { namespace chain {
             fc::variants arr_variant_value;
             for (auto const& item : arrValues)
             {
-               string str_value;
+               std::string str_value;
                ContentObjectPropertyBase::convert_to_string(item, str_value);
                arr_variant_value.emplace_back(str_value);
             }
@@ -143,7 +143,7 @@ namespace graphene { namespace chain {
          fc::variant_object& variant_obj = variant_synopsis.get_object();
          fc::mutable_variant_object mutable_variant_obj(variant_obj);
 
-         string str_name = Derived::name();
+         std::string str_name = Derived::name();
          mutable_variant_obj.set(str_name, variant_value);
          variant_obj = mutable_variant_obj;
 
@@ -151,21 +151,21 @@ namespace graphene { namespace chain {
       }
 
       template <typename U>
-      static void convert_from_string(string const& str_value, U& converted_value)
+      static void convert_from_string(const std::string& str_value, U& converted_value)
       {
          Derived::convert_from_string(str_value, converted_value);
       }
       template <typename U>
-      static void convert_to_string(U const& value, string& str_converted_value)
+      static void convert_to_string(U const& value, std::string& str_converted_value)
       {
          Derived::convert_to_string(value, str_converted_value);
       }
 
-      static void convert_from_string(string const& str_value, string& converted_value)
+      static void convert_from_string(const std::string& str_value, std::string& converted_value)
       {
          converted_value = str_value;
       }
-      static void convert_to_string(string const& str_value, string& converted_value)
+      static void convert_to_string(const std::string& str_value, std::string& converted_value)
       {
          converted_value = str_value;
       }
@@ -315,46 +315,46 @@ namespace graphene { namespace chain {
       using meta_default = bool;
       using meta_unique = bool;
 
-      static string name()
+      static std::string name()
       {
          return "content_type_id";
       }
 
-      static void convert_from_string(string const& str_value, ContentObjectTypeValue& type)
+      static void convert_from_string(const std::string& str_value, ContentObjectTypeValue& type)
       {
          type.from_string(str_value);
       }
-      static void convert_to_string(ContentObjectTypeValue const& type, string& str_value)
+      static void convert_to_string(ContentObjectTypeValue const& type, std::string& str_value)
       {
          type.to_string(str_value);
       }
    };
 
-   class ContentObjectTitle : public ContentObjectPropertyBase<string, ContentObjectTitle>
+   class ContentObjectTitle : public ContentObjectPropertyBase<std::string, ContentObjectTitle>
    {
    public:
       using meta_fallback = bool;
       using meta_unique = bool;
-      static string name()
+      static std::string name()
       {
          return "title";
       }
    };
-   class ContentObjectDescription : public ContentObjectPropertyBase<string, ContentObjectDescription>
+   class ContentObjectDescription : public ContentObjectPropertyBase<std::string, ContentObjectDescription>
    {
    public:
       using meta_default = bool;
       using meta_unique = bool;
-      static string name()
+      static std::string name()
       {
          return "description";
       }
    };
-   class ContentObjectISBN : public ContentObjectPropertyBase<string, ContentObjectISBN>
+   class ContentObjectISBN : public ContentObjectPropertyBase<std::string, ContentObjectISBN>
    {
    public:
       using meta_unique = bool;
-      static string name()
+      static std::string name()
       {
          return "isbn";
       }
@@ -363,7 +363,7 @@ namespace graphene { namespace chain {
    class ContentObjectPropertyManager
    {
    public:
-      ContentObjectPropertyManager(string const& str_synopsis = string())
+      ContentObjectPropertyManager(const std::string& str_synopsis = std::string())
          : m_str_synopsis(str_synopsis)
       {
 
@@ -390,18 +390,18 @@ namespace graphene { namespace chain {
          property.save(m_str_synopsis);
       }
 
-      string m_str_synopsis;
+      std::string m_str_synopsis;
    };
 
    struct content_summary
    {
-      string id;
-      string author;
+      std::string id;
+      std::string author;
       asset price;
-      string synopsis;
+      std::string synopsis;
       fc::ripemd160 _hash;
-      string status;
-      string URI;
+      std::string status;
+      std::string URI;
       uint32_t AVG_rating = 0;
       uint64_t size = 0;
       fc::time_point_sec expiration;
@@ -409,7 +409,7 @@ namespace graphene { namespace chain {
       uint32_t times_bought = 0;
 
       content_summary& set( const content_object& co, const account_object& ao, uint32_t region_code );
-      content_summary& set( const content_object& co, const account_object& ao, string const& region_code );
+      content_summary& set( const content_object& co, const account_object& ao, const std::string& region_code );
    };
 
    struct content_keys {
@@ -430,10 +430,10 @@ namespace graphene { namespace chain {
       fc::time_point_sec created;
       PriceRegions price;
 
-      string synopsis;
+      std::string synopsis;
       uint64_t size;
       uint32_t quorum;
-      string URI;
+      std::string URI;
       std::map<account_id_type, decent::encrypt::CiphertextString> key_parts;
       std::map<account_id_type, fc::time_point_sec> last_proof;
       std::map<account_id_type, share_type> seeder_price;
@@ -563,7 +563,7 @@ namespace graphene { namespace chain {
                member<content_object, account_id_type, &content_object::author>
             >,
             ordered_unique<tag<by_URI>,
-               member<content_object, string, &content_object::URI>
+               member<content_object, std::string, &content_object::URI>
             >,
             ordered_non_unique<tag<by_price>,
             const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>

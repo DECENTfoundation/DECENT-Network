@@ -95,7 +95,7 @@ void graphene::chain::asset_bitasset_data_object::update_median_feeds(time_point
 }
 */
 
-asset asset_object::amount_from_string(string amount_string) const
+asset asset_object::amount_from_string(std::string amount_string) const
 {
 
    try {
@@ -128,7 +128,7 @@ asset asset_object::amount_from_string(string amount_string) const
       share_type scaled_precision = asset::scaled_precision( precision );
 
       const auto decimal_pos = amount_string.find( '.' );
-      const string lhs = amount_string.substr( negative_found, decimal_pos );
+      const std::string lhs = amount_string.substr( negative_found, decimal_pos );
       if( !lhs.empty() )
          satoshis += fc::safe<int64_t>(std::stoll(lhs)) *= scaled_precision;
 
@@ -136,7 +136,7 @@ asset asset_object::amount_from_string(string amount_string) const
       {
          const size_t max_rhs_size = std::to_string( scaled_precision.value ).substr( 1 ).size();
 
-         string rhs = amount_string.substr( decimal_pos + 1, precision );
+         std::string rhs = amount_string.substr( decimal_pos + 1, precision );
          FC_ASSERT( rhs.size() <= max_rhs_size );
 
          while( rhs.size() < max_rhs_size )
@@ -156,14 +156,14 @@ asset asset_object::amount_from_string(string amount_string) const
 
 }
 
-string asset_object::amount_to_string(share_type amount) const
+std::string asset_object::amount_to_string(share_type amount) const
 {
    share_type scaled_precision = 1;
    for( uint8_t i = 0; i < precision; ++i )
       scaled_precision *= 10;
    assert(scaled_precision > 0);
 
-   string result = fc::to_string(amount.value / scaled_precision.value);
+   std::string result = fc::to_string(amount.value / scaled_precision.value);
    auto decimals = amount.value % scaled_precision.value;
    if( decimals )
       result += "." + fc::to_string(scaled_precision.value + decimals).erase(0,1);

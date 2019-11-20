@@ -106,7 +106,7 @@ namespace graphene { namespace chain {
    template <>
    struct key_extractor<by_description, transaction_detail_object>
    {
-      static string get(transaction_detail_object const& ob)
+      static std::string get(transaction_detail_object const& ob)
       {
          return ob.m_str_description;
       }

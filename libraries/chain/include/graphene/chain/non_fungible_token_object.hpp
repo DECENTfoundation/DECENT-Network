@@ -16,7 +16,7 @@ namespace graphene { namespace chain {
    {
       public:
          /// Symbol for this token
-         string symbol;
+         std::string symbol;
          /// Options for this token
          non_fungible_token_options options;
          /// Definitions of data that are assigned to each token instance, fee will be charged proportional to size of definitions
@@ -48,7 +48,7 @@ namespace graphene { namespace chain {
       non_fungible_token_object,
       indexed_by<
          graphene::db::object_id_index,
-         ordered_unique< tag<by_symbol>, member<non_fungible_token_object, string, &non_fungible_token_object::symbol> >,
+         ordered_unique< tag<by_symbol>, member<non_fungible_token_object, std::string, &non_fungible_token_object::symbol> >,
          ordered_non_unique< tag<by_account>, global_fun<const non_fungible_token_object&, account_id_type, &non_fungible_token_object::get_issuer> >
         >
    > non_fungible_token_object_multi_index_type;

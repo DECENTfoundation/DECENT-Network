@@ -101,8 +101,8 @@ namespace detail {
 class seeders_tracker{
 public:
    seeders_tracker(wallet_api_impl& wallet):_wallet(wallet) {};
-   std::vector<account_id_type> track_content(const string& URI);
-   std::vector<account_id_type> untrack_content(const string& URI);
+   std::vector<account_id_type> track_content(const std::string& URI);
+   std::vector<account_id_type> untrack_content(const std::string& URI);
    bool is_empty() { return seeder_to_content.empty(); };
    std::vector<account_id_type> get_unfinished_seeders();
    void set_initial_stats( const account_id_type& seeder, const uint64_t amount );
@@ -116,7 +116,7 @@ private:
 
 struct ipfs_stats_listener : public decent::package::EventListenerInterface{
 
-   ipfs_stats_listener(const string& URI, wallet_api_impl& api, account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
+   ipfs_stats_listener(const std::string& URI, wallet_api_impl& api, account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
       _ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port()){}
 
    virtual void package_download_start();
@@ -124,7 +124,7 @@ struct ipfs_stats_listener : public decent::package::EventListenerInterface{
    virtual void package_download_error(const std::string&);
 
 private:
-   string            _URI;
+   std::string       _URI;
    wallet_api_impl&  _wallet;
    account_id_type   _consumer;
    ipfs::Client      _ipfs_client;
@@ -222,9 +222,9 @@ struct op_prototype_visitor
    template<typename Type>
    result_type operator()( const Type& op )const
    {
-      string name = fc::get_typename<Type>::name();
+      std::string name = fc::get_typename<Type>::name();
       size_t p = name.rfind(':');
-      if( p != string::npos )
+      if( p != std::string::npos )
          name = name.substr( p+1 );
       name2op[ name ] = Type();
    }
@@ -288,7 +288,7 @@ private:
       if( !_wallet.pending_account_registrations.empty() )
       {
          // make a vector of the account names pending registration
-         std::vector<string> pending_account_names = boost::copy_range<std::vector<string> >(boost::adaptors::keys(_wallet.pending_account_registrations));
+         std::vector<std::string> pending_account_names = boost::copy_range<std::vector<std::string>>(boost::adaptors::keys(_wallet.pending_account_registrations));
 
          // look those up on the blockchain
          std::vector<fc::optional<graphene::chain::account_object >>
@@ -303,7 +303,7 @@ private:
       if (!_wallet.pending_miner_registrations.empty())
       {
          // make a vector of the owner accounts for miners pending registration
-         std::vector<string> pending_miner_names = boost::copy_range<std::vector<string> >(boost::adaptors::keys(_wallet.pending_miner_registrations));
+         std::vector<std::string> pending_miner_names = boost::copy_range<std::vector<std::string>>(boost::adaptors::keys(_wallet.pending_miner_registrations));
 
          // look up the owners on the blockchain
          std::vector<fc::optional<graphene::chain::account_object>> owner_account_objects = _remote_db->lookup_account_names(pending_miner_names);
@@ -482,7 +482,7 @@ public:
       return *rec;
    }
 
-   fc::optional<account_object> find_account(const string& account_name_or_id) const
+   fc::optional<account_object> find_account(const std::string& account_name_or_id) const
    {
       if(account_name_or_id.size() == 0)
          FC_THROW_EXCEPTION(account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
@@ -520,7 +520,7 @@ public:
       return *rec;
    }
 
-   account_object get_account(const string& account_name_or_id) const
+   account_object get_account(const std::string& account_name_or_id) const
    {
       auto rec = find_account(account_name_or_id);
       if(!rec)
@@ -533,7 +533,7 @@ public:
       return _remote_db->get_assets({asset_id}).front();
    }
 
-   fc::optional<asset_object> find_asset(const string& asset_symbol_or_id) const
+   fc::optional<asset_object> find_asset(const std::string& asset_symbol_or_id) const
    {
       FC_ASSERT( asset_symbol_or_id.size() > 0 );
 
@@ -560,7 +560,7 @@ public:
       return *opt;
    }
 
-   asset_object get_asset(const string& asset_symbol_or_id) const
+   asset_object get_asset(const std::string& asset_symbol_or_id) const
    {
       auto opt = find_asset(asset_symbol_or_id);
       FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_symbol_or_id));
@@ -572,7 +572,7 @@ public:
       return _remote_db->get_non_fungible_tokens({nft_id}).front();
    }
 
-   fc::optional<non_fungible_token_object> find_non_fungible_token(const string& nft_symbol_or_id) const
+   fc::optional<non_fungible_token_object> find_non_fungible_token(const std::string& nft_symbol_or_id) const
    {
       FC_ASSERT( nft_symbol_or_id.size() > 0 );
       if( auto id = maybe_id<non_fungible_token_id_type>(nft_symbol_or_id) )
@@ -598,7 +598,7 @@ public:
       return *opt;
    }
 
-   non_fungible_token_object get_non_fungible_token(const string& nft_symbol_or_id) const
+   non_fungible_token_object get_non_fungible_token(const std::string& nft_symbol_or_id) const
    {
       auto opt = find_non_fungible_token(nft_symbol_or_id);
       FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", nft_symbol_or_id));
@@ -652,7 +652,7 @@ public:
    // given account name.
    // @returns true if the key matches a current active/owner/memo key for the named
    //          account, false otherwise (but it is stored either way)
-   bool import_key(const string& account_name_or_id, const string& wif_key)
+   bool import_key(const std::string& account_name_or_id, const std::string& wif_key)
    {
       FC_ASSERT( !is_locked() );
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
@@ -705,7 +705,7 @@ public:
 
    // @returns true if the key matches a current active/owner/memo key for the named
    //          account, false otherwise (but it is stored either way)
-   bool import_single_key(const string& account_name_or_id, const string& wif_key)
+   bool import_single_key(const std::string& account_name_or_id, const std::string& wif_key)
    {
       FC_ASSERT( !is_locked() );
       fc::optional<fc::ecc::private_key> optional_private_key = wif_to_key(wif_key);
@@ -956,7 +956,7 @@ public:
       FC_ASSERT( operation_index < trx.operations.size());
       trx.operations[operation_index] = new_op;
    }
-   asset set_fees_on_builder_transaction(transaction_handle_type handle, const string& fee_asset = string(GRAPHENE_SYMBOL))
+   asset set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset)
    {
       if(!_builder_transactions.count(handle))
          FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
@@ -1009,7 +1009,7 @@ public:
 
    signed_transaction propose_builder_transaction2(
       transaction_handle_type handle,
-      const string& account_name_or_id,
+      const std::string& account_name_or_id,
       fc::time_point_sec expiration = fc::time_point::now() + fc::minutes(1),
       uint32_t review_period_seconds = 0, bool broadcast = true)
    {
@@ -1230,20 +1230,20 @@ public:
          return tx;
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(broadcast) ) }
 
-   signed_transaction create_account_with_brain_key(const string& brain_key,
-                                                    const string& account_name,
-                                                    const string& registrar_account,
+   signed_transaction create_account_with_brain_key(const std::string& brain_key,
+                                                    const std::string& account_name,
+                                                    const std::string& registrar_account,
                                                     bool import,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
-      string normalized_brain_key = graphene::utilities::normalize_brain_key( brain_key );
+      std::string normalized_brain_key = graphene::utilities::normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = graphene::utilities::derive_private_key( normalized_brain_key );
       return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
    } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
 
-   signed_transaction update_account_keys( const string& name,
+   signed_transaction update_account_keys( const std::string& name,
                                            fc::optional<authority> owner_auth,
                                            fc::optional<authority> active_auth,
                                            fc::optional<public_key_type> memo_pubkey,
@@ -1284,10 +1284,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (name)(owner_auth)(active_auth)(memo_pubkey)(broadcast) ) }
 
-   signed_transaction create_user_issued_asset(const string& issuer,
-                                               const string& symbol,
+   signed_transaction create_user_issued_asset(const std::string& issuer,
+                                               const std::string& symbol,
                                                uint8_t precision,
-                                               const string& description,
+                                               const std::string& description,
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
@@ -1321,10 +1321,10 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(is_exchangeable)(broadcast) ) }
 
-   signed_transaction issue_asset(const string& to_account,
-                                  const string& amount,
-                                  const string& symbol,
-                                  const string& memo,
+   signed_transaction issue_asset(const std::string& to_account,
+                                  const std::string& amount,
+                                  const std::string& symbol,
+                                  const std::string& memo,
                                   bool broadcast = false)
    {
       auto asset_obj = get_asset(symbol);
@@ -1350,9 +1350,9 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction update_user_issued_asset(const string& symbol,
-                                               const string& new_issuer,
-                                               const string& description,
+   signed_transaction update_user_issued_asset(const std::string& symbol,
+                                               const std::string& new_issuer,
+                                               const std::string& description,
                                                uint64_t max_supply,
                                                price core_exchange_rate,
                                                bool is_exchangeable,
@@ -1384,11 +1384,11 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(broadcast) ) }
 
-      signed_transaction fund_asset_pools(const string& from,
-                                          const string& uia_amount,
-                                          const string& uia_symbol,
-                                          const string& DCT_amount,
-                                          const string& DCT_symbol,
+      signed_transaction fund_asset_pools(const std::string& from,
+                                          const std::string& uia_amount,
+                                          const std::string& uia_symbol,
+                                          const std::string& DCT_amount,
+                                          const std::string& DCT_symbol,
                                           bool broadcast /* = false */)
       { try {
             account_object from_account = get_account(from);
@@ -1408,9 +1408,9 @@ public:
             return sign_transaction( tx, broadcast );
          } FC_CAPTURE_AND_RETHROW( (from)(uia_amount)(uia_symbol)(DCT_amount)(DCT_symbol)(broadcast) ) }
 
-   signed_transaction reserve_asset(const string& from,
-                                    const string& amount,
-                                    const string& symbol,
+   signed_transaction reserve_asset(const std::string& from,
+                                    const std::string& amount,
+                                    const std::string& symbol,
                                     bool broadcast /* = false */)
    { try {
          account_object from_account = get_account(from);
@@ -1428,10 +1428,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
 
-   signed_transaction claim_fees(const string& uia_amount,
-                                 const string& uia_symbol,
-                                 const string& dct_amount,
-                                 const string& dct_symbol,
+   signed_transaction claim_fees(const std::string& uia_amount,
+                                 const std::string& uia_symbol,
+                                 const std::string& dct_amount,
+                                 const std::string& dct_symbol,
                                  bool broadcast /* = false */)
    { try {
          asset_object uia_asset_to_claim = get_asset(uia_symbol);
@@ -1452,10 +1452,10 @@ public:
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (uia_amount)(uia_symbol)(dct_amount)(dct_symbol)(broadcast) ) }
 
-   signed_transaction create_monitored_asset(const string& issuer,
-                                             const string& symbol,
+   signed_transaction create_monitored_asset(const std::string& issuer,
+                                             const std::string& symbol,
                                              uint8_t precision,
-                                             const string& description,
+                                             const std::string& description,
                                              uint32_t feed_lifetime_sec,
                                              uint8_t minimum_feeds,
                                              bool broadcast = false)
@@ -1488,8 +1488,8 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
-   signed_transaction update_monitored_asset(const string& symbol,
-                                             const string& description,
+   signed_transaction update_monitored_asset(const std::string& symbol,
+                                             const std::string& description,
                                              uint32_t feed_lifetime_sec,
                                              uint8_t minimum_feeds,
                                              bool broadcast /* = false */)
@@ -1511,8 +1511,8 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (symbol)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
 
-   signed_transaction publish_asset_feed(const string& publishing_account,
-                                         const string& symbol,
+   signed_transaction publish_asset_feed(const std::string& publishing_account,
+                                         const std::string& symbol,
                                          price_feed feed,
                                          bool broadcast /* = false */)
    { try {
@@ -1537,9 +1537,9 @@ public:
    //                                                                  //
    //////////////////////////////////////////////////////////////////////
 
-   signed_transaction create_non_fungible_token(const string& issuer,
-                                                const string& symbol,
-                                                const string& description,
+   signed_transaction create_non_fungible_token(const std::string& issuer,
+                                                const std::string& symbol,
+                                                const std::string& description,
                                                 const non_fungible_token_data_definitions& definitions,
                                                 uint32_t max_supply,
                                                 bool fixed_max_supply,
@@ -1568,9 +1568,9 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction update_non_fungible_token(const string& issuer,
-                                                const string& symbol,
-                                                const string& description,
+   signed_transaction update_non_fungible_token(const std::string& issuer,
+                                                const std::string& symbol,
+                                                const std::string& description,
                                                 uint32_t max_supply,
                                                 bool fixed_max_supply,
                                                 bool broadcast /* = false */)
@@ -1594,10 +1594,10 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction issue_non_fungible_token(const string& to_account,
-                                               const string& symbol,
+   signed_transaction issue_non_fungible_token(const std::string& to_account,
+                                               const std::string& symbol,
                                                const fc::variants& data,
-                                               const string& memo,
+                                               const std::string& memo,
                                                bool broadcast /* = false */)
    {
       non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
@@ -1705,8 +1705,8 @@ public:
       FC_CAPTURE_AND_RETHROW( (owner_account) )
    }
 
-   signed_transaction create_miner(const string& owner_account,
-                                   const string& url,
+   signed_transaction create_miner(const std::string& owner_account,
+                                   const std::string& url,
                                    bool broadcast /* = false */)
    { try {
       account_object miner_account = get_account(owner_account);
@@ -1733,9 +1733,9 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
 
-   signed_transaction update_miner(const string& miner_name,
-                                   const string& url,
-                                   const string& block_signing_key,
+   signed_transaction update_miner(const std::string& miner_name,
+                                   const std::string& url,
+                                   const std::string& block_signing_key,
                                    bool broadcast /* = false */)
    { try {
       miner_object miner = get_miner(miner_name);
@@ -1786,9 +1786,9 @@ public:
    } FC_CAPTURE_AND_RETHROW( (account_name) )
    }
 
-   signed_transaction withdraw_vesting(const string& miner_name,
-                                       const string& amount,
-                                       const string& asset_symbol,
+   signed_transaction withdraw_vesting(const std::string& miner_name,
+                                       const std::string& amount,
+                                       const std::string& asset_symbol,
                                        bool broadcast = false )
    { try {
       asset_object asset_obj = get_asset( asset_symbol );
@@ -1816,8 +1816,8 @@ public:
    } FC_CAPTURE_AND_RETHROW( (miner_name)(amount) )
    }
 
-   signed_transaction vote_for_miner(const string& voting_account,
-                                     const string& miner,
+   signed_transaction vote_for_miner(const std::string& voting_account,
+                                     const std::string& miner,
                                      bool approve,
                                      bool broadcast /* = false */)
    { try {
@@ -1851,8 +1851,8 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (voting_account)(miner)(approve)(broadcast) ) }
 
-   signed_transaction set_voting_proxy(const string& account_to_modify,
-                                       fc::optional<string> voting_account,
+   signed_transaction set_voting_proxy(const std::string& account_to_modify,
+                                       fc::optional<std::string> voting_account,
                                        bool broadcast /* = false */)
    { try {
       account_object account_object_to_modify = get_account(account_to_modify);
@@ -1884,7 +1884,7 @@ public:
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
 
-   signed_transaction set_desired_miner_count(const string& account_to_modify,
+   signed_transaction set_desired_miner_count(const std::string& account_to_modify,
                                               uint16_t desired_number_of_miners,
                                               bool broadcast /* = false */)
    { try {
@@ -2070,12 +2070,11 @@ public:
       return tx;
    }
 
-
-   signed_transaction transfer(const string& from,
-                               const string& to,
-                               const string& amount,
-                               const string& asset_symbol,
-                               const string& memo,
+   signed_transaction transfer(const std::string& from,
+                               const std::string& to,
+                               const std::string& amount,
+                               const std::string& asset_symbol,
+                               const std::string& memo,
                                bool broadcast = false)
    { try {
       account_object from_account = get_account(from);
@@ -2125,12 +2124,12 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
-   signed_transaction propose_transfer(const string& proposer,
-                         const string& from,
-                         const string& to,
-                         const string& amount,
-                         const string& asset_symbol,
-                         const string& memo,
+   signed_transaction propose_transfer(const std::string& proposer,
+                         const std::string& from,
+                         const std::string& to,
+                         const std::string& amount,
+                         const std::string& asset_symbol,
+                         const std::string& memo,
                          fc::time_point_sec expiration)
    {
       transaction_handle_type propose_num = begin_builder_transaction();
@@ -2147,7 +2146,7 @@ public:
       }
 
       add_operation_to_builder_transaction(propose_num, op);
-      set_fees_on_builder_transaction(propose_num);
+      set_fees_on_builder_transaction(propose_num, std::string(GRAPHENE_SYMBOL));
 
       return propose_builder_transaction2(propose_num, proposer, expiration);
    }
@@ -2249,9 +2248,9 @@ public:
       FC_ASSERT(false);
    }
 
-   std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
+   std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
-      std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
+      std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > m;
       m["help"] = m["get_help"] = m["from_command_file"] = [](fc::variant result, const fc::variants& a)
       {
          return result.get_string();
@@ -2261,7 +2260,7 @@ public:
    }
 
    signed_transaction propose_parameter_change(
-      const string& proposing_account,
+      const std::string& proposing_account,
       fc::time_point_sec expiration_time,
       const fc::variant_object& changed_values,
       bool broadcast = false)
@@ -2295,7 +2294,7 @@ public:
    }
 
    signed_transaction propose_fee_change(
-      const string& proposing_account,
+      const std::string& proposing_account,
       fc::time_point_sec expiration_time,
       const fc::variant_object& changed_fees,
       bool broadcast = false)
@@ -2311,7 +2310,7 @@ public:
 
       for( const auto& item : changed_fees )
       {
-         const string& key = item.key();
+         const std::string& key = item.key();
          if( key == "scale" )
          {
             int64_t _scale = item.value().as_int64();
@@ -2377,8 +2376,8 @@ public:
    }
 
    signed_transaction approve_proposal(
-      const string& fee_paying_account,
-      const string& proposal_id,
+      const std::string& fee_paying_account,
+      const std::string& proposal_id,
       const approval_delta& delta,
       bool broadcast = false)
    {
@@ -2599,8 +2598,8 @@ public:
       FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
    }
 
-signed_transaction content_cancellation(const string& author,
-                                        const string& URI,
+signed_transaction content_cancellation(const std::string& author,
+                                        const std::string& URI,
                                         bool broadcast)
 {
    try
@@ -2617,7 +2616,7 @@ signed_transaction content_cancellation(const string& author,
    } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
 }
 
-   content_download_status get_download_status(const string& consumer, const string& URI) const
+   content_download_status get_download_status(const std::string& consumer, const std::string& URI) const
    {
       try {
 
@@ -2661,7 +2660,7 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
    }
 
-   string price_to_dct(const string& amount, const string& asset_symbol_or_id)
+   std::string price_to_dct(const std::string& amount, const std::string& asset_symbol_or_id) const
    {
       asset_object price_o = get_asset(asset_symbol_or_id);
       asset price = price_o.amount_from_string(amount);
@@ -2674,9 +2673,9 @@ signed_transaction content_cancellation(const string& author,
        return _remote_db->list_operations();
    }
 
-   string from_command_file( const std::string& command_file_name ) const
+   std::string from_command_file( const std::string& command_file_name ) const
    {
-       string result;
+       std::string result;
        WalletAPI my_api;
        bool contains_submit_content_async = false;
 
@@ -2705,7 +2704,7 @@ signed_transaction content_cancellation(const string& author,
                    if( args.size() == 0 )
                       continue;
 
-                   const string& method = args.front().get_string();
+                   const std::string& method = args.front().get_string();
 
                    if (method == "from_command_file")
                    {
@@ -2735,7 +2734,7 @@ signed_transaction content_cancellation(const string& author,
        return result;
    }
 
-   void download_content(string const& consumer, string const& URI, string const& str_region_code_from, bool broadcast)
+   void download_content(const std::string& consumer, const std::string& URI, const std::string& str_region_code_from, bool broadcast)
    {
       try
       {
@@ -2787,11 +2786,11 @@ signed_transaction content_cancellation(const string& author,
    }
 
 
-   signed_transaction request_to_buy(const string& consumer,
-                                     const string& URI,
-                                     const string& price_asset_symbol,
-                                     const string& price_amount,
-                                     const string& str_region_code_from,
+   signed_transaction request_to_buy(const std::string& consumer,
+                                     const std::string& URI,
+                                     const std::string& price_asset_symbol,
+                                     const std::string& price_amount,
+                                     const std::string& str_region_code_from,
                                      bool broadcast/* = false */)
    { try {
       account_object consumer_account = get_account( consumer );
@@ -2827,10 +2826,10 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) )
    }
 
-   signed_transaction leave_rating_and_comment(const string& consumer,
-                                 const string& URI,
+   signed_transaction leave_rating_and_comment(const std::string& consumer,
+                                 const std::string& URI,
                                  uint64_t rating,
-                                 const string& comment,
+                                 const std::string& comment,
                                  bool broadcast/* = false */)
    {
       try
@@ -2855,10 +2854,10 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
    }
 
-   signed_transaction subscribe_to_author( const string& from,
-                                           const string& to,
-                                           const string& price_amount,
-                                           const string& price_asset_symbol,
+   signed_transaction subscribe_to_author( const std::string& from,
+                                           const std::string& to,
+                                           const std::string& price_amount,
+                                           const std::string& price_asset_symbol,
                                            bool broadcast/* = false */)
    { try {
          asset_object asset_obj = get_asset(price_asset_symbol);
@@ -2877,8 +2876,8 @@ signed_transaction content_cancellation(const string& author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(to)(price_amount)(price_asset_symbol)(broadcast) ) }
 
-   signed_transaction subscribe_by_author( const string& from,
-                                           const string& to,
+   signed_transaction subscribe_by_author( const std::string& from,
+                                           const std::string& to,
                                            bool broadcast/* = false */)
    { try {
          subscribe_by_author_operation subscribe_op;
@@ -2893,11 +2892,11 @@ signed_transaction content_cancellation(const string& author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (from)(to)(broadcast)) }
 
-   signed_transaction set_subscription( const string& account,
+   signed_transaction set_subscription( const std::string& account,
                                         bool allow_subscription,
                                         uint32_t subscription_period,
-                                        const string& price_amount,
-                                        const string& price_asset_symbol,
+                                        const std::string& price_amount,
+                                        const std::string& price_asset_symbol,
                                         bool broadcast/* = false */)
    { try {
          asset_object asset_obj = get_asset(price_asset_symbol);
@@ -2919,7 +2918,7 @@ signed_transaction content_cancellation(const string& author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (account)(allow_subscription)(subscription_period)(price_amount)(price_asset_symbol)(broadcast) ) }
 
-   signed_transaction set_automatic_renewal_of_subscription( const string& account_id_or_name,
+   signed_transaction set_automatic_renewal_of_subscription( const std::string& account_id_or_name,
                                                              subscription_id_type subscription_id,
                                                              bool automatic_renewal,
                                                              bool broadcast/* = false */)
@@ -2945,7 +2944,7 @@ signed_transaction content_cancellation(const string& author,
          return sign_transaction( tx, broadcast );
       } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(subscription_id)(automatic_renewal)(broadcast) ) }
 
-   decent::encrypt::DInteger restore_encryption_key(const string& account, buying_id_type buying )
+   decent::encrypt::DInteger restore_encryption_key(const std::string& account, buying_id_type buying )
    {
       account_object buyer_account = get_account( account );
       const buying_object bo = get_object<buying_object>(buying);
@@ -2976,7 +2975,7 @@ signed_transaction content_cancellation(const string& author,
       return ss.secret;
    }
 
-   std::pair<account_id_type, std::vector<account_id_type>> get_author_and_co_authors_by_URI( const string& URI )const
+   std::pair<account_id_type, std::vector<account_id_type>> get_author_and_co_authors_by_URI( const std::string& URI )const
    {
       fc::optional<content_object> co = _remote_db->get_content( URI );
       if(!co.valid())
@@ -3106,13 +3105,13 @@ signed_transaction content_cancellation(const string& author,
       return messages;
    }
 
-   signed_transaction send_message(const string& from,
-                                   const std::vector<string>& to,
-                                   const string& text,
+   signed_transaction send_message(const std::string& from,
+                                   const std::vector<std::string>& to,
+                                   const std::string& text,
                                    bool broadcast = false)
    {
       try {
-         std::set<string> unique_to( to.begin(), to.end() );
+         std::set<std::string> unique_to( to.begin(), to.end() );
          if( to.size() != unique_to.size() )
          {
             ilog( "duplicate entries has been removed" );
@@ -3147,13 +3146,13 @@ signed_transaction content_cancellation(const string& author,
       } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
    }
 
-   signed_transaction send_unencrypted_message(const string& from,
-                                               const std::vector<string>& to,
-                                               const string& text,
+   signed_transaction send_unencrypted_message(const std::string& from,
+                                               const std::vector<std::string>& to,
+                                               const std::string& text,
                                                bool broadcast = false)
    {
       try {
-         std::set<string> unique_to( to.begin(), to.end() );
+         std::set<std::string> unique_to( to.begin(), to.end() );
          if( to.size() != unique_to.size() )
          {
             ilog( "duplicate entries has been removed" );
@@ -3235,7 +3234,7 @@ signed_transaction content_cancellation(const string& author,
    void network_add_nodes( const std::vector<std::string>& nodes )
    {
       use_network_node_api();
-      for( const string& node_address : nodes )
+      for( const std::string& node_address : nodes )
       {
          (*_remote_net_node)->add_node( fc::ip::endpoint::resolve_string( node_address ).back() );
       }
@@ -3273,7 +3272,7 @@ signed_transaction content_cancellation(const string& author,
    boost::filesystem::path _wallet_filename;
    wallet_data             _wallet;
 
-   std::map<public_key_type,string> _keys;
+   std::map<public_key_type, std::string> _keys;
    std::map<decent::encrypt::DInteger, decent::encrypt::DInteger> _el_gamal_keys;   // public_key/private_key
    fc::sha512                  _checksum;
 
@@ -3284,7 +3283,7 @@ signed_transaction content_cancellation(const string& author,
    fc::api<history_api>    _remote_hist;
    fc::optional<fc::api<network_node_api>> _remote_net_node;
 
-   boost::container::flat_map<string, operation> _prototype_ops;
+   boost::container::flat_map<std::string, operation> _prototype_ops;
 
    static_variant_map _operation_which_map = create_static_variant_map< operation >();
 
@@ -3330,8 +3329,8 @@ signed_transaction content_cancellation(const string& author,
       auto a = wallet.get_asset( op.fee.asset_id );
       auto payer = wallet.get_account( op.fee_payer() );
 
-      string op_name = fc::get_typename<T>::name();
-      if( op_name.find_last_of(':') != string::npos )
+      std::string op_name = fc::get_typename<T>::name();
+      if( op_name.find_last_of(':') != std::string::npos )
          op_name.erase(0, op_name.find_last_of(':')+1);
       out << op_name <<" ";
      // out << "balance delta: " << fc::json::to_string(acc.balance) <<"   ";
@@ -3345,7 +3344,7 @@ signed_transaction content_cancellation(const string& author,
       return std::string();
    }
 
-   string operation_printer::operator()(const transfer_obsolete_operation& op) const
+   std::string operation_printer::operator()(const transfer_obsolete_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
       const auto& to_account = wallet.get_account(op.to);
@@ -3355,11 +3354,11 @@ signed_transaction content_cancellation(const string& author,
       return memo(op.memo, from_account, to_account);
    }
 
-   string operation_printer::operator()(const transfer_operation& op) const
+   std::string operation_printer::operator()(const transfer_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
       account_object to_account;
-      string receiver;
+      std::string receiver;
 
       if(  op.to.is<account_id_type>() )
       {
@@ -3380,7 +3379,7 @@ signed_transaction content_cancellation(const string& author,
       return memo(op.memo, from_account, to_account);
    }
 
-   string operation_printer::operator()(const non_fungible_token_issue_operation& op) const
+   std::string operation_printer::operator()(const non_fungible_token_issue_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.issuer);
       const auto& to_account = wallet.get_account(op.to);
@@ -3389,7 +3388,7 @@ signed_transaction content_cancellation(const string& author,
       return memo(op.memo, from_account, to_account);
    }
 
-   string operation_printer::operator()(const non_fungible_token_transfer_operation& op) const
+   std::string operation_printer::operator()(const non_fungible_token_transfer_operation& op) const
    {
       const auto& from_account = wallet.get_account(op.from);
       const auto& to_account = wallet.get_account(op.to);
@@ -3412,7 +3411,6 @@ signed_transaction content_cancellation(const string& author,
       fee(op.fee);
       return std::string();
    }
-
 
    std::string operation_printer::operator()(const account_create_operation& op) const
    {
@@ -3555,7 +3553,7 @@ signed_transaction content_cancellation(const string& author,
       return std::string(oid);
    }
 
-   std::vector<account_id_type> seeders_tracker::track_content(const string& URI)
+   std::vector<account_id_type> seeders_tracker::track_content(const std::string& URI)
    {
       fc::optional<content_object> content = _wallet._remote_db->get_content( URI );
       FC_ASSERT( content );
@@ -3579,7 +3577,7 @@ signed_transaction content_cancellation(const string& author,
       return new_seeders;
    }
 
-   std::vector<account_id_type> seeders_tracker::untrack_content(const string& URI)
+   std::vector<account_id_type> seeders_tracker::untrack_content(const std::string& URI)
    {
       fc::optional<content_object> content = _wallet._remote_db->get_content( URI );
       FC_ASSERT( content );
@@ -3637,7 +3635,7 @@ signed_transaction content_cancellation(const string& author,
       {
          for( const auto& element : new_seeders )
          {
-            const string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
+            const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
             ipfs::Json json;
             _ipfs_client.BitswapLedger( ipfs_ID, &json );
             uint64_t received = json["Recv"];
@@ -3656,7 +3654,7 @@ signed_transaction content_cancellation(const string& author,
          std::map<account_id_type, uint64_t> stats;
          for( const auto& element : finished_seeders )
          {
-            const string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
+            const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
             ipfs::Json json;
             _ipfs_client.BitswapLedger( ipfs_ID, &json );
             uint64_t received = json["Recv"];
@@ -3714,19 +3712,19 @@ signed_transaction content_cancellation(const string& author,
 #include "wallet_messaging.inl"
 #include "wallet_monitoring.inl"
 
-   std::vector<non_fungible_token_object> wallet_api::list_non_fungible_tokens(const string& lowerbound, uint32_t limit) const
+   std::vector<non_fungible_token_object> wallet_api::list_non_fungible_tokens(const std::string& lowerbound, uint32_t limit) const
    {
       return my->_remote_db->list_non_fungible_tokens(lowerbound, limit);
    }
 
-   non_fungible_token_object wallet_api::get_non_fungible_token(const string& nft_symbol_or_id) const
+   non_fungible_token_object wallet_api::get_non_fungible_token(const std::string& nft_symbol_or_id) const
    {
       return my->get_non_fungible_token(nft_symbol_or_id);
    }
 
-   signed_transaction_info wallet_api::create_non_fungible_token(const string& issuer,
-                                                                 const string& symbol,
-                                                                 const string& description,
+   signed_transaction_info wallet_api::create_non_fungible_token(const std::string& issuer,
+                                                                 const std::string& symbol,
+                                                                 const std::string& description,
                                                                  const non_fungible_token_data_definitions& definitions,
                                                                  uint32_t max_supply,
                                                                  bool fixed_max_supply,
@@ -3736,9 +3734,9 @@ signed_transaction content_cancellation(const string& author,
       return my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
    }
 
-   signed_transaction_info wallet_api::update_non_fungible_token(const string& issuer,
-                                                                 const string& symbol,
-                                                                 const string& description,
+   signed_transaction_info wallet_api::update_non_fungible_token(const std::string& issuer,
+                                                                 const std::string& symbol,
+                                                                 const std::string& description,
                                                                  uint32_t max_supply,
                                                                  bool fixed_max_supply,
                                                                  bool broadcast /* = false */)
@@ -3746,10 +3744,10 @@ signed_transaction content_cancellation(const string& author,
       return my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
    }
 
-   signed_transaction_info wallet_api::issue_non_fungible_token(const string& to_account,
-                                                                const string& symbol,
+   signed_transaction_info wallet_api::issue_non_fungible_token(const std::string& to_account,
+                                                                const std::string& symbol,
                                                                 const fc::variants& data,
-                                                                const string& memo,
+                                                                const std::string& memo,
                                                                 bool broadcast /* = false */)
    {
       return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
@@ -3768,7 +3766,7 @@ signed_transaction content_cancellation(const string& author,
    std::vector<non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const std::string& account, const std::set<std::string>& symbols_or_ids) const
    {
       std::set<non_fungible_token_id_type> ids;
-      std::for_each(symbols_or_ids.begin(), symbols_or_ids.end(), [&](const string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
+      std::for_each(symbols_or_ids.begin(), symbols_or_ids.end(), [&](const std::string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
       return my->_remote_db->get_non_fungible_token_balances(get_account(account).get_id(), ids);
    }
 
@@ -3777,9 +3775,9 @@ signed_transaction content_cancellation(const string& author,
       return my->_remote_db->search_non_fungible_token_history(nft_data_id);
    }
 
-   signed_transaction_info wallet_api::transfer_non_fungible_token_data(const string& to_account,
+   signed_transaction_info wallet_api::transfer_non_fungible_token_data(const std::string& to_account,
                                                                         non_fungible_token_data_id_type nft_data_id,
-                                                                        const string& memo,
+                                                                        const std::string& memo,
                                                                         bool broadcast /* = false */)
    {
       return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
@@ -3791,7 +3789,7 @@ signed_transaction content_cancellation(const string& author,
       return my->burn_non_fungible_token_data(nft_data_id, broadcast);
    }
 
-   signed_transaction_info wallet_api::update_non_fungible_token_data(const string& modifier,
+   signed_transaction_info wallet_api::update_non_fungible_token_data(const std::string& modifier,
                                                                       non_fungible_token_data_id_type nft_data_id,
                                                                       const std::vector<std::pair<std::string, fc::variant>>& data,
                                                                       bool broadcast /* = false */)
@@ -3799,7 +3797,7 @@ signed_transaction content_cancellation(const string& author,
       return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
    }
 
-   std::map<string,std::function<string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
+   std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
    {
       return my->get_result_formatters();
    }

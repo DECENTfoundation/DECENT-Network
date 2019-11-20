@@ -81,7 +81,7 @@ std::vector<operation_detail> wallet_api::get_account_history(const std::string&
 }
 
 std::vector<balance_change_result_detail> wallet_api::search_account_balance_history(const std::string& account_name,
-                                                                                     const boost::container::flat_set<string>& assets_list,
+                                                                                     const boost::container::flat_set<std::string>& assets_list,
                                                                                      const std::string& partner_account,
                                                                                      uint32_t from_block, uint32_t to_block,
                                                                                      uint32_t start_offset,
@@ -124,7 +124,7 @@ std::vector<balance_change_result_detail> wallet_api::search_account_balance_his
     return result;
 }
 
-fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const string& account_name, operation_history_id_type operation_history_id) const
+fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const std::string& account_name, operation_history_id_type operation_history_id) const
 {
    auto account_id = get_account(account_name).get_id();
 
@@ -197,7 +197,7 @@ std::vector<transaction_detail_object> wallet_api::search_account_history(std::s
    return result;
 }
 
-account_object wallet_api::get_account(const string& account_name_or_id) const
+account_object wallet_api::get_account(const std::string& account_name_or_id) const
 {
    return my->get_account(account_name_or_id);
 }
@@ -248,9 +248,9 @@ signed_transaction_info wallet_api::register_multisig_account(const std::string&
    return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
-signed_transaction_info wallet_api::create_account_with_brain_key(const string& brain_key,
-                                                                  const string& account_name,
-                                                                  const string& registrar_account,
+signed_transaction_info wallet_api::create_account_with_brain_key(const std::string& brain_key,
+                                                                  const std::string& account_name,
+                                                                  const std::string& registrar_account,
                                                                   bool broadcast /* = false */)
 {
    if(is_locked())
@@ -258,10 +258,10 @@ signed_transaction_info wallet_api::create_account_with_brain_key(const string& 
    return my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
 }
 
-signed_transaction_info wallet_api::update_account_keys(const string& name,
-                                                        const string& owner,
-                                                        const string& active,
-                                                        const string& memo,
+signed_transaction_info wallet_api::update_account_keys(const std::string& name,
+                                                        const std::string& owner,
+                                                        const std::string& active,
+                                                        const std::string& memo,
                                                         bool broadcast /* = false */)
 {
    if(is_locked())
@@ -315,7 +315,7 @@ el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
    return ret;
 }
 
-el_gamal_key_pair_str wallet_api::get_el_gammal_key(string const& consumer) const
+el_gamal_key_pair_str wallet_api::get_el_gammal_key(const std::string& consumer) const
 {
    try
    {
@@ -344,7 +344,7 @@ std::pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_g
    return ret;
 }
 
-brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
+brain_key_info wallet_api::get_brain_key_info(const std::string& brain_key) const
 {
    brain_key_info result;
    result.brain_priv_key = graphene::utilities::normalize_brain_key( brain_key );
@@ -355,11 +355,11 @@ brain_key_info wallet_api::get_brain_key_info(string const& brain_key) const
    return result;
 }
 
-signed_transaction_info wallet_api::transfer(const string& from,
-                                             const string& to,
-                                             const string& amount,
-                                             const string& asset_symbol,
-                                             const string& memo,
+signed_transaction_info wallet_api::transfer(const std::string& from,
+                                             const std::string& to,
+                                             const std::string& amount,
+                                             const std::string& asset_symbol,
+                                             const std::string& memo,
                                              bool broadcast /* = false */)
 {
    if(is_locked())

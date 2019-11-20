@@ -33,7 +33,7 @@ namespace graphene { namespace chain {
  *  They must end with [A, Z]
  *  They can contain a maximum of one '.'
  */
-bool is_valid_symbol( const string& symbol )
+bool is_valid_symbol( const std::string& symbol )
 {
     if( symbol.size() < GRAPHENE_MIN_ASSET_SYMBOL_LENGTH )
         return false;

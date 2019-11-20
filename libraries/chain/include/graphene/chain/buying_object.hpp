@@ -15,10 +15,10 @@ namespace graphene { namespace chain {
    {
    public:
       account_id_type consumer;
-      string URI;
+      std::string URI;
       uint64_t size = 0; //< initialized by content.size
       uint32_t rating = 0;  //< this is the user rating
-      string comment;
+      std::string comment;
       asset price;  //< this is an escrow, initialized by request_to_buy_operation.price then reset to 0 for escrow system and inflation calculations
       asset paid_price_before_exchange; //< initialized by request_to_buy_operation.price
       asset paid_price_after_exchange;
@@ -40,7 +40,6 @@ namespace graphene { namespace chain {
       bool is_rated() const { return rated_or_commented; }
       share_type get_price_before_exchange() const { return paid_price_before_exchange.amount; }
    };
-
 
    struct by_URI_consumer;
    struct by_consumer_URI;
@@ -106,7 +105,7 @@ namespace graphene { namespace chain {
    template <>
    struct key_extractor<by_URI_rated, buying_object>
    {
-      static std::tuple<string, uint32_t> get(buying_object const& ob)
+      static std::tuple<std::string, uint32_t> get(buying_object const& ob)
       {
          return std::make_tuple(ob.URI, ob.rating);
       }
@@ -118,14 +117,14 @@ namespace graphene { namespace chain {
             graphene::db::object_id_index,
             ordered_unique< tag< by_URI_consumer>,
                composite_key< buying_object,
-                  member<buying_object, string, &buying_object::URI>,
+                  member<buying_object, std::string, &buying_object::URI>,
                   member<buying_object, account_id_type, &buying_object::consumer>
                >
             >,
             ordered_unique< tag< by_consumer_URI>,
                composite_key< buying_object,
                   member<buying_object, account_id_type, &buying_object::consumer>,
-                  member<buying_object, string, &buying_object::URI>
+                  member<buying_object, std::string, &buying_object::URI>
                >
             >,
             ordered_non_unique<tag<by_expiration_time>,
@@ -139,13 +138,13 @@ namespace graphene { namespace chain {
             >,
             ordered_non_unique< tag< by_URI_open>,
                composite_key< buying_object,
-                  member<buying_object, string, &buying_object::URI>,
+                  member<buying_object, std::string, &buying_object::URI>,
                   const_mem_fun<buying_object, bool, &buying_object::is_open>
                >
             >,
             ordered_non_unique< tag< by_URI_rated>,
                composite_key< buying_object,
-                  member<buying_object, string, &buying_object::URI>,
+                  member<buying_object, std::string, &buying_object::URI>,
                   const_mem_fun<buying_object, bool, &buying_object::is_rated>
                >
             >,

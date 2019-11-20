@@ -198,7 +198,7 @@ namespace graphene { namespace chain {
          };
 
          const std::vector<applied_operation>& get_applied_operations() const { return _applied_ops; }
-         string to_pretty_string( const asset& a )const;
+         std::string to_pretty_string(const asset& a) const;
 
          /**
           * This signal is emitted for plugins to process every operation
@@ -410,7 +410,7 @@ namespace graphene { namespace chain {
          real_supply get_real_supply()const;
 
          struct votes_gained{
-            string account_name;
+            std::string account_name;
             uint64_t votes;
          };
          std::vector<votes_gained> get_actual_votes() const;

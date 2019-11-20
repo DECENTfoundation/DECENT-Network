@@ -8,8 +8,8 @@ miner_object wallet_api::get_miner(const std::string& owner_account) const
    return my->get_miner(owner_account);
 }
 
-signed_transaction_info wallet_api::create_miner(const string& owner_account,
-                                                 const string& url,
+signed_transaction_info wallet_api::create_miner(const std::string& owner_account,
+                                                 const std::string& url,
                                                  bool broadcast /* = false */)
 {
    if(is_locked())
@@ -17,9 +17,9 @@ signed_transaction_info wallet_api::create_miner(const string& owner_account,
    return my->create_miner(owner_account, url, broadcast);
 }
 
-signed_transaction_info wallet_api::update_miner(const string& miner_name,
-                                                 const string& url,
-                                                 const string& block_signing_key,
+signed_transaction_info wallet_api::update_miner(const std::string& miner_name,
+                                                 const std::string& url,
+                                                 const std::string& block_signing_key,
                                                  bool broadcast /* = false */)
 {
    if(is_locked())
@@ -32,9 +32,9 @@ std::vector<vesting_balance_object_with_info> wallet_api::get_vesting_balances(c
    return my->get_vesting_balances( account_name );
 }
 
-signed_transaction_info wallet_api::withdraw_vesting(const string& miner_name,
-                                                     const string& amount,
-                                                     const string& asset_symbol,
+signed_transaction_info wallet_api::withdraw_vesting(const std::string& miner_name,
+                                                     const std::string& amount,
+                                                     const std::string& asset_symbol,
                                                      bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -42,8 +42,8 @@ signed_transaction_info wallet_api::withdraw_vesting(const string& miner_name,
    return my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
 }
 
-signed_transaction_info wallet_api::vote_for_miner(const string& voting_account,
-                                                   const string& miner,
+signed_transaction_info wallet_api::vote_for_miner(const std::string& voting_account,
+                                                   const std::string& miner,
                                                    bool approve,
                                                    bool broadcast /* = false */)
 {
@@ -52,8 +52,8 @@ signed_transaction_info wallet_api::vote_for_miner(const string& voting_account,
    return my->vote_for_miner(voting_account, miner, approve, broadcast);
 }
 
-signed_transaction_info wallet_api::set_voting_proxy(const string& account_to_modify,
-                                                     fc::optional<string> voting_account,
+signed_transaction_info wallet_api::set_voting_proxy(const std::string& account_to_modify,
+                                                     fc::optional<std::string> voting_account,
                                                      bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -61,7 +61,7 @@ signed_transaction_info wallet_api::set_voting_proxy(const string& account_to_mo
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
-signed_transaction_info wallet_api::set_desired_miner_count(const string& account_to_modify,
+signed_transaction_info wallet_api::set_desired_miner_count(const std::string& account_to_modify,
                                                             uint16_t desired_number_of_miners,
                                                             bool broadcast /* = false */)
 {

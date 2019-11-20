@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       graphene::app::application app1;
       test_plugins::create(app1);
       boost::program_options::variables_map cfg;
-      cfg.emplace("p2p-endpoint", boost::program_options::variable_value(string("127.0.0.1:3939"), false));
+      cfg.emplace("p2p-endpoint", boost::program_options::variable_value(std::string("127.0.0.1:3939"), false));
       app1.initialize(app_dir.path(), cfg);
 
       BOOST_TEST_MESSAGE( "Creating and initializing app2" );
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       test_plugins::create(app2);
       auto cfg2 = cfg;
       cfg2.erase("p2p-endpoint");
-      cfg2.emplace("p2p-endpoint", boost::program_options::variable_value(string("127.0.0.1:4040"), false));
+      cfg2.emplace("p2p-endpoint", boost::program_options::variable_value(std::string("127.0.0.1:4040"), false));
       cfg2.emplace("seed-node", boost::program_options::variable_value(std::vector<std::string>{"127.0.0.1:3939"}, false));
       app2.initialize(app2_dir.path(), cfg2);
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       graphene::chain::signed_transaction trx;
       {
          account_id_type nathan_id = db2->get_index_type<account_index>().indices().get<by_name>().find( "nathan" )->id;
-         fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+         fc::ecc::private_key nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("nathan")));
          transfer_obsolete_operation xfer_op;
          xfer_op.from = nathan_id;
          xfer_op.to = GRAPHENE_NULL_ACCOUNT;
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE( two_node_network )
       BOOST_CHECK_EQUAL( db2->get_balance( GRAPHENE_NULL_ACCOUNT, asset_id_type() ).amount.value, 1000000 );
 
       BOOST_TEST_MESSAGE( "Generating block on db2" );
-      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
+      fc::ecc::private_key committee_key = fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("nathan")));
 
       auto block_1 = db2->generate_block(
          db2->get_slot_time(1),

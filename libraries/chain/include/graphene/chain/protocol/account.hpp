@@ -31,8 +31,8 @@
 
 namespace graphene { namespace chain {
 
-   bool is_valid_name( const string& s );
-   bool is_cheap_name( const string& n );
+   bool is_valid_name( const std::string& s );
+   bool is_cheap_name( const std::string& n );
 
    struct publishing_rights
    {
@@ -96,7 +96,7 @@ namespace graphene { namespace chain {
       /// This account pays the fee. Must be a lifetime member.
       account_id_type registrar;
 
-      string          name;
+      std::string     name;
       authority       owner;
       authority       active;
 

@@ -144,7 +144,7 @@ struct el_gamal_key_pair_str
  */
 struct plain_keys
 {
-   std::map<public_key_type, string> ec_keys;
+   std::map<public_key_type, std::string> ec_keys;
    fc::sha512 checksum;
 };
 
@@ -237,7 +237,7 @@ struct buying_object_ex : public buying_object, public content_download_status {
 
 struct rating_object_ex : public buying_object
 {
-   rating_object_ex( const buying_object& buying, string author )
+   rating_object_ex( const buying_object& buying, const std::string& author )
    : buying_object( buying ), author(author) {}
    std::string author;
 };

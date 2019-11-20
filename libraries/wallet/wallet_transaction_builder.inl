@@ -13,7 +13,7 @@ void wallet_api::replace_operation_in_builder_transaction(transaction_handle_typ
    my->replace_operation_in_builder_transaction(handle, operation_index, new_op);
 }
 
-asset wallet_api::set_fees_on_builder_transaction(transaction_handle_type handle, const string& fee_asset)
+asset wallet_api::set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset)
 {
    return my->set_fees_on_builder_transaction(handle, fee_asset);
 }
@@ -41,7 +41,7 @@ signed_transaction_info wallet_api::propose_builder_transaction(transaction_hand
 }
 
 signed_transaction_info wallet_api::propose_builder_transaction2(transaction_handle_type handle,
-                                                                 const string& account_name_or_id,
+                                                                 const std::string& account_name_or_id,
                                                                  fc::time_point_sec expiration,
                                                                  uint32_t review_period_seconds,
                                                                  bool broadcast)
@@ -56,7 +56,7 @@ void wallet_api::remove_builder_transaction(transaction_handle_type handle)
    return my->remove_builder_transaction(handle);
 }
 
-string wallet_api::serialize_transaction( signed_transaction tx )const
+std::string wallet_api::serialize_transaction( signed_transaction tx )const
 {
    return fc::to_hex(fc::raw::pack(tx));
 }

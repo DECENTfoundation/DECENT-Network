@@ -35,8 +35,8 @@ content_keys wallet_api::submit_content_async(const std::string& author,
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 }
 
-signed_transaction_info wallet_api::content_cancellation(const string& author,
-                                                         const string& URI,
+signed_transaction_info wallet_api::content_cancellation(const std::string& author,
+                                                         const std::string& URI,
                                                          bool broadcast)
 {
    if(my->is_locked())
@@ -44,24 +44,23 @@ signed_transaction_info wallet_api::content_cancellation(const string& author,
    return my->content_cancellation(author, URI, broadcast);
 }
 
-void wallet_api::download_content(const string& consumer, const string& URI, const string& region_code_from, bool broadcast)
+void wallet_api::download_content(const std::string& consumer, const std::string& URI, const std::string& region_code_from, bool broadcast)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
    return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
-content_download_status wallet_api::get_download_status(const string& consumer,
-                                                                  const string& URI) const
+content_download_status wallet_api::get_download_status(const std::string& consumer, const std::string& URI) const
 {
    return my->get_download_status(consumer, URI);
 }
 
-signed_transaction_info wallet_api::request_to_buy(const string& consumer,
-                                                   const string& URI,
-                                                   const string& price_asset_name,
-                                                   const string& price_amount,
-                                                   const string& str_region_code_from,
+signed_transaction_info wallet_api::request_to_buy(const std::string& consumer,
+                                                   const std::string& URI,
+                                                   const std::string& price_asset_name,
+                                                   const std::string& price_amount,
+                                                   const std::string& str_region_code_from,
                                                    bool broadcast)
 {
    if(my->is_locked())
@@ -69,10 +68,10 @@ signed_transaction_info wallet_api::request_to_buy(const string& consumer,
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
-signed_transaction_info wallet_api::leave_rating_and_comment(const string& consumer,
-                                                             const string& URI,
+signed_transaction_info wallet_api::leave_rating_and_comment(const std::string& consumer,
+                                                             const std::string& URI,
                                                              uint64_t rating,
-                                                             const string& comment,
+                                                             const std::string& comment,
                                                              bool broadcast)
 {
    if(my->is_locked())
@@ -80,7 +79,7 @@ signed_transaction_info wallet_api::leave_rating_and_comment(const string& consu
    return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
 }
 
-decent::encrypt::DInteger wallet_api::restore_encryption_key(const string& consumer, buying_id_type buying)
+decent::encrypt::DInteger wallet_api::restore_encryption_key(const std::string& consumer, buying_id_type buying)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
@@ -167,7 +166,7 @@ std::vector<buying_object_ex> wallet_api::search_my_purchases(const std::string&
    return result;
 }
 
-fc::optional<buying_object> wallet_api::get_buying_by_consumer_URI( const string& account_id_or_name, const string& URI ) const
+fc::optional<buying_object> wallet_api::get_buying_by_consumer_URI( const std::string& account_id_or_name, const std::string& URI ) const
 {
    account_id_type account = get_account( account_id_or_name ).id;
    return my->_remote_db->get_buying_by_consumer_URI( account, URI );
@@ -179,12 +178,12 @@ std::vector<rating_object_ex> wallet_api::search_feedback(const std::string& use
     std::vector<buying_object> temp = my->_remote_db->search_feedback(user, URI, db::object_id_type(id), count);
 
     for (auto const& item : temp)
-       result.push_back(rating_object_ex( item, get_account(string(db::object_id_type(item.consumer))).name ));
+       result.push_back(rating_object_ex( item, get_account(std::string(db::object_id_type(item.consumer))).name));
 
     return result;
 }
 
-fc::optional<content_object> wallet_api::get_content( const string& URI ) const
+fc::optional<content_object> wallet_api::get_content( const std::string& URI ) const
 {
     return my->_remote_db->get_content( URI );
 }
@@ -278,7 +277,7 @@ std::pair<std::string, decent::encrypt::CustodyData> wallet_api::create_package(
    auto pack = decent::package::PackageManager::instance().get_package(content_dir, samples_dir, key1);
    pack->create( true );
    decent::encrypt::CustodyData cd = pack->get_custody_data();
-   return std::pair<string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
+   return std::pair<std::string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
 }
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const decent::encrypt::DInteger& aes_key) const

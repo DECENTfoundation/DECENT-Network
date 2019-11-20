@@ -113,7 +113,7 @@ void database::renew_subscription(const subscription_object& subscription, const
          obj.m_to_account = subscription.to;
          obj.m_transaction_amount = price;
          obj.m_transaction_fee = asset();
-         string str_subscription_period = std::to_string(subscription_period) + " day";
+         std::string str_subscription_period = std::to_string(subscription_period) + " day";
          if( subscription_period > 1 )
             str_subscription_period += "s";
          obj.m_str_description = str_subscription_period;
