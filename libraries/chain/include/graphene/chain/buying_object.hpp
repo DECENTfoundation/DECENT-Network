@@ -111,68 +111,68 @@ namespace graphene { namespace chain {
       }
    };
 
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       buying_object,
-         indexed_by<
-            graphene::db::object_id_index,
-            ordered_unique< tag< by_URI_consumer>,
-               composite_key< buying_object,
-                  member<buying_object, std::string, &buying_object::URI>,
-                  member<buying_object, account_id_type, &buying_object::consumer>
-               >
-            >,
-            ordered_unique< tag< by_consumer_URI>,
-               composite_key< buying_object,
-                  member<buying_object, account_id_type, &buying_object::consumer>,
-                  member<buying_object, std::string, &buying_object::URI>
-               >
-            >,
-            ordered_non_unique<tag<by_expiration_time>,
-               member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
-            >,
-            ordered_non_unique< tag< by_consumer_time>,
-               composite_key< buying_object,
-                  member<buying_object, account_id_type, &buying_object::consumer>,
-                  member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
-               >
-            >,
-            ordered_non_unique< tag< by_URI_open>,
-               composite_key< buying_object,
-                  member<buying_object, std::string, &buying_object::URI>,
-                  const_mem_fun<buying_object, bool, &buying_object::is_open>
-               >
-            >,
-            ordered_non_unique< tag< by_URI_rated>,
-               composite_key< buying_object,
-                  member<buying_object, std::string, &buying_object::URI>,
-                  const_mem_fun<buying_object, bool, &buying_object::is_rated>
-               >
-            >,
-            ordered_non_unique< tag< by_open_expiration>,
-               composite_key< buying_object,
-                  const_mem_fun<buying_object, bool, &buying_object::is_open>,
-                  member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
-               >
-            >,
-            ordered_non_unique< tag< by_consumer_open>,
-               composite_key< buying_object,
-                  member<buying_object, account_id_type, &buying_object::consumer>,
-                  const_mem_fun<buying_object, bool, &buying_object::is_open>
-               >
-            >,
-            ordered_non_unique< tag< by_size>,
-                  member<buying_object, uint64_t, &buying_object::size>
-            >,
-            ordered_non_unique< tag< by_price_before_exchange>,
-                  const_mem_fun<buying_object, share_type, &buying_object::get_price_before_exchange>
-            >,
-            ordered_non_unique< tag< by_created>,
-                  member<buying_object, fc::time_point_sec, &buying_object::created>
-            >,
-            ordered_non_unique< tag< by_purchased>,
-                  member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_URI_consumer>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, std::string, &buying_object::URI>,
+               db::mi::member<buying_object, account_id_type, &buying_object::consumer>
             >
+         >,
+         db::mi::ordered_unique<db::mi::tag<by_consumer_URI>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, account_id_type, &buying_object::consumer>,
+               db::mi::member<buying_object, std::string, &buying_object::URI>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_expiration_time>,
+            db::mi::member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_consumer_time>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, account_id_type, &buying_object::consumer>,
+               db::mi::member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_URI_open>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, std::string, &buying_object::URI>,
+               db::mi::const_mem_fun<buying_object, bool, &buying_object::is_open>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_URI_rated>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, std::string, &buying_object::URI>,
+               db::mi::const_mem_fun<buying_object, bool, &buying_object::is_rated>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_open_expiration>,
+            db::mi::composite_key<buying_object,
+               db::mi::const_mem_fun<buying_object, bool, &buying_object::is_open>,
+               db::mi::member<buying_object, fc::time_point_sec, &buying_object::expiration_time>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_consumer_open>,
+            db::mi::composite_key<buying_object,
+               db::mi::member<buying_object, account_id_type, &buying_object::consumer>,
+               db::mi::const_mem_fun<buying_object, bool, &buying_object::is_open>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_size>,
+               db::mi::member<buying_object, uint64_t, &buying_object::size>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_price_before_exchange>,
+               db::mi::const_mem_fun<buying_object, share_type, &buying_object::get_price_before_exchange>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_created>,
+               db::mi::member<buying_object, fc::time_point_sec, &buying_object::created>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_purchased>,
+               db::mi::member<buying_object, fc::time_point_sec, &buying_object::expiration_or_delivery_time>
          >
+      >
    >buying_object_multi_index_type;
 
    typedef graphene::db::generic_index< buying_object, buying_object_multi_index_type > buying_index;

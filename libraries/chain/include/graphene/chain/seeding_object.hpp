@@ -26,13 +26,13 @@ public:
 
 struct by_URI;
 
-typedef multi_index_container<
-      seeding_object,
-      indexed_by<
-            graphene::db::object_id_index,
-            ordered_unique< tag<by_URI>,
-               member<seeding_object, std::string, &seeding_object::URI>
-            >
+typedef boost::multi_index_container<
+   seeding_object,
+      db::mi::indexed_by<
+      db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_URI>,
+            db::mi::member<seeding_object, std::string, &seeding_object::URI>
+         >
       >
 >seeding_object_multi_index_type;
 

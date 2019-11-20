@@ -121,20 +121,34 @@ namespace graphene { namespace chain {
       }
    };
 
-   using namespace boost::multi_index;
-
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       transaction_detail_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_non_unique< tag<by_from_account>, member<transaction_detail_object, account_id_type, &transaction_detail_object::m_from_account> >,
-         ordered_non_unique< tag<by_to_account>, member<transaction_detail_object, account_id_type, &transaction_detail_object::m_to_account> >,
-         ordered_non_unique< tag<by_operation_type>, member<transaction_detail_object, uint8_t, &transaction_detail_object::m_operation_type> >,
-         ordered_non_unique< tag<by_transaction_amount>, const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_amount> >,
-         ordered_non_unique< tag<by_transaction_fee>, const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_fee> >,
-         ordered_non_unique< tag<by_nft>, const_mem_fun<transaction_detail_object, non_fungible_token_data_id_type, &transaction_detail_object::get_non_fungible_token_id> >,
-         ordered_non_unique< tag<by_description>, member<transaction_detail_object, std::string, &transaction_detail_object::m_str_description> >,
-         ordered_non_unique< tag<by_time>, member<transaction_detail_object, fc::time_point_sec, &transaction_detail_object::m_timestamp> >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_from_account>,
+            db::mi::member<transaction_detail_object, account_id_type, &transaction_detail_object::m_from_account>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_to_account>,
+            db::mi::member<transaction_detail_object, account_id_type, &transaction_detail_object::m_to_account>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_operation_type>,
+            db::mi::member<transaction_detail_object, uint8_t, &transaction_detail_object::m_operation_type>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_transaction_amount>,
+            db::mi::const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_amount>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_transaction_fee>,
+            db::mi::const_mem_fun<transaction_detail_object, share_type, &transaction_detail_object::get_transaction_fee>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_nft>,
+            db::mi::const_mem_fun<transaction_detail_object, non_fungible_token_data_id_type, &transaction_detail_object::get_non_fungible_token_id>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_description>,
+            db::mi::member<transaction_detail_object, std::string, &transaction_detail_object::m_str_description>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_time>,
+            db::mi::member<transaction_detail_object, fc::time_point_sec, &transaction_detail_object::m_timestamp>
+         >
       >
    > transaction_detail_multi_index_type;
 

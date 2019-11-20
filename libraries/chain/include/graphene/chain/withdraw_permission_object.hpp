@@ -68,31 +68,29 @@ namespace graphene { namespace chain {
         }
    };
 
-   using namespace boost::multi_index;
-
    struct by_from;
    struct by_authorized;
    struct by_expiration;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       withdraw_permission_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_from>,
-            composite_key< withdraw_permission_object,
-               member<withdraw_permission_object, account_id_type, &withdraw_permission_object::withdraw_from_account>,
-               graphene::db::object_id_member
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_from>,
+            db::mi::composite_key<withdraw_permission_object,
+               db::mi::member<withdraw_permission_object, account_id_type, &withdraw_permission_object::withdraw_from_account>,
+               db::object_id_member
             >
          >,
-         ordered_unique< tag<by_authorized>,
-            composite_key< withdraw_permission_object,
-               member<withdraw_permission_object, account_id_type, &withdraw_permission_object::authorized_account>,
-               graphene::db::object_id_member
+         db::mi::ordered_unique<db::mi::tag<by_authorized>,
+            db::mi::composite_key<withdraw_permission_object,
+               db::mi::member<withdraw_permission_object, account_id_type, &withdraw_permission_object::authorized_account>,
+               db::object_id_member
             >
          >,
-         ordered_unique< tag<by_expiration>,
-            composite_key< withdraw_permission_object,
-               member<withdraw_permission_object, fc::time_point_sec, &withdraw_permission_object::expiration>,
-               graphene::db::object_id_member
+         db::mi::ordered_unique<db::mi::tag<by_expiration>,
+            db::mi::composite_key<withdraw_permission_object,
+               db::mi::member<withdraw_permission_object, fc::time_point_sec, &withdraw_permission_object::expiration>,
+               db::object_id_member
             >
          >
       >

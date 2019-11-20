@@ -35,29 +35,29 @@ namespace graphene { namespace chain {
    struct by_region;
    struct by_rating;
 
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       seeder_object,
-         indexed_by<
-            graphene::db::object_id_index,
-            ordered_unique< tag<by_seeder>,
-               member<seeder_object, account_id_type, &seeder_object::seeder>
-            >,
-            ordered_non_unique< tag<by_free_space>,
-               member<seeder_object, uint64_t, &seeder_object::free_space>
-            >,
-            ordered_non_unique< tag<by_price>,
-               member<seeder_object, asset, &seeder_object::price>
-            >,
-            ordered_non_unique< tag<by_expiration>,
-               member<seeder_object, fc::time_point_sec, &seeder_object::expiration>
-            >,
-            ordered_non_unique< tag<by_region>,
-               member<seeder_object, std::string, &seeder_object::region_code>
-            >,
-            ordered_non_unique< tag<by_rating>,
-               member<seeder_object, uint32_t, &seeder_object::rating>,std::greater<uint32_t>
-            >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_seeder>,
+            db::mi::member<seeder_object, account_id_type, &seeder_object::seeder>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_free_space>,
+            db::mi::member<seeder_object, uint64_t, &seeder_object::free_space>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_price>,
+            db::mi::member<seeder_object, asset, &seeder_object::price>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_expiration>,
+            db::mi::member<seeder_object, fc::time_point_sec, &seeder_object::expiration>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_region>,
+            db::mi::member<seeder_object, std::string, &seeder_object::region_code>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_rating>,
+            db::mi::member<seeder_object, uint32_t, &seeder_object::rating>,std::greater<uint32_t>
          >
+      >
    >seeder_object_multi_index_type;
 
    typedef graphene::db::generic_index< seeder_object, seeder_object_multi_index_type > seeder_index;

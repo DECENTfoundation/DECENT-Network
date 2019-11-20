@@ -46,22 +46,21 @@ namespace graphene { namespace chain {
          miner_object() : vote_id(vote_id_type::miner) {}
    };
 
-   using namespace boost::multi_index;
-
    struct by_account;
    struct by_vote_id;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       miner_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_account>,
-            member<miner_object, account_id_type, &miner_object::miner_account>
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_account>,
+            db::mi::member<miner_object, account_id_type, &miner_object::miner_account>
          >,
-         ordered_unique< tag<by_vote_id>,
-            member<miner_object, vote_id_type, &miner_object::vote_id>
+         db::mi::ordered_unique<db::mi::tag<by_vote_id>,
+            db::mi::member<miner_object, vote_id_type, &miner_object::vote_id>
          >
       >
    > miner_multi_index_type;
+
    typedef graphene::db::generic_index<miner_object, miner_multi_index_type> miner_index;
 } } // graphene::chain
 

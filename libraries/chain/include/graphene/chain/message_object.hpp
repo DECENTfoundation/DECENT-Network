@@ -68,14 +68,14 @@ namespace graphene {
       std::map< account_id_type, std::set<graphene::db::object_id_type> > message_to_receiver_memberships;
    };
 
-   using namespace boost::multi_index;
-
    struct by_sender;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       message_object,
-      indexed_by<
-      graphene::db::object_id_index,
-      ordered_non_unique< tag<by_sender>, member< message_object, account_id_type, &message_object::sender > >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_sender>,
+            db::mi::member<message_object, account_id_type, &message_object::sender>
+         >
       >
    > message_multi_index_type;
 

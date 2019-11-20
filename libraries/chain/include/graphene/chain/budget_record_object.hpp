@@ -66,11 +66,13 @@ class budget_record_object : public graphene::db::abstract_object<implementation
 
 struct by_time;
 
-typedef multi_index_container<
+typedef boost::multi_index_container<
    budget_record_object,
-   indexed_by<
-      graphene::db::object_id_index,
-      ordered_unique< tag<by_time>, member< budget_record_object, fc::time_point_sec, &budget_record_object::time > >
+   db::mi::indexed_by<
+      db::object_id_index,
+      db::mi::ordered_unique<db::mi::tag<by_time>,
+         db::mi::member< budget_record_object, fc::time_point_sec, &budget_record_object::time>
+      >
    >
 > budget_record_object_multi_index_type;
 

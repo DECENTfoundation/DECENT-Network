@@ -238,22 +238,22 @@ namespace graphene { namespace chain {
          { return options.max_supply - dynamic_data(db).current_supply; }
    };
 
-   using namespace boost::multi_index;
-
    struct by_symbol;
    struct by_type;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       asset_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_symbol>, member<asset_object, std::string, &asset_object::symbol> >,
-            ordered_unique< tag<by_type>,
-               composite_key< asset_object,
-                  const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,
-                  graphene::db::object_id_member
-               >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_symbol>,
+            db::mi::member<asset_object, std::string, &asset_object::symbol>
+         >,
+         db::mi::ordered_unique<db::mi::tag<by_type>,
+            db::mi::composite_key<asset_object,
+               db::mi::const_mem_fun<asset_object, bool, &asset_object::is_monitored_asset>,
+               graphene::db::object_id_member
             >
-        >
+         >
+      >
    > asset_object_multi_index_type;
 
    typedef graphene::db::generic_index<asset_object, asset_object_multi_index_type> asset_index;

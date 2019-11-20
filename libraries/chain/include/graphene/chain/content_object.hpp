@@ -553,41 +553,35 @@ namespace graphene { namespace chain {
       }
    };
 
-   using namespace boost::multi_index;
-
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       content_object,
-         indexed_by<
-            graphene::db::object_id_index,
-            ordered_non_unique<tag<by_author>,
-               member<content_object, account_id_type, &content_object::author>
-            >,
-            ordered_unique<tag<by_URI>,
-               member<content_object, std::string, &content_object::URI>
-            >,
-            ordered_non_unique<tag<by_price>,
-            const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
-            >,
-            ordered_non_unique<tag<by_size>,
-               member<content_object, uint64_t, &content_object::size>
-            >,
-            ordered_non_unique<tag<by_AVG_rating>,
-               member<content_object, uint32_t, &content_object::AVG_rating>
-            >,
-            ordered_non_unique<tag<by_times_bought>,
-               member<content_object, uint32_t, &content_object::times_bought>,
-               std::greater<uint32_t>
-            >,
-
-            ordered_non_unique<tag<by_expiration>,
-               member<content_object, fc::time_point_sec, &content_object::expiration>
-            >,
-
-            ordered_non_unique<tag<by_created>,
-               member<content_object, fc::time_point_sec, &content_object::created>
-            >
-
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_author>,
+            db::mi::member<content_object, account_id_type, &content_object::author>
+         >,
+         db::mi::ordered_unique<db::mi::tag<by_URI>,
+            db::mi::member<content_object, std::string, &content_object::URI>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_price>,
+            db::mi::const_mem_fun<content_object, share_type, &content_object::get_price_amount_template<RegionCodes::OO_none>>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_size>,
+            db::mi::member<content_object, uint64_t, &content_object::size>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_AVG_rating>,
+            db::mi::member<content_object, uint32_t, &content_object::AVG_rating>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_times_bought>,
+            db::mi::member<content_object, uint32_t, &content_object::times_bought>, std::greater<uint32_t>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_expiration>,
+               db::mi::member<content_object, fc::time_point_sec, &content_object::expiration>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_created>,
+            db::mi::member<content_object, fc::time_point_sec, &content_object::created>
          >
+      >
    > content_object_multi_index_type;
 
    typedef graphene::db::generic_index< content_object, content_object_multi_index_type > content_index;

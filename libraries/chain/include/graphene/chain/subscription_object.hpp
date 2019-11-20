@@ -22,8 +22,6 @@ namespace graphene { namespace chain {
       bool automatic_renewal;
    };
 
-   using namespace boost::multi_index;
-
    struct by_from;
    struct by_to;
    struct by_expiration;
@@ -33,55 +31,55 @@ namespace graphene { namespace chain {
    struct by_renewal;
    struct by_to_renewal;
 
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       subscription_object,
-         indexed_by<
-            graphene::db::object_id_index,
-            ordered_non_unique< tag< by_from>,
-               member<subscription_object, account_id_type, &subscription_object::from>
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_from>,
+            db::mi::member<subscription_object, account_id_type, &subscription_object::from>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_to>,
+            db::mi::member<subscription_object, account_id_type, &subscription_object::to>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_expiration>,
+            db::mi::member<subscription_object, fc::time_point_sec, &subscription_object::expiration>, std::greater<fc::time_point_sec>
+         >,
+         db::mi::ordered_unique<db::mi::tag<by_from_to>,
+            db::mi::composite_key<subscription_object,
+               db::mi::member<subscription_object, account_id_type, &subscription_object::from>,
+               db::mi::member<subscription_object, account_id_type, &subscription_object::to>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_from_expiration>,
+            db::mi::composite_key<subscription_object,
+               db::mi::member<subscription_object, account_id_type, &subscription_object::from>,
+               db::mi::member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
             >,
-            ordered_non_unique< tag< by_to>,
-               member<subscription_object, account_id_type, &subscription_object::to>
+            db::mi::composite_key_compare<
+               std::less<account_id_type>,
+               std::greater<fc::time_point_sec>
+            >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_to_expiration>,
+            db::mi::composite_key<subscription_object,
+               db::mi::member<subscription_object, account_id_type, &subscription_object::to>,
+               db::mi::member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
             >,
-            ordered_non_unique< tag< by_expiration>,
-               member<subscription_object, fc::time_point_sec, &subscription_object::expiration>, std::greater<fc::time_point_sec>
-            >,
-            ordered_unique< tag< by_from_to>,
-               composite_key< subscription_object,
-                  member<subscription_object, account_id_type, &subscription_object::from>,
-                  member<subscription_object, account_id_type, &subscription_object::to>
+            db::mi::composite_key_compare<
+               std::less<account_id_type>,
+                 std::greater<fc::time_point_sec>
                >
-            >,
-            ordered_non_unique< tag< by_from_expiration>,
-               composite_key< subscription_object,
-                  member<subscription_object, account_id_type, &subscription_object::from>,
-                  member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
-               >,
-               composite_key_compare<
-                  std::less<account_id_type>,
-                  std::greater<fc::time_point_sec>
-               >
-            >,
-            ordered_non_unique< tag< by_to_expiration>,
-               composite_key< subscription_object,
-                  member<subscription_object, account_id_type, &subscription_object::to>,
-                  member<subscription_object, fc::time_point_sec, &subscription_object::expiration>
-               >,
-               composite_key_compare<
-                  std::less<account_id_type>,
-                  std::greater<fc::time_point_sec>
-                  >
-            >,
-            ordered_non_unique< tag< by_renewal>,
-               member<subscription_object, bool, &subscription_object::automatic_renewal>, std::greater<bool>
-            >,
-            ordered_non_unique< tag< by_to_renewal>,
-               composite_key< subscription_object,
-                  member<subscription_object, account_id_type, &subscription_object::to>,
-                  member<subscription_object, bool, &subscription_object::automatic_renewal>
-               >
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_renewal>,
+            db::mi::member<subscription_object, bool, &subscription_object::automatic_renewal>, std::greater<bool>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_to_renewal>,
+            db::mi::composite_key<subscription_object,
+               db::mi::member<subscription_object, account_id_type, &subscription_object::to>,
+               db::mi::member<subscription_object, bool, &subscription_object::automatic_renewal>
             >
          >
+      >
    >subscription_object_multi_index_type;
 
 typedef graphene::db::generic_index< subscription_object, subscription_object_multi_index_type > subscription_index;

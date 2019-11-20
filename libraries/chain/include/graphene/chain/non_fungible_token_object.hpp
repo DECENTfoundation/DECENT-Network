@@ -1,5 +1,6 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
+#include <graphene/chain/protocol/non_fungible_token.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/global_fun.hpp>
 
@@ -40,29 +41,35 @@ namespace graphene { namespace chain {
          fc::variants data;
    };
 
-   using namespace boost::multi_index;
-
    struct by_symbol;
    struct by_account;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       non_fungible_token_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_symbol>, member<non_fungible_token_object, std::string, &non_fungible_token_object::symbol> >,
-         ordered_non_unique< tag<by_account>, global_fun<const non_fungible_token_object&, account_id_type, &non_fungible_token_object::get_issuer> >
-        >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_symbol>,
+            db::mi::member<non_fungible_token_object, std::string, &non_fungible_token_object::symbol>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_account>,
+            db::mi::global_fun<const non_fungible_token_object&, account_id_type, &non_fungible_token_object::get_issuer>
+         >
+      >
    > non_fungible_token_object_multi_index_type;
 
    typedef graphene::db::generic_index<non_fungible_token_object, non_fungible_token_object_multi_index_type> non_fungible_token_index;
 
    struct by_nft;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       non_fungible_token_data_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_non_unique< tag<by_nft>, member<non_fungible_token_data_object, non_fungible_token_id_type, &non_fungible_token_data_object::nft_id> >,
-         ordered_non_unique< tag<by_account>, member<non_fungible_token_data_object, account_id_type, &non_fungible_token_data_object::owner> >
-        >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_nft>,
+            db::mi::member<non_fungible_token_data_object, non_fungible_token_id_type, &non_fungible_token_data_object::nft_id>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_account>,
+            db::mi::member<non_fungible_token_data_object, account_id_type, &non_fungible_token_data_object::owner>
+         >
+      >
    > non_fungible_token_data_object_multi_index_type;
 
    typedef graphene::db::generic_index<non_fungible_token_data_object, non_fungible_token_data_object_multi_index_type> non_fungible_token_data_index;

@@ -30,11 +30,11 @@
 
 namespace graphene { namespace db {
 
-   using namespace boost::multi_index;
+   namespace mi = boost::multi_index;
 
    struct by_id;
-   typedef member<object, object_id_type, &object::id> object_id_member;
-   typedef ordered_unique<tag<by_id>, object_id_member> object_id_index;
+   typedef mi::member<object, object_id_type, &object::id> object_id_member;
+   typedef mi::ordered_unique<mi::tag<by_id>, object_id_member> object_id_index;
 
    /**
     *  Almost all objects can be tracked and managed via a boost::multi_index container that uses
@@ -113,21 +113,5 @@ namespace graphene { namespace db {
          fc::uint128 _current_hash;
          index_type  _indices;
    };
-
-   /**
-    * @brief An index type for objects which may be deleted
-    *
-    * This is the preferred index type for objects which need only be referenced by ID, but may be deleted.
-    */
-   template< class T >
-   struct sparse_index : public generic_index<T, boost::multi_index_container<
-      T,
-      indexed_by<
-         ordered_unique<
-            tag<by_id>,
-            member<object, object_id_type, &object::id>
-         >
-      >
-   >>{};
 
 } }

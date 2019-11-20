@@ -43,16 +43,18 @@ namespace graphene { namespace chain {
          transaction_id_type trx_id;
    };
 
-   using namespace boost::multi_index;
-
    struct by_expiration;
    struct by_trx_id;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       transaction_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         hashed_unique< tag<by_trx_id>, BOOST_MULTI_INDEX_MEMBER(transaction_object, transaction_id_type, trx_id), std::hash<transaction_id_type> >,
-         ordered_non_unique< tag<by_expiration>, BOOST_MULTI_INDEX_MEMBER(transaction_object, fc::time_point_sec, expiration) >
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::hashed_unique<db::mi::tag<by_trx_id>,
+            BOOST_MULTI_INDEX_MEMBER(transaction_object, transaction_id_type, trx_id), std::hash<transaction_id_type>
+         >,
+         db::mi::ordered_non_unique<db::mi::tag<by_expiration>,
+            BOOST_MULTI_INDEX_MEMBER(transaction_object, fc::time_point_sec, expiration)
+         >
       >
    > transaction_multi_index_type;
 

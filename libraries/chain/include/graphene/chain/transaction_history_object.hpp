@@ -47,13 +47,14 @@ namespace graphene { namespace chain {
       uint16_t          trx_in_block = 0;
    };
 
-   using namespace boost::multi_index;
-
    struct by_tx_id;
-   typedef multi_index_container<transaction_history_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         hashed_non_unique< tag<by_tx_id>, BOOST_MULTI_INDEX_MEMBER(transaction_history_object, transaction_id_type, tx_id), std::hash<transaction_id_type> >
+   typedef boost::multi_index_container<
+      transaction_history_object,
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::hashed_non_unique<db::mi::tag<by_tx_id>,
+            BOOST_MULTI_INDEX_MEMBER(transaction_history_object, transaction_id_type, tx_id), std::hash<transaction_id_type>
+         >
       >
    > transaction_history_multi_index_type;
 

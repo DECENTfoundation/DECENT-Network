@@ -182,35 +182,33 @@ namespace graphene { namespace chain {
          std::set<public_key_type>  before_key_members;
    };
 
-   using namespace boost::multi_index;
-
    struct by_account_asset;
    struct by_asset_balance;
    /**
     * @ingroup object_index
     */
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       account_balance_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_account_asset>,
-            composite_key<
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_account_asset>,
+            db::mi::composite_key<
                account_balance_object,
-               member<account_balance_object, account_id_type, &account_balance_object::owner>,
-               member<account_balance_object, asset_id_type, &account_balance_object::asset_type>
+               db::mi::member<account_balance_object, account_id_type, &account_balance_object::owner>,
+               db::mi::member<account_balance_object, asset_id_type, &account_balance_object::asset_type>
             >
          >,
-         ordered_unique< tag<by_asset_balance>,
-            composite_key<
+         db::mi::ordered_unique<db::mi::tag<by_asset_balance>,
+            db::mi::composite_key<
                account_balance_object,
-               member<account_balance_object, asset_id_type, &account_balance_object::asset_type>,
-               member<account_balance_object, share_type, &account_balance_object::balance>,
-               member<account_balance_object, account_id_type, &account_balance_object::owner>
+               db::mi::member<account_balance_object, asset_id_type, &account_balance_object::asset_type>,
+               db::mi::member<account_balance_object, share_type, &account_balance_object::balance>,
+               db::mi::member<account_balance_object, account_id_type, &account_balance_object::owner>
             >,
-            composite_key_compare<
-               std::less< asset_id_type >,
-               std::greater< share_type >,
-               std::less< account_id_type >
+            db::mi::composite_key_compare<
+               std::less<asset_id_type>,
+               std::greater<share_type>,
+               std::less<account_id_type>
             >
          >
       >
@@ -248,15 +246,17 @@ namespace graphene { namespace chain {
    /**
     * @ingroup object_index
     */
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       account_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_unique< tag<by_name>, member<account_object, std::string, &account_object::name>  >,
-         ordered_unique< tag< by_publishing_manager_and_name>,
-            composite_key< account_object,
-               const_mem_fun<account_object, bool, &account_object::is_publishing_manager>,
-               member<account_object, std::string, &account_object::name>
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_unique<db::mi::tag<by_name>,
+            db::mi::member<account_object, std::string, &account_object::name>
+         >,
+         db::mi::ordered_unique<db::mi::tag<by_publishing_manager_and_name>,
+            db::mi::composite_key<account_object,
+               db::mi::const_mem_fun<account_object, bool, &account_object::is_publishing_manager>,
+               db::mi::member<account_object, std::string, &account_object::name>
             >
          >
       >

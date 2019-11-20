@@ -92,24 +92,22 @@ namespace graphene { namespace chain {
          //std::pair<account_id_type,uint32_t>                   account_seq()const { return std::tie( account, sequence );     }
    };
 
-using namespace boost::multi_index;
-
 struct by_seq;
 struct by_op;
-typedef multi_index_container<
+typedef boost::multi_index_container<
    account_transaction_history_object,
-   indexed_by<
-      graphene::db::object_id_index,
-      ordered_unique< tag<by_seq>,
-         composite_key< account_transaction_history_object,
-            member< account_transaction_history_object, account_id_type, &account_transaction_history_object::account>,
-            member< account_transaction_history_object, uint32_t, &account_transaction_history_object::sequence>
+   db::mi::indexed_by<
+      db::object_id_index,
+      db::mi::ordered_unique<db::mi::tag<by_seq>,
+         db::mi::composite_key<account_transaction_history_object,
+            db::mi::member<account_transaction_history_object, account_id_type, &account_transaction_history_object::account>,
+            db::mi::member<account_transaction_history_object, uint32_t, &account_transaction_history_object::sequence>
          >
       >,
-      ordered_unique< tag<by_op>,
-         composite_key< account_transaction_history_object,
-            member< account_transaction_history_object, account_id_type, &account_transaction_history_object::account>,
-            member< account_transaction_history_object, operation_history_id_type, &account_transaction_history_object::operation_id>
+      db::mi::ordered_unique<db::mi::tag<by_op>,
+         db::mi::composite_key<account_transaction_history_object,
+            db::mi::member<account_transaction_history_object, account_id_type, &account_transaction_history_object::account>,
+            db::mi::member<account_transaction_history_object, operation_history_id_type, &account_transaction_history_object::operation_id>
          >
       >
    >

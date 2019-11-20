@@ -74,16 +74,17 @@ class required_approval_index : public graphene::db::secondary_index
       std::map<account_id_type, std::set<proposal_id_type>> _account_to_proposals;
 };
 
-using namespace boost::multi_index;
-
 struct by_expiration;
-typedef multi_index_container<
+typedef boost::multi_index_container<
    proposal_object,
-   indexed_by<
-      graphene::db::object_id_index,
-      ordered_non_unique< tag< by_expiration >, member< proposal_object, fc::time_point_sec, &proposal_object::expiration_time > >
+   db::mi::indexed_by<
+      db::object_id_index,
+      db::mi::ordered_non_unique<db::mi::tag<by_expiration>,
+         db::mi::member<proposal_object, fc::time_point_sec, &proposal_object::expiration_time>
+      >
    >
 > proposal_multi_index_container;
+
 typedef graphene::db::generic_index<proposal_object, proposal_multi_index_container> proposal_index;
 
 } } // graphene::chain

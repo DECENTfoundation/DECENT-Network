@@ -44,16 +44,15 @@ namespace graphene { namespace chain {
       struct by_seeder;
       struct by_upload;
 
-      typedef multi_index_container<
+      typedef boost::multi_index_container<
          seeding_statistics_object,
-         indexed_by<
-            graphene::db::object_id_index,
-            ordered_unique< tag<by_seeder>,
-               member<seeding_statistics_object, account_id_type, &seeding_statistics_object::seeder>
+         db::mi::indexed_by<
+            db::object_id_index,
+            db::mi::ordered_unique<db::mi::tag<by_seeder>,
+               db::mi::member<seeding_statistics_object, account_id_type, &seeding_statistics_object::seeder>
             >,
-            ordered_non_unique< tag<by_upload>,
-               member<seeding_statistics_object, uint64_t , &seeding_statistics_object::total_upload>,
-            std::greater<uint64_t>
+            db::mi::ordered_non_unique<db::mi::tag<by_upload>,
+               db::mi::member<seeding_statistics_object, uint64_t , &seeding_statistics_object::total_upload>, std::greater<uint64_t>
             >
          >
       >seeding_statistics_object_multi_index_type;

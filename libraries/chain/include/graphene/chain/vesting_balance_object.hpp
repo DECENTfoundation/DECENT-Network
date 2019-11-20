@@ -160,21 +160,20 @@ namespace graphene { namespace chain {
          asset get_allowed_withdraw(const fc::time_point_sec& now)const;
    };
 
-   using namespace boost::multi_index;
-
    /**
     * @ingroup object_index
     */
    struct by_account;
-   typedef multi_index_container<
+   typedef boost::multi_index_container<
       vesting_balance_object,
-      indexed_by<
-         graphene::db::object_id_index,
-         ordered_non_unique< tag<by_account>,
-            member<vesting_balance_object, account_id_type, &vesting_balance_object::owner>
+      db::mi::indexed_by<
+         db::object_id_index,
+         db::mi::ordered_non_unique<db::mi::tag<by_account>,
+            db::mi::member<vesting_balance_object, account_id_type, &vesting_balance_object::owner>
          >
       >
    > vesting_balance_multi_index_type;
+
    /**
     * @ingroup object_index
     */
