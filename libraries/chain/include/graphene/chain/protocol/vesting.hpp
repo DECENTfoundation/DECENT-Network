@@ -24,7 +24,6 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 

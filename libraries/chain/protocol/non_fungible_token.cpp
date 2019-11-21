@@ -1,7 +1,6 @@
 /* (c) 2019 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/protocol/non_fungible_token.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
-#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 

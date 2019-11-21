@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/asset_ops.hpp>
-#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 

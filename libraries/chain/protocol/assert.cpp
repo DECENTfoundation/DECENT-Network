@@ -24,7 +24,6 @@
 #include <graphene/chain/protocol/assert.hpp>
 #include <graphene/chain/protocol/account.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
-#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 

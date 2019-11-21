@@ -23,7 +23,6 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/account.hpp>
-#include <fc/static_variant.hpp>
 
 namespace graphene { namespace chain {
 
