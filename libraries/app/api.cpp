@@ -459,10 +459,11 @@ namespace graphene { namespace app {
        return *key;
    }
 
-   chain::signed_transaction crypto_api::sign_transaction(const chain::signed_transaction& trx, const chain::private_key_type &key) const
+   chain::signed_transaction crypto_api::sign_transaction(const chain::transaction& trx, const chain::private_key_type &key) const
    {
-       trx.sign(key, _app.chain_database()->get_chain_id());
-       return trx;
+       chain::signed_transaction signed_trx(trx);
+       signed_trx.sign(key, _app.chain_database()->get_chain_id());
+       return signed_trx;
    }
 
    chain::memo_data crypto_api::encrypt_message(const std::string &message, const chain::private_key_type &key, const chain::public_key_type &pub, uint64_t nonce) const

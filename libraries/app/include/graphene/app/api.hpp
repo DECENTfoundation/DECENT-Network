@@ -325,7 +325,7 @@ namespace graphene { namespace app {
           * @return signed transaction
           * @ingroup CryptoAPI
           */
-         chain::signed_transaction sign_transaction(const chain::signed_transaction& trx, const chain::private_key_type &key) const;
+         chain::signed_transaction sign_transaction(const chain::transaction& trx, const chain::private_key_type &key) const;
 
          /**
           * @brief Encrypt message.

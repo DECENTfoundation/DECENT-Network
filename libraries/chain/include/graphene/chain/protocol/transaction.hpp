@@ -127,7 +127,7 @@ namespace graphene { namespace chain {
       const signature_type& sign( const private_key_type& key, const chain_id_type& chain_id );
 
       /** returns signature but does not append */
-      signature_type sign( const private_key_type& key, const chain_id_type& chain_id )const;
+      signature_type signature( const private_key_type& key, const chain_id_type& chain_id ) const;
 
       /**
        *  The purpose of this method is to identify some subset of

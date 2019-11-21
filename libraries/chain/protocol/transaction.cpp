@@ -78,17 +78,13 @@ graphene::chain::transaction_id_type graphene::chain::transaction::id() const
 
 const signature_type& graphene::chain::signed_transaction::sign(const private_key_type& key, const chain_id_type& chain_id)
 {
-   digest_type h = sig_digest( chain_id );
-   signatures.push_back(key.sign_compact(h));
+   signatures.push_back(signature(key, chain_id));
    return signatures.back();
 }
 
-signature_type graphene::chain::signed_transaction::sign(const private_key_type& key, const chain_id_type& chain_id)const
+signature_type graphene::chain::signed_transaction::signature(const private_key_type& key, const chain_id_type& chain_id) const
 {
-   digest_type::encoder enc;
-   fc::raw::pack( enc, chain_id );
-   fc::raw::pack( enc, *this );
-   return key.sign_compact(enc.result());
+   return key.sign_compact(sig_digest(chain_id));
 }
 
 void transaction::set_expiration( fc::time_point_sec expiration_time )
