@@ -3,17 +3,17 @@ wallet_about wallet_api::about() const
    return my->about();
 }
 
-fc::optional<signed_block_with_info> wallet_api::get_block(uint32_t num) const
+fc::optional<chain::signed_block_with_info> wallet_api::get_block(uint32_t num) const
 {
    return my->_remote_db->get_block(num);
 }
 
-global_property_object wallet_api::get_global_properties() const
+chain::global_property_object wallet_api::get_global_properties() const
 {
    return my->get_global_properties();
 }
 
-dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
+chain::dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
 {
    return my->get_dynamic_global_properties();
 }
@@ -85,7 +85,7 @@ std::string wallet_api::get_help(const std::string& method) const
       ss << "PRECISION: the number of digits after the decimal point\n\n";
 
       ss << "\nExample value of MONITORED ASSET_OPTIONS: \n";
-      ss << fc::json::to_pretty_string( graphene::chain::monitored_asset_options() );
+      ss << fc::json::to_pretty_string(chain::monitored_asset_options());
    }
    else
    {
@@ -123,8 +123,8 @@ std::string wallet_api::sign_buffer(const std::string& str_buffer,
    if(str_buffer.empty() || str_brainkey.empty())
       FC_THROW_EXCEPTION(need_buffer_and_brainkey_exception, "");
 
-   std::string normalized_brain_key = graphene::utilities::normalize_brain_key( str_brainkey );
-   fc::ecc::private_key privkey = graphene::utilities::derive_private_key( normalized_brain_key );
+   std::string normalized_brain_key = utilities::normalize_brain_key( str_brainkey );
+   chain::private_key_type privkey = utilities::derive_private_key( normalized_brain_key );
 
    fc::sha256 digest(str_buffer);
 
@@ -146,23 +146,23 @@ bool wallet_api::verify_signature(const std::string& str_buffer,
    fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
    fc::sha256 digest(str_buffer);
 
-   fc::ecc::public_key pub_key(signature, digest);
-   public_key_type provided_key(str_publickey);
+   chain::public_key_type pub_key(signature, digest);
+   chain::public_key_type provided_key(str_publickey);
 
    return (provided_key == pub_key);
 }
 
-transaction_id_type wallet_api::get_transaction_id( const signed_transaction& trx ) const
+chain::transaction_id_type wallet_api::get_transaction_id(const chain::signed_transaction& trx) const
 {
    return trx.id();
 }
 
-fc::optional<processed_transaction> wallet_api::get_transaction_by_id( const transaction_id_type& id ) const
+fc::optional<chain::processed_transaction> wallet_api::get_transaction_by_id(chain::transaction_id_type id) const
 {
    return my->_remote_db->get_transaction_by_id( id );
 }
 
-std::vector<operation_info> wallet_api::list_operations() const
+std::vector<app::operation_info> wallet_api::list_operations() const
 {
    return my->list_operations();
 }

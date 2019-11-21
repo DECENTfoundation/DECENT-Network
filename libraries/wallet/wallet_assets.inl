@@ -1,9 +1,9 @@
-std::vector<asset_object> wallet_api::list_assets(const std::string& lowerbound, uint32_t limit) const
+std::vector<chain::asset_object> wallet_api::list_assets(const std::string& lowerbound, uint32_t limit) const
 {
    return my->_remote_db->list_assets( lowerbound, limit );
 }
 
-asset_object wallet_api::get_asset(const std::string& asset_name_or_id) const
+chain::asset_object wallet_api::get_asset(const std::string& asset_name_or_id) const
 {
    auto a = my->find_asset(asset_name_or_id);
    if(!a)
@@ -12,7 +12,7 @@ asset_object wallet_api::get_asset(const std::string& asset_name_or_id) const
    return *a;
 }
 
-monitored_asset_options wallet_api::get_monitored_asset_data(const std::string& asset_name_or_id) const
+chain::monitored_asset_options wallet_api::get_monitored_asset_data(const std::string& asset_name_or_id) const
 {
    auto asset = get_asset(asset_name_or_id);
    if(!asset.is_monitored_asset())
@@ -52,7 +52,7 @@ signed_transaction_info wallet_api::create_user_issued_asset(const std::string& 
                                                              uint8_t precision,
                                                              const std::string& description,
                                                              uint64_t max_supply,
-                                                             price core_exchange_rate,
+                                                             chain::price core_exchange_rate,
                                                              bool is_exchangeable,
                                                              bool is_fixed_max_supply,
                                                              bool broadcast /* = false */)
@@ -77,7 +77,7 @@ signed_transaction_info wallet_api::update_user_issued_asset(const std::string& 
                                                              const std::string& new_issuer,
                                                              const std::string& description,
                                                              uint64_t max_supply,
-                                                             price core_exchange_rate,
+                                                             chain::price core_exchange_rate,
                                                              bool is_exchangeable,
                                                              bool broadcast /* = false */)
 {
@@ -126,7 +126,7 @@ signed_transaction_info wallet_api::claim_fees(const std::string& uia_amount,
 
 signed_transaction_info wallet_api::publish_asset_feed(const std::string& publishing_account,
                                                        const std::string& symbol,
-                                                       const price_feed& feed,
+                                                       const chain::price_feed& feed,
                                                        bool broadcast /* = false */)
 {
    if(my->is_locked())
@@ -134,13 +134,13 @@ signed_transaction_info wallet_api::publish_asset_feed(const std::string& publis
    return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
 }
 
-std::multimap<fc::time_point_sec, price_feed> wallet_api::get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const
+std::multimap<fc::time_point_sec, chain::price_feed> wallet_api::get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const
 {
-   account_id_type account_id = get_account( account_name_or_id ).id;
+   chain::account_id_type account_id = get_account( account_name_or_id ).id;
    return my->_remote_db->get_feeds_by_miner( account_id, count );
 }
 
-real_supply wallet_api::get_real_supply() const
+chain::real_supply wallet_api::get_real_supply() const
 {
    return my->_remote_db->get_real_supply();
 }

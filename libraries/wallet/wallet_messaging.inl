@@ -22,10 +22,10 @@ std::vector<message_data> wallet_api::get_message_objects(const std::string& sen
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-   fc::optional<account_id_type> receiver_id;
+   fc::optional<chain::account_id_type> receiver_id;
    if(receiver.size())
       receiver_id = get_account(receiver).get_id();
-   fc::optional<account_id_type> sender_id;
+   fc::optional<chain::account_id_type> sender_id;
    if(sender.size())
       sender_id = get_account(sender).get_id();
    return my->get_message_objects(sender_id, receiver_id, max_count);

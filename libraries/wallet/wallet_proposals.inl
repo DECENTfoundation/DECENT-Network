@@ -1,6 +1,6 @@
-std::vector<proposal_object> wallet_api::get_proposed_transactions(const std::string& account_or_id ) const
+std::vector<chain::proposal_object> wallet_api::get_proposed_transactions(const std::string& account_or_id ) const
 {
-   account_id_type id = get_account(account_or_id).get_id();
+   chain::account_id_type id = get_account(account_or_id).get_id();
    return my->_remote_db->get_proposed_transactions( id );
 }
 

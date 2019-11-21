@@ -1,24 +1,24 @@
-std::vector<account_object> wallet_api::list_my_accounts() const
+std::vector<chain::account_object> wallet_api::list_my_accounts() const
 {
-   return std::vector<account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
+   return std::vector<chain::account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
 }
 
-path wallet_api::get_wallet_filename() const
+boost::filesystem::path wallet_api::get_wallet_filename() const
 {
    return my->get_wallet_filename();
 }
 
-void wallet_api::set_wallet_filename( const path& wallet_filename )
+void wallet_api::set_wallet_filename( const boost::filesystem::path& wallet_filename )
 {
    return my->set_wallet_filename( wallet_filename );
 }
 
-std::string wallet_api::get_private_key(const public_key_type& pubkey) const
+std::string wallet_api::get_private_key(const chain::public_key_type& pubkey) const
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
 
-   return key_to_wif( my->get_private_key( pubkey ) );
+   return utilities::key_to_wif( my->get_private_key( pubkey ) );
 }
 
 bool wallet_api::is_new()const
@@ -40,7 +40,7 @@ bool wallet_api::lock()
 
    my->encrypt_keys2();
    for( auto & key : my->_keys )
-      key.second = key_to_wif(fc::ecc::private_key());
+      key.second = utilities::key_to_wif(chain::private_key_type());
    my->_keys.clear();
    my->_el_gamal_keys.clear();
    my->_checksum = fc::sha512();
@@ -80,7 +80,7 @@ bool wallet_api::unlock(const std::string& password)
          for( const auto& element : pk.ec_keys )
          {
             el_gamal_key_pair_str el_gamal_keys_str;
-            el_gamal_keys_str.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret( wif_to_key( element.second )->get_secret() );
+            el_gamal_keys_str.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret( utilities::wif_to_key( element.second )->get_secret() );
             el_gamal_keys_str.public_key = get_public_el_gamal_key( el_gamal_keys_str.private_key );
             pk.el_gamal_keys.push_back( el_gamal_keys_str );
          }
@@ -128,14 +128,14 @@ void wallet_api::set_password(const std::string& password )
    lock();
 }
 
-bool wallet_api::load_wallet_file(const path& wallet_filename )
+bool wallet_api::load_wallet_file(const boost::filesystem::path& wallet_filename )
 {
    if( !wallet_filename.empty() )
       my->set_wallet_filename(wallet_filename);
    return my->load_wallet_file( wallet_filename );
 }
 
-void wallet_api::save_wallet_file(const path& wallet_filename )
+void wallet_api::save_wallet_file(const boost::filesystem::path& wallet_filename )
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");

@@ -39,7 +39,9 @@ namespace graphene { namespace wallet {
 
       wallet_filename_cannot_be_empty_code      = 6,
       wallet_is_locked_code                     = 7,
-      password_cannot_be_empty_code             = 10,
+      password_cannot_be_empty_code             = 8,
+      malformed_private_key_code                = 9,
+      account_does_not_exist_code               = 10,
       account_already_exist_code                = 11,
       invalid_wif_private_key_code              = 12,
       new_auth_needs_to_be_different_from_existing_code = 13,
@@ -70,8 +72,9 @@ namespace graphene { namespace wallet {
       invalid_content_uri_code                  = 34,
       content_not_available_for_this_region_code = 35,
       cannot_find_download_object_code          = 36,
+      seeder_not_found_code                     = 37,
 
-      could_not_find_matching_subscription_code = 37
+      could_not_find_matching_subscription_code = 38
    };
 
    FC_DECLARE_EXCEPTION(wallet_exception, 500, "wallet exception")
@@ -90,7 +93,9 @@ namespace graphene { namespace wallet {
    FC_DECLARE_WALLET_EXCEPTION(wallet_filename_cannot_be_empty_exception, wallet_filename_cannot_be_empty_code, "Wallet filename cannot be empty.")
    FC_DECLARE_WALLET_EXCEPTION(wallet_is_locked_exception, wallet_is_locked_code, "The wallet is locked and needs to be unlocked.")
    FC_DECLARE_WALLET_EXCEPTION(password_cannot_be_empty_exception, password_cannot_be_empty_code, "Password cannot be empty.")
+   FC_DECLARE_WALLET_EXCEPTION(malformed_private_key_exception, malformed_private_key_code, "Malformed private_key.")
    //account
+   FC_DECLARE_WALLET_EXCEPTION(account_does_not_exist_exception, account_does_not_exist_code, "Account does not exist.")
    FC_DECLARE_WALLET_EXCEPTION(account_already_exist_exception, account_already_exist_code, "Account already exists.")
    FC_DECLARE_WALLET_EXCEPTION(invalid_wif_private_key_exception, invalid_wif_private_key_code, "Invalid wif private key.")
    FC_DECLARE_WALLET_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, new_auth_needs_to_be_different_from_existing_code, "New authority needs to be different from the existing one.")
@@ -121,6 +126,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_WALLET_EXCEPTION(invalid_content_uri_exception, invalid_content_uri_code, "Invalid content URI.")
    FC_DECLARE_WALLET_EXCEPTION(content_not_available_for_this_region_exception, content_not_available_for_this_region_code, "Content not available for this region.")
    FC_DECLARE_WALLET_EXCEPTION(cannot_find_download_object_exception, cannot_find_download_object_code, "Cannot find download object.")
+   FC_DECLARE_WALLET_EXCEPTION(seeder_not_found_exception, seeder_not_found_code, "Seeder not found.")
    // suscription
    FC_DECLARE_WALLET_EXCEPTION(could_not_find_matching_subcription_exception, could_not_find_matching_subscription_code, "Could not find matching subscription.")
 

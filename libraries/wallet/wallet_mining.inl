@@ -1,9 +1,9 @@
-std::map<std::string, miner_id_type> wallet_api::list_miners(const std::string& lowerbound, uint32_t limit) const
+std::map<std::string, chain::miner_id_type> wallet_api::list_miners(const std::string& lowerbound, uint32_t limit) const
 {
    return my->_remote_db->lookup_miner_accounts(lowerbound, limit);
 }
 
-miner_object wallet_api::get_miner(const std::string& owner_account) const
+chain::miner_object wallet_api::get_miner(const std::string& owner_account) const
 {
    return my->get_miner(owner_account);
 }

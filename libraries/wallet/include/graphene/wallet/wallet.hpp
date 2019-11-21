@@ -33,19 +33,15 @@
 #include <fc/api.hpp>
 #include <boost/signals2/signal.hpp>
 
-using namespace graphene::app;
-using namespace graphene::chain;
-using namespace graphene::utilities;
-using namespace boost::filesystem;
-
 namespace fc
 {
-   void to_variant(const account_multi_index_type& accts, variant& vo);
-   void from_variant(const variant &var, account_multi_index_type &vo);
+   void to_variant(const graphene::chain::account_multi_index_type& accts, variant& vo);
+   void from_variant(const variant &var, graphene::chain::account_multi_index_type &vo);
 }
 
 namespace graphene { namespace wallet {
 
+namespace fs = boost::filesystem;
 typedef uint16_t transaction_handle_type;
 
 /**
@@ -66,20 +62,20 @@ struct wallet_data
 {
    int version = 0;
    /** Chain ID this wallet is used with */
-   chain_id_type chain_id;
-   account_multi_index_type my_accounts;
+   chain::chain_id_type chain_id;
+   chain::account_multi_index_type my_accounts;
    /// @return IDs of all accounts in @ref my_accounts
    std::vector<db::object_id_type> my_account_ids()const
    {
       std::vector<db::object_id_type> ids;
       ids.reserve(my_accounts.size());
       std::transform(my_accounts.begin(), my_accounts.end(), std::back_inserter(ids),
-                     [](const account_object& ao) { return ao.id; });
+                     [](const chain::account_object& ao) { return ao.id; });
       return ids;
    }
    /// @brief Add acct to @ref my_accounts, or update it if it is already in @ref my_accounts
    /// @return \c true if the account was newly inserted; \c false if it was only updated
-   bool update_account(const account_object& acct)
+   bool update_account(const chain::account_object& acct)
    {
       auto& idx = my_accounts.get<db::by_id>();
       auto itr = idx.find(acct.get_id());
@@ -97,7 +93,7 @@ struct wallet_data
    std::vector<char> cipher_keys;
 
    /** map an account to a set of extra keys that have been imported for that account */
-   std::map<account_id_type, std::set<public_key_type>> extra_keys;
+   std::map<chain::account_id_type, std::set<chain::public_key_type>> extra_keys;
 
    // map of account_name -> base58_private_key for
    //    incomplete account regs
@@ -119,12 +115,12 @@ struct wallet_about
 struct wallet_info
 {
    uint32_t head_block_num;
-   block_id_type head_block_id;
+   chain::block_id_type head_block_id;
    std::string head_block_age;
    std::string next_maintenance_time;
-   chain_id_type chain_id;
+   chain::chain_id_type chain_id;
    double participation;
-   std::vector<miner_id_type> active_miners;
+   std::vector<chain::miner_id_type> active_miners;
 };
 
 struct el_gamal_key_pair
@@ -144,7 +140,7 @@ struct el_gamal_key_pair_str
  */
 struct plain_keys
 {
-   std::map<public_key_type, std::string> ec_keys;
+   std::map<chain::public_key_type, std::string> ec_keys;
    fc::sha512 checksum;
 };
 
@@ -168,14 +164,14 @@ struct brain_key_info
 {
    std::string brain_priv_key;
    std::string wif_priv_key;
-   public_key_type pub_key;
+   chain::public_key_type pub_key;
 };
 
 struct exported_account_keys
 {
    std::string account_name;
    std::vector<std::vector<char>> encrypted_private_keys;
-   std::vector<public_key_type> public_keys;
+   std::vector<chain::public_key_type> public_keys;
 };
 
 struct exported_keys
@@ -214,12 +210,12 @@ struct operation_detail
 {
    std::string memo;
    std::string description;
-   operation_history_object op;
+   chain::operation_history_object op;
 };
 
-struct buying_object_ex : public buying_object, public content_download_status {
-   buying_object_ex(const buying_object& obj, const content_download_status& status)
-    : buying_object(obj), content_download_status(status)
+struct buying_object_ex : public chain::buying_object, public content_download_status {
+   buying_object_ex(const chain::buying_object& obj, const content_download_status& status)
+    : chain::buying_object(obj), content_download_status(status)
    {
       // buying_object price is used for other purposes
       // but the GUI relies on buying_object_ex::price
@@ -235,22 +231,22 @@ struct buying_object_ex : public buying_object, public content_download_status {
    uint32_t AVG_rating;
 };
 
-struct rating_object_ex : public buying_object
+struct rating_object_ex : public chain::buying_object
 {
-   rating_object_ex( const buying_object& buying, const std::string& author )
-   : buying_object( buying ), author(author) {}
+   rating_object_ex( const chain::buying_object& buying, const std::string& author )
+   : chain::buying_object( buying ), author(author) {}
    std::string author;
 };
 
-struct vesting_balance_object_with_info : public vesting_balance_object
+struct vesting_balance_object_with_info : public chain::vesting_balance_object
 {
-   vesting_balance_object_with_info( const vesting_balance_object& vbo, fc::time_point_sec now );
+   vesting_balance_object_with_info( const chain::vesting_balance_object& vbo, fc::time_point_sec now );
    vesting_balance_object_with_info( const vesting_balance_object_with_info& vbo ) = default;
 
    /**
     * How much is allowed to be withdrawn.
     */
-   asset allowed_withdraw;
+   chain::asset allowed_withdraw;
 
    /**
     * The time at which allowed_withdrawal was calculated.
@@ -260,37 +256,37 @@ struct vesting_balance_object_with_info : public vesting_balance_object
 
 struct miner_voting_info
 {
-    miner_id_type id;
+    chain::miner_id_type id;
     std::string name;
     std::string url;
     uint64_t total_votes;
     bool voted;
 };
 
-struct balance_change_result_detail : public balance_change_result
+struct balance_change_result_detail : public app::balance_change_result
 {
    std::string memo;
    std::string description;
 };
 
-struct extended_asset : public asset
+struct extended_asset : public chain::asset
 {
-   extended_asset( const asset& a, const std::string& pretty_amount )
-      : asset( a ), pretty_amount( pretty_amount ) {}
+   extended_asset( const chain::asset& a, const std::string& pretty_amount )
+      : chain::asset( a ), pretty_amount( pretty_amount ) {}
    std::string pretty_amount;
 };
 
-struct signed_transaction_info : public signed_transaction
+struct signed_transaction_info : public chain::signed_transaction
 {
-   signed_transaction_info(const signed_transaction& tx)
-      : signed_transaction( tx ), transaction_id( tx.id() ) {}
-   transaction_id_type transaction_id;
+   signed_transaction_info(const chain::signed_transaction& tx)
+      : chain::signed_transaction( tx ), transaction_id( tx.id() ) {}
+   chain::transaction_id_type transaction_id;
 };
 
-struct message_data : public message_object
+struct message_data : public chain::message_object
 {
    message_data() = default;
-   message_data(const message_object& obj) : message_object(obj) {}
+   message_data(const chain::message_object& obj) : chain::message_object(obj) {}
    std::string text;
 };
 
@@ -330,7 +326,7 @@ struct text_message
 class wallet_api : public fc::api_base<wallet_api>
 {
 public:
-   wallet_api( const fc::api<login_api> &rapi, const chain_id_type &chain_id, const server_data &ws );
+   wallet_api( const fc::api<app::login_api> &rapi, const chain::chain_id_type &chain_id, const server_data &ws );
    virtual ~wallet_api();
 
    /**
@@ -346,7 +342,7 @@ public:
     * @return the referenced block with info, or \c null if no matching block was found
     * @ingroup WalletAPI_General
     */
-   fc::optional<signed_block_with_info> get_block(uint32_t num) const;
+   fc::optional<chain::signed_block_with_info> get_block(uint32_t num) const;
 
    /**
     * @brief Returns the blockchain's slowly-changing properties.
@@ -357,7 +353,7 @@ public:
     * @return the global properties
     * @ingroup WalletAPI_General
     */
-   global_property_object get_global_properties() const;
+   chain::global_property_object get_global_properties() const;
 
    /**
     * @brief Returns the blockchain's rapidly-changing properties.
@@ -367,7 +363,7 @@ public:
     * @return the dynamic global properties
     * @ingroup WalletAPI_General
     */
-   dynamic_global_property_object get_dynamic_global_properties() const;
+   chain::dynamic_global_property_object get_dynamic_global_properties() const;
 
    /**
     * @brief Returns the blockchain object corresponding to the given id.
@@ -454,7 +450,7 @@ public:
     * @return The transaction ID
     * @ingroup WalletAPI_General
     */
-   transaction_id_type get_transaction_id( const signed_transaction& trx ) const;
+   chain::transaction_id_type get_transaction_id(const chain::signed_transaction& trx) const;
 
    /**
     * @brief This method will return the transaction for the given ID (transaction hash) or
@@ -466,14 +462,14 @@ public:
     * @return The transaction
     * @ingroup WalletAPI_General
     */
-   fc::optional<processed_transaction> get_transaction_by_id( const transaction_id_type& id ) const;
+   fc::optional<chain::processed_transaction> get_transaction_by_id(chain::transaction_id_type id) const;
 
    /**
     * @brief Listing the operations available.
     * @return a vector of operations with ids, names and fees
     * @ingroup WalletAPI_General
     */
-   std::vector<operation_info> list_operations() const;
+   std::vector<app::operation_info> list_operations() const;
 
    /**
     * @brief This method encapsulates the functionality of running a sequence of calls
@@ -491,7 +487,7 @@ public:
     * @return a list of accounts imported in the wallet
     * @ingroup WalletAPI_Wallet
     */
-   std::vector<account_object> list_my_accounts() const;
+   std::vector<chain::account_object> list_my_accounts() const;
 
    /**
     * @brief Returns the current wallet filename.
@@ -499,14 +495,14 @@ public:
     * @return the wallet filename
     * @ingroup WalletAPI_Wallet
     */
-   path get_wallet_filename() const;
+   fs::path get_wallet_filename() const;
 
    /**
     * @brief Sets the wallet filename used for future writes.
     * @param wallet_filename the wallet filename that will be used when automatically saving the wallet
     * @ingroup WalletAPI_Wallet
     */
-   void set_wallet_filename( const path& wallet_filename );
+   void set_wallet_filename( const fs::path& wallet_filename );
 
    /**
     * @brief Get the WIF private key corresponding to a public key.  The
@@ -516,7 +512,7 @@ public:
     * @return WIF private key corresponding to a public key
     * @ingroup WalletAPI_Wallet
     */
-   std::string get_private_key(const public_key_type& pubkey) const;
+   std::string get_private_key(const chain::public_key_type& pubkey) const;
 
    /**
     * @brief Checks whether the wallet has just been created and has not yet had a password set.
@@ -571,7 +567,7 @@ public:
     * @return \c true if the specified wallet is loaded
     * @ingroup WalletAPI_Wallet
     */
-   bool load_wallet_file(const path& wallet_filename = path());
+   bool load_wallet_file(const fs::path& wallet_filename = fs::path());
 
    /**
     * @brief Saves the current wallet to the given filename.
@@ -583,7 +579,7 @@ public:
     *                        save to the current filename.
     * @ingroup WalletAPI_Wallet
     */
-   void save_wallet_file(const path& wallet_filename = path());
+   void save_wallet_file(const fs::path& wallet_filename = fs::path());
 
    /**
     * @brief Imports the private key for an existing account.
@@ -644,7 +640,7 @@ public:
     * @return a list of accounts mapping account names to account ids
     * @ingroup WalletAPI_Account
     */
-   std::map<std::string, account_id_type> list_accounts(const std::string& lowerbound, uint32_t limit) const;
+   std::map<std::string, chain::account_id_type> list_accounts(const std::string& lowerbound, uint32_t limit) const;
 
    /**
     * @brief Get registered accounts that match search term
@@ -655,7 +651,7 @@ public:
     * @return map of account names to corresponding IDs
     * @ingroup WalletAPI_Account
     */
-   std::vector<account_object> search_accounts(const std::string& term, const std::string& order, const std::string& id, uint32_t limit) const;
+   std::vector<chain::account_object> search_accounts(const std::string& term, const std::string& order, const std::string& id, uint32_t limit) const;
 
    /**
     * @brief List the balances of an account.
@@ -677,7 +673,7 @@ public:
     * @return a list of transaction detail objects
     * @ingroup WalletAPI_Account
     */
-   std::vector<transaction_detail_object> search_account_history(const std::string& account_name,
+   std::vector<chain::transaction_detail_object> search_account_history(const std::string& account_name,
                                                                  const std::string& order,
                                                                  const std::string& id,
                                                                  int limit) const;
@@ -739,7 +735,7 @@ public:
     * @ingroup WalletAPI_Account
     */
    fc::optional<balance_change_result_detail> get_account_balance_for_transaction(const std::string& account_name,
-                                                                                  operation_history_id_type operation_history_id) const;
+                                                                                  chain::operation_history_id_type operation_history_id) const;
 
    /**
     * @brief Returns information about the given account.
@@ -747,7 +743,7 @@ public:
     * @return the public account data stored in the blockchain
     * @ingroup WalletAPI_Account
     */
-   account_object get_account(const std::string& account_name_or_id) const;
+   chain::account_object get_account(const std::string& account_name_or_id) const;
 
    /**
     * @brief Derive private key from given prefix and sequence.
@@ -764,7 +760,7 @@ public:
     * @return corresponding public key
     * @ingroup WalletAPI_Account
     */
-   public_key_type get_public_key( const std::string& wif_private_key ) const;
+   chain::public_key_type get_public_key( const std::string& wif_private_key ) const;
 
    /**
     * @brief Suggests a safe brain key to use for creating your account.
@@ -820,9 +816,9 @@ public:
     * @ingroup WalletAPI_Account
     */
    signed_transaction_info register_account_with_keys(const std::string& name,
-                                                      const public_key_type& owner,
-                                                      const public_key_type& active,
-                                                      const public_key_type& memo,
+                                                      const chain::public_key_type& owner,
+                                                      const chain::public_key_type& active,
+                                                      const chain::public_key_type& memo,
                                                       const std::string& registrar_account,
                                                       bool broadcast = false);
 
@@ -846,8 +842,8 @@ public:
     * @ingroup WalletAPI_Account
     */
    signed_transaction_info register_account(const std::string& name,
-                                            const public_key_type& owner,
-                                            const public_key_type& active,
+                                            const chain::public_key_type& owner,
+                                            const chain::public_key_type& active,
                                             const std::string& registrar_account,
                                             bool broadcast = false);
 
@@ -874,9 +870,9 @@ public:
     * @ingroup WalletAPI_Account
     */
    signed_transaction_info register_multisig_account(const std::string& name,
-                                                     const authority& owner,
-                                                     const authority& active,
-                                                     const public_key_type& memo,
+                                                     const chain::authority& owner,
+                                                     const chain::authority& active,
+                                                     const chain::public_key_type& memo,
                                                      const std::string& registrar_account,
                                                      bool broadcast = false);
 
@@ -941,9 +937,9 @@ public:
     * @ingroup WalletAPI_Account
     */
    signed_transaction_info update_account_keys_to_multisig(const std::string& name,
-                                                           const authority& owner,
-                                                           const authority& active,
-                                                           const public_key_type& memo,
+                                                           const chain::authority& owner,
+                                                           const chain::authority& active,
+                                                           const chain::public_key_type& memo,
                                                            bool broadcast = false);
 
    /**
@@ -992,7 +988,7 @@ public:
     * @return the list of asset objects, ordered by symbol
     * @ingroup WalletAPI_Asset
     */
-   std::vector<asset_object> list_assets(const std::string& lowerbound, uint32_t limit) const;
+   std::vector<chain::asset_object> list_assets(const std::string& lowerbound, uint32_t limit) const;
 
    /**
     * @brief Returns information about the given asset.
@@ -1000,7 +996,7 @@ public:
     * @return the information about the asset stored in the block chain
     * @ingroup WalletAPI_Asset
     */
-   asset_object get_asset(const std::string& asset_name_or_id) const;
+   chain::asset_object get_asset(const std::string& asset_name_or_id) const;
 
    /**
     * @brief Returns the specific data for a given monitored asset.
@@ -1009,7 +1005,7 @@ public:
     * @return the specific data for this monitored asset
     * @ingroup WalletAPI_Asset
     */
-   monitored_asset_options get_monitored_asset_data(const std::string& asset_name_or_id) const;
+   chain::monitored_asset_options get_monitored_asset_data(const std::string& asset_name_or_id) const;
 
    /**
     * @brief Creates a new monitored asset.
@@ -1081,7 +1077,7 @@ public:
                                                     uint8_t precision,
                                                     const std::string& description,
                                                     uint64_t max_supply,
-                                                    price core_exchange_rate,
+                                                    chain::price core_exchange_rate,
                                                     bool is_exchangeable,
                                                     bool is_fixed_max_supply,
                                                     bool broadcast = false);
@@ -1122,7 +1118,7 @@ public:
                                                     const std::string& new_issuer,
                                                     const std::string& description,
                                                     uint64_t max_supply,
-                                                    price core_exchange_rate,
+                                                    chain::price core_exchange_rate,
                                                     bool is_exchangeable,
                                                     bool broadcast = false);
 
@@ -1207,7 +1203,7 @@ public:
     */
    signed_transaction_info publish_asset_feed(const std::string& publishing_account,
                                               const std::string& symbol,
-                                              const price_feed& feed,
+                                              const chain::price_feed& feed,
                                               bool broadcast = false);
 
    /**
@@ -1217,14 +1213,14 @@ public:
     * @return list of price feeds published by the miner
     * @ingroup WalletAPI_Asset
     */
-   std::multimap<fc::time_point_sec, price_feed> get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const;
+   std::multimap<fc::time_point_sec, chain::price_feed> get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const;
 
    /**
     * @brief Get current supply of the core asset
     * @return the number of shares currently in existence in account and vesting balances, escrows and pools
     * @ingroup WalletAPI_Asset
     */
-   real_supply get_real_supply() const;
+   chain::real_supply get_real_supply() const;
 
    /**
     * @brief Allows creation of customized transactions and fill them with operation/s.
@@ -1240,7 +1236,7 @@ public:
     * @param op the operation
     * @ingroup WalletAPI_TransactionBuilder
     */
-   void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const operation& op);
+   void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const chain::operation& op);
 
    /**
     * @brief Replace existing operation in specified transaction in transaction builder.
@@ -1252,7 +1248,7 @@ public:
     */
    void replace_operation_in_builder_transaction(transaction_handle_type handle,
                                                  unsigned operation_index,
-                                                 const operation& new_op);
+                                                 const chain::operation& new_op);
 
    /**
     * @brief Set fees on all operations in a transaction
@@ -1262,7 +1258,7 @@ public:
     * @return total fee in specified asset
     * @ingroup WalletAPI_TransactionBuilder
     */
-   asset set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset);
+   chain::asset set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset);
 
    /**
     * @brief Previews a transaction from transaction builder.
@@ -1271,7 +1267,7 @@ public:
     * @return the transaction to preview
     * @ingroup WalletAPI_TransactionBuilder
     */
-   transaction preview_builder_transaction(transaction_handle_type handle);
+   chain::transaction preview_builder_transaction(transaction_handle_type handle);
 
    /**
     * @brief Signs a transaction from transaction builder
@@ -1328,7 +1324,6 @@ public:
     */
    void remove_builder_transaction(transaction_handle_type handle);
 
-   // TODO: I don't see a broadcast_transaction() function, do we need one?
    /**
     * @brief Converts a signed_transaction in JSON form to its binary representation.
     * @param tx the transaction to serialize
@@ -1336,7 +1331,7 @@ public:
     *         this returns a raw string that may have null characters embedded in it
     * @ingroup WalletAPI_TransactionBuilder
     */
-   std::string serialize_transaction(signed_transaction tx) const;
+   std::string serialize_transaction(const chain::signed_transaction& tx) const;
 
    /**
     * @brief Signs a transaction.
@@ -1348,7 +1343,7 @@ public:
     * @return the signed version of the transaction
     * @ingroup WalletAPI_TransactionBuilder
     */
-   signed_transaction_info sign_transaction(signed_transaction tx, bool broadcast = false);
+   signed_transaction_info sign_transaction(const chain::transaction& tx, bool broadcast = false);
 
    /**
     * @brief Returns an uninitialized object representing a given blockchain operation.
@@ -1363,7 +1358,7 @@ public:
     * @return a default-constructed operation of the given type
     * @ingroup WalletAPI_TransactionBuilder
     */
-   operation get_prototype_operation(const std::string& operation_type) const;
+   chain::operation get_prototype_operation(const std::string& operation_type) const;
 
    /**
     * @brief Lists all miners registered in the blockchain.
@@ -1378,7 +1373,7 @@ public:
     * @return a list of miners mapping miner names to miner ids
     * @ingroup WalletAPI_Mining
     */
-   std::map<std::string, miner_id_type> list_miners(const std::string& lowerbound, uint32_t limit) const;
+   std::map<std::string, chain::miner_id_type> list_miners(const std::string& lowerbound, uint32_t limit) const;
 
    /**
     * @brief Returns information about the given miner.
@@ -1386,7 +1381,7 @@ public:
     * @return the information about the miner stored in the block chain
     * @ingroup WalletAPI_Mining
     */
-   miner_object get_miner(const std::string& owner_account) const;
+   chain::miner_object get_miner(const std::string& owner_account) const;
 
    /**
     * @brief Creates a miner object owned by the given account.
@@ -1527,7 +1522,7 @@ public:
     * @return a list of seeders
     * @ingroup WalletAPI_Seeding
     */
-   std::vector<seeder_object> list_seeders_by_price(uint32_t count) const;
+   std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
 
    /**
     * @brief Get a list of seeders ordered by total upload, in decreasing order.
@@ -1535,7 +1530,7 @@ public:
     * @return a list of seeders
     * @ingroup WalletAPI_Seeding
     */
-   fc::optional<std::vector<seeder_object>> list_seeders_by_upload(uint32_t count) const;
+   fc::optional<std::vector<chain::seeder_object>> list_seeders_by_upload(uint32_t count) const;
 
    /**
     * @brief Get a list of seeders by region code.
@@ -1543,7 +1538,7 @@ public:
     * @return a list of seeders
     * @ingroup WalletAPI_Seeding
     */
-   std::vector<seeder_object> list_seeders_by_region(const std::string& region_code) const;
+   std::vector<chain::seeder_object> list_seeders_by_region(const std::string& region_code) const;
 
    /**
     * @brief Get a list of seeders ordered by rating, in decreasing order.
@@ -1551,7 +1546,7 @@ public:
     * @return a list of seeders
     * @ingroup WalletAPI_Seeding
     */
-   std::vector<seeder_object> list_seeders_by_rating(uint32_t count) const;
+   std::vector<chain::seeder_object> list_seeders_by_rating(uint32_t count) const;
 
    /**
     * @brief Lists proposed transactions relevant to a user
@@ -1559,7 +1554,7 @@ public:
     * @return a list of proposed transactions
     * @ingroup WalletAPI_Proposals
     */
-   std::vector<proposal_object> get_proposed_transactions(const std::string& account_or_id) const;
+   std::vector<chain::proposal_object> get_proposed_transactions(const std::string& account_or_id) const;
 
    /**
     * @brief Encapsulates begin_builder_transaction(), add_operation_to_builder_transaction(),
@@ -1661,7 +1656,7 @@ public:
                                           const std::vector<regional_price_info>& price_amounts,
                                           uint64_t size,
                                           const fc::ripemd160& hash,
-                                          const std::vector<account_id_type>& seeders,
+                                          const std::vector<chain::account_id_type>& seeders,
                                           uint32_t quorum,
                                           const fc::time_point_sec& expiration,
                                           const std::string& publishing_fee_asset,
@@ -1689,13 +1684,13 @@ public:
     * @return generated key, key parts and quorum
     * @ingroup WalletAPI_Content
     */
-   content_keys submit_content_async(const std::string& author,
+   chain::content_keys submit_content_async(const std::string& author,
                                      const std::vector<std::pair<std::string, uint32_t>>& co_authors,
                                      const std::string& content_dir,
                                      const std::string& samples_dir,
                                      const std::string& protocol,
                                      const std::vector<regional_price_info>& price_amounts,
-                                     const std::vector<account_id_type>& seeders,
+                                     const std::vector<chain::account_id_type>& seeders,
                                      const fc::time_point_sec& expiration,
                                      const std::string& synopsis);
 
@@ -1773,7 +1768,7 @@ public:
     * @return a list of open buying objects
     * @ingroup WalletAPI_Content
     */
-   std::vector<buying_object> get_open_buyings() const;
+   std::vector<chain::buying_object> get_open_buyings() const;
 
    /**
     * @brief Get a list of open buyings by URI.
@@ -1781,7 +1776,7 @@ public:
     * @return a list of open buying objects corresponding to the provided URI
     * @ingroup WalletAPI_Content
     */
-   std::vector<buying_object> get_open_buyings_by_URI(const std::string& URI) const;
+   std::vector<chain::buying_object> get_open_buyings_by_URI(const std::string& URI) const;
 
    /**
     * @brief Get a list of open buyings by consumer.
@@ -1789,7 +1784,7 @@ public:
     * @return a list of open buying objects corresponding to the provided consumer
     * @ingroup WalletAPI_Content
     */
-   std::vector<buying_object> get_open_buyings_by_consumer(const std::string& account_id_or_name) const;
+   std::vector<chain::buying_object> get_open_buyings_by_consumer(const std::string& account_id_or_name) const;
 
    /**
     * @brief Get history buyings by consumer.
@@ -1797,7 +1792,7 @@ public:
     * @return a list of history buying objects corresponding to the provided consumer
     * @ingroup WalletAPI_Content
     */
-   std::vector<buying_object> get_buying_history_objects_by_consumer(const std::string& account_id_or_name) const;
+   std::vector<chain::buying_object> get_buying_history_objects_by_consumer(const std::string& account_id_or_name) const;
 
    /**
     * @brief Get history buying objects by consumer that match search term.
@@ -1822,7 +1817,7 @@ public:
     * @return buying objects corresponding to the provided consumer, or null if no matching buying was found
     * @ingroup WalletAPI_Content
     */
-   fc::optional<buying_object> get_buying_by_consumer_URI(const std::string& account_id_or_name, const std::string& URI) const;
+   fc::optional<chain::buying_object> get_buying_by_consumer_URI(const std::string& account_id_or_name, const std::string& URI) const;
 
    /**
     * @brief Search for term in users' feedbacks.
@@ -1844,7 +1839,7 @@ public:
     * @return the content corresponding to the provided URI, or \c null if no matching content was found
     * @ingroup WalletAPI_Content
     */
-   fc::optional<content_object> get_content(const std::string& URI) const;
+   fc::optional<chain::content_object> get_content(const std::string& URI) const;
 
    /**
     * @brief Get a list of contents ordered alphabetically by search term.
@@ -1859,7 +1854,7 @@ public:
     * @return the contents found
     * @ingroup WalletAPI_Content
     */
-   std::vector<content_summary> search_content(const std::string& term,
+   std::vector<chain::content_summary> search_content(const std::string& term,
                                           const std::string& order,
                                           const std::string& user,
                                           const std::string& region_code,
@@ -1880,7 +1875,7 @@ public:
     * @return the contents found
     * @ingroup WalletAPI_Content
     */
-   std::vector<content_summary> search_user_content(const std::string& user,
+   std::vector<chain::content_summary> search_user_content(const std::string& user,
                                                const std::string& term,
                                                const std::string& order,
                                                const std::string& region_code,
@@ -1894,7 +1889,7 @@ public:
     * @return the autor of the content and the list of co-authors, if provided
     * @ingroup WalletAPI_Content
     */
-   std::pair<account_id_type, std::vector<account_id_type>> get_author_and_co_authors_by_URI(const std::string& URI) const;
+   std::pair<chain::account_id_type, std::vector<chain::account_id_type>> get_author_and_co_authors_by_URI(const std::string& URI) const;
 
    /**
     * @brief Creates a package from selected files.
@@ -1956,7 +1951,7 @@ public:
     * @return restored AES key from key particles
     * @ingroup WalletAPI_Content
     */
-   decent::encrypt::DInteger restore_encryption_key(const std::string& account, buying_id_type buying);
+   decent::encrypt::DInteger restore_encryption_key(const std::string& account, chain::buying_id_type buying);
 
    /**
     * @brief Generates AES encryption key.
@@ -1971,7 +1966,7 @@ public:
     * @return generated key and key parts
     * @ingroup WalletCLI
     */
-   content_keys generate_content_keys(const std::vector<account_id_type>& seeders) const;
+   chain::content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
 
    /**
     * @brief Returns true if any package manager task is waiting (e.g. if content submission is still being processed in the background).
@@ -2040,7 +2035,7 @@ public:
     * @ingroup WalletAPI_Subscription
     */
    signed_transaction_info set_automatic_renewal_of_subscription(const std::string& account_id_or_name,
-                                                                 subscription_id_type subscription_id,
+                                                                 chain::subscription_id_type subscription_id,
                                                                  bool automatic_renewal,
                                                                  bool broadcast = false);
 
@@ -2051,7 +2046,7 @@ public:
     * @return list of active subscription objects corresponding to the provided consumer
     * @ingroup WalletAPI_Subscription
     */
-   std::vector<subscription_object> list_active_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const;
+   std::vector<chain::subscription_object> list_active_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const;
 
    /**
     * @brief Get a list of consumer's subscriptions.
@@ -2060,7 +2055,7 @@ public:
     * @return list of subscription objects corresponding to the provided consumer
     * @ingroup WalletAPI_Subscription
     */
-   std::vector<subscription_object> list_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const;
+   std::vector<chain::subscription_object> list_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const;
 
    /**
     * @brief Get a list of active (not expired) subscriptions to author.
@@ -2069,7 +2064,7 @@ public:
     * @return list of active subscription objects corresponding to the provided author
     * @ingroup WalletAPI_Subscription
     */
-   std::vector<subscription_object> list_active_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const;
+   std::vector<chain::subscription_object> list_active_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const;
 
    /**
     * @brief Get a list of subscriptions to author.
@@ -2078,7 +2073,7 @@ public:
     * @return list of subscription objects corresponding to the provided author
     * @ingroup WalletAPI_Subscription
     */
-   std::vector<subscription_object> list_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const;
+   std::vector<chain::subscription_object> list_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const;
 
    /**
     * @brief Sends an encrypted text message to one or many users.
@@ -2168,7 +2163,7 @@ public:
     * @return the list of non fungible token objects, ordered by symbol
     * @ingroup WalletAPI_NonFungibleToken
     */
-   std::vector<non_fungible_token_object> list_non_fungible_tokens(const std::string& lowerbound, uint32_t limit) const;
+   std::vector<chain::non_fungible_token_object> list_non_fungible_tokens(const std::string& lowerbound, uint32_t limit) const;
 
    /**
     * @brief Returns information about the given non fungible token.
@@ -2176,7 +2171,7 @@ public:
     * @return the information about the non fungible token stored in the block chain
     * @ingroup WalletAPI_NonFungibleToken
     */
-   non_fungible_token_object get_non_fungible_token(const std::string& nft_symbol_or_id) const;
+   chain::non_fungible_token_object get_non_fungible_token(const std::string& nft_symbol_or_id) const;
 
    /**
     * @brief Creates a new non fungible token definition.
@@ -2194,7 +2189,7 @@ public:
    signed_transaction_info create_non_fungible_token(const std::string& issuer,
                                                      const std::string& symbol,
                                                      const std::string& description,
-                                                     const non_fungible_token_data_definitions& definitions,
+                                                     const chain::non_fungible_token_data_definitions& definitions,
                                                      uint32_t max_supply,
                                                      bool fixed_max_supply,
                                                      bool transferable,
@@ -2241,7 +2236,7 @@ public:
     * @return the non fungible token data objects found
     * @ingroup WalletAPI_NonFungibleToken
     */
-   std::vector<non_fungible_token_data_object> list_non_fungible_token_data(const std::string& nft_symbol_or_id) const;
+   std::vector<chain::non_fungible_token_data_object> list_non_fungible_token_data(const std::string& nft_symbol_or_id) const;
 
    /**
     * @brief Get account's summary of various non fungible tokens.
@@ -2249,7 +2244,7 @@ public:
     * @return a summary of non fungible token ids
     * @ingroup DatabaseAPI_Balance
     */
-   std::map<non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(const std::string& account) const;
+   std::map<chain::non_fungible_token_id_type,uint32_t> get_non_fungible_token_summary(const std::string& account) const;
 
    /**
     * @brief Gets account's balances in various non fungible tokens.
@@ -2258,7 +2253,7 @@ public:
     * @return the list of non fungible token data objects
     * @ingroup WalletAPI_NonFungibleToken
     */
-   std::vector<non_fungible_token_data_object> get_non_fungible_token_balances(const std::string& account,
+   std::vector<chain::non_fungible_token_data_object> get_non_fungible_token_balances(const std::string& account,
                                                                           const std::set<std::string>& symbols_or_ids) const;
 
    /**
@@ -2267,7 +2262,7 @@ public:
     * @return a list of transaction detail objects
     * @ingroup WalletAPI_NonFungibleToken
     */
-   std::vector<transaction_detail_object> search_non_fungible_token_history(non_fungible_token_data_id_type nft_data_id) const;
+   std::vector<chain::transaction_detail_object> search_non_fungible_token_history(chain::non_fungible_token_data_id_type nft_data_id) const;
 
    /**
     * @brief Transfers ownership of token instance.
@@ -2279,7 +2274,7 @@ public:
     * @ingroup WalletAPI_NonFungibleToken
     */
    signed_transaction_info transfer_non_fungible_token_data(const std::string& to_account,
-                                                            non_fungible_token_data_id_type nft_data_id,
+                                                            chain::non_fungible_token_data_id_type nft_data_id,
                                                             const std::string& memo,
                                                             bool broadcast = false);
 
@@ -2289,8 +2284,7 @@ public:
     * @param broadcast \c true to broadcast the transaction on the network
     * @ingroup WalletAPI_NonFungibleToken
     */
-   signed_transaction_info burn_non_fungible_token_data(non_fungible_token_data_id_type nft_data_id,
-                                                        bool broadcast = false);
+   signed_transaction_info burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id, bool broadcast = false);
 
    /**
     * @brief Updates data of token instance.
@@ -2302,7 +2296,7 @@ public:
     * @ingroup WalletAPI_NonFungibleToken
     */
    signed_transaction_info update_non_fungible_token_data(const std::string& modifier,
-                                                          non_fungible_token_data_id_type nft_data_id,
+                                                          chain::non_fungible_token_data_id_type nft_data_id,
                                                           const std::vector<std::pair<std::string,fc::variant>>& data,
                                                           bool broadcast = false);
 

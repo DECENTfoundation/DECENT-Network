@@ -56,7 +56,7 @@ namespace bpo = boost::program_options;
 int main( int argc, char** argv )
 {
    try {
-      decent_path_finder &pf = decent_path_finder::instance();
+      auto &pf = graphene::utilities::decent_path_finder::instance();
       bpo::options_description opts("CLI Wallet");
       opts.add_options()
          ("help,h", "Print this help message and exit")
@@ -182,7 +182,7 @@ int main( int argc, char** argv )
       auto con  = client.connect( wdata.ws_server );
       auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
 
-      auto remote_api = apic->get_remote_api< login_api >(1);
+      auto remote_api = apic->get_remote_api<graphene::app::login_api>(1);
       // TODO:  Error message here
       FC_ASSERT( remote_api->login( wdata.ws_user, wdata.ws_password ) );
 
@@ -190,7 +190,7 @@ int main( int argc, char** argv )
       {
          if( options.count("chain-id") )
          {
-            wdata.chain_id = chain_id_type(options.at("chain-id").as<std::string>());
+            wdata.chain_id = graphene::chain::chain_id_type(options.at("chain-id").as<std::string>());
             // the --chain-id on the CLI must match the chain ID of database we connect to
             if( remote_api->database()->get_chain_id() != wdata.chain_id )
             {
@@ -209,7 +209,7 @@ int main( int argc, char** argv )
       else if( options.count("chain-id") )
       {
          // the --chain-id on the CLI must match the chain ID embedded in the wallet file
-         if( chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
+         if( graphene::chain::chain_id_type(options.at("chain-id").as<std::string>()) != wdata.chain_id )
          {
             std::cerr << "Chain ID in wallet file " << wallet_file.generic_string() << " does not match specified chain ID\n";
             return 1;
