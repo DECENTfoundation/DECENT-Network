@@ -254,15 +254,6 @@ struct vesting_balance_object_with_info : public chain::vesting_balance_object
    fc::time_point_sec allowed_withdraw_time;
 };
 
-struct miner_voting_info
-{
-    chain::miner_id_type id;
-    std::string name;
-    std::string url;
-    uint64_t total_votes;
-    bool voted;
-};
-
 struct balance_change_result_detail : public app::balance_change_result
 {
    std::string memo;
@@ -1509,7 +1500,7 @@ public:
     * @return the list of miner voting info found
     * @ingroup WalletAPI_Mining
     */
-   std::vector<miner_voting_info> search_miner_voting(const std::string& account_id,
+   std::vector<app::miner_voting_info> search_miner_voting(const std::string& account_id,
                                                  const std::string& term,
                                                  bool only_my_votes,
                                                  const std::string& order,
@@ -2385,8 +2376,6 @@ FC_REFLECT_DERIVED( graphene::wallet::rating_object_ex, (graphene::chain::buying
 
 FC_REFLECT_DERIVED( graphene::wallet::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
                     (allowed_withdraw)(allowed_withdraw_time) )
-
-FC_REFLECT( graphene::wallet::miner_voting_info, (id)(name)(url)(total_votes)(voted) )
 
 FC_REFLECT_DERIVED( graphene::wallet::extended_asset, (graphene::chain::asset),(pretty_amount))
 

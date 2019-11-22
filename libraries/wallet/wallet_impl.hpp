@@ -123,7 +123,6 @@ class wallet_api_impl
    void claim_registered_miner(const std::string& miner_name);
 
    void resync();
-   void init_prototype_ops();
    int find_first_unused_derived_key_index(const chain::private_key_type& parent_key) const;
 
    // if the user executes the same command twice in quick succession,
@@ -152,6 +151,7 @@ class wallet_api_impl
    recently_generated_transaction_set_type _recently_generated_transactions;
    std::map<transaction_handle_type, chain::signed_transaction> _builder_transactions;
    fc::mutex _resync_mutex;
+   boost::filesystem::path _wallet_filename;
 
 public:
    wallet_api& self;
@@ -177,12 +177,6 @@ public:
 
    void set_operation_fees(chain::signed_transaction& tx, const chain::fee_schedule& s) const;
 
-   wallet_info info() const;
-   wallet_about about() const;
-
-   chain::chain_property_object get_chain_properties() const;
-   chain::global_property_object get_global_properties() const;
-   chain::dynamic_global_property_object get_dynamic_global_properties() const;
    fc::optional<chain::account_object> find_account(chain::account_id_type account_id) const;
    fc::optional<chain::account_object> find_account(const std::string& account_name_or_id) const;
 
@@ -204,11 +198,7 @@ public:
    fc::optional<chain::non_fungible_token_data_object> find_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id) const;
    chain::non_fungible_token_data_object get_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id) const;
 
-   const boost::filesystem::path& get_wallet_filename() const
-   {
-      return _wallet_filename;
-   }
-
+   const boost::filesystem::path& get_wallet_filename() const { return _wallet_filename; }
    void set_wallet_filename(const boost::filesystem::path &wallet_filename);
 
    chain::private_key_type get_private_key(const chain::public_key_type& id) const;
@@ -229,7 +219,7 @@ public:
    bool load_new_wallet_file(const fc::variant& data, wallet_data& result);
    bool load_wallet_file(boost::filesystem::path wallet_filename = boost::filesystem::path());
    void save_wallet_file(boost::filesystem::path wallet_filename = boost::filesystem::path());
-
+   // transaction builder
    transaction_handle_type begin_builder_transaction();
    void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const chain::operation& op);
    void replace_operation_in_builder_transaction(transaction_handle_type handle, uint32_t operation_index, const chain::operation& new_op);
@@ -237,339 +227,106 @@ public:
    chain::asset set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset);
    chain::transaction preview_builder_transaction(transaction_handle_type handle);
    chain::signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
-
-   chain::signed_transaction propose_builder_transaction(
-      transaction_handle_type handle,
-      fc::time_point_sec expiration = fc::time_point::now() + fc::minutes(1),
-      uint32_t review_period_seconds = 0, bool broadcast = true);
-
-   chain::signed_transaction propose_builder_transaction2(
-      transaction_handle_type handle,
-      const std::string& account_name_or_id,
-      fc::time_point_sec expiration = fc::time_point::now() + fc::minutes(1),
-      uint32_t review_period_seconds = 0, bool broadcast = true);
-
-   chain::signed_transaction register_account(const std::string& name,
-                                       const chain::public_key_type& owner,
-                                       const chain::public_key_type& active,
-                                       const chain::public_key_type& memo,
-                                       const std::string& registrar_account,
-                                       bool broadcast = false);
-
-   chain::signed_transaction register_multisig_account(const std::string& name,
-                                                const chain::authority& owner_authority,
-                                                const chain::authority& active_authority,
-                                                const chain::public_key_type& memo_pubkey,
-                                                const std::string& registrar_account,
-                                                bool broadcast = false);
-
-   chain::signed_transaction create_account_with_private_key(const chain::private_key_type& owner_privkey,
-                                                      const std::string& account_name,
-                                                      const std::string& registrar_account,
-                                                      bool import,
-                                                      bool broadcast = false,
-                                                      bool save_wallet = true);
-
-   chain::signed_transaction create_account_with_brain_key(const std::string& brain_key,
-                                                    const std::string& account_name,
-                                                    const std::string& registrar_account,
-                                                    bool import,
-                                                    bool broadcast = false,
-                                                    bool save_wallet = true);
-
-   chain::signed_transaction update_account_keys( const std::string& name,
-                                           fc::optional<chain::authority> owner_auth,
-                                           fc::optional<chain::authority> active_auth,
-                                           fc::optional<chain::public_key_type> memo_pubkey,
-                                           bool broadcast );
-
-   chain::signed_transaction create_user_issued_asset(const std::string& issuer,
-                                               const std::string& symbol,
-                                               uint8_t precision,
-                                               const std::string& description,
-                                               uint64_t max_supply,
-                                               chain::price core_exchange_rate,
-                                               bool is_exchangeable,
-                                               bool is_fixed_max_supply,
-                                               bool broadcast = false);
-
-   chain::signed_transaction issue_asset(const std::string& to_account,
-                                  const std::string& amount,
-                                  const std::string& symbol,
-                                  const std::string& memo,
-                                  bool broadcast = false);
-
-   chain::signed_transaction update_user_issued_asset(const std::string& symbol,
-                                               const std::string& new_issuer,
-                                               const std::string& description,
-                                               uint64_t max_supply,
-                                               chain::price core_exchange_rate,
-                                               bool is_exchangeable,
-                                               bool broadcast = false);
-   chain::signed_transaction fund_asset_pools(const std::string& from,
-                                       const std::string& uia_amount,
-                                       const std::string& uia_symbol,
-                                       const std::string& DCT_amount,
-                                       const std::string& DCT_symbol,
-                                       bool broadcast /* = false */);
-
-   chain::signed_transaction reserve_asset(const std::string& from,
-                                    const std::string& amount,
-                                    const std::string& symbol,
-                                    bool broadcast /* = false */);
-
-   chain::signed_transaction claim_fees(const std::string& uia_amount,
-                                 const std::string& uia_symbol,
-                                 const std::string& dct_amount,
-                                 const std::string& dct_symbol,
-                                 bool broadcast /* = false */);
-
-   chain::signed_transaction create_monitored_asset(const std::string& issuer,
-                                             const std::string& symbol,
-                                             uint8_t precision,
-                                             const std::string& description,
-                                             uint32_t feed_lifetime_sec,
-                                             uint8_t minimum_feeds,
-                                             bool broadcast = false);
-
-   chain::signed_transaction update_monitored_asset(const std::string& symbol,
-                                             const std::string& description,
-                                             uint32_t feed_lifetime_sec,
-                                             uint8_t minimum_feeds,
-                                             bool broadcast /* = false */);
-
-   chain::signed_transaction publish_asset_feed(const std::string& publishing_account,
-                                         const std::string& symbol,
-                                         const chain::price_feed& feed,
-                                         bool broadcast /* = false */);
-
-   chain::signed_transaction create_non_fungible_token(const std::string& issuer,
-                                                const std::string& symbol,
-                                                const std::string& description,
-                                                const chain::non_fungible_token_data_definitions& definitions,
-                                                uint32_t max_supply,
-                                                bool fixed_max_supply,
-                                                bool transferable,
-                                                bool broadcast /* = false */);
-
-   chain::signed_transaction update_non_fungible_token(const std::string& issuer,
-                                                const std::string& symbol,
-                                                const std::string& description,
-                                                uint32_t max_supply,
-                                                bool fixed_max_supply,
-                                                bool broadcast /* = false */);
-
-   chain::signed_transaction issue_non_fungible_token(const std::string& to_account,
-                                               const std::string& symbol,
-                                               const fc::variants& data,
-                                               const std::string& memo,
-                                               bool broadcast /* = false */);
-
-   chain::signed_transaction transfer_non_fungible_token_data(const std::string& to_account,
-                                                       chain::non_fungible_token_data_id_type nft_data_id,
-                                                       const std::string& memo,
-                                                       bool broadcast /* = false */);
-
-   chain::signed_transaction burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id, bool broadcast /* = false */);
-
-   chain::signed_transaction update_non_fungible_token_data(const std::string& modifier,
-                                                     chain::non_fungible_token_data_id_type nft_data_id,
-                                                     const std::vector<std::pair<std::string, fc::variant>>& data,
-                                                     bool broadcast /* = false */);
-
+   chain::signed_transaction propose_builder_transaction(transaction_handle_type handle, fc::time_point_sec expiration, uint32_t review_period_seconds, bool broadcast);
+   chain::signed_transaction propose_builder_transaction2(transaction_handle_type handle, const std::string& account_name_or_id, fc::time_point_sec expiration,
+                                                          uint32_t review_period_seconds, bool broadcast);
+   // account
+   chain::signed_transaction register_account(const std::string& name, const chain::public_key_type& owner, const chain::public_key_type& active, const chain::public_key_type& memo,
+                                              const std::string& registrar_account, bool broadcast);
+   chain::signed_transaction register_multisig_account(const std::string& name, const chain::authority& owner_authority, const chain::authority& active_authority,
+                                                       const chain::public_key_type& memo_pubkey, const std::string& registrar_account, bool broadcast);
+   chain::signed_transaction create_account_with_private_key(const chain::private_key_type& owner_privkey, const std::string& account_name, const std::string& registrar_account,
+                                                             bool import, bool broadcast, bool save_wallet = true);
+   chain::signed_transaction create_account_with_brain_key(const std::string& brain_key, const std::string& account_name, const std::string& registrar_account,
+                                                           bool import, bool broadcast, bool save_wallet = true);
+   chain::signed_transaction update_account_keys(const std::string& name, fc::optional<chain::authority> owner_auth, fc::optional<chain::authority> active_auth,
+                                                 fc::optional<chain::public_key_type> memo_pubkey, bool broadcast);
+   // asset
+   chain::signed_transaction create_user_issued_asset(const std::string& issuer, const std::string& symbol, uint8_t precision, const std::string& description, uint64_t max_supply,
+                                                      chain::price core_exchange_rate, bool is_exchangeable, bool is_fixed_max_supply, bool broadcast);
+   chain::signed_transaction issue_asset(const std::string& to_account, const std::string& amount, const std::string& symbol, const std::string& memo, bool broadcast);
+   chain::signed_transaction update_user_issued_asset(const std::string& symbol, const std::string& new_issuer, const std::string& description, uint64_t max_supply,
+                                                      chain::price core_exchange_rate, bool is_exchangeable, bool broadcast);
+   chain::signed_transaction fund_asset_pools(const std::string& from, const std::string& uia_amount, const std::string& uia_symbol,
+                                              const std::string& DCT_amount, const std::string& DCT_symbol, bool broadcast);
+   chain::signed_transaction reserve_asset(const std::string& from, const std::string& amount, const std::string& symbol, bool broadcast);
+   chain::signed_transaction claim_fees(const std::string& uia_amount, const std::string& uia_symbol, const std::string& dct_amount, const std::string& dct_symbol, bool broadcast);
+   chain::signed_transaction create_monitored_asset(const std::string& issuer, const std::string& symbol, uint8_t precision, const std::string& description,
+                                                    uint32_t feed_lifetime_sec, uint8_t minimum_feeds, bool broadcast);
+   chain::signed_transaction update_monitored_asset(const std::string& symbol, const std::string& description, uint32_t feed_lifetime_sec, uint8_t minimum_feeds, bool broadcast);
+   chain::signed_transaction publish_asset_feed(const std::string& publishing_account, const std::string& symbol, const chain::price_feed& feed, bool broadcast);
+   // non fungible token
+   chain::signed_transaction create_non_fungible_token(const std::string& issuer, const std::string& symbol, const std::string& description,
+                                                       const chain::non_fungible_token_data_definitions& definitions, uint32_t max_supply,
+                                                       bool fixed_max_supply, bool transferable, bool broadcast);
+   chain::signed_transaction update_non_fungible_token(const std::string& issuer, const std::string& symbol, const std::string& description,
+                                                       uint32_t max_supply, bool fixed_max_supply, bool broadcast);
+   chain::signed_transaction issue_non_fungible_token(const std::string& to_account, const std::string& symbol, const fc::variants& data, const std::string& memo, bool broadcast);
+   chain::signed_transaction transfer_non_fungible_token_data(const std::string& to_account, chain::non_fungible_token_data_id_type nft_data_id,
+                                                              const std::string& memo, bool broadcast);
+   chain::signed_transaction burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id, bool broadcast);
+   chain::signed_transaction update_non_fungible_token_data(const std::string& modifier, chain::non_fungible_token_data_id_type nft_data_id,
+                                                            const std::vector<std::pair<std::string, fc::variant>>& data, bool broadcast);
+   // miner
    chain::miner_object get_miner(const std::string& owner_account) const;
-
-   chain::signed_transaction create_miner(const std::string& owner_account,
-                                   const std::string& url,
-                                   bool broadcast /* = false */);
-
-   chain::signed_transaction update_miner(const std::string& miner_name,
-                                   const std::string& url,
-                                   const std::string& block_signing_key,
-                                   bool broadcast /* = false */);
-
+   chain::signed_transaction create_miner(const std::string& owner_account, const std::string& url, bool broadcast);
+   chain::signed_transaction update_miner(const std::string& miner_name, const std::string& url, const std::string& block_signing_key, bool broadcast);
    std::vector<vesting_balance_object_with_info> get_vesting_balances(const std::string& account_name) const;
-
-   chain::signed_transaction withdraw_vesting(const std::string& miner_name,
-                                       const std::string& amount,
-                                       const std::string& asset_symbol,
-                                       bool broadcast = false );
-
-   chain::signed_transaction vote_for_miner(const std::string& voting_account,
-                                     const std::string& miner,
-                                     bool approve,
-                                     bool broadcast /* = false */);
-
-   chain::signed_transaction set_voting_proxy(const std::string& account_to_modify,
-                                       fc::optional<std::string> voting_account,
-                                       bool broadcast /* = false */);
-
-   chain::signed_transaction set_desired_miner_count(const std::string& account_to_modify,
-                                              uint16_t desired_number_of_miners,
-                                              bool broadcast /* = false */);
-
-   std::vector<miner_voting_info> search_miner_voting(const std::string& account_id,
-                                                      const std::string& filter,
-                                                      bool only_my_votes,
-                                                      const std::string& order,
-                                                      const std::string& id,
-                                                      uint32_t count ) const;
-
-   chain::signed_transaction sign_transaction(chain::signed_transaction tx, bool broadcast = false);
-
-   chain::signed_transaction transfer(const std::string& from,
-                               const std::string& to,
-                               const std::string& amount,
-                               const std::string& asset_symbol,
-                               const std::string& memo,
-                               bool broadcast = false);
-
-   chain::signed_transaction propose_transfer(const std::string& proposer,
-                         const std::string& from,
-                         const std::string& to,
-                         const std::string& amount,
-                         const std::string& asset_symbol,
-                         const std::string& memo,
-                         fc::time_point_sec expiration);
-
-   std::string decrypt_memo( const chain::memo_data& memo, const chain::account_object& from_account, const chain::account_object& to_account ) const;
-
-   std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)>> get_result_formatters() const;
-
-   chain::signed_transaction propose_parameter_change(
-      const std::string& proposing_account,
-      fc::time_point_sec expiration_time,
-      const fc::variant_object& changed_values,
-      bool broadcast = false);
-
-   chain::signed_transaction propose_fee_change(
-      const std::string& proposing_account,
-      fc::time_point_sec expiration_time,
-      const fc::variant_object& changed_fees,
-      bool broadcast = false);
-
-   chain::signed_transaction approve_proposal(
-      const std::string& fee_paying_account,
-      const std::string& proposal_id,
-      const approval_delta& delta,
-      bool broadcast = false);
-
+   chain::signed_transaction withdraw_vesting(const std::string& miner_name, const std::string& amount, const std::string& asset_symbol, bool broadcast);
+   chain::signed_transaction vote_for_miner(const std::string& voting_account, const std::string& miner, bool approve, bool broadcast);
+   chain::signed_transaction set_voting_proxy(const std::string& account_to_modify, fc::optional<std::string> voting_account, bool broadcast);
+   chain::signed_transaction set_desired_miner_count(const std::string& account_to_modify, uint16_t desired_number_of_miners, bool broadcast);
+   // transaction
+   chain::signed_transaction sign_transaction(chain::signed_transaction tx, bool broadcast);
+   chain::signed_transaction transfer(const std::string& from, const std::string& to, const std::string& amount, const std::string& asset_symbol,
+                                      const std::string& memo, bool broadcast);
+   chain::signed_transaction propose_transfer(const std::string& proposer, const std::string& from, const std::string& to, const std::string& amount, const std::string& asset_symbol,
+                                              const std::string& memo, fc::time_point_sec expiration);
+   std::string decrypt_memo(const chain::memo_data& memo, const chain::account_object& from_account, const chain::account_object& to_account) const;
+   // proposal
+   chain::signed_transaction propose_parameter_change(const std::string& proposing_account, fc::time_point_sec expiration_time, const fc::variant_object& changed_values, bool broadcast);
+   chain::signed_transaction propose_fee_change(const std::string& proposing_account, fc::time_point_sec expiration_time, const fc::variant_object& changed_fees, bool broadcast);
+   chain::signed_transaction approve_proposal(const std::string& fee_paying_account, const std::string& proposal_id, const approval_delta& delta, bool broadcast);
+   // content
    void submit_content_utility(chain::content_submit_operation& submit_op, const std::vector<regional_price_info>& price_amounts);
-
-   chain::signed_transaction submit_content(const std::string& author,
-                                     const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                     const std::string& URI,
-                                     const std::vector<regional_price_info>& price_amounts,
-                                     const fc::ripemd160& hash,
-                                     uint64_t size,
-                                     const std::vector<chain::account_id_type>& seeders,
-                                     uint32_t quorum,
-                                     fc::time_point_sec expiration,
-                                     const std::string& publishing_fee_symbol_name,
-                                     const std::string& publishing_fee_amount,
-                                     const std::string& synopsis,
-                                     const decent::encrypt::DInteger& secret,
-                                     const decent::encrypt::CustodyData& cd,
-                                     bool broadcast/* = false */);
-
-   chain::content_keys submit_content_async(const std::string& author,
-                                     const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                     const std::string& content_dir,
-                                     const std::string& samples_dir,
-                                     const std::string& protocol,
-                                     const std::vector<regional_price_info>& price_amounts,
-                                     const std::vector<chain::account_id_type>& seeders,
-                                     fc::time_point_sec expiration,
-                                     const std::string& synopsis);
-
-   chain::signed_transaction content_cancellation(const std::string& author,
-                                          const std::string& URI,
-                                          bool broadcast);
-
+   chain::signed_transaction submit_content(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors, const std::string& URI,
+                                            const std::vector<regional_price_info>& price_amounts, const fc::ripemd160& hash, uint64_t size,
+                                            const std::vector<chain::account_id_type>& seeders, uint32_t quorum, fc::time_point_sec expiration,
+                                            const std::string& publishing_fee_symbol_name, const std::string& publishing_fee_amount, const std::string& synopsis,
+                                            const decent::encrypt::DInteger& secret, const decent::encrypt::CustodyData& cd, bool broadcast);
+   chain::content_keys submit_content_async(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                            const std::string& content_dir, const std::string& samples_dir, const std::string& protocol,
+                                            const std::vector<regional_price_info>& price_amounts, const std::vector<chain::account_id_type>& seeders,
+                                            fc::time_point_sec expiration, const std::string& synopsis);
+   chain::signed_transaction content_cancellation(const std::string& author, const std::string& URI, bool broadcast);
    content_download_status get_download_status(const std::string& consumer, const std::string& URI) const;
-
-   std::string price_to_dct(const std::string& amount, const std::string& asset_symbol_or_id) const;
-
-   std::vector<app::operation_info> list_operations() const;
-
-   std::string from_command_file( const std::string& command_file_name ) const;
-
    void download_content(const std::string& consumer, const std::string& URI, const std::string& str_region_code_from, bool broadcast);
-
-   chain::signed_transaction request_to_buy(const std::string& consumer,
-                                     const std::string& URI,
-                                     const std::string& price_asset_symbol,
-                                     const std::string& price_amount,
-                                     const std::string& str_region_code_from,
-                                     bool broadcast/* = false */);
-
-   chain::signed_transaction leave_rating_and_comment(const std::string& consumer,
-                                 const std::string& URI,
-                                 uint64_t rating,
-                                 const std::string& comment,
-                                 bool broadcast/* = false */);
-
-   chain::signed_transaction subscribe_to_author( const std::string& from,
-                                           const std::string& to,
-                                           const std::string& price_amount,
-                                           const std::string& price_asset_symbol,
-                                           bool broadcast/* = false */);
-
-   chain::signed_transaction subscribe_by_author( const std::string& from,
-                                           const std::string& to,
-                                           bool broadcast/* = false */);
-
-   chain::signed_transaction set_subscription( const std::string& account,
-                                        bool allow_subscription,
-                                        uint32_t subscription_period,
-                                        const std::string& price_amount,
-                                        const std::string& price_asset_symbol,
-                                        bool broadcast/* = false */);
-
-   chain::signed_transaction set_automatic_renewal_of_subscription( const std::string& account_id_or_name,
-                                                            chain::subscription_id_type subscription_id,
-                                                            bool automatic_renewal,
-                                                            bool broadcast/* = false */);
-
+   chain::signed_transaction request_to_buy(const std::string& consumer, const std::string& URI, const std::string& price_asset_symbol,
+                                            const std::string& price_amount, const std::string& str_region_code_from, bool broadcast);
+   chain::signed_transaction leave_rating_and_comment(const std::string& consumer, const std::string& URI, uint64_t rating, const std::string& comment, bool broadcast);
+   chain::signed_transaction subscribe_to_author(const std::string& from, const std::string& to, const std::string& price_amount, const std::string& price_asset_symbol, bool broadcast);
+   chain::signed_transaction subscribe_by_author(const std::string& from, const std::string& to, bool broadcast);
+   chain::signed_transaction set_subscription(const std::string& account, bool allow_subscription, uint32_t subscription_period,
+                                              const std::string& price_amount, const std::string& price_asset_symbol, bool broadcast);
+   chain::signed_transaction set_automatic_renewal_of_subscription(const std::string& account_id_or_name, chain::subscription_id_type subscription_id,
+                                                                   bool automatic_renewal, bool broadcast);
    decent::encrypt::DInteger restore_encryption_key(const std::string& account, chain::buying_id_type buying);
-
    std::pair<chain::account_id_type, std::vector<chain::account_id_type>> get_author_and_co_authors_by_URI(const std::string& URI) const;
-
-   bool is_package_manager_task_waiting() const;
-
+   //message
    std::vector<message_data> get_message_objects(fc::optional<chain::account_id_type> sender, fc::optional<chain::account_id_type> receiver, uint32_t max_count) const;
-
    std::vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const;
-
    std::vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count) const;
-
-   chain::signed_transaction send_message(const std::string& from,
-                                   const std::vector<std::string>& to,
-                                   const std::string& text,
-                                   bool broadcast = false);
-
-   chain::signed_transaction send_unencrypted_message(const std::string& from,
-                                               const std::vector<std::string>& to,
-                                               const std::string& text,
-                                               bool broadcast = false);
-
+   chain::signed_transaction send_message(const std::string& from, const std::vector<std::string>& to, const std::string& text, bool broadcast);
+   chain::signed_transaction send_unencrypted_message(const std::string& from, const std::vector<std::string>& to, const std::string& text, bool broadcast);
+   // monitoring
    void use_monitoring_api();
-
    void reset_counters(const std::vector<std::string>& names);
-
    std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names);
-
+   // network node
    void use_network_node_api();
-
    void network_add_nodes(const std::vector<std::string>& nodes);
-
    fc::variants network_get_connected_peers();
 
-   const chain::operation& get_prototype_operation(const std::string& operation_name) const;
-
-   fc::time_point_sec head_block_time() const;
-
-   boost::filesystem::path _wallet_filename;
    wallet_data             _wallet;
 
    std::map<chain::public_key_type, std::string> _keys;
