@@ -1,5 +1,4 @@
-file(GLOB HEADERS "include/graphene/wallet/*.hpp")
-file(GLOB INLINES "*.inl")
+file(GLOB_RECURSE HEADERS "*.hpp")
 
 find_package( Perl )
 find_package( Doxygen )
@@ -24,9 +23,10 @@ endif()
 
 add_library( graphene_wallet
              wallet.cpp
+             wallet_impl.cpp
              wallet_utility.cpp
+             operation_printer.cpp
              ${CMAKE_CURRENT_BINARY_DIR}/api_documentation.cpp
-             ${INLINES}
              ${HEADERS}
            )
 

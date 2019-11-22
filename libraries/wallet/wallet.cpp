@@ -22,3829 +22,1673 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <functional>
-#include <algorithm>
-#include <cctype>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <sstream>
-#include <utility>
-#include <string>
-#include <list>
-#include <map>
 
-#include <nlohmann/json.hpp>
-#include <ipfs/client.h>
-
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/range/algorithm/unique.hpp>
-#include <boost/range/algorithm/sort.hpp>
-
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/mem_fun.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/random_access_index.hpp>
-#include <boost/multi_index/tag.hpp>
-#include <boost/multi_index/sequenced_index.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-
-#include <fc/monitoring.hpp>
-#include <fc/io/fstream.hpp>
-#include <fc/io/json.hpp>
-#include <fc/io/stdio.hpp>
-#include <fc/io/console.hpp>
-#include <fc/network/http/websocket.hpp>
-#include <fc/rpc/cli.hpp>
-#include <fc/rpc/websocket_api.hpp>
+#include "wallet_impl.hpp"
+#include "operation_printer.hpp"
+#include <graphene/utilities/keys_generator.hpp>
 #include <fc/crypto/aes.hpp>
 #include <fc/crypto/hex.hpp>
-#include <fc/thread/mutex.hpp>
-#include <fc/thread/scoped_lock.hpp>
-#include <fc/rpc/api_connection.hpp>
-
-#include <graphene/app/api.hpp>
-#include <graphene/app/exceptions.hpp>
-#include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/hardfork.hpp>
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/utilities/key_conversion.hpp>
-#include <graphene/utilities/keys_generator.hpp>
-#include <graphene/utilities/string_escape.hpp>
-#include <graphene/utilities/words.hpp>
-#include <graphene/wallet/wallet.hpp>
-#include <graphene/wallet/wallet_utility.hpp>
-#include <graphene/wallet/api_documentation.hpp>
-#include <graphene/wallet/reflect_util.hpp>
-#include <graphene/wallet/exceptions.hpp>
-#include <graphene/db/exceptions.hpp>
-
-#include <decent/encrypt/encryptionutils.hpp>
-#include <decent/package/package.hpp>
-#include <decent/package/package_config.hpp>
-#include <decent/ipfs_check.hpp>
-
-#ifndef WIN32
-# include <sys/types.h>
-# include <sys/stat.h>
-#endif
-
-CryptoPP::AutoSeededRandomPool randomGenerator;
 
 namespace graphene { namespace wallet {
 
-namespace detail {
-
-// this class helps to gather seeding statistics. Tracks seeders currently in use.
-class seeders_tracker{
-public:
-   seeders_tracker(wallet_api_impl& wallet):_wallet(wallet) {};
-   std::vector<chain::account_id_type> track_content(const std::string& URI);
-   std::vector<chain::account_id_type> untrack_content(const std::string& URI);
-   bool is_empty() { return seeder_to_content.empty(); };
-   std::vector<chain::account_id_type> get_unfinished_seeders();
-   void set_initial_stats(chain::account_id_type seeder, const uint64_t amount);
-   uint64_t get_final_stats(chain::account_id_type seeder, const uint64_t amount);
-   void remove_stats(chain::account_id_type seeder);
-private:
-   wallet_api_impl& _wallet;
-   std::multimap<chain::account_id_type, chain::content_id_type> seeder_to_content;
-   std::map<chain::account_id_type, uint64_t> initial_stats;
-};
-
-struct ipfs_stats_listener : public decent::package::EventListenerInterface{
-
-   ipfs_stats_listener(const std::string& URI, wallet_api_impl& api, chain::account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
-      _ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port()){}
-
-   virtual void package_download_start();
-   virtual void package_download_complete();
-   virtual void package_download_error(const std::string&);
-
-private:
-   std::string       _URI;
-   wallet_api_impl&  _wallet;
-   chain::account_id_type _consumer;
-   ipfs::Client      _ipfs_client;
-};
-
-struct submit_transfer_listener : public decent::package::EventListenerInterface {
-
-   submit_transfer_listener(wallet_api_impl& wallet, std::shared_ptr<decent::package::PackageInfo> info, const chain::content_submit_operation& op, const std::string& protocol)
-      : _wallet(wallet), _info(info), _op(op), _protocol(protocol), _is_finished(false) {
-   }
-
-   virtual void package_seed_complete();
-   virtual void package_creation_complete();
-
-   fc::ripemd160 get_hash() const { return _info->get_hash(); }
-   const chain::content_submit_operation& op() const { return _op; }
-   bool is_finished() { return _is_finished; }
-
-private:
-   wallet_api_impl&          _wallet;
-   std::shared_ptr<decent::package::PackageInfo> _info;
-   chain::content_submit_operation _op;
-   std::string               _protocol;
-   bool                      _is_finished;
-};
-
-// BLOCK  TRX  OP  VOP
-struct operation_printer
+wallet_api::wallet_api( const fc::api<app::login_api> &rapi, const chain::chain_id_type &chain_id, const server_data &ws )
+   : my(new detail::wallet_api_impl(*this, rapi, chain_id, ws))
 {
-private:
-   struct result_visitor : fc::visitor<std::string>
-   {
-      std::string operator()(const chain::void_result& x) const;
-      std::string operator()(const db::object_id_type& oid) const;
-   };
-
-   std::ostream& out;
-   const wallet_api_impl& wallet;
-   chain::operation_result result;
-
-   void fee(const chain::asset& a) const;
-   std::string memo(const fc::optional<chain::memo_data>& data, const chain::account_object& from, const chain::account_object& to) const;
-
-public:
-   operation_printer( std::ostream& out, const wallet_api_impl& wallet, const chain::operation_result& r = chain::operation_result() )
-      : out(out),
-        wallet(wallet),
-        result(r)
-   {}
-   typedef std::string result_type;
-
-   template<typename T>
-   std::string operator()(const T& op)const;
-
-   std::string operator()(const chain::transfer_obsolete_operation& op)const;
-   std::string operator()(const chain::transfer_operation& op)const;
-   std::string operator()(const chain::non_fungible_token_issue_operation& op) const;
-   std::string operator()(const chain::non_fungible_token_transfer_operation& op) const;
-   std::string operator()(const chain::account_create_operation& op)const;
-   std::string operator()(const chain::account_update_operation& op)const;
-   std::string operator()(const chain::asset_create_operation& op)const;
-   std::string operator()(const chain::content_submit_operation& op)const;
-   std::string operator()(const chain::request_to_buy_operation& op)const;
-   std::string operator()(const chain::leave_rating_and_comment_operation& op)const;
-   std::string operator()(const chain::ready_to_publish_operation& op)const;
-   std::string operator()(const chain::custom_operation& op)const;
-};
-
-template<class T>
-fc::optional<T> maybe_id( const std::string& name_or_id )
-{
-   if( std::isdigit( name_or_id.front() ) )
-   {
-      try
-      {
-         return fc::variant(name_or_id).as<T>();
-      }
-      catch (const fc::exception&)
-      {
-      }
-   }
-   return {};
 }
 
-struct op_prototype_visitor
+wallet_api::~wallet_api()
 {
-   typedef void result_type;
-
-   boost::container::flat_map<std::string, chain::operation>& name2op;
-
-   op_prototype_visitor(
-      boost::container::flat_map<std::string, chain::operation>& _prototype_ops
-      ):name2op(_prototype_ops) {}
-
-   template<typename Type>
-   result_type operator()( const Type& op )const
-   {
-      std::string name = fc::get_typename<Type>::name();
-      size_t p = name.rfind(':');
-      if( p != std::string::npos )
-         name = name.substr( p+1 );
-      name2op[ name ] = Type();
-   }
-};
-
-class wallet_api_impl
-{
-public:
-   api_documentation method_documentation;
-private:
-   void claim_registered_account(const chain::account_object& account)
-   {
-      auto it = _wallet.pending_account_registrations.find( account.name );
-      FC_ASSERT( it != _wallet.pending_account_registrations.end() );
-      for (const std::string& wif_key : it->second)
-         if( !import_key( account.name, wif_key ) )
-         {
-            // somebody else beat our pending registration, there is
-            //    nothing we can do except log it and move on
-            elog( "account ${name} registered by someone else first!",
-                  ("name", account.name) );
-            // might as well remove it from pending regs,
-            //    because there is now no way this registration
-            //    can become valid (even in the extremely rare
-            //    possibility of migrating to a fork where the
-            //    name is available, the user can always
-            //    manually re-register)
-         }
-      _wallet.pending_account_registrations.erase( it );
-   }
-
-   // after a miner registration succeeds, this saves the private key in the wallet permanently
-   //
-   void claim_registered_miner(const std::string& miner_name)
-   {
-      auto iter = _wallet.pending_miner_registrations.find(miner_name);
-      FC_ASSERT(iter != _wallet.pending_miner_registrations.end());
-      std::string wif_key = iter->second;
-
-      // get the list key id this key is registered with in the chain
-      fc::optional<chain::private_key_type> miner_private_key = utilities::wif_to_key(wif_key);
-      FC_ASSERT(miner_private_key);
-
-      auto pub_key = miner_private_key->get_public_key();
-      _keys[pub_key] = wif_key;
-      _wallet.pending_miner_registrations.erase(iter);
-   }
-
-   fc::mutex _resync_mutex;
-   void resync()
-   {
-      fc::scoped_lock<fc::mutex> lock(_resync_mutex);
-      // this method is used to update wallet_data annotations
-      //   e.g. wallet has been restarted and was not notified
-      //   of events while it was down
-      //
-      // everything that is done "incremental style" when a push
-      //   notification is received, should also be done here
-      //   "batch style" by querying the blockchain
-
-      if( !_wallet.pending_account_registrations.empty() )
-      {
-         // make a vector of the account names pending registration
-         std::vector<std::string> pending_account_names = boost::copy_range<std::vector<std::string>>(boost::adaptors::keys(_wallet.pending_account_registrations));
-
-         // look those up on the blockchain
-         std::vector<fc::optional<chain::account_object>> pending_account_objects = _remote_db->lookup_account_names( pending_account_names );
-
-         // if any of them exist, claim them
-         for( const fc::optional<chain::account_object>& optional_account : pending_account_objects )
-            if( optional_account )
-               claim_registered_account(*optional_account);
-      }
-
-      if (!_wallet.pending_miner_registrations.empty())
-      {
-         // make a vector of the owner accounts for miners pending registration
-         std::vector<std::string> pending_miner_names = boost::copy_range<std::vector<std::string>>(boost::adaptors::keys(_wallet.pending_miner_registrations));
-
-         // look up the owners on the blockchain
-         std::vector<fc::optional<chain::account_object>> owner_account_objects = _remote_db->lookup_account_names(pending_miner_names);
-
-         // if any of them have registered miners, claim them
-         for( const fc::optional<chain::account_object>& optional_account : owner_account_objects )
-            if (optional_account)
-            {
-               fc::optional<chain::miner_object> miner_obj = _remote_db->get_miner_by_account(optional_account->id);
-               if (miner_obj)
-                  claim_registered_miner(optional_account->name);
-            }
-      }
-   }
-
-   void init_prototype_ops()
-   {
-      chain::operation op;
-      for( std::size_t t=0; t<chain::operation::type_info::count; t++ )
-      {
-         op.set_which( t );
-         op.visit( op_prototype_visitor(_prototype_ops) );
-      }
-   }
-
-   std::map<transaction_handle_type, chain::signed_transaction> _builder_transactions;
-
-   // if the user executes the same command twice in quick succession,
-   // we might generate the same transaction id, and cause the second
-   // transaction to be rejected.  This can be avoided by altering the
-   // second transaction slightly (bumping up the expiration time by
-   // a second).  Keep track of recent transaction ids we've generated
-   // so we can know if we need to do this
-   struct recently_generated_transaction_record
-   {
-      fc::time_point_sec generation_time;
-      chain::transaction_id_type transaction_id;
-   };
-   struct timestamp_index{};
-   typedef boost::multi_index_container<recently_generated_transaction_record,
-      boost::multi_index::indexed_by<
-         boost::multi_index::hashed_unique<
-            boost::multi_index::member<recently_generated_transaction_record, chain::transaction_id_type, &recently_generated_transaction_record::transaction_id>, std::hash<chain::transaction_id_type>
-         >,
-         boost::multi_index::ordered_non_unique<boost::multi_index::tag<timestamp_index>,
-            boost::multi_index::member<recently_generated_transaction_record, fc::time_point_sec, &recently_generated_transaction_record::generation_time>
-         >
-      >
-   > recently_generated_transaction_set_type;
-   recently_generated_transaction_set_type _recently_generated_transactions;
-
-public:
-   wallet_api& self;
-   wallet_api_impl( wallet_api& s, const fc::api<app::login_api> &rapi, const chain::chain_id_type &chain_id, const server_data &ws )
-      : self(s),
-        _chain_id(chain_id),
-        _remote_api(rapi),
-        _remote_db(rapi->database()),
-        _remote_net_broadcast(rapi->network_broadcast()),
-        _remote_hist(rapi->history()),
-        _seeders_tracker(*this)
-   {
-      chain::chain_id_type remote_chain_id = _remote_db->get_chain_id();
-      if( remote_chain_id != _chain_id )
-      {
-         FC_THROW( "Remote server gave us an unexpected chain_id",
-            ("remote_chain_id", remote_chain_id)
-            ("chain_id", _chain_id) );
-      }
-      init_prototype_ops();
-
-      _remote_db->set_block_applied_callback( [this](const fc::variant& block_id )
-      {
-         on_block_applied( block_id );
-      } );
-
-      _wallet.chain_id = _chain_id;
-      _wallet.ws_server = ws.server;
-      _wallet.ws_user = ws.user;
-      _wallet.ws_password = ws.password;
-      decent::package::PackageManager::instance().recover_all_packages();
-   }
-
-   void encrypt_keys()
-   {
-      plain_ec_and_el_gamal_keys data;
-      data.ec_keys = _keys;
-      std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
-         [](const std::pair<decent::encrypt::DInteger, decent::encrypt::DInteger>& el_gamal_pair) {
-            return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
-      data.checksum = _checksum;
-      auto plain_txt = fc::raw::pack(data);
-      _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
-   }
-
-   void encrypt_keys2()
-   {
-      plain_ec_and_el_gamal_keys data;
-      data.ec_keys = _keys;
-      std::transform( _el_gamal_keys.begin(), _el_gamal_keys.end(), std::back_inserter( data.el_gamal_keys ),
-                      [](const std::pair<decent::encrypt::DInteger, decent::encrypt::DInteger>& el_gamal_pair) {
-                          return el_gamal_key_pair_str {el_gamal_pair.second, el_gamal_pair.first}; });
-      data.checksum = _checksum;
-      auto data_string = fc::json::to_string(data);
-      std::vector<char> plain_txt;
-      plain_txt.resize(data_string.length());
-      memcpy(plain_txt.data(), data_string.data(), data_string.length());
-      _wallet.cipher_keys = fc::aes_encrypt( data.checksum, plain_txt );
-   }
-
-   void on_block_applied( const fc::variant& block_id )
-   {
-      fc::async([this]{resync();}, "Resync after block");
-   }
-
-   bool is_locked()const
-   {
-      return _checksum == fc::sha512();
-   }
-
-   template<typename T>
-   T get_object(db::object_id<T::space_id, T::type_id, T> id)const
-   {
-      auto ob = _remote_db->get_objects({id}).front();
-      return ob.template as<T>();
-   }
-
-   void set_operation_fees(chain::signed_transaction& tx, const chain::fee_schedule& s) const
-   {
-      for( auto& op : tx.operations )
-         s.set_fee(op);
-   }
-
-   wallet_info info() const
-   {
-      auto chain_props = get_chain_properties();
-      auto global_props = get_global_properties();
-      auto dynamic_props = get_dynamic_global_properties();
-      wallet_info result;
-      result.head_block_num = dynamic_props.head_block_number;
-      result.head_block_id = dynamic_props.head_block_id;
-      result.head_block_age = fc::get_approximate_relative_time_string(dynamic_props.time,
-                                                                       fc::time_point_sec(fc::time_point::now()),
-                                                                       " old");
-      result.next_maintenance_time = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
-      result.chain_id = chain_props.chain_id;
-      result.participation = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
-      result.active_miners = global_props.active_miners;
-      return result;
-   }
-
-   wallet_about about() const
-   {
-      return { _remote_db->about(), decent::get_about_info() };
-   }
-
-   chain::chain_property_object get_chain_properties() const
-   {
-      return _remote_db->get_chain_properties();
-   }
-
-   chain::global_property_object get_global_properties() const
-   {
-      return _remote_db->get_global_properties();
-   }
-
-   chain::dynamic_global_property_object get_dynamic_global_properties() const
-   {
-      return _remote_db->get_dynamic_global_properties();
-   }
-
-   fc::optional<chain::account_object> find_account(chain::account_id_type account_id) const
-   {
-      auto rec = _remote_db->get_accounts({account_id}).front();
-
-      if(!rec)
-         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
-
-      return *rec;
-   }
-
-   fc::optional<chain::account_object> find_account(const std::string& account_name_or_id) const
-   {
-      if(account_name_or_id.size() == 0)
-         FC_THROW_EXCEPTION(account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
-
-      if( auto id = maybe_id<chain::account_id_type>(account_name_or_id) )
-      {
-         // It's an ID
-         return find_account(*id);
-      } else {
-         auto rec = _remote_db->lookup_account_names({ account_name_or_id }).front();
-         if(_wallet.my_accounts.get<chain::by_name>().count(account_name_or_id))
-         {
-            auto local_account = *_wallet.my_accounts.get<chain::by_name>().find(account_name_or_id);
-            if(!rec)
-               FC_THROW_EXCEPTION(account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
-            if(local_account.id != rec->id)
-               elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", rec->id));
-            if(local_account.name != rec->name)
-               elog("my account name ${id} different from blockchain name ${id2}", ("id", local_account.name)("id2", rec->name));
-
-            //return *_wallet.my_accounts.get<by_name>().find(account_name_or_id);
-            return rec;
-         }
-         if(rec && rec->name != account_name_or_id)
-            return {};
-         return rec;
-      }
-   }
-
-   chain::account_object get_account(chain::account_id_type account_id) const
-   {
-      auto rec = find_account(account_id);
-      if(!rec)
-         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
-      return *rec;
-   }
-
-   chain::account_object get_account(const std::string& account_name_or_id) const
-   {
-      auto rec = find_account(account_name_or_id);
-      if(!rec)
-         FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
-      return *rec;
-   }
-
-   fc::optional<chain::asset_object> find_asset(chain::asset_id_type asset_id)const
-   {
-      return _remote_db->get_assets({asset_id}).front();
-   }
-
-   fc::optional<chain::asset_object> find_asset(const std::string& asset_symbol_or_id) const
-   {
-      FC_ASSERT( asset_symbol_or_id.size() > 0 );
-
-      if( auto id = maybe_id<chain::asset_id_type>(asset_symbol_or_id) )
-      {
-         // It's an ID
-         return find_asset(*id);
-      } else {
-         // It's a symbol
-         auto rec = _remote_db->lookup_asset_symbols({asset_symbol_or_id}).front();
-         if( rec )
-         {
-            if( rec->symbol != asset_symbol_or_id )
-               return {};
-         }
-         return rec;
-      }
-   }
-
-   chain::asset_object get_asset(chain::asset_id_type asset_id)const
-   {
-      auto opt = find_asset(asset_id);
-      FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_id));
-      return *opt;
-   }
-
-   chain::asset_object get_asset(const std::string& asset_symbol_or_id) const
-   {
-      auto opt = find_asset(asset_symbol_or_id);
-      FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_symbol_or_id));
-      return *opt;
-   }
-
-   fc::optional<chain::non_fungible_token_object> find_non_fungible_token(chain::non_fungible_token_id_type nft_id)const
-   {
-      return _remote_db->get_non_fungible_tokens({nft_id}).front();
-   }
-
-   fc::optional<chain::non_fungible_token_object> find_non_fungible_token(const std::string& nft_symbol_or_id) const
-   {
-      FC_ASSERT( nft_symbol_or_id.size() > 0 );
-      if( auto id = maybe_id<chain::non_fungible_token_id_type>(nft_symbol_or_id) )
-      {
-         // It's an ID
-         return find_non_fungible_token(*id);
-      } else {
-         // It's a symbol
-         auto rec = _remote_db->get_non_fungible_tokens_by_symbols({nft_symbol_or_id}).front();
-         if( rec )
-         {
-            if( rec->symbol != nft_symbol_or_id )
-               return {};
-         }
-         return rec;
-      }
-   }
-
-   chain::non_fungible_token_object get_non_fungible_token(chain::non_fungible_token_id_type nft_id)const
-   {
-      auto opt = find_non_fungible_token(nft_id);
-      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", nft_id));
-      return *opt;
-   }
-
-   chain::non_fungible_token_object get_non_fungible_token(const std::string& nft_symbol_or_id) const
-   {
-      auto opt = find_non_fungible_token(nft_symbol_or_id);
-      FC_ASSERT(opt, "Non fungible token ${nft} does not exist", ("nft", nft_symbol_or_id));
-      return *opt;
-   }
-
-   fc::optional<chain::non_fungible_token_data_object> find_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id)const
-   {
-      return _remote_db->get_non_fungible_token_data({nft_data_id}).front();
-   }
-
-   chain::non_fungible_token_data_object get_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id)const
-   {
-      auto opt = find_non_fungible_token_data(nft_data_id);
-      FC_ASSERT(opt, "Non fungible token data ${nft} does not exist", ("nft", nft_data_id));
-      return *opt;
-   }
-
-   const boost::filesystem::path& get_wallet_filename() const
-   {
-      return _wallet_filename;
-   }
-
-   void set_wallet_filename(const boost::filesystem::path &wallet_filename)
-   {
-      if(wallet_filename.empty())
-         FC_THROW_EXCEPTION(wallet_filename_cannot_be_empty_exception, "");
-
-      _wallet_filename = wallet_filename;
-   }
-
-   chain::private_key_type get_private_key(const chain::public_key_type& id)const
-   {
-      auto it = _keys.find(id);
-      FC_ASSERT( it != _keys.end() );
-
-      fc::optional<chain::private_key_type> privkey = utilities::wif_to_key( it->second );
-      FC_ASSERT( privkey );
-      return *privkey;
-   }
-
-   chain::private_key_type get_private_key_for_account(const chain::account_object& account)const
-   {
-      std::vector<chain::public_key_type> active_keys = account.active.get_keys();
-      if (active_keys.size() != 1)
-         FC_THROW("Expecting a simple authority with one active key");
-      return get_private_key(active_keys.front());
-   }
-
-   // imports the private key into the wallet, and associate it in some way (?) with the
-   // given account name.
-   // @returns true if the key matches a current active/owner/memo key for the named
-   //          account, false otherwise (but it is stored either way)
-   bool import_key(const std::string& account_name_or_id, const std::string& wif_key)
-   {
-      FC_ASSERT( !is_locked() );
-      fc::optional<chain::private_key_type> optional_private_key = utilities::wif_to_key(wif_key);
-      if (!optional_private_key)
-         FC_THROW("Invalid private key");
-
-      chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
-      chain::account_object account = get_account( account_name_or_id );
-
-      // make a list of all current public keys for the named account
-      boost::container::flat_set<chain::public_key_type> all_keys_for_account;
-      std::vector<chain::public_key_type> active_keys = account.active.get_keys();
-      std::vector<chain::public_key_type> owner_keys = account.owner.get_keys();
-
-      if( std::find( owner_keys.begin(), owner_keys.end(), wif_pub_key ) != owner_keys.end() )
-      {
-         //we have the owner keys
-         int active_key_index = find_first_unused_derived_key_index( *optional_private_key );
-         chain::private_key_type active_privkey = utilities::derive_private_key( wif_key, active_key_index);
-
-         int memo_key_index = find_first_unused_derived_key_index(active_privkey);
-         chain::private_key_type memo_privkey = utilities::derive_private_key( utilities::key_to_wif(active_privkey), memo_key_index);
-
-         chain::public_key_type active_pubkey = active_privkey.get_public_key();
-         chain::public_key_type memo_pubkey = memo_privkey.get_public_key();
-         _keys[active_pubkey] = utilities::key_to_wif( active_privkey );
-         _keys[memo_pubkey] = utilities::key_to_wif( memo_privkey );
-
-         decent::encrypt::DInteger active_el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret( active_privkey.get_secret() );
-         _el_gamal_keys[get_public_el_gamal_key( active_el_gamal_priv_key )] = active_el_gamal_priv_key;
-         decent::encrypt::DInteger memo_el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret( memo_privkey.get_secret() );
-         _el_gamal_keys[get_public_el_gamal_key( memo_el_gamal_priv_key )] = memo_el_gamal_priv_key;
-
-         _wallet.extra_keys[account.id].insert( active_pubkey );
-         _wallet.extra_keys[account.id].insert( memo_pubkey );
-      }
-
-      std::copy(active_keys.begin(), active_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
-      std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
-      all_keys_for_account.insert(account.options.memo_key);
-
-      _keys[wif_pub_key] = wif_key;
-      decent::encrypt::DInteger el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
-      _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
-      _wallet.update_account(account);
-      _wallet.extra_keys[account.id].insert(wif_pub_key);
-
-      return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
-   }
-
-   // @returns true if the key matches a current active/owner/memo key for the named
-   //          account, false otherwise (but it is stored either way)
-   bool import_single_key(const std::string& account_name_or_id, const std::string& wif_key)
-   {
-      FC_ASSERT( !is_locked() );
-      fc::optional<chain::private_key_type> optional_private_key = utilities::wif_to_key(wif_key);
-      if (!optional_private_key)
-         FC_THROW("Invalid private key");
-
-      chain::public_key_type wif_pub_key = optional_private_key->get_public_key();
-      chain::account_object account = get_account( account_name_or_id );
-
-      // make a list of all current public keys for the named account
-      boost::container::flat_set<chain::public_key_type> all_keys_for_account;
-      std::vector<chain::public_key_type> active_keys = account.active.get_keys();
-      std::vector<chain::public_key_type> owner_keys = account.owner.get_keys();
-      std::copy(active_keys.begin(), active_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
-      std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
-      all_keys_for_account.insert(account.options.memo_key);
-
-      _keys[wif_pub_key] = wif_key;
-      decent::encrypt::DInteger el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret( optional_private_key->get_secret() );
-      _el_gamal_keys[get_public_el_gamal_key( el_gamal_priv_key )] = el_gamal_priv_key;
-      _wallet.update_account(account);
-      _wallet.extra_keys[account.id].insert(wif_pub_key);
-
-      return all_keys_for_account.find(wif_pub_key) != all_keys_for_account.end();
-   }
-
-   int get_wallet_file_version(const fc::variant& data)
-   {
-      fc::variant_object vo;
-      fc::from_variant( data, vo );
-      if (vo.find("version") == vo.end()) {
-         return 0;
-      }
-
-      return vo["version"].as<int>();
-   }
-
-   bool load_old_wallet_file(const fc::variant& data, wallet_data& result)
-   {
-       bool ret;
-       try {
-           result = data.as<wallet_data>();
-           ret = true;
-       }
-       catch (const fc::exception& ex) {
-           elog("Parsing wallet data error: ${ex}", ("ex", ex.what()) );
-           ret = false;
-       }
-       return ret;
-   }
-
-   bool load_new_wallet_file(const fc::variant& data, wallet_data& result)
-   {
-      bool ret;
-      try {
-         result = data.as<wallet_data>();
-
-         const fc::variant_object& vo = data.get_object();
-         result.version = vo["version"].as<int>();
-         result.update_time = vo["update_time"].as_string();
-
-         ret = true;
-      }
-      catch (const fc::exception& ex) {
-         elog("Parsing wallet data error: ${ex}", ("ex", ex.what()) );
-         ret = false;
-      }
-      return ret;
-   }
-
-   bool load_wallet_file(boost::filesystem::path wallet_filename = boost::filesystem::path())
-   {
-      dlog("load_wallet_file() begin");
-
-      // TODO:  Merge imported wallet with existing wallet,
-      //        instead of replacing it
-      if( wallet_filename.empty() )
-         wallet_filename = _wallet_filename;
-
-      bool result = false;
-      wallet_data load_data;
-      try {
-
-         fc::variant v = fc::json::from_file(wallet_filename);
-         int version = get_wallet_file_version(v);
-
-         if (version == 0) {
-            result = load_old_wallet_file(v, load_data);
-         }
-         else {
-            result = load_new_wallet_file(v, load_data);
-         }
-      }
-      catch(const fc::exception& ex) {
-         elog("Error loading wallet file: ${ex}", ("ex",ex.what()) );
-         result = false;
-      }
-      catch(const std::exception& ex) {
-         elog("Error loading wallet file: ${ex}", ("ex",ex.what()) );
-         result = false;
-      }
-
-      if (!result) {
-         dlog("load_wallet_file() end (failed)");
-         return false;
-      }
-
-      _wallet = load_data;
-      if( _wallet.chain_id != _chain_id ) {
-         FC_THROW("Wallet chain ID does not match",
-                  ("wallet.chain_id", _wallet.chain_id)
-                        ("chain_id", _chain_id));
-      }
-
-      size_t account_pagination = 100;
-      std::vector<chain::account_id_type> account_ids_to_send;
-      size_t n = _wallet.my_accounts.size();
-      account_ids_to_send.reserve( std::min( account_pagination, n ) );
-      auto it = _wallet.my_accounts.begin();
-
-      for( size_t start=0; start<n; start+=account_pagination )
-      {
-         size_t end = std::min( start+account_pagination, n );
-         assert( end > start );
-         account_ids_to_send.clear();
-         std::vector<chain::account_object> old_accounts;
-         for( size_t i=start; i<end; i++ )
-         {
-            assert( it != _wallet.my_accounts.end() );
-            old_accounts.push_back( *it );
-            account_ids_to_send.push_back( old_accounts.back().id );
-            ++it;
-         }
-         std::vector<fc::optional<chain::account_object>> accounts = _remote_db->get_accounts(account_ids_to_send);
-         // server response should be same length as request
-         FC_ASSERT( accounts.size() == account_ids_to_send.size() );
-         size_t i = 0;
-         for( const fc::optional<chain::account_object>& acct : accounts )
-         {
-            chain::account_object& old_acct = old_accounts[i];
-            if( !acct.valid() )
-            {
-               elog( "Could not find account ${id} : \"${name}\" does not exist on the chain!", ("id", old_acct.id)("name", old_acct.name) );
-               i++;
-               continue;
-            }
-            // this check makes sure the server didn't send results
-            // in a different order, or accounts we didn't request
-            FC_ASSERT( acct->id == old_acct.id );
-            if( fc::json::to_string(*acct) != fc::json::to_string(old_acct) )
-            {
-               wlog( "Account ${id} : \"${name}\" updated on chain", ("id", acct->id)("name", acct->name) );
-            }
-            _wallet.update_account( *acct );
-            i++;
-         }
-      }
-
-      dlog("load_wallet_file() end");
-      return true;
-   }
-
-   void save_wallet_file(boost::filesystem::path wallet_filename = boost::filesystem::path() )
-   {
-      dlog("save_wallet_file() begin");
-      FC_ASSERT( !is_locked() );
-
-      //
-      // Serialize in memory, then save to disk
-      //
-      // This approach lessens the risk of a partially written wallet
-      // if exceptions are thrown in serialization
-      //
-
-      //allways save in new format
-      _wallet.version = 1;
-      _wallet.update_time = fc::time_point::now();
-      encrypt_keys2();
-
-      if( wallet_filename.empty() )
-         wallet_filename = _wallet_filename;
-
-      ilog( "saving wallet to file ${fn}", ("fn", wallet_filename) );
-
-      auto save_wallet_data = [](const wallet_data& data)
-      {
-         fc::mutable_variant_object mvo;
-         mvo["version"] = fc::variant(data.version);
-         mvo["update_time"] = fc::variant(data.update_time);
-         mvo["chain_id"] = fc::variant(data.chain_id);
-         mvo["my_accounts"] = fc::variant(data.my_accounts);
-         mvo["cipher_keys"] = fc::variant(data.cipher_keys);
-         mvo["extra_keys"] = fc::variant(data.extra_keys);
-         mvo["pending_account_registrations"] = fc::variant(data.pending_account_registrations);
-         mvo["pending_miner_registrations"] = fc::variant(data.pending_miner_registrations);
-         mvo["ws_server"] = fc::variant(data.ws_server);
-         mvo["ws_user"] = fc::variant(data.ws_user);
-         mvo["ws_password"] = fc::variant(data.ws_password);
-         return fc::json::to_pretty_string( mvo );
-      };
-
-      try
-      {
-         std::string data = save_wallet_data( _wallet );
-#ifndef WIN32
-         struct umask_guard {
-            mode_t _old_umask;
-
-            umask_guard() : _old_umask( umask( S_IRWXG | S_IRWXO ) ) {}
-            ~umask_guard() { umask( _old_umask ); }
-         } _umask_guard;
-#endif
-
-         boost::filesystem::ofstream outfile;
-         outfile.exceptions( std::ios_base::failbit );
-         outfile.open( wallet_filename );
-         outfile.write( data.c_str(), data.length() );
-         outfile.flush();
-         outfile.close();
-      }
-      FC_CAPTURE_LOG_AND_RETHROW( ("Error save wallet file")(wallet_filename) )
-
-      dlog("save_wallet_file() end");
-   }
-
-   transaction_handle_type begin_builder_transaction()
-   {
-      transaction_handle_type trx_handle = _builder_transactions.empty()? 0
-                                                    : (--_builder_transactions.end())->first + 1;
-      _builder_transactions[trx_handle];
-      return trx_handle;
-   }
-
-   void add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const chain::operation& op)
-   {
-      if(!_builder_transactions.count(transaction_handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      _builder_transactions[transaction_handle].operations.emplace_back(op);
-   }
-
-   void replace_operation_in_builder_transaction(transaction_handle_type handle, uint32_t operation_index, const chain::operation& new_op)
-   {
-      if(!_builder_transactions.count(handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      chain::signed_transaction& trx = _builder_transactions[handle];
-      FC_ASSERT( operation_index < trx.operations.size());
-      trx.operations[operation_index] = new_op;
-   }
-
-   chain::asset set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset)
-   {
-      if(!_builder_transactions.count(handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      if(fee_asset != GRAPHENE_SYMBOL)
-         FC_THROW_EXCEPTION(fees_can_be_paid_in_core_asset_exception, "");
-
-      auto fee_asset_obj = get_asset(fee_asset);
-      chain::asset total_fee = fee_asset_obj.amount(0);
-
-      auto gprops = _remote_db->get_global_properties().parameters;
-      for( auto& op : _builder_transactions[handle].operations )
-         total_fee += gprops.current_fees->set_fee( op );
-
-      return total_fee;
-   }
-
-   chain::transaction preview_builder_transaction(transaction_handle_type handle)
-   {
-      if(!_builder_transactions.count(handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-      return _builder_transactions[handle];
-   }
-
-   chain::signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true)
-   {
-      if(!_builder_transactions.count(transaction_handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
-   }
-
-   chain::signed_transaction propose_builder_transaction(
-      transaction_handle_type handle,
-      fc::time_point_sec expiration = fc::time_point::now() + fc::minutes(1),
-      uint32_t review_period_seconds = 0, bool broadcast = true)
-   {
-      if(!_builder_transactions.count(handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      chain::proposal_create_operation op;
-      op.expiration_time = expiration;
-      chain::signed_transaction& trx = _builder_transactions[handle];
-      std::transform(trx.operations.begin(), trx.operations.end(), std::back_inserter(op.proposed_ops),
-                     [](const chain::operation& op) -> chain::op_wrapper { return op; });
-      if( review_period_seconds )
-         op.review_period_seconds = review_period_seconds;
-      trx.operations = {op};
-      _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
-
-      return trx = sign_transaction(trx, broadcast);
-   }
-
-   chain::signed_transaction propose_builder_transaction2(
-      transaction_handle_type handle,
-      const std::string& account_name_or_id,
-      fc::time_point_sec expiration = fc::time_point::now() + fc::minutes(1),
-      uint32_t review_period_seconds = 0, bool broadcast = true)
-   {
-      if(!_builder_transactions.count(handle))
-         FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-      chain::proposal_create_operation op;
-      op.fee_paying_account = get_account(account_name_or_id).get_id();
-      op.expiration_time = expiration;
-      chain::signed_transaction& trx = _builder_transactions[handle];
-      std::transform(trx.operations.begin(), trx.operations.end(), std::back_inserter(op.proposed_ops),
-                     [](const chain::operation& op) -> chain::op_wrapper { return op; });
-      if( review_period_seconds )
-         op.review_period_seconds = review_period_seconds;
-      trx.operations = {op};
-      _remote_db->get_global_properties().parameters.current_fees->set_fee( trx.operations.front() );
-
-      return trx = sign_transaction(trx, broadcast);
-   }
-
-   void remove_builder_transaction(transaction_handle_type handle)
-   {
-      _builder_transactions.erase(handle);
-   }
-
-   chain::signed_transaction register_account(const std::string& name,
-                                       const chain::public_key_type& owner,
-                                       const chain::public_key_type& active,
-                                       const chain::public_key_type& memo,
-                                       const std::string& registrar_account,
-                                       bool broadcast = false)
-   { try {
-      if(find_account(name).valid())
-         FC_THROW_EXCEPTION(account_already_exist_exception, "");
-
-      chain::account_create_operation account_create_op;
-
-      // TODO:  process when pay_from_account is ID
-
-      chain::account_object registrar_account_object = get_account( registrar_account );
-      chain::account_id_type registrar_account_id = registrar_account_object.id;
-
-      account_create_op.registrar = registrar_account_id;
-      account_create_op.name = name;
-      account_create_op.owner = chain::authority(1, owner, 1);
-      account_create_op.active = chain::authority(1, active, 1);
-      account_create_op.options.memo_key = memo;
-
-      chain::signed_transaction tx;
-
-      tx.operations.push_back( account_create_op );
-
-      auto current_fees = _remote_db->get_global_properties().parameters.current_fees;
-      set_operation_fees( tx, current_fees );
-
-      std::vector<chain::public_key_type> paying_keys = registrar_account_object.active.get_keys();
-
-      auto dyn_props = get_dynamic_global_properties();
-      tx.set_reference_block( dyn_props.head_block_id );
-      tx.set_expiration( dyn_props.time + fc::seconds(30) );
-      tx.validate();
-
-      for( chain::public_key_type& key : paying_keys )
-      {
-         auto it = _keys.find(key);
-         if( it != _keys.end() )
-         {
-            fc::optional<chain::private_key_type> privkey = utilities::wif_to_key( it->second );
-            if( !privkey.valid() )
-            {
-               FC_THROW_EXCEPTION(malformed_private_key_exception, "");
-            }
-            tx.sign( *privkey, _chain_id );
-         }
-      }
-
-      if( broadcast )
-         _remote_net_broadcast->broadcast_transaction( tx );
-      return tx;
-   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(memo)(registrar_account)(broadcast) ) }
-
-   chain::signed_transaction register_multisig_account(const std::string& name,
-                                                const chain::authority& owner_authority,
-                                                const chain::authority& active_authority,
-                                                const chain::public_key_type& memo_pubkey,
-                                                const std::string& registrar_account,
-                                                bool broadcast = false)
-   {
-      try
-      {
-         if(find_account(name).valid())
-            FC_THROW_EXCEPTION(account_already_exist_exception, "");
-
-         chain::account_create_operation account_create_op;
-         chain::account_object acc = get_account( registrar_account );
-
-         account_create_op.registrar = acc.id;
-         account_create_op.name = name;
-         account_create_op.owner = owner_authority;
-         account_create_op.active = active_authority;
-         account_create_op.options.memo_key = memo_pubkey;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( account_create_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (name)(owner_authority)(active_authority)(memo_pubkey)(registrar_account)(broadcast) )
-   }
-
-   // This function generates derived keys starting with index 0 and keeps incrementing
-   // the index until it finds a key that isn't registered in the block chain.  To be
-   // safer, it continues checking for a few more keys to make sure there wasn't a short gap
-   // caused by a failed registration or the like.
-   int find_first_unused_derived_key_index(const chain::private_key_type& parent_key)
-   {
-      int first_unused_index = 0;
-      int number_of_consecutive_unused_keys = 0;
-      for (int key_index = 0; ; ++key_index)
-      {
-         chain::private_key_type derived_private_key = utilities::derive_private_key(utilities::key_to_wif(parent_key), key_index);
-         chain::public_key_type derived_public_key = derived_private_key.get_public_key();
-         if( _keys.find(derived_public_key) == _keys.end() )
-         {
-            if (number_of_consecutive_unused_keys)
-            {
-               ++number_of_consecutive_unused_keys;
-               if (number_of_consecutive_unused_keys > 5)
-                  return first_unused_index;
-            }
-            else
-            {
-               first_unused_index = key_index;
-               number_of_consecutive_unused_keys = 1;
-            }
-         }
-         else
-         {
-            // key_index is used
-            first_unused_index = 0;
-            number_of_consecutive_unused_keys = 0;
-         }
-      }
-   }
-
-   chain::signed_transaction create_account_with_private_key(const chain::private_key_type& owner_privkey,
-                                                      const std::string& account_name,
-                                                      const std::string& registrar_account,
-                                                      bool import,
-                                                      bool broadcast = false,
-                                                      bool save_wallet = true)
-   { try {
-         if(find_account(account_name).valid())
-            FC_THROW_EXCEPTION(account_already_exist_exception, "");
-
-         int active_key_index = find_first_unused_derived_key_index(owner_privkey);
-         chain::private_key_type active_privkey = utilities::derive_private_key( utilities::key_to_wif(owner_privkey), active_key_index);
-
-         int memo_key_index = find_first_unused_derived_key_index(active_privkey);
-         chain::private_key_type memo_privkey = utilities::derive_private_key( utilities::key_to_wif(active_privkey), memo_key_index);
-
-         chain::public_key_type owner_pubkey = owner_privkey.get_public_key();
-         chain::public_key_type active_pubkey = active_privkey.get_public_key();
-         chain::public_key_type memo_pubkey = memo_privkey.get_public_key();
-
-         chain::account_create_operation account_create_op;
-
-         // TODO:  process when pay_from_account is ID
-
-         chain::account_object registrar_account_object = get_account( registrar_account );
-         chain::account_id_type registrar_account_id = registrar_account_object.id;
-
-         account_create_op.registrar = registrar_account_id;
-         account_create_op.name = account_name;
-         account_create_op.owner = chain::authority(1, owner_pubkey, 1);
-         account_create_op.active = chain::authority(1, active_pubkey, 1);
-         account_create_op.options.memo_key = memo_pubkey;
-
-         // current_fee_schedule()
-         // find_account(pay_from_account)
-
-         // account_create_op.fee = account_create_op.calculate_fee(db.current_fee_schedule());
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( account_create_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-
-         std::vector<chain::public_key_type> paying_keys = registrar_account_object.active.get_keys();
-
-         auto dyn_props = get_dynamic_global_properties();
-         tx.set_reference_block( dyn_props.head_block_id );
-         tx.set_expiration( dyn_props.time + fc::seconds(30) );
-         tx.validate();
-
-         for( chain::public_key_type& key : paying_keys )
-         {
-            auto it = _keys.find(key);
-            if( it != _keys.end() )
-            {
-               fc::optional<chain::private_key_type> privkey = utilities::wif_to_key( it->second );
-               FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
-               tx.sign( *privkey, _chain_id );
-            }
-         }
-
-         // we do not insert owner_privkey here because
-         //    it is intended to only be used for key recovery
-         if (import)
-         {
-            _wallet.pending_account_registrations[account_name].push_back(utilities::key_to_wif( active_privkey ));
-            _wallet.pending_account_registrations[account_name].push_back(utilities::key_to_wif( memo_privkey ));
-         }
-         if( save_wallet )
-            save_wallet_file();
-         if( broadcast )
-            _remote_net_broadcast->broadcast_transaction( tx );
-         return tx;
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(broadcast) ) }
-
-   chain::signed_transaction create_account_with_brain_key(const std::string& brain_key,
-                                                    const std::string& account_name,
-                                                    const std::string& registrar_account,
-                                                    bool import,
-                                                    bool broadcast = false,
-                                                    bool save_wallet = true)
-   { try {
-      std::string normalized_brain_key = utilities::normalize_brain_key( brain_key );
-      // TODO:  scan blockchain for accounts that exist with same brain key
-      chain::private_key_type owner_privkey = utilities::derive_private_key( normalized_brain_key );
-      return create_account_with_private_key(owner_privkey, account_name, registrar_account, import, broadcast, save_wallet);
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account) ) }
-
-   chain::signed_transaction update_account_keys( const std::string& name,
-                                           fc::optional<chain::authority> owner_auth,
-                                           fc::optional<chain::authority> active_auth,
-                                           fc::optional<chain::public_key_type> memo_pubkey,
-                                           bool broadcast )
-   { try {
-         FC_ASSERT( owner_auth || active_auth || memo_pubkey, "at least one authority/public key needs to be specified");
-
-         chain::account_object acc = get_account( name );
-         chain::account_update_operation account_update_op;
-
-         // TODO: move the following asserts into evaluator.
-         if( owner_auth )
-         {
-            FC_ASSERT( acc.owner != *owner_auth, "new authority needs to be different from the existing one" );
-         }
-
-         if( active_auth )
-         {
-            FC_ASSERT( acc.active != *active_auth, "new authority needs to be different from the existing one" );
-         }
-
-         account_update_op.account = acc.id;
-         account_update_op.owner = owner_auth;
-         account_update_op.active = active_auth;
-
-         if( memo_pubkey )
-         {
-            FC_ASSERT( acc.options.memo_key != *memo_pubkey, "new authority needs to be different from the existing one" );
-            acc.options.memo_key = *memo_pubkey;
-            account_update_op.new_options = acc.options;
-         }
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( account_update_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (name)(owner_auth)(active_auth)(memo_pubkey)(broadcast) ) }
-
-   chain::signed_transaction create_user_issued_asset(const std::string& issuer,
-                                               const std::string& symbol,
-                                               uint8_t precision,
-                                               const std::string& description,
-                                               uint64_t max_supply,
-                                               chain::price core_exchange_rate,
-                                               bool is_exchangeable,
-                                               bool is_fixed_max_supply,
-                                               bool broadcast = false)
-   { try {
-      chain::account_object issuer_account = get_account( issuer );
-
-      if(find_asset(symbol).valid())
-         FC_THROW_EXCEPTION(asset_already_exists_exception, "");
-
-      chain::asset_create_operation create_op;
-      create_op.issuer = issuer_account.id;
-      create_op.symbol = symbol;
-      create_op.precision = precision;
-      create_op.description = description;
-      chain::asset_options opts;
-      opts.max_supply = max_supply;
-      opts.core_exchange_rate = core_exchange_rate;
-      opts.is_exchangeable = is_exchangeable;
-      opts.extensions.insert(chain::asset_options::fixed_max_supply_struct(is_fixed_max_supply));
-
-      create_op.options = opts;
-      create_op.monitored_asset_opts = fc::optional<chain::monitored_asset_options>();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( create_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(max_supply)(is_exchangeable)(broadcast) ) }
-
-   chain::signed_transaction issue_asset(const std::string& to_account,
-                                  const std::string& amount,
-                                  const std::string& symbol,
-                                  const std::string& memo,
-                                  bool broadcast = false)
-   {
-      auto asset_obj = get_asset(symbol);
-
-      chain::account_object to = get_account(to_account);
-      chain::account_object issuer = get_account(asset_obj.issuer);
-
-      chain::asset_issue_operation issue_op;
-      issue_op.issuer           = asset_obj.issuer;
-      issue_op.asset_to_issue   = asset_obj.amount_from_string(amount);
-      issue_op.issue_to_account = to.id;
-
-      if( !memo.empty() )
-      {
-         issue_op.memo = chain::memo_data(memo, get_private_key(issuer.options.memo_key), to.options.memo_key);
-      }
-
-      chain::signed_transaction tx;
-      tx.operations.push_back(issue_op);
-      set_operation_fees(tx,_remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction(tx, broadcast);
-   }
-
-   chain::signed_transaction update_user_issued_asset(const std::string& symbol,
-                                               const std::string& new_issuer,
-                                               const std::string& description,
-                                               uint64_t max_supply,
-                                               chain::price core_exchange_rate,
-                                               bool is_exchangeable,
-                                               bool broadcast = false)
-   { try {
-         chain::asset_object asset_to_update = get_asset(symbol);
-
-         chain::update_user_issued_asset_operation update_op;
-         update_op.issuer = asset_to_update.issuer;
-         update_op.asset_to_update = asset_to_update.id;
-         update_op.new_description = description;
-         update_op.max_supply = max_supply;
-         update_op.core_exchange_rate = core_exchange_rate;
-         update_op.is_exchangeable = is_exchangeable;
-
-         fc::optional<chain::account_id_type> new_issuer_account_id;
-         if( !new_issuer.empty() )
-         {
-            chain::account_object new_issuer_account = get_account(new_issuer);
-            new_issuer_account_id = new_issuer_account.id;
-         }
-         update_op.new_issuer = new_issuer_account_id;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( update_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (symbol)(new_issuer)(description)(max_supply)(core_exchange_rate)(is_exchangeable)(broadcast) ) }
-
-      chain::signed_transaction fund_asset_pools(const std::string& from,
-                                          const std::string& uia_amount,
-                                          const std::string& uia_symbol,
-                                          const std::string& DCT_amount,
-                                          const std::string& DCT_symbol,
-                                          bool broadcast /* = false */)
-      { try {
-            chain::account_object from_account = get_account(from);
-            chain::asset_object uia_asset_to_fund = get_asset(uia_symbol);
-            chain::asset_object dct_asset_to_fund = get_asset(DCT_symbol);
-
-            chain::asset_fund_pools_operation fund_op;
-            fund_op.from_account = from_account.id;
-            fund_op.uia_asset = uia_asset_to_fund.amount_from_string(uia_amount);
-            fund_op.dct_asset = dct_asset_to_fund.amount_from_string(DCT_amount);
-
-            chain::signed_transaction tx;
-            tx.operations.push_back( fund_op );
-            set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-            tx.validate();
-
-            return sign_transaction( tx, broadcast );
-         } FC_CAPTURE_AND_RETHROW( (from)(uia_amount)(uia_symbol)(DCT_amount)(DCT_symbol)(broadcast) ) }
-
-   chain::signed_transaction reserve_asset(const std::string& from,
-                                    const std::string& amount,
-                                    const std::string& symbol,
-                                    bool broadcast /* = false */)
-   { try {
-         chain::account_object from_account = get_account(from);
-         chain::asset_object asset_to_reserve = get_asset(symbol);
-
-         chain::asset_reserve_operation reserve_op;
-         reserve_op.payer = from_account.id;
-         reserve_op.amount_to_reserve = asset_to_reserve.amount_from_string(amount);
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( reserve_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(amount)(symbol)(broadcast) ) }
-
-   chain::signed_transaction claim_fees(const std::string& uia_amount,
-                                 const std::string& uia_symbol,
-                                 const std::string& dct_amount,
-                                 const std::string& dct_symbol,
-                                 bool broadcast /* = false */)
-   { try {
-         chain::asset_object uia_asset_to_claim = get_asset(uia_symbol);
-         chain::asset_object dct_asset_to_claim = get_asset(dct_symbol);
-
-         FC_ASSERT( dct_asset_to_claim.id == chain::asset_id_type() );
-
-         chain::asset_claim_fees_operation claim_fees_op;
-         claim_fees_op.issuer = uia_asset_to_claim.issuer;
-         claim_fees_op.uia_asset = uia_asset_to_claim.amount_from_string(uia_amount);
-         claim_fees_op.dct_asset = dct_asset_to_claim.amount_from_string(dct_amount);
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( claim_fees_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (uia_amount)(uia_symbol)(dct_amount)(dct_symbol)(broadcast) ) }
-
-   chain::signed_transaction create_monitored_asset(const std::string& issuer,
-                                             const std::string& symbol,
-                                             uint8_t precision,
-                                             const std::string& description,
-                                             uint32_t feed_lifetime_sec,
-                                             uint8_t minimum_feeds,
-                                             bool broadcast = false)
-   { try {
-      chain::account_object issuer_account = get_account( issuer );
-
-      if(find_asset(symbol).valid())
-         FC_THROW_EXCEPTION(asset_already_exists_exception, "");
-
-      chain::asset_create_operation create_op;
-      create_op.issuer = issuer_account.id;
-      create_op.symbol = symbol;
-      create_op.precision = precision;
-      create_op.description = description;
-
-      chain::asset_options opts;
-      opts.max_supply = 0;
-      create_op.options = opts;
-
-      chain::monitored_asset_options m_opts;
-      m_opts.feed_lifetime_sec = feed_lifetime_sec;
-      m_opts.minimum_feeds = minimum_feeds;
-      create_op.monitored_asset_opts = m_opts;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( create_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (issuer)(symbol)(precision)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
-
-   chain::signed_transaction update_monitored_asset(const std::string& symbol,
-                                             const std::string& description,
-                                             uint32_t feed_lifetime_sec,
-                                             uint8_t minimum_feeds,
-                                             bool broadcast /* = false */)
-   { try {
-      chain::asset_object asset_to_update = get_asset(symbol);
-
-      chain::update_monitored_asset_operation update_op;
-      update_op.issuer = asset_to_update.issuer;
-      update_op.asset_to_update = asset_to_update.id;
-      update_op.new_description = description;
-      update_op.new_feed_lifetime_sec = feed_lifetime_sec;
-      update_op.new_minimum_feeds = minimum_feeds;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (symbol)(description)(feed_lifetime_sec)(minimum_feeds)(broadcast) ) }
-
-   chain::signed_transaction publish_asset_feed(const std::string& publishing_account,
-                                         const std::string& symbol,
-                                         const chain::price_feed& feed,
-                                         bool broadcast /* = false */)
-   { try {
-      chain::asset_object asset_to_update = get_asset(symbol);
-
-      chain::asset_publish_feed_operation publish_op;
-      publish_op.publisher = get_account(publishing_account).get_id();
-      publish_op.asset_id = asset_to_update.id;
-      publish_op.feed = feed;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( publish_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (publishing_account)(symbol)(feed)(broadcast) ) }
-
-   //////////////////////////////////////////////////////////////////////
-   //                                                                  //
-   // Non Fungible Tokens                                              //
-   //                                                                  //
-   //////////////////////////////////////////////////////////////////////
-
-   chain::signed_transaction create_non_fungible_token(const std::string& issuer,
-                                                const std::string& symbol,
-                                                const std::string& description,
-                                                const chain::non_fungible_token_data_definitions& definitions,
-                                                uint32_t max_supply,
-                                                bool fixed_max_supply,
-                                                bool transferable,
-                                                bool broadcast /* = false */)
-   {
-      if(find_non_fungible_token(symbol).valid())
-         FC_THROW_EXCEPTION(nft_already_exist_exception, "");
-
-      chain::non_fungible_token_create_definition_operation create_op;
-      create_op.symbol = symbol;
-      create_op.transferable = transferable;
-      create_op.options.issuer = get_account(issuer).get_id();
-      create_op.options.max_supply = max_supply;
-      create_op.options.fixed_max_supply = fixed_max_supply;
-      create_op.options.description = description;
-      create_op.definitions = definitions;
-
-      create_op.validate();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( create_op );
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   chain::signed_transaction update_non_fungible_token(const std::string& issuer,
-                                                const std::string& symbol,
-                                                const std::string& description,
-                                                uint32_t max_supply,
-                                                bool fixed_max_supply,
-                                                bool broadcast /* = false */)
-   {
-      chain::non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
-      chain::non_fungible_token_update_definition_operation update_op;
-      update_op.current_issuer = nft_obj.options.issuer;
-      update_op.nft_id = nft_obj.get_id();
-      update_op.options.issuer = issuer.empty() ? nft_obj.options.issuer : get_account(issuer).get_id();
-      update_op.options.max_supply = max_supply;
-      update_op.options.fixed_max_supply = fixed_max_supply;
-      update_op.options.description = description;
-
-      update_op.validate();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( update_op );
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   chain::signed_transaction issue_non_fungible_token(const std::string& to_account,
-                                               const std::string& symbol,
-                                               const fc::variants& data,
-                                               const std::string& memo,
-                                               bool broadcast /* = false */)
-   {
-      chain::non_fungible_token_object nft_obj = get_non_fungible_token(symbol);
-      chain::account_object to = get_account(to_account);
-      chain::account_object issuer = get_account(nft_obj.options.issuer);
-
-      chain::non_fungible_token_issue_operation issue_op;
-      issue_op.issuer = nft_obj.options.issuer;
-      issue_op.to = to.id;
-      issue_op.nft_id = nft_obj.get_id();
-      issue_op.data = data;
-
-      if(!memo.empty())
-         issue_op.memo = chain::memo_data(memo, get_private_key(issuer.options.memo_key), to.options.memo_key);
-
-      issue_op.validate();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( issue_op );
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   chain::signed_transaction transfer_non_fungible_token_data(const std::string& to_account,
-                                                       chain::non_fungible_token_data_id_type nft_data_id,
-                                                       const std::string& memo,
-                                                       bool broadcast /* = false */)
-   {
-      chain::non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
-      chain::account_object from = get_account(nft_data.owner);
-      chain::account_object to = get_account(to_account);
-
-      chain::non_fungible_token_transfer_operation transfer_op;
-      transfer_op.from = nft_data.owner;
-      transfer_op.to = to.id;
-      transfer_op.nft_data_id = nft_data.get_id();
-
-      if(!memo.empty())
-         transfer_op.memo = chain::memo_data(memo, get_private_key(from.options.memo_key), to.options.memo_key);
-
-      transfer_op.validate();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( transfer_op );
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   chain::signed_transaction burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id, bool broadcast /* = false */)
-   {
-      return transfer_non_fungible_token_data(static_cast<std::string>(static_cast<db::object_id_type>(GRAPHENE_NULL_ACCOUNT)), nft_data_id, "", broadcast);
-   }
-
-   chain::signed_transaction update_non_fungible_token_data(const std::string& modifier,
-                                                     chain::non_fungible_token_data_id_type nft_data_id,
-                                                     const std::vector<std::pair<std::string, fc::variant>>& data,
-                                                     bool broadcast /* = false */)
-   {
-      chain::non_fungible_token_data_object nft_data = get_non_fungible_token_data(nft_data_id);
-      chain::non_fungible_token_update_data_operation data_op;
-      data_op.modifier = get_account(modifier).get_id();
-      data_op.nft_data_id = nft_data.get_id();
-      data_op.data = data;
-
-      data_op.validate();
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( data_op );
-      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   chain::miner_object get_miner(const std::string& owner_account) const
-   {
-      try
-      {
-         fc::optional<chain::miner_id_type> miner_id = maybe_id<chain::miner_id_type>(owner_account);
-         if (miner_id)
-         {
-            std::vector<chain::miner_id_type> ids_to_get;
-            ids_to_get.push_back(*miner_id);
-            std::vector<fc::optional<chain::miner_object>> miner_objects = _remote_db->get_miners(ids_to_get);
-            if (miner_objects.front())
-               return *miner_objects.front();
-            FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
-         }
-         else
-         {
-            // then maybe it's the owner account
-           chain:: account_id_type owner_account_id = get_account(owner_account).get_id();
-            fc::optional<chain::miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
-            if (miner)
-               return *miner;
-            else
-               FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
-         }
-      }
-      FC_CAPTURE_AND_RETHROW( (owner_account) )
-   }
-
-   chain::signed_transaction create_miner(const std::string& owner_account,
-                                   const std::string& url,
-                                   bool broadcast /* = false */)
-   { try {
-      chain::account_object miner_account = get_account(owner_account);
-      chain::private_key_type active_private_key = get_private_key_for_account(miner_account);
-      int miner_key_index = find_first_unused_derived_key_index(active_private_key);
-      chain::private_key_type miner_private_key = utilities::derive_private_key(utilities::key_to_wif(active_private_key), miner_key_index);
-      chain::public_key_type miner_public_key = miner_private_key.get_public_key();
-
-      chain::miner_create_operation miner_create_op;
-      miner_create_op.miner_account = miner_account.id;
-      miner_create_op.block_signing_key = miner_public_key;
-      miner_create_op.url = url;
-
-      if (_remote_db->get_miner_by_account(miner_create_op.miner_account))
-         FC_THROW("Account ${owner_account} is already a miner", ("owner_account", owner_account));
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( miner_create_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      _wallet.pending_miner_registrations[owner_account] = utilities::key_to_wif(miner_private_key);
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (owner_account)(broadcast) ) }
-
-   chain::signed_transaction update_miner(const std::string& miner_name,
-                                   const std::string& url,
-                                   const std::string& block_signing_key,
-                                   bool broadcast /* = false */)
-   { try {
-      chain::miner_object miner = get_miner(miner_name);
-      chain::account_object miner_account = get_account( miner.miner_account );
-      chain::private_key_type active_private_key = get_private_key_for_account(miner_account);
-
-      chain::miner_update_operation miner_update_op;
-      miner_update_op.miner = miner.id;
-      miner_update_op.miner_account = miner_account.id;
-      if( !url.empty() )
-         miner_update_op.new_url = url;
-      if( !block_signing_key.empty() )
-         miner_update_op.new_signing_key = chain::public_key_type( block_signing_key );
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( miner_update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (miner_name)(url)(block_signing_key)(broadcast) ) }
-
-   std::vector<vesting_balance_object_with_info> get_vesting_balances(const std::string& account_name) const
-   { try {
-      fc::optional<chain::vesting_balance_id_type> vbid = maybe_id<chain::vesting_balance_id_type>( account_name );
-      std::vector<vesting_balance_object_with_info> result;
-      fc::time_point_sec now = _remote_db->get_dynamic_global_properties().time;
-
-      if( vbid )
-      {
-         result.emplace_back( get_object<chain::vesting_balance_object>(*vbid), now );
-         return result;
-      }
-
-      // try casting to avoid a round-trip if we were given an account ID
-      fc::optional<chain::account_id_type> acct_id = maybe_id<chain::account_id_type>( account_name );
-      if( !acct_id )
-         acct_id = get_account( account_name ).id;
-
-      std::vector<chain::vesting_balance_object> vbos = _remote_db->get_vesting_balances( *acct_id );
-      if( vbos.size() == 0 )
-         return result;
-
-      for( const chain::vesting_balance_object& vbo : vbos )
-         result.emplace_back( vbo, now );
-
-      return result;
-   } FC_CAPTURE_AND_RETHROW( (account_name) )
-   }
-
-   chain::signed_transaction withdraw_vesting(const std::string& miner_name,
-                                       const std::string& amount,
-                                       const std::string& asset_symbol,
-                                       bool broadcast = false )
-   { try {
-      chain::asset_object asset_obj = get_asset( asset_symbol );
-      fc::optional<chain::vesting_balance_id_type> vbid = maybe_id<chain::vesting_balance_id_type>(miner_name);
-      if( !vbid )
-      {
-         chain::miner_object wit = get_miner( miner_name );
-         FC_ASSERT( wit.pay_vb );
-         vbid = wit.pay_vb;
-      }
-
-      chain::vesting_balance_object vbo = get_object<chain::vesting_balance_object>( *vbid );
-      chain::vesting_balance_withdraw_operation vesting_balance_withdraw_op;
-
-      vesting_balance_withdraw_op.vesting_balance = *vbid;
-      vesting_balance_withdraw_op.owner = vbo.owner;
-      vesting_balance_withdraw_op.amount = asset_obj.amount_from_string(amount);
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( vesting_balance_withdraw_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (miner_name)(amount) )
-   }
-
-   chain::signed_transaction vote_for_miner(const std::string& voting_account,
-                                     const std::string& miner,
-                                     bool approve,
-                                     bool broadcast /* = false */)
-   { try {
-      chain::account_object voting_account_object = get_account(voting_account);
-      chain::account_id_type miner_owner_account_id = get_account(miner).get_id();
-      fc::optional<chain::miner_object> miner_obj = _remote_db->get_miner_by_account(miner_owner_account_id);
-      if(!miner_obj)
-         FC_THROW_EXCEPTION(account_is_not_registered_as_miner_exception, "Account: ${miner}", ("miner", miner));
-
-      if (approve)
-      {
-         auto insert_result = voting_account_object.options.votes.insert(miner_obj->vote_id);
-         if (!insert_result.second)
-            FC_THROW_EXCEPTION(account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
-      }
-      else
-      {
-         auto votes_removed = voting_account_object.options.votes.erase(miner_obj->vote_id);
-         if (!votes_removed)
-            FC_THROW_EXCEPTION(account_is_already_not_voting_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
-      }
-      chain::account_update_operation account_update_op;
-      account_update_op.account = voting_account_object.id;
-      account_update_op.new_options = voting_account_object.options;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( account_update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (voting_account)(miner)(approve)(broadcast) ) }
-
-   chain::signed_transaction set_voting_proxy(const std::string& account_to_modify,
-                                       fc::optional<std::string> voting_account,
-                                       bool broadcast /* = false */)
-   { try {
-      chain::account_object account_object_to_modify = get_account(account_to_modify);
-      if (voting_account)
-      {
-         chain::account_id_type new_voting_account_id = get_account(*voting_account).get_id();
-         if(account_object_to_modify.options.voting_account == new_voting_account_id)
-            FC_THROW_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, "For: ${account} voter: ${voter}", ("account", account_to_modify)("voter", *voting_account));
-
-         account_object_to_modify.options.voting_account = new_voting_account_id;
-      }
-      else
-      {
-         if(account_object_to_modify.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT)
-            FC_THROW_EXCEPTION(account_was_already_voting_for_itself_exception, "Account: ${account}", ("account", account_to_modify));
-
-         account_object_to_modify.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
-      }
-
-      chain::account_update_operation account_update_op;
-      account_update_op.account = account_object_to_modify.id;
-      account_update_op.new_options = account_object_to_modify.options;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( account_update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(voting_account)(broadcast) ) }
-
-   chain::signed_transaction set_desired_miner_count(const std::string& account_to_modify,
-                                              uint16_t desired_number_of_miners,
-                                              bool broadcast /* = false */)
-   { try {
-      chain::account_object account_object_to_modify = get_account(account_to_modify);
-
-      if(account_object_to_modify.options.num_miner == desired_number_of_miners)
-         FC_THROW_EXCEPTION(account_was_already_voting_for_miners_exception, "Account: ${account} number of miners: ${miners} ", ("account", account_to_modify)("miners", desired_number_of_miners));
-
-      account_object_to_modify.options.num_miner = desired_number_of_miners;
-
-      chain::account_update_operation account_update_op;
-      account_update_op.account = account_object_to_modify.id;
-      account_update_op.new_options = account_object_to_modify.options;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( account_update_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (account_to_modify)(desired_number_of_miners)(broadcast) ) }
-
-   std::vector<miner_voting_info> search_miner_voting(const std::string& account_id,
-                                                      const std::string& filter,
-                                                      bool only_my_votes,
-                                                      const std::string& order,
-                                                      const std::string& id,
-                                                      uint32_t count ) const
-   {
-      std::vector<app::miner_voting_info> tmp_result = _remote_db->search_miner_voting(account_id, filter, only_my_votes, order, id, count);
-
-      std::vector<miner_voting_info> result;
-      result.reserve(tmp_result.size());
-
-      for (const auto& item : tmp_result) {
-         miner_voting_info info;
-         info.id    = item.id;
-         info.name  = item.name;
-         info.url   = item.url;
-         info.total_votes = item.total_votes;
-         info.voted = item.voted;
-
-         result.push_back(info);
-      }
-
-      return result;
-   }
-
-   chain::signed_transaction sign_transaction(chain::signed_transaction tx, bool broadcast = false)
-   {
-      boost::container::flat_set<chain::account_id_type> req_active_approvals;
-      boost::container::flat_set<chain::account_id_type> req_owner_approvals;
-      std::vector<chain::authority> other_auths;
-
-      tx.get_required_authorities( req_active_approvals, req_owner_approvals, other_auths );
-
-      for( const auto& auth : other_auths )
-         for( const auto& a : auth.account_auths )
-            req_active_approvals.insert(a.first);
-
-      // std::merge lets us de-duplicate account_id's that occur in both
-      //   sets, and dump them into a vector (as required by remote_db api)
-      //   at the same time
-      std::vector<chain::account_id_type> v_approving_account_ids;
-      std::merge(req_active_approvals.begin(), req_active_approvals.end(),
-                 req_owner_approvals.begin() , req_owner_approvals.end(),
-                 std::back_inserter(v_approving_account_ids));
-
-      /// TODO: fetch the accounts specified via other_auths as well.
-
-      std::vector<fc::optional<chain::account_object>> approving_account_objects = _remote_db->get_accounts( v_approving_account_ids );
-
-      /// TODO: recursively check one layer deeper in the authority tree for keys
-
-      FC_ASSERT( approving_account_objects.size() == v_approving_account_ids.size() );
-
-      boost::container::flat_map<chain::account_id_type, chain::account_object*> approving_account_lut;
-      size_t i = 0;
-      for( fc::optional<chain::account_object>& approving_acct : approving_account_objects )
-      {
-         if( !approving_acct.valid() )
-         {
-            wlog( "operation_get_required_auths said approval of non-existing account ${id} was needed",
-                  ("id", v_approving_account_ids[i]) );
-            i++;
-            continue;
-         }
-         approving_account_lut[ approving_acct->id ] = &(*approving_acct);
-         i++;
-      }
-
-      boost::container::flat_set<chain::public_key_type> approving_key_set;
-      for( chain::account_id_type acct_id : req_active_approvals )
-      {
-         const auto it = approving_account_lut.find( acct_id );
-         if( it == approving_account_lut.end() )
-            continue;
-         const chain::account_object* acct = it->second;
-         std::vector<chain::public_key_type> v_approving_keys = acct->active.get_keys();
-         for( const chain::public_key_type& approving_key : v_approving_keys )
-            approving_key_set.insert( approving_key );
-      }
-      for( chain::account_id_type acct_id : req_owner_approvals )
-      {
-         const auto it = approving_account_lut.find( acct_id );
-         if( it == approving_account_lut.end() )
-            continue;
-         const chain::account_object* acct = it->second;
-         std::vector<chain::public_key_type> v_approving_keys = acct->owner.get_keys();
-         for( const chain::public_key_type& approving_key : v_approving_keys )
-            approving_key_set.insert( approving_key );
-      }
-      for( const chain::authority& a : other_auths )
-      {
-         for( const auto& k : a.key_auths )
-            approving_key_set.insert( k.first );
-      }
-
-      auto dyn_props = get_dynamic_global_properties();
-      tx.set_reference_block( dyn_props.head_block_id );
-
-      // first, some bookkeeping, expire old items from _recently_generated_transactions
-      // since transactions include the head block id, we just need the index for keeping transactions unique
-      // when there are multiple transactions in the same block.  choose a time period that should be at
-      // least one block long, even in the worst case.  2 minutes ought to be plenty.
-      fc::time_point_sec oldest_transaction_ids_to_track(dyn_props.time - fc::minutes(2));
-      auto oldest_transaction_record_iter = _recently_generated_transactions.get<timestamp_index>().lower_bound(oldest_transaction_ids_to_track);
-      auto begin_iter = _recently_generated_transactions.get<timestamp_index>().begin();
-      _recently_generated_transactions.get<timestamp_index>().erase(begin_iter, oldest_transaction_record_iter);
-
-      uint32_t expiration_time_offset = 0;
-      for (;;)
-      {
-         tx.set_expiration( dyn_props.time + fc::seconds(30 + expiration_time_offset) );
-         tx.signatures.clear();
-
-         for( chain::public_key_type& key : approving_key_set )
-         {
-            auto it = _keys.find(key);
-            if( it != _keys.end() )
-            {
-               fc::optional<chain::private_key_type> privkey = utilities::wif_to_key( it->second );
-               FC_ASSERT( privkey.valid(), "Malformed private key in _keys" );
-               tx.sign( *privkey, _chain_id );
-            }
-            /// TODO: if transaction has enough signatures to be "valid" don't add any more,
-            /// there are cases where the wallet may have more keys than strictly necessary and
-            /// the transaction will be rejected if the transaction validates without requiring
-            /// all signatures provided
-         }
-
-         chain::transaction_id_type this_transaction_id = tx.id();
-         auto iter = _recently_generated_transactions.find(this_transaction_id);
-         if (iter == _recently_generated_transactions.end())
-         {
-            // we haven't generated this transaction before, the usual case
-            recently_generated_transaction_record this_transaction_record;
-            this_transaction_record.generation_time = dyn_props.time;
-            this_transaction_record.transaction_id = this_transaction_id;
-            _recently_generated_transactions.insert(this_transaction_record);
-            break;
-         }
-
-         // else we've generated a dupe, increment expiration time and re-sign it
-         ++expiration_time_offset;
-      }
-
-      if( broadcast )
-      {
-         try
-         {
-            dlog("about to broadcast tx: ${t}", ("t", tx));
-            _remote_net_broadcast->broadcast_transaction( tx );
-         }
-         catch (const fc::exception& e)
-         {
-            elog("Caught exception while broadcasting tx ${id}:  ${e}", ("id", tx.id().str())("e", e.to_detail_string()) );
-            throw;
-         }
-      }
-
-      return tx;
-   }
-
-   chain::signed_transaction transfer(const std::string& from,
-                               const std::string& to,
-                               const std::string& amount,
-                               const std::string& asset_symbol,
-                               const std::string& memo,
-                               bool broadcast = false)
-   { try {
-      chain::account_object from_account = get_account(from);
-      chain::account_id_type from_id = from_account.id;
-
-      chain::asset_object asset_obj = get_asset(asset_symbol);
-
-      chain::account_object to_account;
-      db::object_id_type to_obj_id;
-
-      bool is_account = true;
-
-      try {
-         to_account = get_account(to);
-         to_obj_id = db::object_id_type(to_account.id);
-      }
-      catch ( const fc::exception& )
-      {
-         is_account = false;
-      }
-
-      if( !is_account )
-      {
-         to_obj_id = db::object_id_type(to);
-         chain::content_id_type content_id = to_obj_id.as<chain::content_id_type>();
-         const chain::content_object content_obj = get_object<chain::content_object>(content_id);
-         to_account = get_account( content_obj.author);
-      }
-
-      chain::signed_transaction tx;
-      chain::transfer_operation xfer_op;
-
-      xfer_op.from = from_id;
-      xfer_op.to = to_obj_id;
-      xfer_op.amount = asset_obj.amount_from_string(amount);
-
-      if( !memo.empty() )
-      {
-         xfer_op.memo = chain::memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
-      }
-
-      tx.operations.push_back(xfer_op);
-
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
-
-   chain::signed_transaction propose_transfer(const std::string& proposer,
-                         const std::string& from,
-                         const std::string& to,
-                         const std::string& amount,
-                         const std::string& asset_symbol,
-                         const std::string& memo,
-                         fc::time_point_sec expiration)
-   {
-      transaction_handle_type propose_num = begin_builder_transaction();
-      chain::transfer_obsolete_operation op;
-      chain::account_object from_account = get_account(from);
-      chain::account_object to_account = get_account(to);
-      op.from = from_account.id;
-      op.to = to_account.id;
-      chain::asset_object asset_obj = get_asset(asset_symbol);
-      op.amount = asset_obj.amount_from_string(amount);
-      if( !memo.empty() )
-      {
-         op.memo = chain::memo_data(memo, get_private_key(from_account.options.memo_key), to_account.options.memo_key);
-      }
-
-      add_operation_to_builder_transaction(propose_num, op);
-      set_fees_on_builder_transaction(propose_num, std::string(GRAPHENE_SYMBOL));
-
-      return propose_builder_transaction2(propose_num, proposer, expiration);
-   }
-
-   std::string decrypt_memo( const chain::memo_data& memo, const chain::account_object& from_account, const chain::account_object& to_account ) const
-   {
-      FC_ASSERT(_keys.count(memo.to) || _keys.count(memo.from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", memo.to)("from",memo.from));
-      std::string memo_result;
-      if( _keys.count(memo.to) ) {
-         std::vector<chain::private_key_type> keys_to_try_to;
-         auto my_memo_key = utilities::wif_to_key(_keys.at(memo.to));
-
-         FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
-         keys_to_try_to.push_back(*my_memo_key);
-         for( auto k: to_account.active.key_auths ) {
-            auto key_itr = _keys.find(k.first);
-            if( key_itr == _keys.end() )
-               continue;
-            auto my_key = utilities::wif_to_key(key_itr->second);
-            if(my_key)
-               keys_to_try_to.push_back(*my_key);
-         }
-         for( auto k: to_account.owner.key_auths ) {
-            auto key_itr = _keys.find(k.first);
-            if( key_itr == _keys.end() )
-               continue;
-            auto my_key = utilities::wif_to_key(key_itr->second);
-            if(my_key)
-               keys_to_try_to.push_back(*my_key);
-         }
-
-         for( auto k : keys_to_try_to ){
-            try{
-               memo_result = memo.get_message(k, memo.from);
-               return memo_result;
-            }catch(...){}
-         }
-
-         std::vector<chain::public_key_type> keys_to_try_from;
-         for( auto k : from_account.active.key_auths ){
-            keys_to_try_from.push_back(k.first);
-         }
-         for( auto k : from_account.owner.key_auths ){
-            keys_to_try_from.push_back(k.first);
-         }
-         for( auto k : keys_to_try_from ){
-            try{
-               memo_result = memo.get_message(*my_memo_key, k);
-               return memo_result;
-            }catch(...){}
-         }
-
-      } else {
-         std::vector<chain::private_key_type> keys_to_try_from;
-         auto my_memo_key = utilities::wif_to_key(_keys.at(memo.from));
-
-         FC_ASSERT(my_memo_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
-         keys_to_try_from.push_back(*my_memo_key);
-         for( auto k: from_account.active.key_auths ) {
-            auto key_itr = _keys.find(k.first);
-            if( key_itr == _keys.end() )
-               continue;
-            auto my_key = utilities::wif_to_key(key_itr->second);
-            if(my_key)
-               keys_to_try_from.push_back(*my_key);
-         }
-         for( auto k: from_account.owner.key_auths ) {
-            auto key_itr = _keys.find(k.first);
-            if( key_itr == _keys.end() )
-               continue;
-            auto my_key = utilities::wif_to_key(key_itr->second);
-            if(my_key)
-               keys_to_try_from.push_back(*my_key);
-         }
-
-         for( auto k : keys_to_try_from ){
-            try{
-               memo_result = memo.get_message(k, memo.to);
-               return memo_result;
-            }catch(...){}
-         }
-
-         std::vector<chain::public_key_type> keys_to_try_to;
-         for( auto k : to_account.active.key_auths ) {
-            keys_to_try_to.push_back(k.first);
-         }
-         for( auto k : to_account.owner.key_auths ) {
-            keys_to_try_to.push_back(k.first);
-         }
-         for( auto k : keys_to_try_to ) {
-            try {
-               memo_result = memo.get_message(*my_memo_key, k);
-               return memo_result;
-            } catch( ... ) {}
-         }
-
-      }
-
-      FC_ASSERT(false);
-   }
-
-   std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)>> get_result_formatters() const
-   {
-      std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > m;
-      m["help"] = m["get_help"] = m["from_command_file"] = [](fc::variant result, const fc::variants& a)
-      {
-         return result.get_string();
-      };
-
-      return m;
-   }
-
-   chain::signed_transaction propose_parameter_change(
-      const std::string& proposing_account,
-      fc::time_point_sec expiration_time,
-      const fc::variant_object& changed_values,
-      bool broadcast = false)
-   {
-      FC_ASSERT( !changed_values.contains("current_fees") );
-
-      const chain::chain_parameters& current_params = get_global_properties().parameters;
-      chain::chain_parameters new_params = current_params;
-      fc::reflector<chain::chain_parameters>::visit(
-         fc::from_variant_visitor<chain::chain_parameters>( changed_values, new_params )
-         );
-
-      chain::miner_update_global_parameters_operation update_op;
-      update_op.new_parameters = new_params;
-
-      chain::proposal_create_operation prop_op;
-
-      prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.miner_proposal_review_period;
-      prop_op.fee_paying_account = get_account(proposing_account).id;
-
-      prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
-
-      chain::signed_transaction tx;
-      tx.operations.push_back(prop_op);
-      set_operation_fees(tx, current_params.current_fees);
-      tx.validate();
-
-      return sign_transaction(tx, broadcast);
-   }
-
-   chain::signed_transaction propose_fee_change(
-      const std::string& proposing_account,
-      fc::time_point_sec expiration_time,
-      const fc::variant_object& changed_fees,
-      bool broadcast = false)
-   {
-      const chain::chain_parameters& current_params = get_global_properties().parameters;
-      const chain::fee_schedule_type& current_fees = *(current_params.current_fees);
-
-      boost::container::flat_map< int, chain::fee_parameters > fee_map;
-      fee_map.reserve( current_fees.parameters.size() );
-      for( const chain::fee_parameters& op_fee : current_fees.parameters )
-         fee_map[ op_fee.which() ] = op_fee;
-      uint32_t scale = current_fees.scale;
-
-      for( const auto& item : changed_fees )
-      {
-         const std::string& key = item.key();
-         if( key == "scale" )
-         {
-            int64_t _scale = item.value().as_int64();
-            FC_ASSERT( _scale >= 0 );
-            FC_ASSERT( _scale <= std::numeric_limits<uint32_t>::max() );
-            scale = uint32_t( _scale );
-            continue;
-         }
-         // is key a number?
-         auto is_numeric = [&]() -> bool
-         {
-            size_t n = key.size();
-            for( size_t i=0; i<n; i++ )
-            {
-               if( !isdigit( key[i] ) )
-                  return false;
-            }
-            return true;
-         };
-
-         int which;
-         if( is_numeric() )
-            which = std::stoi( key );
-         else
-         {
-            const auto& n2w = _operation_which_map.name_to_which;
-            auto it = n2w.find( key );
-            FC_ASSERT( it != n2w.end(), "unknown operation" );
-            which = it->second;
-         }
-
-         chain::fee_parameters fp = from_which_variant<chain::fee_parameters>( which, item.value() );
-         fee_map[ which ] = fp;
-      }
-
-      chain::fee_schedule_type new_fees;
-
-      for( const std::pair< int, chain::fee_parameters >& item : fee_map )
-         new_fees.parameters.insert( item.second );
-      new_fees.scale = scale;
-
-      chain::chain_parameters new_params = current_params;
-      new_params.current_fees = new_fees;
-
-      chain::miner_update_global_parameters_operation update_op;
-      update_op.new_parameters = new_params;
-
-      chain::proposal_create_operation prop_op;
-
-      prop_op.expiration_time = expiration_time;
-      prop_op.review_period_seconds = current_params.miner_proposal_review_period;
-      prop_op.fee_paying_account = get_account(proposing_account).id;
-
-      prop_op.proposed_ops.emplace_back( update_op );
-      current_params.current_fees->set_fee( prop_op.proposed_ops.back().op );
-
-      chain::signed_transaction tx;
-      tx.operations.push_back(prop_op);
-      set_operation_fees(tx, current_params.current_fees);
-      tx.validate();
-
-      return sign_transaction(tx, broadcast);
-   }
-
-   chain::signed_transaction approve_proposal(
-      const std::string& fee_paying_account,
-      const std::string& proposal_id,
-      const approval_delta& delta,
-      bool broadcast = false)
-   {
-      chain::proposal_update_operation update_op;
-
-      update_op.fee_paying_account = get_account(fee_paying_account).id;
-      update_op.proposal = fc::variant(proposal_id).as<chain::proposal_id_type>();
-      // make sure the proposal exists
-      get_object( update_op.proposal );
-
-      for( const std::string& name : delta.active_approvals_to_add )
-         update_op.active_approvals_to_add.insert( get_account( name ).id );
-      for( const std::string& name : delta.active_approvals_to_remove )
-         update_op.active_approvals_to_remove.insert( get_account( name ).id );
-      for( const std::string& name : delta.owner_approvals_to_add )
-         update_op.owner_approvals_to_add.insert( get_account( name ).id );
-      for( const std::string& name : delta.owner_approvals_to_remove )
-         update_op.owner_approvals_to_remove.insert( get_account( name ).id );
-      for( const std::string& k : delta.key_approvals_to_add )
-         update_op.key_approvals_to_add.insert( chain::public_key_type( k ) );
-      for( const std::string& k : delta.key_approvals_to_remove )
-         update_op.key_approvals_to_remove.insert( chain::public_key_type( k ) );
-
-      chain::signed_transaction tx;
-      tx.operations.push_back(update_op);
-      set_operation_fees(tx, get_global_properties().parameters.current_fees);
-      tx.validate();
-      return sign_transaction(tx, broadcast);
-   }
-
-
-   void submit_content_utility(chain::content_submit_operation& submit_op,
-                               std::vector<regional_price_info> const& price_amounts)
-   {
-      std::vector<chain::regional_price> arr_prices;
-
-      for (auto const& item : price_amounts)
-      {
-
-         uint32_t region_code_for = chain::RegionCodes::OO_none;
-
-         auto it = chain::RegionCodes::s_mapNameToCode.find(item.region);
-         if (it != chain::RegionCodes::s_mapNameToCode.end())
-            region_code_for = it->second;
-         else
-            FC_ASSERT(false, "Invalid region code");
-
-         chain::asset_object currency = get_asset(item.asset_symbol);
-
-         arr_prices.push_back({region_code_for, currency.amount_from_string(item.amount)});
-      }
-
-      submit_op.price = arr_prices;
-   }
-
-   chain::signed_transaction submit_content(std::string const& author,
-                                     std::vector<std::pair<std::string, uint32_t>> co_authors,
-                                     std::string const& URI,
-                                     std::vector<regional_price_info> const& price_amounts,
-                                     fc::ripemd160 const& hash,
-                                     uint64_t size,
-                                     std::vector<chain::account_id_type> const& seeders,
-                                     uint32_t quorum,
-                                     fc::time_point_sec const& expiration,
-                                     std::string const& publishing_fee_symbol_name,
-                                     std::string const& publishing_fee_amount,
-                                     std::string const& synopsis,
-                                     decent::encrypt::DInteger const& secret,
-                                     decent::encrypt::CustodyData const& cd,
-                                     bool broadcast/* = false */)
-   {
-      try
-      {
-         auto& pmc = decent::package::PackageManagerConfigurator::instance();
-         decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());
-         chain::account_id_type author_account = get_account( author ).get_id();
-
-         std::map<chain::account_id_type, uint32_t> co_authors_id_to_split;
-         if( !co_authors.empty() )
-         {
-            for( auto const& element : co_authors )
-            {
-               chain::account_id_type co_author = get_account( element.first ).get_id();
-               co_authors_id_to_split[ co_author ] = element.second;
-            }
-         }
-
-         // checking for duplicates
-         FC_ASSERT( co_authors.size() == co_authors_id_to_split.size(), "Duplicity in the list of co-authors is not allowed." );
-
-         chain::asset_object fee_asset_obj = get_asset(publishing_fee_symbol_name);
-
-         decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(quorum), static_cast<uint16_t>(seeders.size()), secret);
-         ss.calculate_split();
-         chain::content_submit_operation submit_op;
-         for( int i =0; i<(int)seeders.size(); i++ )
-         {
-            const auto& s = _remote_db->get_seeder( seeders[i] );
-            decent::encrypt::Ciphertext cp;
-            decent::encrypt::point p = ss.split[i];
-            decent::encrypt::el_gamal_encrypt( p ,s->pubKey ,cp );
-            submit_op.key_parts.push_back(cp);
-         }
-
-         submit_op.author = author_account;
-         submit_op.co_authors = co_authors_id_to_split;
-         submit_op.URI = URI;
-         submit_content_utility(submit_op, price_amounts);
-         submit_op.hash = hash;
-         submit_op.size = size;
-         submit_op.seeders = seeders;
-         submit_op.quorum = quorum;
-         submit_op.expiration = expiration;
-         submit_op.publishing_fee = fee_asset_obj.amount_from_string(publishing_fee_amount);
-         submit_op.synopsis = synopsis;
-         submit_op.cd = cd;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( submit_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
-   }
-
-   chain::content_keys submit_content_async(std::string const& author,
-                                     std::vector<std::pair<std::string, uint32_t>> co_authors,
-                                     std::string const& content_dir,
-                                     std::string const& samples_dir,
-                                     std::string const& protocol,
-                                     std::vector<regional_price_info> const& price_amounts,
-                                     std::vector<chain::account_id_type> const& seeders,
-                                     fc::time_point_sec const& expiration,
-                                     std::string const& synopsis)
-   {
-      try
-      {
-         auto& pmc = decent::package::PackageManagerConfigurator::instance();
-         decent::check_ipfs_minimal_version(pmc.get_ipfs_host(), pmc.get_ipfs_port());
-         chain::account_object author_account = get_account( author );
-
-         std::map<chain::account_id_type, uint32_t> co_authors_id_to_split;
-         if( !co_authors.empty() )
-         {
-            for( auto const &element : co_authors )
-            {
-               chain::account_id_type co_author = get_account( element.first ).get_id();
-               co_authors_id_to_split[ co_author ] = element.second;
-            }
-         }
-
-         // checking for duplicates
-         if(co_authors.size() != co_authors_id_to_split.size())
-            FC_THROW_EXCEPTION(duplicity_at_the_list_of_coauthors_not_allowed_exception, "");
-
-         if(price_amounts.empty())
-            FC_THROW_EXCEPTION(the_prices_of_the_content_per_region_cannot_be_empty_exception, "");
-         if(fc::time_point_sec(fc::time_point::now()) > expiration)
-            FC_THROW_EXCEPTION(invalid_content_expiration_exception, "");
-
-         CryptoPP::Integer secret(randomGenerator, 256);
-         while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
-            CryptoPP::Integer tmp(randomGenerator, 256);
-            secret = tmp;
-         }
-
-         chain::content_keys keys;
-#if CRYPTOPP_VERSION >= 600
-         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
-#else
-         secret.Encode((byte*)keys.key._hash, 32);
-#endif
-
-         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
-         ss.calculate_split();
-
-         for( int i =0; i < (int)seeders.size(); i++ )
-         {
-            const auto& s = _remote_db->get_seeder( seeders[i] );
-            if(!s)
-               FC_THROW_EXCEPTION(seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
-            decent::encrypt::Ciphertext cp;
-            decent::encrypt::point p = ss.split[i];
-
-            decent::encrypt::DIntegerString a(p.first);
-            decent::encrypt::DIntegerString b(p.second);
-
-            ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
-
-            decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
-            keys.parts.push_back(cp);
-         }
-
-         chain::content_submit_operation submit_op;
-         submit_op.key_parts = keys.parts;
-         submit_op.author = author_account.id;
-         submit_op.co_authors = co_authors_id_to_split;
-         submit_content_utility(submit_op, price_amounts);
-
-         submit_op.seeders = seeders;
-         submit_op.quorum = keys.quorum;
-         submit_op.expiration = expiration;
-         submit_op.synopsis = synopsis;
-
-         auto& package_manager = decent::package::PackageManager::instance();
-         auto package_handle = package_manager.get_package(content_dir, samples_dir, keys.key);
-         std::shared_ptr<submit_transfer_listener> listener_ptr = std::make_shared<submit_transfer_listener>(*this, package_handle, submit_op, protocol);
-         _package_manager_listeners.push_back(listener_ptr);
-
-         package_handle->add_event_listener(listener_ptr);
-         package_handle->create(false);
-
-         //We end up here and return the  to the upper layer. The create method will continue in the background, and once finished, it will call the respective callback of submit_transfer_listener class
-         return keys;
-      }
-      FC_CAPTURE_AND_RETHROW( (author)(content_dir)(samples_dir)(protocol)(price_amounts)(seeders)(expiration)(synopsis) )
-   }
-
-chain::signed_transaction content_cancellation(const std::string& author,
-                                        const std::string& URI,
-                                        bool broadcast)
-{
-   try
-   {
-      chain::content_cancellation_operation cc_op;
-      cc_op.author = get_account( author ).get_id();
-      cc_op.URI = URI;
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( cc_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-      return sign_transaction( tx, broadcast );
-   } FC_CAPTURE_AND_RETHROW( (author)(URI)(broadcast) )
 }
 
-   content_download_status get_download_status(const std::string& consumer, const std::string& URI) const
-   {
-      try {
+wallet_about wallet_api::about() const
+{
+   return my->about();
+}
 
-         chain::account_id_type acc = get_account(consumer).id;
-         fc::optional<chain::buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
-         if (!bobj) {
-            FC_THROW_EXCEPTION(cannot_find_download_object_exception, "");
-         }
+fc::optional<chain::signed_block_with_info> wallet_api::get_block(uint32_t num) const
+{
+   return my->_remote_db->get_block(num);
+}
 
-         fc::optional<chain::content_object> content = _remote_db->get_content( URI );
+chain::global_property_object wallet_api::get_global_properties() const
+{
+   return my->get_global_properties();
+}
 
-         if (!content) {
-             FC_THROW("Invalid content URI");
-         }
+chain::dynamic_global_property_object wallet_api::get_dynamic_global_properties() const
+{
+   return my->get_dynamic_global_properties();
+}
 
-         content_download_status status;
-         status.received_key_parts = static_cast<uint32_t>(bobj->key_particles.size());
-         status.total_key_parts = static_cast<uint32_t>(content->key_parts.size());
+fc::variant wallet_api::get_object(db::object_id_type id) const
+{
+   return my->_remote_db->get_objects({id});
+}
 
-         auto pack = decent::package::PackageManager::instance().find_package(URI);
+wallet_info wallet_api::info() const
+{
+   return my->info();
+}
 
-         if (!pack) {
-             status.total_download_bytes = 0;
-             status.received_download_bytes = 0;
-             status.status_text = "Unknown";
-         } else {
-            if (pack->get_data_state() == decent::package::PackageInfo::CHECKED) {
-
-                status.total_download_bytes = static_cast<int>(pack->get_size());
-                status.received_download_bytes = static_cast<int>(pack->get_size());
-                status.status_text = "Downloaded";
-
-            } else {
-                status.total_download_bytes = static_cast<int>(pack->get_total_size());
-                status.received_download_bytes = static_cast<int>(pack->get_downloaded_size());
-                status.status_text = "Downloading...";
-            }
-         }
-
-         return status;
-      } FC_CAPTURE_AND_RETHROW( (consumer)(URI) )
-   }
-
-   std::string price_to_dct(const std::string& amount, const std::string& asset_symbol_or_id) const
-   {
-      chain::asset_object price_o = get_asset(asset_symbol_or_id);
-      chain::asset price = price_o.amount_from_string(amount);
-      chain::asset result = _remote_db->price_to_dct(price);
-      return std::to_string(result.amount.value);
-   }
-
-   std::vector<app::operation_info> list_operations()
-   {
-       return _remote_db->list_operations();
-   }
-
-   std::string from_command_file( const std::string& command_file_name ) const
-   {
-       std::string result;
-       WalletAPI my_api;
-       bool contains_submit_content_async = false;
-
-       try
-       {
-           std::ifstream cf_in(command_file_name);
-           std::string current_line;
-
-           if (! cf_in.good())
-           {
-               FC_THROW_EXCEPTION(fc::file_not_found_exception, "File: ${f}", ("f", command_file_name));
-           }
-
-           my_api.Connect(get_wallet_filename(), { _wallet.ws_server, _wallet.ws_user, _wallet.ws_password });
-
-           while (std::getline(cf_in, current_line))
-           {
-               if (current_line.size() > 0)
-               {
-                   if (current_line == "unlock" || current_line == "set_password")
-                   {
-                       current_line = fc::get_password_hidden(current_line);
-                   }
-
-                   fc::variants args = fc::json::variants_from_string(current_line + char(EOF));
-                   if( args.size() == 0 )
-                      continue;
-
-                   const std::string& method = args.front().get_string();
-
-                   if (method == "from_command_file")
-                   {
-                       FC_THROW("Method from_command_file cannot be called from within a command file");
-                   }
-
-                   result += my_api.RunTask(current_line) + "\n";
-
-                   if (method == "submit_content_async")
-                   {
-                       contains_submit_content_async = true;
-                   }
-               }
-           }
-
-           if (contains_submit_content_async)
-           {
-               // hold on and periodically check if all package manager listeners are in a final state
-               while (my_api.exec(&wallet_api::is_package_manager_task_waiting))
-               {
-                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-               }
-           }
-
-       } FC_CAPTURE_AND_RETHROW( (command_file_name) )
-
-       return result;
-   }
-
-   void download_content(const std::string& consumer, const std::string& URI, const std::string& str_region_code_from, bool broadcast)
+std::string wallet_api::help() const
+{
+   std::stringstream ss;
+   for (const std::string& method_name : my->method_documentation.get_method_names())
    {
       try
       {
-         fc::optional<chain::content_object> content = _remote_db->get_content( URI );
-         chain::account_object consumer_account = get_account( consumer );
-
-         if (!content)
-         {
-            FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
-         }
-
-         uint32_t region_code_from = chain::RegionCodes::OO_none;
-
-         auto it = chain::RegionCodes::s_mapNameToCode.find(str_region_code_from);
-         if (it != chain::RegionCodes::s_mapNameToCode.end())
-            region_code_from = it->second;
-         //
-         // may want to throw here to forbid purchase from unknown region
-         // but seems can also try to allow purchase if the content has default price
-         //
-
-         fc::optional<chain::asset> op_price = content->price.GetPrice(region_code_from);
-         if (!op_price)
-            FC_THROW_EXCEPTION(content_not_available_for_this_region_exception, "");
-
-
-         chain::request_to_buy_operation request_op;
-         request_op.consumer = consumer_account.id;
-         request_op.URI = URI;
-
-         decent::encrypt::DInteger el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
-
-         request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-         request_op.price = _remote_db->price_to_dct(*op_price);
-         request_op.region_code_from = region_code_from;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( request_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-         sign_transaction( tx, broadcast );
-         auto& package_manager = decent::package::PackageManager::instance();
-         auto package = package_manager.get_package( URI, content->_hash );
-         std::shared_ptr<ipfs_stats_listener> listener_ptr = std::make_shared<ipfs_stats_listener>( URI, *this, consumer_account.id );
-         package->add_event_listener( listener_ptr );
-         package->download();
-
-      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
-   }
-
-   chain::signed_transaction request_to_buy(const std::string& consumer,
-                                     const std::string& URI,
-                                     const std::string& price_asset_symbol,
-                                     const std::string& price_amount,
-                                     const std::string& str_region_code_from,
-                                     bool broadcast/* = false */)
-   { try {
-      chain::account_object consumer_account = get_account( consumer );
-      chain::asset_object asset_obj = get_asset(price_asset_symbol);
-
-      chain::request_to_buy_operation request_op;
-      request_op.consumer = consumer_account.id;
-      request_op.URI = URI;
-
-      decent::encrypt::DInteger el_gamal_priv_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( get_private_key_for_account(consumer_account).get_secret() );
-      request_op.pubKey = decent::encrypt::get_public_el_gamal_key( el_gamal_priv_key );
-
-      fc::optional<chain::content_object> content = _remote_db->get_content( URI );
-      uint32_t region_code_from = chain::RegionCodes::OO_none;
-
-      auto it = chain::RegionCodes::s_mapNameToCode.find(str_region_code_from);
-      if (it != chain::RegionCodes::s_mapNameToCode.end())
-         region_code_from = it->second;
-      //
-      // may want to throw here to forbid purchase from unknown region
-      // but seems can also try to allow purchase if the content has default price
-      //
-
-      request_op.region_code_from = region_code_from;
-      request_op.price = asset_obj.amount_from_string(price_amount);
-
-      chain::signed_transaction tx;
-      tx.operations.push_back( request_op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(price_asset_symbol)(price_amount)(broadcast) )
-   }
-
-   chain::signed_transaction leave_rating_and_comment(const std::string& consumer,
-                                 const std::string& URI,
-                                 uint64_t rating,
-                                 const std::string& comment,
-                                 bool broadcast/* = false */)
-   {
-      try
-      {
-         FC_ASSERT( rating >0 && rating <=5, "Rating shall be 1-5 stars");
-
-         chain::account_object consumer_account = get_account( consumer );
-
-         chain::leave_rating_and_comment_operation leave_rating_op;
-         leave_rating_op.consumer = consumer_account.id;
-         leave_rating_op.URI = URI;
-         leave_rating_op.rating = rating;
-         leave_rating_op.comment = comment;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( leave_rating_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-
-      } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(rating)(comment)(broadcast) )
-   }
-
-   chain::signed_transaction subscribe_to_author( const std::string& from,
-                                           const std::string& to,
-                                           const std::string& price_amount,
-                                           const std::string& price_asset_symbol,
-                                           bool broadcast/* = false */)
-   { try {
-         chain::asset_object asset_obj = get_asset(price_asset_symbol);
-         FC_ASSERT( asset_obj.id == chain::asset_id_type() );
-
-         chain::subscribe_operation subscribe_op;
-         subscribe_op.from = get_account( from ).get_id();
-         subscribe_op.to = get_account( to ).get_id();
-         subscribe_op.price = asset_obj.amount_from_string(price_amount);
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( subscribe_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(price_amount)(price_asset_symbol)(broadcast) ) }
-
-   chain::signed_transaction subscribe_by_author( const std::string& from,
-                                           const std::string& to,
-                                           bool broadcast/* = false */)
-   { try {
-         chain::subscribe_by_author_operation subscribe_op;
-         subscribe_op.from = get_account( from ).get_id();
-         subscribe_op.to = get_account( to ).get_id();
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( subscribe_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (from)(to)(broadcast)) }
-
-   chain::signed_transaction set_subscription( const std::string& account,
-                                        bool allow_subscription,
-                                        uint32_t subscription_period,
-                                        const std::string& price_amount,
-                                        const std::string& price_asset_symbol,
-                                        bool broadcast/* = false */)
-   { try {
-         chain::asset_object asset_obj = get_asset(price_asset_symbol);
-
-         chain::account_object account_object_to_modify = get_account( account );
-         account_object_to_modify.options.allow_subscription = allow_subscription;
-         account_object_to_modify.options.subscription_period = subscription_period;
-         account_object_to_modify.options.price_per_subscribe = asset_obj.amount_from_string(price_amount);
-
-         chain::account_update_operation account_update_op;
-         account_update_op.account = account_object_to_modify.id;
-         account_update_op.new_options = account_object_to_modify.options;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( account_update_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (account)(allow_subscription)(subscription_period)(price_amount)(price_asset_symbol)(broadcast) ) }
-
-  chain::signed_transaction set_automatic_renewal_of_subscription( const std::string& account_id_or_name,
-                                                             chain::subscription_id_type subscription_id,
-                                                             bool automatic_renewal,
-                                                             bool broadcast/* = false */)
-   {
-      try {
-         chain::account_id_type account = get_account( account_id_or_name ).get_id();
-         fc::optional<chain::subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
-
-         if(!subscription_obj)
-            FC_THROW_EXCEPTION(could_not_find_matching_subcription_exception, "Subscription: ${subscription}", ("subscription", subscription_id));
-
-         chain::automatic_renewal_of_subscription_operation aros_op;
-         aros_op.consumer = account;
-         aros_op.subscription = subscription_id;
-         aros_op.automatic_renewal = automatic_renewal;
-
-         chain::signed_transaction tx;
-         tx.operations.push_back( aros_op );
-         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction( tx, broadcast );
-      } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(subscription_id)(automatic_renewal)(broadcast) ) }
-
-   decent::encrypt::DInteger restore_encryption_key(const std::string& account, chain::buying_id_type buying )
-   {
-      chain::account_object buyer_account = get_account( account );
-      const chain::buying_object bo = get_object<chain::buying_object>(buying);
-      const chain::content_object co = *(_remote_db->get_content(bo.URI));
-
-      decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(co.quorum), static_cast<uint16_t>(co.key_parts.size()) );
-      decent::encrypt::point message;
-
-      const auto& el_gamal_priv_key = _el_gamal_keys.find( bo.pubKey );
-      FC_ASSERT( el_gamal_priv_key != _el_gamal_keys.end(), "Wallet does not contain required ElGamal key" );
-
-      int i=0;
-      for( const auto key_particle : bo.key_particles )
-      {
-         auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key->second, message );
-         FC_ASSERT(result == decent::encrypt::ok);
-
-         decent::encrypt::DIntegerString a(message.first);
-         decent::encrypt::DIntegerString b(message.second);
-
-         ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
-         i++;
-         ss.add_point( message );
+         ss << my->method_documentation.get_brief_description(method_name);
       }
+      catch (const fc::key_not_found_exception&)
+      {
+         ss << method_name << " (no help available)\n";
+      }
+   }
+   return ss.str();
+}
 
-      FC_ASSERT( ss.resolvable() );
-      ss.calculate_secret();
-      return ss.secret;
+std::string wallet_api::get_help(const std::string& method) const
+{
+   std::stringstream ss;
+   ss << "\n";
+
+   if( method == "import_key" )
+   {
+      ss << "usage: import_key ACCOUNT_NAME_OR_ID  WIF_PRIVATE_KEY\n\n";
+      ss << "example: import_key \"1.2.11\" 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3\n";
+      ss << "example: import_key \"usera\" 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3\n";
+   }
+   else if( method == "transfer" )
+   {
+      ss << "usage: transfer FROM TO AMOUNT SYMBOL \"memo\" BROADCAST\n\n";
+      ss << "example: transfer \"1.2.11\" \"1.2.4\" 1000.03 DCT \"memo\" true\n";
+      ss << "example: transfer \"usera\" \"userb\" 1000.123 DCT \"memo\" true\n";
+   }
+   else if( method == "create_account_with_brain_key" )
+   {
+      ss << "usage: create_account_with_brain_key BRAIN_KEY ACCOUNT_NAME REGISTRAR BROADCAST\n\n";
+      ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"1.2.11\" true\n";
+      ss << "example: create_account_with_brain_key \"my really long brain key\" \"newaccount\" \"someaccount\" true\n";
+      ss << "\n";
+      ss << "This method should be used if you would like the wallet to generate new keys derived from the brain key.\n";
+      ss << "The BRAIN_KEY will be used as the owner key, and the active key will be derived from the BRAIN_KEY.  Use\n";
+      ss << "register_account if you already know the keys you know the public keys that you would like to register.\n";
+   }
+   else if( method == "register_account" )
+   {
+      ss << "usage: register_account ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY REGISTRAR BROADCAST\n\n";
+      ss << "example: register_account \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" true\n";
+      ss << "\n";
+      ss << "Use this method to register an account for which you do not know the private keys.";
+   }
+   else if( method == "create_monitored_asset" )
+   {
+      ss << "usage: ISSUER SYMBOL PRECISION DESCRIPTION FEED_LIFETIME_SEC MINIMUM_FEEDS BROADCAST\n\n";
+      ss << "PRECISION: the number of digits after the decimal point\n\n";
+
+      ss << "\nExample value of MONITORED ASSET_OPTIONS: \n";
+      ss << fc::json::to_pretty_string(chain::monitored_asset_options());
+   }
+   else
+   {
+      std::string doxygenHelpString = my->method_documentation.get_brief_description(method).append(my->method_documentation.get_detailed_description(method));
+      if (!doxygenHelpString.empty())
+      {
+         auto i = doxygenHelpString.find_first_not_of(" \t\n");
+         ss << doxygenHelpString.substr(i == std::string::npos ? 0 : i);
+      }
+      else
+         ss << "No help defined for method " << method << "\n";
    }
 
-   std::pair<chain::account_id_type, std::vector<chain::account_id_type>> get_author_and_co_authors_by_URI( const std::string& URI )const
-   {
-      fc::optional<chain::content_object> co = _remote_db->get_content( URI );
-      if(!co.valid())
-         FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
-      std::pair<chain::account_id_type, std::vector<chain::account_id_type>> result;
-      result.first = co->author;
-      for( auto const& co_author : co->co_authors )
-         result.second.emplace_back( co_author.first );
+   return ss.str();
+}
 
-      return result;
-   };
+fc::time_point_sec wallet_api::head_block_time() const
+{
+   return my->head_block_time();
+}
 
-   bool is_package_manager_task_waiting()const
-   {
-      for (const auto& listener : _package_manager_listeners)
-      {
-         if (! listener->is_finished())
-         {
-            return true;
-         }
-      }
+void wallet_api::network_add_nodes(const std::vector<std::string>& nodes) const
+{
+   my->network_add_nodes( nodes );
+}
 
+fc::variants wallet_api::network_get_connected_peers() const
+{
+   return my->network_get_connected_peers();
+}
+
+std::string wallet_api::sign_buffer(const std::string& str_buffer,
+                                    const std::string& str_brainkey) const
+{
+   if(str_buffer.empty() || str_brainkey.empty())
+      FC_THROW_EXCEPTION(need_buffer_and_brainkey_exception, "");
+
+   std::string normalized_brain_key = utilities::normalize_brain_key( str_brainkey );
+   chain::private_key_type privkey = utilities::derive_private_key( normalized_brain_key );
+
+   fc::sha256 digest(str_buffer);
+
+   auto sign = privkey.sign_compact(digest);
+
+   return fc::to_hex((const char*)sign.begin(), sign.size());
+}
+
+bool wallet_api::verify_signature(const std::string& str_buffer,
+                                  const std::string& str_publickey,
+                                  const std::string& str_signature) const
+{
+   if (str_buffer.empty() ||
+       str_publickey.empty() ||
+       str_signature.empty())
+      throw std::runtime_error("You need buffer, public key and signature to verify");
+
+   fc::ecc::compact_signature signature;
+   fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
+   fc::sha256 digest(str_buffer);
+
+   chain::public_key_type pub_key(signature, digest);
+   chain::public_key_type provided_key(str_publickey);
+
+   return (provided_key == pub_key);
+}
+
+chain::transaction_id_type wallet_api::get_transaction_id(const chain::signed_transaction& trx) const
+{
+   return trx.id();
+}
+
+fc::optional<chain::processed_transaction> wallet_api::get_transaction_by_id(chain::transaction_id_type id) const
+{
+   return my->_remote_db->get_transaction_by_id( id );
+}
+
+std::vector<app::operation_info> wallet_api::list_operations() const
+{
+   return my->list_operations();
+}
+
+std::string wallet_api::from_command_file( const std::string& command_file_name ) const
+{
+   return my->from_command_file( command_file_name );
+}
+
+std::vector<chain::account_object> wallet_api::list_my_accounts() const
+{
+   return std::vector<chain::account_object>(my->_wallet.my_accounts.begin(), my->_wallet.my_accounts.end());
+}
+
+boost::filesystem::path wallet_api::get_wallet_filename() const
+{
+   return my->get_wallet_filename();
+}
+
+void wallet_api::set_wallet_filename( const boost::filesystem::path& wallet_filename )
+{
+   return my->set_wallet_filename( wallet_filename );
+}
+
+std::string wallet_api::get_private_key(const chain::public_key_type& pubkey) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+
+   return utilities::key_to_wif( my->get_private_key( pubkey ) );
+}
+
+bool wallet_api::is_new()const
+{
+   return my->_wallet.cipher_keys.size() == 0;
+}
+
+bool wallet_api::is_locked()const
+{
+   return my->is_locked();
+}
+
+bool wallet_api::lock()
+{ try {
+   if(is_locked()) {
+      std::cout << "Wallet is already locked" << std::endl;
       return false;
    }
 
-   std::vector<message_data> get_message_objects(fc::optional<chain::account_id_type> sender, fc::optional<chain::account_id_type> receiver, uint32_t max_count)const
-   {
+   my->encrypt_keys2();
+   for( auto & key : my->_keys )
+      key.second = utilities::key_to_wif(chain::private_key_type());
+   my->_keys.clear();
+   my->_el_gamal_keys.clear();
+   my->_checksum = fc::sha512();
+   my->self.lock_changed(true);
+   return true;
+} FC_RETHROW() }
+
+bool wallet_api::unlock(const std::string& password)
+{ try {
+   if(!is_locked()) {
+      std::cout << "Wallet is already unlocked" << std::endl;
+      return false;
+   }
+
+   if(password.size() == 0)
+      FC_THROW_EXCEPTION(password_cannot_be_empty_exception, "");
+
+   auto pw = fc::sha512::hash(password.c_str(), password.size());
+   std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
+   plain_ec_and_el_gamal_keys pk;
+   bool update_wallet_file = false;
+
+   if (my->_wallet.version == 0) {
+
+      // supporting backward compatibility of wallet json file
       try {
-         std::vector<message_data> result;
-         for (const auto& obj : _remote_api->messaging()->get_message_objects(sender, receiver, max_count)) {
-            result.emplace_back(obj);
-
-            for (const auto& receivers_data_item : obj.receivers_data) {
-               try {
-                  if( obj.sender_pubkey == chain::public_key_type() || receivers_data_item.receiver_pubkey == chain::public_key_type() )
-                  {
-                     result.back().text = receivers_data_item.get_message(chain::private_key_type(), chain::public_key_type());
-                     break;
-                  }
-
-                  auto it = _keys.find(receivers_data_item.receiver_pubkey);
-                  if (it != _keys.end()) {
-                     fc::optional<chain::private_key_type> privkey = utilities::wif_to_key(it->second);
-                     if (privkey)
-                        result.back().text = receivers_data_item.get_message(*privkey, obj.sender_pubkey );
-                     else
-                        std::cout << "Cannot decrypt message." << std::endl;
-                  }
-                  else {
-                     it = _keys.find(obj.sender_pubkey);
-                     if (it != _keys.end()) {
-                        fc::optional<chain::private_key_type> privkey = utilities::wif_to_key(it->second);
-                        if (privkey)
-                           result.back().text = receivers_data_item.get_message(*privkey, receivers_data_item.receiver_pubkey);
-                        else
-                           std::cout << "Cannot decrypt message." << std::endl;
-                     }
-                     else {
-                        std::cout << "Cannot decrypt message." << std::endl;
-                     }
-                  }
-               }
-               catch (fc::exception& e)
-               {
-                  std::cout << "Cannot decrypt message." << std::endl;
-                  std::cout << "Error: " << e.what() << std::endl;
-               }
-               catch (...) {
-                  std::cout << "Unknown exception in decrypting message" << std::endl;
-               }
-            }
-         }
-         return result;
-      } FC_CAPTURE_AND_RETHROW((sender)(receiver))
-   }
-
-   std::vector<text_message> get_messages(const std::string& receiver, uint32_t max_count) const
-   {
-         const auto& receiver_id = get_account(receiver).get_id();
-         auto itr = _wallet.my_accounts.get<db::by_id>().find(receiver_id);
-         if (itr == _wallet.my_accounts.get<db::by_id>().end())
-            return std::vector<text_message>();
-
-         fc::optional<chain::account_id_type> sender_id;
-         std::vector<text_message> messages;
-
-         for (const auto& obj : get_message_objects(sender_id, fc::optional<chain::account_id_type>(receiver_id), max_count)) {
-            text_message msg;
-            msg.created = obj.created;
-            chain::account_object account_sender = get_account(obj.sender);
-            msg.from = account_sender.name;
-            for (const auto& item : obj.receivers_data)
-            {
-               msg.to.push_back(get_account(item.receiver).name);
-            }
-            msg.text = obj.text;
-
-            messages.push_back(msg);
-         }
-         return messages;
-   }
-
-   std::vector<text_message> get_sent_messages(const std::string& sender, uint32_t max_count)const
-   {
-      const auto& sender_id = get_account(sender).get_id();
-      auto itr = _wallet.my_accounts.get<db::by_id>().find(sender_id);
-      if (itr == _wallet.my_accounts.get<db::by_id>().end())
-         return std::vector<text_message>();
-
-      fc::optional<chain::account_id_type> receiver_id;
-      std::vector<text_message> messages;
-
-      for (const auto& obj : get_message_objects(fc::optional<chain::account_id_type>(sender_id), receiver_id, max_count)) {
-         text_message msg;
-
-         msg.created = obj.created;
-         chain::account_object account_sender = get_account(obj.sender);
-         msg.from = account_sender.name;
-         for (const auto& item : obj.receivers_data)
-         {
-            msg.to.push_back(get_account(item.receiver).name);
-         }
-         msg.text = obj.text;
-
-         messages.push_back(msg);
+         std::string data;
+         data.reserve(decrypted.size());
+         std::copy(decrypted.begin(), decrypted.end(), back_inserter(data));
+         pk = fc::json::from_string(data).as<plain_ec_and_el_gamal_keys>();
+         update_wallet_file = true;
       }
-      return messages;
+      catch(const fc::exception&)
+      {
+         pk = fc::raw::unpack<plain_keys>(decrypted);
+         // wallet file is in old format, derive corresponding el gamal keys from private keys
+         for( const auto& element : pk.ec_keys )
+         {
+            el_gamal_key_pair_str el_gamal_keys_str;
+            el_gamal_keys_str.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret( utilities::wif_to_key( element.second )->get_secret() );
+            el_gamal_keys_str.public_key = get_public_el_gamal_key( el_gamal_keys_str.private_key );
+            pk.el_gamal_keys.push_back( el_gamal_keys_str );
+         }
+         update_wallet_file = true;
+      }
    }
+   else {
 
-   chain::signed_transaction send_message(const std::string& from,
-                                   const std::vector<std::string>& to,
-                                   const std::string& text,
-                                   bool broadcast = false)
-   {
       try {
-         std::set<std::string> unique_to( to.begin(), to.end() );
-         if( to.size() != unique_to.size() )
+         std::string data;
+         data.reserve(decrypted.size());
+         std::copy(decrypted.begin(), decrypted.end(), back_inserter(data));
+         pk = fc::json::from_string(data).as<plain_ec_and_el_gamal_keys>();
+      }
+      catch(const fc::exception&) {
+         throw;
+      }
+   }
+
+   FC_ASSERT(pk.checksum == pw);
+   my->_keys = std::move(pk.ec_keys);
+   if( !pk.el_gamal_keys.empty() ) {
+      std::transform(pk.el_gamal_keys.begin(), pk.el_gamal_keys.end(),
+                     std::inserter(my->_el_gamal_keys, my->_el_gamal_keys.end()),
+                     [](const el_gamal_key_pair_str el_gamal_pair) {
+                         return std::make_pair(decent::encrypt::DInteger(el_gamal_pair.public_key), decent::encrypt::DInteger(el_gamal_pair.private_key));
+                     });
+   }
+   my->_checksum = pk.checksum;
+
+   if( update_wallet_file ) // upgrade structure for storing keys to new format
+      save_wallet_file();
+
+   my->self.lock_changed(false);
+   return true;
+} FC_RETHROW() }
+
+void wallet_api::set_password(const std::string& password )
+{
+   if(!is_new()) {
+      if(my->is_locked())
+         FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   }
+   my->_checksum = fc::sha512::hash( password.c_str(), password.size() );
+   lock();
+}
+
+bool wallet_api::load_wallet_file(const boost::filesystem::path& wallet_filename )
+{
+   if( !wallet_filename.empty() )
+      my->set_wallet_filename(wallet_filename);
+   return my->load_wallet_file( wallet_filename );
+}
+
+void wallet_api::save_wallet_file(const boost::filesystem::path& wallet_filename )
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   my->save_wallet_file( wallet_filename );
+}
+
+bool wallet_api::import_key(const std::string& account_name_or_id, const std::string& wif_key)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   bool result = my->import_key(account_name_or_id, wif_key);
+   save_wallet_file();
+
+   return result;
+}
+
+bool wallet_api::import_single_key(const std::string& account_name_or_id, const std::string& wif_key)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   bool result = my->import_single_key(account_name_or_id, wif_key);
+   save_wallet_file();
+
+   return result;
+}
+
+fc::variant wallet_api::dump_private_keys() const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   fc::mutable_variant_object result;
+   result["ec_keys"] = my->_keys;
+   result["el_gamal_keys"] = my->_el_gamal_keys;   // map of public keys to private keys
+
+   return result;
+}
+
+std::string wallet_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
+{
+   chain::private_key_type private_key = graphene::utilities::derive_private_key( prefix_string, sequence_number );
+   return graphene::utilities::key_to_wif( private_key );
+}
+
+graphene::chain::public_key_type wallet_api::get_public_key( const std::string& wif_private_key ) const
+{
+   fc::optional<chain::private_key_type> private_key = graphene::utilities::wif_to_key( wif_private_key );
+   if(!private_key)
+      FC_THROW_EXCEPTION(invalid_wif_private_key_exception, "");
+
+   return private_key->get_public_key();
+}
+
+uint64_t wallet_api::get_account_count() const
+{
+   return my->_remote_db->get_account_count();
+}
+
+std::map<std::string, chain::account_id_type> wallet_api::list_accounts(const std::string& lowerbound, uint32_t limit) const
+{
+    return my->_remote_db->lookup_accounts(lowerbound, limit);
+}
+
+std::vector<chain::account_object> wallet_api::search_accounts(const std::string& term, const std::string& order, const std::string& id, uint32_t limit) const
+{
+   return my->_remote_db->search_accounts(term, order, db::object_id_type(id), limit);
+}
+
+std::vector<extended_asset> wallet_api::list_account_balances(const std::string& id) const
+{
+   std::vector<chain::asset> assets;
+   if( auto real_id = detail::maybe_id<chain::account_id_type>(id) )
+      assets = my->_remote_db->get_account_balances(*real_id, boost::container::flat_set<chain::asset_id_type>());
+   assets = my->_remote_db->get_account_balances(get_account(id).id, boost::container::flat_set<chain::asset_id_type>());
+
+   std::vector<extended_asset> result;
+   std::vector<chain::asset_id_type> asset_ids;
+   result.reserve( assets.size() );
+   asset_ids.reserve( assets.size() );
+
+   for( const chain::asset& element : assets )
+      asset_ids.push_back( element.asset_id );
+
+   std::vector<fc::optional<chain::asset_object>> asset_objs = my->_remote_db->get_assets( asset_ids ) ;
+
+   for( size_t i = 0; i < assets.size(); i++ )
+      result.emplace_back( assets[i], asset_objs[i]->amount_to_pretty_string( assets[i].amount ) );
+   FC_ASSERT( assets.size() == result.size() );
+
+   return result;
+}
+
+std::vector<operation_detail> wallet_api::get_account_history(const std::string& name, int limit) const
+{
+   std::vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   while( limit > 0 )
+      {
+      chain::operation_history_id_type start;
+      if( result.size() )
+      {
+         start = result.back().op.id;
+         start = start + 1;
+      }
+
+      std::vector<chain::operation_history_object> current = my->_remote_hist->get_account_history(account_id, chain::operation_history_id_type(), std::min(100,limit), start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
+      }
+      if( (int)current.size() < std::min(100,limit) )
+         break;
+      limit -= static_cast<int>(current.size());
+   }
+
+   return result;
+}
+
+std::vector<balance_change_result_detail> wallet_api::search_account_balance_history(const std::string& account_name,
+                                                                                     const boost::container::flat_set<std::string>& assets_list,
+                                                                                     const std::string& partner_account,
+                                                                                     uint32_t from_block, uint32_t to_block,
+                                                                                     uint32_t start_offset,
+                                                                                     int limit) const
+{
+    std::vector<balance_change_result_detail> result;
+    auto account_id = get_account(account_name).get_id();
+
+    if( limit > 0 )
+    {
+       boost::container::flat_set<chain::asset_id_type> asset_id_list;
+       if (!assets_list.empty()) {
+           for( const auto& item : assets_list) {
+              asset_id_list.insert( get_asset(item).get_id() );
+           }
+       }
+
+       fc::optional<chain::account_id_type> partner_id;
+       if (!partner_account.empty()) {
+          partner_id = get_account(partner_account).get_id();
+       }
+
+       std::vector<app::balance_change_result> current = my->_remote_hist->search_account_balance_history(account_id, asset_id_list, partner_id, from_block, to_block, start_offset, limit);
+       result.reserve( current.size() );
+       for(const auto& item : current) {
+          balance_change_result_detail info;
+          info.hist_object = item.hist_object;
+          info.balance     = item.balance;
+          info.fee         = item.fee;
+          info.timestamp   = item.timestamp;
+          info.transaction_id = item.transaction_id;
+
+          std::stringstream ss;
+          info.memo = item.hist_object.op.visit(detail::operation_printer(ss, *my, item.hist_object.result));
+
+          result.push_back(info);
+       }
+    }
+
+    return result;
+}
+
+fc::optional<balance_change_result_detail> wallet_api::get_account_balance_for_transaction(const std::string& account_name, chain::operation_history_id_type operation_history_id) const
+{
+   auto account_id = get_account(account_name).get_id();
+
+   fc::optional<app::balance_change_result> result = my->_remote_hist->get_account_balance_for_transaction(account_id, operation_history_id);
+   if (!result) {
+      return fc::optional<balance_change_result_detail>();
+   }
+
+   balance_change_result_detail info;
+   info.hist_object = result->hist_object;
+   info.balance     = result->balance;
+   info.fee         = result->fee;
+
+   std::stringstream ss;
+   info.memo = result->hist_object.op.visit(detail::operation_printer(ss, *my, result->hist_object.result));
+
+   return info;
+}
+
+std::vector<operation_detail> wallet_api::get_relative_account_history(const std::string& name,
+                                                                       uint32_t stop,
+                                                                       int limit,
+                                                                       uint32_t start) const
+{
+   std::vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   std::vector<chain::operation_history_object> current = my->_remote_hist->get_relative_account_history(account_id, stop, limit, start);
+   for( auto& o : current ) {
+      std::stringstream ss;
+      auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+      result.push_back( operation_detail{ memo, ss.str(), o } );
+   }
+
+   return result;
+}
+
+std::vector<chain::transaction_detail_object> wallet_api::search_account_history(std::string const& account_name,
+                                                                          std::string const& order,
+                                                                          std::string const& id,
+                                                                          int limit) const
+{
+   std::vector<chain::transaction_detail_object> result;
+   try
+   {
+      chain::account_object account = get_account(account_name);
+      result = my->_remote_db->search_account_history(account.id, order, db::object_id_type(id), limit);
+
+      for (auto& item : result)
+      {
+         auto const& memo = item.m_transaction_encrypted_memo;
+         if (memo)
          {
-            ilog( "duplicate entries has been removed" );
-            std::cout<<"duplicate entries has been removed"<<std::endl;
-         }
-
-         chain::account_object from_account = get_account(from);
-         chain::account_id_type from_id = from_account.id;
-
-         chain::message_payload pl;
-         pl.from = from_id;
-         pl.pub_from = from_account.options.memo_key;
-
-         for (const auto& receiver : unique_to) {
-            chain::account_object to_account = get_account(receiver);
-            pl.receivers_data.emplace_back(text, get_private_key(from_account.options.memo_key), to_account.options.memo_key, to_account.get_id());
-         }
-
-         chain::custom_operation cust_op;
-         cust_op.id = chain::custom_operation::custom_operation_subtype_messaging;
-         cust_op.payer = from_id;
-         cust_op.set_messaging_payload(pl);
-
-         chain::signed_transaction tx;
-         tx.operations.push_back(cust_op);
-
-         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction(tx, broadcast);
-
-      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
-   }
-
-   chain::signed_transaction send_unencrypted_message(const std::string& from,
-                                               const std::vector<std::string>& to,
-                                               const std::string& text,
-                                               bool broadcast = false)
-   {
-      try {
-         std::set<std::string> unique_to( to.begin(), to.end() );
-         if( to.size() != unique_to.size() )
-         {
-            ilog( "duplicate entries has been removed" );
-            std::cout<<"duplicate entries has been removed"<<std::endl;
-         }
-
-         chain::account_object from_account = get_account(from);
-         chain::account_id_type from_id = from_account.id;
-         chain::message_payload pl;
-         pl.from = from_id;
-         pl.pub_from = chain::public_key_type();
-
-         for (const auto &receiver : unique_to) {
-            chain::account_object to_account = get_account(receiver);
-            pl.receivers_data.emplace_back(text, chain::private_key_type(), chain::public_key_type(), to_account.get_id());
-         }
-
-         chain::custom_operation cust_op;
-         cust_op.id = chain::custom_operation::custom_operation_subtype_messaging;
-         cust_op.payer = from_id;
-         cust_op.set_messaging_payload(pl);
-
-         chain::signed_transaction tx;
-         tx.operations.push_back(cust_op);
-
-         set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-
-         return sign_transaction(tx, broadcast);
-
-      } FC_CAPTURE_AND_RETHROW((from)(to)(text)(broadcast))
-   }
-
-   void reset_counters(const std::vector<std::string>& names) const
-   {
-      const auto& monapi = _remote_api->monitoring();
-      monapi->reset_counters(names);
-   }
-
-   std::vector<monitoring::counter_item_cli> get_counters(const std::vector<std::string>& names) const
-   {
-      const auto& monapi = _remote_api->monitoring();
-      std::vector<monitoring::counter_item_cli> cli_result;
-      std::vector<monitoring::counter_item> result;
-      result = monapi->get_counters(names);
-      std::for_each(result.begin(), result.end(), [&](monitoring::counter_item& item) {
-         monitoring::counter_item_cli item_cli;
-         item_cli.name = item.name;
-         item_cli.value = item.value;
-         item_cli.last_reset = fc::time_point_sec(item.last_reset);
-         item_cli.persistent = item.persistent;
-
-         cli_result.push_back(item_cli);
-      });
-
-      std::sort(cli_result.begin(), cli_result.end(), [&](monitoring::counter_item_cli& item1, monitoring::counter_item_cli& item2) {return item1.name < item2.name; });
-
-      return cli_result;
-   }
-
-   void use_network_node_api()
-   {
-      if( _remote_net_node )
-         return;
-      try
-      {
-         _remote_net_node = _remote_api->network_node();
-      }
-      catch( const fc::exception& e )
-      {
-         std::cerr << "\nCouldn't get network node API.  You probably are not configured\n"
-         "to access the network API on the decentd you are\n"
-         "connecting to.  Please follow the instructions in README.md to set up an apiaccess file.\n"
-         "\n";
-         throw(e);
-      }
-   }
-
-   void network_add_nodes( const std::vector<std::string>& nodes )
-   {
-      use_network_node_api();
-      for( const std::string& node_address : nodes )
-      {
-         (*_remote_net_node)->add_node( fc::ip::endpoint::resolve_string( node_address ).back() );
-      }
-   }
-
-   fc::variants network_get_connected_peers()
-   {
-      use_network_node_api();
-      const auto peers = (*_remote_net_node)->get_connected_peers();
-      fc::variants result;
-      result.reserve( peers.size() );
-      for( const auto& peer : peers )
-      {
-         fc::variant v;
-         fc::to_variant( peer, v );
-         result.push_back( v );
-      }
-      return result;
-   }
-
-   const chain::operation& get_prototype_operation(const std::string& operation_name) const
-   {
-      auto it = _prototype_ops.find( operation_name );
-      if(it == _prototype_ops.end())
-         FC_THROW_EXCEPTION(unsupported_operation_exception, "Operation name: ${operation_name}", ("operation_name", operation_name));
-
-      return it->second;
-   }
-
-   fc::time_point_sec head_block_time() const
-   {
-      return _remote_db->head_block_time();
-   }
-
-   boost::filesystem::path _wallet_filename;
-   wallet_data             _wallet;
-
-   std::map<chain::public_key_type, std::string> _keys;
-   std::map<decent::encrypt::DInteger, decent::encrypt::DInteger> _el_gamal_keys;   // public_key/private_key
-   fc::sha512                  _checksum;
-
-   chain::chain_id_type _chain_id;
-   fc::api<app::login_api> _remote_api;
-   fc::api<app::database_api> _remote_db;
-   fc::api<app::network_broadcast_api> _remote_net_broadcast;
-   fc::api<app::history_api> _remote_hist;
-   fc::optional<fc::api<app::network_node_api>> _remote_net_node;
-
-   boost::container::flat_map<std::string, chain::operation> _prototype_ops;
-
-   static_variant_map _operation_which_map = create_static_variant_map<chain::operation>();
-
-   std::vector<std::shared_ptr<detail::submit_transfer_listener>> _package_manager_listeners;
-   seeders_tracker _seeders_tracker;
-};
-
-   void operation_printer::fee(const chain::asset& a) const
-   {
-      out << " (Fee: " << wallet.get_asset(a.asset_id).amount_to_pretty_string(a) << ")";
-   }
-
-   std::string operation_printer::memo(const fc::optional<chain::memo_data>& data, const chain::account_object& from, const chain::account_object& to) const
-   {
-      std::string memo;
-      if( data )
-      {
-         if( wallet.is_locked() )
-         {
-            out << " -- Unlock wallet to see memo.";
-         }
-         else
-         {
-            try
-            {
-               memo = wallet.decrypt_memo( *data, from, to );
-               out << " -- Memo: " << memo;
-            }
-            catch (const fc::exception& e)
-            {
-               out << " -- could not decrypt memo";
-               elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
-            }
-         }
-      }
-      return memo;
-   }
-
-   template<typename T> std::string operation_printer::operator()(const T& op)const
-   {
-      //balance_accumulator acc;
-      //op.get_balance_delta( acc, result );
-      auto a = wallet.get_asset( op.fee.asset_id );
-      auto payer = wallet.get_account( op.fee_payer() );
-
-      std::string op_name = fc::get_typename<T>::name();
-      if( op_name.find_last_of(':') != std::string::npos )
-         op_name.erase(0, op_name.find_last_of(':')+1);
-      out << op_name <<" ";
-     // out << "balance delta: " << fc::json::to_string(acc.balance) <<"   ";
-      out << payer.name << " fee: " << a.amount_to_pretty_string( op.fee );
-      result_visitor rprinter;
-      std::string str_result = result.visit(rprinter);
-      if( !str_result.empty() )
-      {
-         out << "   result: " << str_result;
-      }
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::transfer_obsolete_operation& op) const
-   {
-      const auto& from_account = wallet.get_account(op.from);
-      const auto& to_account = wallet.get_account(op.to);
-      out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
-          << " from " << from_account.name << " to " << to_account.name;
-      fee(op.fee);
-      return memo(op.memo, from_account, to_account);
-   }
-
-   std::string operation_printer::operator()(const chain::transfer_operation& op) const
-   {
-      const auto& from_account = wallet.get_account(op.from);
-      chain::account_object to_account;
-      std::string receiver;
-
-      if(  op.to.is<chain::account_id_type>() )
-      {
-         to_account = wallet.get_account(op.to);
-         receiver = to_account.name;
-      }
-      else
-      {
-         chain::content_id_type content_id = op.to.as<chain::content_id_type>();
-         const chain::content_object content_obj = wallet.get_object<chain::content_object>(content_id);
-         to_account = wallet.get_account(content_obj.author);
-         receiver = std::string(op.to);
-      }
-
-      out << "Transfer " << wallet.get_asset(op.amount.asset_id).amount_to_pretty_string(op.amount)
-          << " from " << from_account.name << " to " << receiver;
-      fee(op.fee);
-      return memo(op.memo, from_account, to_account);
-   }
-
-   std::string operation_printer::operator()(const chain::non_fungible_token_issue_operation& op) const
-   {
-      const auto& from_account = wallet.get_account(op.issuer);
-      const auto& to_account = wallet.get_account(op.to);
-      out << "Issue non fungible token " << wallet.get_non_fungible_token(op.nft_id).symbol << " from " << from_account.name << " to " << to_account.name;
-      fee(op.fee);
-      return memo(op.memo, from_account, to_account);
-   }
-
-   std::string operation_printer::operator()(const chain::non_fungible_token_transfer_operation& op) const
-   {
-      const auto& from_account = wallet.get_account(op.from);
-      const auto& to_account = wallet.get_account(op.to);
-      const auto& nft_data = wallet.get_non_fungible_token_data(op.nft_data_id);
-      out << "Transfer non fungible token " << wallet.get_non_fungible_token(nft_data.nft_id).symbol <<
-         " (" << std::string(db::object_id_type(nft_data.get_id())) << ") from " << from_account.name << " to " << to_account.name;
-      fee(op.fee);
-      return memo(op.memo, from_account, to_account);
-   }
-
-   std::string operation_printer::operator()(const chain::leave_rating_and_comment_operation& op) const
-   {
-      out << wallet.get_account(op.consumer).name;
-      if( op.comment.empty() )
-         out << " rated " << op.URI << " -- Rating: " << op.rating;
-      else if( op.rating == 0 )
-         out << " commented " << op.URI << " -- Comment: " << op.comment;
-      else
-         out << " rated and commented " << op.URI << " -- Rating: " << op.rating << " -- Comment: " << op.comment;
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::account_create_operation& op) const
-   {
-      out << "Create Account '" << op.name << "'";
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::account_update_operation& op) const
-   {
-      out << "Update Account '" << wallet.get_account(op.account).name << "'";
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::asset_create_operation& op) const
-   {
-      out << "Create ";
-      out << "Monitored Asset ";
-
-      out << "'" << op.symbol << "' with issuer " << wallet.get_account(op.issuer).name;
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::content_submit_operation& op) const
-   {
-      out << "Submit content by " << wallet.get_account(op.author).name << " -- URI: " << op.URI;
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::request_to_buy_operation& op) const
-   {
-      out << "Request to buy by " << wallet.get_account(op.consumer).name << " -- URI: " << op.URI << " -- Price: " << op.price.amount.value;
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::ready_to_publish_operation& op) const
-   {
-      out << "Ready to publish -- Seeder: " << wallet.get_account(op.seeder).name << " -- space: " << op.space << " -- Price per MB: " << op.price_per_MByte;
-      fee(op.fee);
-      return std::string();
-   }
-
-   std::string operation_printer::operator()(const chain::custom_operation& op) const
-   {
-      if (op.id == chain::custom_operation::custom_operation_subtype_messaging) {
-         chain::message_payload pl;
-         op.get_messaging_payload(pl);
-
-         const auto& from_account = wallet.get_account(pl.from);
-         chain::account_object to_account;
-         std::string receivers;
-
-         for (int i = 0; i < (int)pl.receivers_data.size(); i++) {
-            const auto& to_account = wallet.get_account(pl.receivers_data[i].to);
-            receivers += to_account.name;
-            receivers += " ";
-         }
-
-         out << "Send message from " << from_account.name << " to " << receivers;
-
-         std::string memo;
-         if (wallet.is_locked())
-         {
-            out << " -- Unlock wallet to see memo.";
-         }
-         else
-         {
-            for (const auto& receivers_data_item : pl.receivers_data) {
-               try
-               {
-                  try {
-
-                     if (pl.pub_from == chain::public_key_type() || receivers_data_item.pub_to == chain::public_key_type())
-                     {
-                        memo = receivers_data_item.get_message(chain::private_key_type(), chain::public_key_type());
-                        break;
-                     }
-
-                     auto it = wallet._keys.find(receivers_data_item.pub_to);
-                     if (it != wallet._keys.end()) {
-                        fc::optional<chain::private_key_type> privkey = utilities::wif_to_key(it->second);
-                        if (privkey)
-                           memo = receivers_data_item.get_message(*privkey, pl.pub_from);
-                        else
-                           std::cout << "Cannot decrypt message." << std::endl;
-                     }
-                     else {
-                        it = wallet._keys.find(pl.pub_from);
-                        if (it != wallet._keys.end()) {
-                           fc::optional<chain::private_key_type> privkey = utilities::wif_to_key(it->second);
-                           if (privkey)
-                              memo = receivers_data_item.get_message(*privkey, receivers_data_item.pub_to);
-                           else
-                              std::cout << "Cannot decrypt message." << std::endl;
-                        }
-                        else {
-                           std::cout << "Cannot decrypt message." << std::endl;
-                        }
-                     }
-
-                  }
-                  catch (fc::exception& e)
-                  {
-                     std::cout << "Cannot decrypt message." << std::endl;
-                     std::cout << "Error: " << e.what() << std::endl;
-                     throw;
-                  }
-                  catch (...) {
-                     std::cout << "Unknown exception in decrypting message" << std::endl;
-                     throw;
-                  }
-                  // memo = wallet.decrypt_memo(*op.memo, from_account, to_account);
-                  out << " -- Memo: " << memo;
-               }
-               catch (const fc::exception& e)
-               {
-                  out << " -- could not decrypt memo";
-                  elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
-               }
-            }
-         }
-
-         fee(op.fee);
-         return memo;
-      }
-      return std::string();
-   }
-
-   std::string operation_printer::result_visitor::operator()(const chain::void_result& x) const
-   {
-      return std::string();
-   }
-
-   std::string operation_printer::result_visitor::operator()(const db::object_id_type& oid) const
-   {
-      return std::string(oid);
-   }
-
-   std::vector<chain::account_id_type> seeders_tracker::track_content(const std::string& URI)
-   {
-      fc::optional<chain::content_object> content = _wallet._remote_db->get_content( URI );
-      FC_ASSERT( content );
-      std::vector<chain::account_id_type> new_seeders;
-      for( const auto& element : content->key_parts )
-      {
-         auto range = seeder_to_content.equal_range( element.first );
-         auto& itr = range.first;
-         if( range.first == range.second)
-            new_seeders.push_back( element.first );
-
-         while( itr != range.second )
-         {
-            if( itr->second == content->id )
-               break;
-            itr++;
-         }
-         if( itr == range.second )
-            seeder_to_content.insert(std::make_pair( element.first, content->id ));
-      }
-      return new_seeders;
-   }
-
-   std::vector<chain::account_id_type> seeders_tracker::untrack_content(const std::string& URI)
-   {
-      fc::optional<chain::content_object> content = _wallet._remote_db->get_content( URI );
-      FC_ASSERT( content );
-      std::vector<chain::account_id_type> finished_seeders;
-      for( auto& element : content->key_parts )
-      {
-         auto range = seeder_to_content.equal_range( element.first );
-         auto& itr = range.first;
-         while( itr != range.second )
-         {
-            if( itr->second == content->id )
-            {
-               seeder_to_content.erase(itr);
-               break;
-            }
-            itr++;
-         }
-         if( seeder_to_content.count( element.first ) == 0 )
-            finished_seeders.push_back( element.first );
-      }
-      return finished_seeders;
-   }
-
-   std::vector<chain::account_id_type> seeders_tracker::get_unfinished_seeders()
-   {
-      std::vector<chain::account_id_type> result;
-      for( const auto& element : initial_stats )
-      {
-         result.push_back( element.first );
-      }
-      return result;
-   }
-
-   void seeders_tracker::set_initial_stats(chain::account_id_type seeder, const uint64_t amount)
-   {
-      FC_ASSERT( initial_stats.count(seeder) == 0 );
-      initial_stats.emplace( seeder, amount );
-   }
-
-   uint64_t seeders_tracker::get_final_stats(chain::account_id_type seeder, const uint64_t amount )
-   {
-      FC_ASSERT( initial_stats.count(seeder) == 1 );
-      return amount - initial_stats[seeder];
-   }
-
-   void seeders_tracker::remove_stats(chain::account_id_type seeder )
-   {
-      FC_ASSERT( initial_stats.erase( seeder ) == 1 );
-   }
-
-   void ipfs_stats_listener::package_download_start()
-   {
-      std::vector<chain::account_id_type> new_seeders = _wallet._seeders_tracker.track_content( _URI);
-      if( !new_seeders.empty() )
-      {
-         for( const auto& element : new_seeders )
-         {
-            const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
-            ipfs::Json json;
-            _ipfs_client.BitswapLedger( ipfs_ID, &json );
-            uint64_t received = json["Recv"];
-            wlog( "IPFS stats: package download start: ${r} bytes from ${id}", ("r", received)("id", ipfs_ID));
-            _wallet._seeders_tracker.set_initial_stats( element, received );
+            item.m_str_description += " - ";
+            auto it = my->_keys.find(memo->to);
+            auto it2 = it == my->_keys.end() ? my->_keys.find(memo->from) : it;
+
+            if (it2 == my->_keys.end())
+               // memo is encrypted for someone else
+               item.m_str_description += "{encrypted}";
+            else
+               // here the memo is encrypted for/by me so I can decrypt it
+               item.m_str_description += memo->get_message(*utilities::wif_to_key(it2->second), it == it2 ? memo->from : memo->to);
          }
       }
    }
+   catch(...){}
 
-   void ipfs_stats_listener::package_download_complete()
-   {
-      std::vector<chain::account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
-      if( !finished_seeders.empty() )
-      {
-         uint64_t difference;
-         std::map<chain::account_id_type, uint64_t> stats;
-         for( const auto& element : finished_seeders )
-         {
-            const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
-            ipfs::Json json;
-            _ipfs_client.BitswapLedger( ipfs_ID, &json );
-            uint64_t received = json["Recv"];
-            difference = _wallet._seeders_tracker.get_final_stats( element, received );
-            wlog( "IPFS stats: package download complete: received ${r} bytes from ${id}, difference: ${diff}", ("r", received)("id", ipfs_ID)("diff", difference));
-            stats.emplace( element, difference );
+   return result;
+}
 
-            _wallet._seeders_tracker.remove_stats( element );
-         }
+chain::account_object wallet_api::get_account(const std::string& account_name_or_id) const
+{
+   return my->get_account(account_name_or_id);
+}
 
-         chain::report_stats_operation op;
-         op.consumer = _consumer;
-         op.stats = stats;
-         chain::signed_transaction tx;
-         tx.operations.push_back( op );
-         _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
-         tx.validate();
-         _wallet.sign_transaction(tx, true);
-      }
-   }
+brain_key_info wallet_api::suggest_brain_key() const
+{
+   brain_key_info result;
+   result.brain_priv_key = utilities::generate_brain_key();
 
-   void ipfs_stats_listener:: package_download_error(const std::string& )
-   {
-      std::vector<chain::account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
-      for( const auto& element : finished_seeders )
-      {
-         _wallet._seeders_tracker.remove_stats( element );
-      }
-      wlog( "IPFS stats: package download error: URI: ${uri}", ("uri", _URI));
-   }
+   chain::private_key_type priv_key = utilities::derive_private_key(result.brain_priv_key);
+   result.wif_priv_key = utilities::key_to_wif( priv_key );
+   result.pub_key = priv_key.get_public_key();
+   return result;
+}
 
-   }}}
+signed_transaction_info wallet_api::register_account_with_keys(const std::string& name,
+                                                               const chain::public_key_type& owner,
+                                                               const chain::public_key_type& active,
+                                                               const chain::public_key_type& memo,
+                                                               const std::string& registrar_account,
+                                                               bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
+}
 
-   namespace graphene { namespace wallet {
+signed_transaction_info wallet_api::register_account(const std::string& name,
+                                                     const chain::public_key_type& owner,
+                                                     const chain::public_key_type& active,
+                                                     const std::string& registrar_account,
+                                                     bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->register_account( name, owner, active, active, registrar_account, broadcast );
+}
 
-   wallet_api::wallet_api( const fc::api<app::login_api> &rapi, const chain::chain_id_type &chain_id, const server_data &ws )
-      : my(new detail::wallet_api_impl(*this, rapi, chain_id, ws))
-   {
-   }
+signed_transaction_info wallet_api::register_multisig_account(const std::string& name,
+                                                              const chain::authority& owner,
+                                                              const chain::authority& active,
+                                                              const chain::public_key_type& memo,
+                                                              const std::string& registrar_account,
+                                                              bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
+}
 
-   wallet_api::~wallet_api()
-   {
-   }
+signed_transaction_info wallet_api::create_account_with_brain_key(const std::string& brain_key,
+                                                                  const std::string& account_name,
+                                                                  const std::string& registrar_account,
+                                                                  bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
+}
 
-#include "wallet_general.inl"
-#include "wallet_wallet_file.inl"
-#include "wallet_account.inl"
-#include "wallet_assets.inl"
-#include "wallet_transaction_builder.inl"
-#include "wallet_mining.inl"
-#include "wallet_seeding.inl"
-#include "wallet_proposals.inl"
-#include "wallet_content.inl"
-#include "wallet_subscription.inl"
-#include "wallet_messaging.inl"
-#include "wallet_monitoring.inl"
+signed_transaction_info wallet_api::update_account_keys(const std::string& name,
+                                                        const std::string& owner,
+                                                        const std::string& active,
+                                                        const std::string& memo,
+                                                        bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   fc::optional<chain::authority> new_owner, new_active;
+   fc::optional<chain::public_key_type> new_memo;
+   chain::account_object acc = my->get_account( name );
 
-   std::vector<chain::non_fungible_token_object> wallet_api::list_non_fungible_tokens(const std::string& lowerbound, uint32_t limit) const
-   {
-      return my->_remote_db->list_non_fungible_tokens(lowerbound, limit);
-   }
+   if( !owner.empty() )
+      new_owner = chain::authority( 1, chain::public_key_type( owner ), 1 );
 
-   chain::non_fungible_token_object wallet_api::get_non_fungible_token(const std::string& nft_symbol_or_id) const
-   {
-      return my->get_non_fungible_token(nft_symbol_or_id);
-   }
+   if( !active.empty() )
+      new_active = chain::authority( 1, chain::public_key_type( active ), 1 );
 
-   signed_transaction_info wallet_api::create_non_fungible_token(const std::string& issuer,
-                                                                 const std::string& symbol,
-                                                                 const std::string& description,
-                                                                 const chain::non_fungible_token_data_definitions& definitions,
-                                                                 uint32_t max_supply,
-                                                                 bool fixed_max_supply,
-                                                                 bool transferable,
-                                                                 bool broadcast /* = false */)
-   {
-      return my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
-   }
+   if( !memo.empty() )
+      new_memo = chain::public_key_type( memo );
 
-   signed_transaction_info wallet_api::update_non_fungible_token(const std::string& issuer,
-                                                                 const std::string& symbol,
-                                                                 const std::string& description,
-                                                                 uint32_t max_supply,
-                                                                 bool fixed_max_supply,
-                                                                 bool broadcast /* = false */)
-   {
-      return my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
-   }
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
+}
 
-   signed_transaction_info wallet_api::issue_non_fungible_token(const std::string& to_account,
-                                                                const std::string& symbol,
-                                                                const fc::variants& data,
-                                                                const std::string& memo,
-                                                                bool broadcast /* = false */)
-   {
-      return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
-   }
-
-   std::vector<chain::non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const std::string& nft_symbol_or_id) const
-   {
-      return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(nft_symbol_or_id).get_id());
-   }
-
-   std::map<chain::non_fungible_token_id_type, uint32_t> wallet_api::get_non_fungible_token_summary(const std::string& account) const
-   {
-      return my->_remote_db->get_non_fungible_token_summary(get_account(account).get_id());
-   }
-
-   std::vector<chain::non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const std::string& account, const std::set<std::string>& symbols_or_ids) const
-   {
-      std::set<chain::non_fungible_token_id_type> ids;
-      std::for_each(symbols_or_ids.begin(), symbols_or_ids.end(), [&](const std::string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
-      return my->_remote_db->get_non_fungible_token_balances(get_account(account).get_id(), ids);
-   }
-
-   std::vector<chain::transaction_detail_object> wallet_api::search_non_fungible_token_history(chain::non_fungible_token_data_id_type nft_data_id) const
-   {
-      return my->_remote_db->search_non_fungible_token_history(nft_data_id);
-   }
-
-   signed_transaction_info wallet_api::transfer_non_fungible_token_data(const std::string& to_account,
-                                                                        chain::non_fungible_token_data_id_type nft_data_id,
-                                                                        const std::string& memo,
-                                                                        bool broadcast /* = false */)
-   {
-      return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
-   }
-
-   signed_transaction_info wallet_api::burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id,
+signed_transaction_info wallet_api::update_account_keys_to_multisig(const std::string& name,
+                                                                    const chain::authority& owner,
+                                                                    const chain::authority& active,
+                                                                    const chain::public_key_type& memo,
                                                                     bool broadcast /* = false */)
+{
+   fc::optional<chain::authority> new_owner, new_active;
+   fc::optional<chain::public_key_type> new_memo;
+   chain::account_object acc = my->get_account( name );
+
+   if( acc.owner != owner )
+      new_owner = owner;
+
+   if( acc.active != active )
+      new_active = active;
+
+   if( acc.options.memo_key != memo )
+      new_memo = memo;
+
+   if(!new_owner && !new_active && !new_memo)
+      FC_THROW_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, "");
+
+   return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
+}
+
+el_gamal_key_pair wallet_api::generate_el_gamal_keys() const
+{
+   el_gamal_key_pair ret;
+   ret.private_key = decent::encrypt::generate_private_el_gamal_key();
+   ret.public_key = decent::encrypt::get_public_el_gamal_key( ret.private_key );
+   return ret;
+}
+
+el_gamal_key_pair_str wallet_api::get_el_gammal_key(const std::string& consumer) const
+{
+   try
    {
-      return my->burn_non_fungible_token_data(nft_data_id, broadcast);
+      if(is_locked())
+         FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+
+      chain::account_object consumer_account = get_account( consumer );
+      el_gamal_key_pair_str res;
+
+      res.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( my->get_private_key_for_account(consumer_account).get_secret() );
+      res.public_key = decent::encrypt::get_public_el_gamal_key( res.private_key );
+      return res;
+   } FC_CAPTURE_AND_RETHROW( (consumer) )
+}
+
+std::pair<brain_key_info, el_gamal_key_pair> wallet_api::generate_brain_key_el_gamal_key() const
+{
+   std::pair<brain_key_info, el_gamal_key_pair> ret;
+   ret.first = suggest_brain_key();
+
+   fc::optional<chain::private_key_type> op_private_key = utilities::wif_to_key(ret.first.wif_priv_key);
+   FC_ASSERT(op_private_key);
+   ret.second.private_key = decent::encrypt::generate_private_el_gamal_key_from_secret ( op_private_key->get_secret() );
+   ret.second.public_key = decent::encrypt::get_public_el_gamal_key( ret.second.private_key );
+
+   return ret;
+}
+
+brain_key_info wallet_api::get_brain_key_info(const std::string& brain_key) const
+{
+   brain_key_info result;
+   result.brain_priv_key = graphene::utilities::normalize_brain_key( brain_key );
+
+   chain::private_key_type priv_key = graphene::utilities::derive_private_key( result.brain_priv_key );
+   result.wif_priv_key = utilities::key_to_wif( priv_key );
+   result.pub_key = priv_key.get_public_key();
+   return result;
+}
+
+signed_transaction_info wallet_api::transfer(const std::string& from,
+                                             const std::string& to,
+                                             const std::string& amount,
+                                             const std::string& asset_symbol,
+                                             const std::string& memo,
+                                             bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
+}
+
+std::vector<chain::asset_object> wallet_api::list_assets(const std::string& lowerbound, uint32_t limit) const
+{
+   return my->_remote_db->list_assets( lowerbound, limit );
+}
+
+chain::asset_object wallet_api::get_asset(const std::string& asset_name_or_id) const
+{
+   auto a = my->find_asset(asset_name_or_id);
+   if(!a)
+      FC_THROW_EXCEPTION(asset_not_found_exception, "");
+
+   return *a;
+}
+
+chain::monitored_asset_options wallet_api::get_monitored_asset_data(const std::string& asset_name_or_id) const
+{
+   auto asset = get_asset(asset_name_or_id);
+   if(!asset.is_monitored_asset())
+      FC_THROW_EXCEPTION(asset_not_monitored_exception, "");
+
+   return *asset.monitored_asset_opts;
+}
+
+signed_transaction_info wallet_api::create_monitored_asset(const std::string& issuer,
+                                                           const std::string& symbol,
+                                                           uint8_t precision,
+                                                           const std::string& description,
+                                                           uint32_t feed_lifetime_sec,
+                                                           uint8_t minimum_feeds,
+                                                           bool broadcast)
+
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+
+   return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
+}
+
+signed_transaction_info wallet_api::update_monitored_asset(const std::string& symbol,
+                                                           const std::string& description,
+                                                           uint32_t feed_lifetime_sec,
+                                                           uint8_t minimum_feeds,
+                                                           bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
+}
+
+signed_transaction_info wallet_api::create_user_issued_asset(const std::string& issuer,
+                                                             const std::string& symbol,
+                                                             uint8_t precision,
+                                                             const std::string& description,
+                                                             uint64_t max_supply,
+                                                             chain::price core_exchange_rate,
+                                                             bool is_exchangeable,
+                                                             bool is_fixed_max_supply,
+                                                             bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
+}
+
+signed_transaction_info wallet_api::issue_asset(const std::string& to_account,
+                                                const std::string& amount,
+                                                const std::string& symbol,
+                                                const std::string& memo,
+                                                bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->issue_asset(to_account, amount, symbol, memo, broadcast);
+}
+
+signed_transaction_info wallet_api::update_user_issued_asset(const std::string& symbol,
+                                                             const std::string& new_issuer,
+                                                             const std::string& description,
+                                                             uint64_t max_supply,
+                                                             chain::price core_exchange_rate,
+                                                             bool is_exchangeable,
+                                                             bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
+}
+
+signed_transaction_info wallet_api::fund_asset_pools(const std::string& from,
+                                                     const std::string& uia_amount,
+                                                     const std::string& uia_symbol,
+                                                     const std::string& DCT_amount,
+                                                     const std::string& DCT_symbol,
+                                                     bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
+}
+
+signed_transaction_info wallet_api::reserve_asset(const std::string& from,
+                                                  const std::string& amount,
+                                                  const std::string& symbol,
+                                                  bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->reserve_asset(from, amount, symbol, broadcast);
+}
+
+std::string wallet_api::price_to_dct(const std::string& amount, const std::string& asset_symbol_or_id) const
+{
+   return my->price_to_dct(amount, asset_symbol_or_id);
+}
+
+signed_transaction_info wallet_api::claim_fees(const std::string& uia_amount,
+                                               const std::string& uia_symbol,
+                                               const std::string& dct_amount,
+                                               const std::string& dct_symbol,
+                                               bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
+}
+
+signed_transaction_info wallet_api::publish_asset_feed(const std::string& publishing_account,
+                                                       const std::string& symbol,
+                                                       const chain::price_feed& feed,
+                                                       bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
+}
+
+std::multimap<fc::time_point_sec, chain::price_feed> wallet_api::get_feeds_by_miner(const std::string& account_name_or_id, uint32_t count) const
+{
+   chain::account_id_type account_id = get_account( account_name_or_id ).id;
+   return my->_remote_db->get_feeds_by_miner( account_id, count );
+}
+
+chain::real_supply wallet_api::get_real_supply() const
+{
+   return my->_remote_db->get_real_supply();
+}
+
+transaction_handle_type wallet_api::begin_builder_transaction()
+{
+   return my->begin_builder_transaction();
+}
+
+void wallet_api::add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const chain::operation& op)
+{
+   my->add_operation_to_builder_transaction(transaction_handle, op);
+}
+
+void wallet_api::replace_operation_in_builder_transaction(transaction_handle_type handle, unsigned operation_index, const chain::operation& new_op)
+{
+   my->replace_operation_in_builder_transaction(handle, operation_index, new_op);
+}
+
+chain::asset wallet_api::set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset)
+{
+   return my->set_fees_on_builder_transaction(handle, fee_asset);
+}
+
+chain::transaction wallet_api::preview_builder_transaction(transaction_handle_type handle)
+{
+   return my->preview_builder_transaction(handle);
+}
+
+signed_transaction_info wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->sign_builder_transaction(transaction_handle, broadcast);
+}
+
+signed_transaction_info wallet_api::propose_builder_transaction(transaction_handle_type handle,
+                                                                fc::time_point_sec expiration,
+                                                                uint32_t review_period_seconds,
+                                                                bool broadcast)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
+}
+
+signed_transaction_info wallet_api::propose_builder_transaction2(transaction_handle_type handle,
+                                                                 const std::string& account_name_or_id,
+                                                                 fc::time_point_sec expiration,
+                                                                 uint32_t review_period_seconds,
+                                                                 bool broadcast)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
+}
+
+void wallet_api::remove_builder_transaction(transaction_handle_type handle)
+{
+   return my->remove_builder_transaction(handle);
+}
+
+std::string wallet_api::serialize_transaction(const chain::signed_transaction& tx) const
+{
+   return fc::to_hex(fc::raw::pack(tx));
+}
+
+signed_transaction_info wallet_api::sign_transaction(const chain::transaction& tx, bool broadcast /* = false */)
+{
+    try {
+       if(is_locked())
+          FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+       return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (tx) )
+}
+
+chain::operation wallet_api::get_prototype_operation(const std::string& operation_name) const
+{
+   return my->get_prototype_operation( operation_name );
+}
+
+std::map<std::string, chain::miner_id_type> wallet_api::list_miners(const std::string& lowerbound, uint32_t limit) const
+{
+   return my->_remote_db->lookup_miner_accounts(lowerbound, limit);
+}
+
+chain::miner_object wallet_api::get_miner(const std::string& owner_account) const
+{
+   return my->get_miner(owner_account);
+}
+
+signed_transaction_info wallet_api::create_miner(const std::string& owner_account,
+                                                 const std::string& url,
+                                                 bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->create_miner(owner_account, url, broadcast);
+}
+
+signed_transaction_info wallet_api::update_miner(const std::string& miner_name,
+                                                 const std::string& url,
+                                                 const std::string& block_signing_key,
+                                                 bool broadcast /* = false */)
+{
+   if(is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->update_miner(miner_name, url, block_signing_key, broadcast);
+}
+
+std::vector<vesting_balance_object_with_info> wallet_api::get_vesting_balances(const std::string& account_name) const
+{
+   return my->get_vesting_balances( account_name );
+}
+
+signed_transaction_info wallet_api::withdraw_vesting(const std::string& miner_name,
+                                                     const std::string& amount,
+                                                     const std::string& asset_symbol,
+                                                     bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
+}
+
+signed_transaction_info wallet_api::vote_for_miner(const std::string& voting_account,
+                                                   const std::string& miner,
+                                                   bool approve,
+                                                   bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->vote_for_miner(voting_account, miner, approve, broadcast);
+}
+
+signed_transaction_info wallet_api::set_voting_proxy(const std::string& account_to_modify,
+                                                     fc::optional<std::string> voting_account,
+                                                     bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
+}
+
+signed_transaction_info wallet_api::set_desired_miner_count(const std::string& account_to_modify,
+                                                            uint16_t desired_number_of_miners,
+                                                            bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
+}
+
+std::vector<miner_voting_info> wallet_api::search_miner_voting(const std::string& account_id,
+                                                               const std::string& term,
+                                                               bool only_my_votes,
+                                                               const std::string& order,
+                                                               const std::string& id,
+                                                               uint32_t count ) const
+{
+   return my->search_miner_voting(account_id, term, only_my_votes, order, id, count);
+}
+
+std::vector<chain::seeder_object> wallet_api::list_seeders_by_price( uint32_t count )const
+{
+   return my->_remote_db->list_seeders_by_price( count );
+}
+
+fc::optional<std::vector<chain::seeder_object>> wallet_api::list_seeders_by_upload( const uint32_t count )const
+{
+   return my->_remote_db->list_seeders_by_upload( count );
+}
+
+std::vector<chain::seeder_object> wallet_api::list_seeders_by_region( const std::string& region_code )const
+{
+   return my->_remote_db->list_seeders_by_region( region_code );
+}
+
+std::vector<chain::seeder_object> wallet_api::list_seeders_by_rating( const uint32_t count )const
+{
+   return my->_remote_db->list_seeders_by_rating( count );
+}
+
+std::vector<chain::proposal_object> wallet_api::get_proposed_transactions(const std::string& account_or_id ) const
+{
+   chain::account_id_type id = get_account(account_or_id).get_id();
+   return my->_remote_db->get_proposed_transactions( id );
+}
+
+signed_transaction_info wallet_api::propose_transfer(const std::string& proposer,
+                                                     const std::string& from,
+                                                     const std::string& to,
+                                                     const std::string& amount,
+                                                     const std::string& asset_symbol,
+                                                     const std::string& memo,
+                                                     fc::time_point_sec expiration)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->propose_transfer(proposer, from, to, amount, asset_symbol, memo, expiration);
+}
+
+signed_transaction_info wallet_api::propose_parameter_change(const std::string& proposing_account,
+                                                             fc::time_point_sec expiration_time,
+                                                             const fc::variant_object& changed_values,
+                                                             bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->propose_parameter_change( proposing_account, expiration_time, changed_values, broadcast );
+}
+
+signed_transaction_info wallet_api::propose_fee_change(const std::string& proposing_account,
+                                                       fc::time_point_sec expiration_time,
+                                                       const fc::variant_object& changed_fees,
+                                                       bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
+}
+
+signed_transaction_info wallet_api::approve_proposal(const std::string& fee_paying_account,
+                                                     const std::string& proposal_id,
+                                                     const approval_delta& delta,
+                                                     bool broadcast /* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
+}
+
+signed_transaction_info wallet_api::submit_content(const std::string& author,
+                                                   const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                                   const std::string& URI,
+                                                   const std::vector<regional_price_info>& price_amounts,
+                                                   uint64_t size,
+                                                   const fc::ripemd160& hash,
+                                                   const std::vector<chain::account_id_type>& seeders,
+                                                   uint32_t quorum,
+                                                   const fc::time_point_sec& expiration,
+                                                   const std::string& publishing_fee_asset,
+                                                   const std::string& publishing_fee_amount,
+                                                   const std::string& synopsis,
+                                                   const decent::encrypt::DInteger& secret,
+                                                   const decent::encrypt::CustodyData& cd,
+                                                   bool broadcast)
+{
+   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   return my->submit_content(author, co_authors, URI, price_amounts, hash, size,
+                             seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount,
+                             synopsis, secret, cd, broadcast);
+}
+
+chain::content_keys wallet_api::submit_content_async(const std::string& author,
+                                              const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                              const std::string& content_dir,
+                                              const std::string& samples_dir,
+                                              const std::string& protocol,
+                                              const std::vector<regional_price_info>& price_amounts,
+                                              const std::vector<chain::account_id_type>& seeders,
+                                              const fc::time_point_sec& expiration,
+                                              const std::string& synopsis)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
+}
+
+signed_transaction_info wallet_api::content_cancellation(const std::string& author,
+                                                         const std::string& URI,
+                                                         bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->content_cancellation(author, URI, broadcast);
+}
+
+void wallet_api::download_content(const std::string& consumer, const std::string& URI, const std::string& region_code_from, bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->download_content(consumer, URI, region_code_from, broadcast);
+}
+
+content_download_status wallet_api::get_download_status(const std::string& consumer, const std::string& URI) const
+{
+   return my->get_download_status(consumer, URI);
+}
+
+signed_transaction_info wallet_api::request_to_buy(const std::string& consumer,
+                                                   const std::string& URI,
+                                                   const std::string& price_asset_name,
+                                                   const std::string& price_amount,
+                                                   const std::string& str_region_code_from,
+                                                   bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
+}
+
+signed_transaction_info wallet_api::leave_rating_and_comment(const std::string& consumer,
+                                                             const std::string& URI,
+                                                             uint64_t rating,
+                                                             const std::string& comment,
+                                                             bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
+}
+
+decent::encrypt::DInteger wallet_api::restore_encryption_key(const std::string& consumer, chain::buying_id_type buying)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->restore_encryption_key(consumer, buying);
+}
+
+decent::encrypt::DInteger wallet_api::generate_encryption_key() const
+{
+   CryptoPP::Integer secret(detail::wallet_api_impl::randomGenerator, 256);
+   return secret;
+}
+
+std::vector<chain::buying_object> wallet_api::get_open_buyings() const
+{
+   return my->_remote_db->get_open_buyings();
+}
+
+std::vector<chain::buying_object> wallet_api::get_open_buyings_by_URI( const std::string& URI ) const
+{
+   return my->_remote_db->get_open_buyings_by_URI( URI );
+}
+
+std::vector<chain::buying_object> wallet_api::get_open_buyings_by_consumer( const std::string& account_id_or_name ) const
+{
+   chain::account_id_type consumer = get_account( account_id_or_name ).id;
+   return my->_remote_db->get_open_buyings_by_consumer( consumer );
+}
+
+std::vector<chain::buying_object> wallet_api::get_buying_history_objects_by_consumer( const std::string& account_id_or_name ) const
+{
+   chain::account_id_type consumer = get_account( account_id_or_name ).id;
+   std::vector<chain::buying_object> result = my->_remote_db->get_buying_history_objects_by_consumer( consumer );
+
+   for (int i = 0; i < (int)result.size(); ++i)
+   {
+      chain::buying_object& bobj = result[i];
+
+      fc::optional<chain::content_object> content = my->_remote_db->get_content( bobj.URI );
+      if (!content)
+         continue;
+      fc::optional<chain::asset> op_price = content->price.GetPrice(bobj.region_code_from);
+      if (!op_price)
+         continue;
+
+      bobj.price = *op_price;
+
+      bobj.size = content->size;
+      bobj.rating = content->AVG_rating;
+      bobj.synopsis = content->synopsis;
+
+   }
+   return result;
+}
+
+std::vector<buying_object_ex> wallet_api::search_my_purchases(const std::string& account_id_or_name,
+                                                              const std::string& term,
+                                                              const std::string& order,
+                                                              const std::string& id,
+                                                              uint32_t count) const
+{
+   chain::account_id_type consumer = get_account( account_id_or_name ).id;
+   std::vector<chain::buying_object> bobjects = my->_remote_db->get_buying_objects_by_consumer(consumer, order, db::object_id_type(id), term, count );
+   std::vector<buying_object_ex> result;
+
+   for (size_t i = 0; i < bobjects.size(); ++i)
+   {
+      chain::buying_object const& buyobj = bobjects[i];
+      content_download_status status = get_download_status(account_id_or_name, buyobj.URI);
+
+      fc::optional<chain::content_object> content = my->_remote_db->get_content( buyobj.URI );
+      if (!content)
+         continue;
+
+      result.emplace_back(buying_object_ex(bobjects[i], status));
+      buying_object_ex& bobj = result.back();
+
+      bobj.author_account = my->get_account(content->author).name;
+      bobj.times_bought = content->times_bought;
+      bobj.hash = content->_hash;
+      bobj.AVG_rating = content->AVG_rating;
+      bobj.rating = content->AVG_rating;
    }
 
-   signed_transaction_info wallet_api::update_non_fungible_token_data(const std::string& modifier,
-                                                                      chain::non_fungible_token_data_id_type nft_data_id,
-                                                                      const std::vector<std::pair<std::string, fc::variant>>& data,
-                                                                      bool broadcast /* = false */)
-   {
-      return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
+   return result;
+}
+
+fc::optional<chain::buying_object> wallet_api::get_buying_by_consumer_URI( const std::string& account_id_or_name, const std::string& URI ) const
+{
+   chain::account_id_type account = get_account( account_id_or_name ).id;
+   return my->_remote_db->get_buying_by_consumer_URI( account, URI );
+}
+
+std::vector<rating_object_ex> wallet_api::search_feedback(const std::string& user, const std::string& URI, const std::string& id, uint32_t count) const
+{
+    std::vector<rating_object_ex> result;
+    std::vector<chain::buying_object> temp = my->_remote_db->search_feedback(user, URI, db::object_id_type(id), count);
+
+    for (auto const& item : temp)
+       result.push_back(rating_object_ex( item, get_account(std::string(db::object_id_type(item.consumer))).name));
+
+    return result;
+}
+
+fc::optional<chain::content_object> wallet_api::get_content( const std::string& URI ) const
+{
+    return my->_remote_db->get_content( URI );
+}
+
+std::vector<chain::content_summary> wallet_api::search_content(const std::string& term,
+                                                        const std::string& order,
+                                                        const std::string& user,
+                                                        const std::string& region_code,
+                                                        const std::string& id,
+                                                        const std::string& type,
+                                                        uint32_t count)const
+{
+   return my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
+}
+
+std::vector<chain::content_summary> wallet_api::search_user_content(const std::string& user,
+                                                             const std::string& term,
+                                                             const std::string& order,
+                                                             const std::string& region_code,
+                                                             const std::string& id,
+                                                             const std::string& type,
+                                                             uint32_t count)const
+{
+  std::vector<chain::content_summary> result = my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
+
+  auto packages = decent::package::PackageManager::instance().get_all_known_packages();
+  for (auto package: packages)
+  {
+     auto state = package->get_manipulation_state();
+
+     if (package->get_data_state() == decent::package::PackageInfo::CHECKED)
+     {
+        bool cont = false;
+        auto hash = package->get_hash();
+        for( const auto& item : result )
+           if( item._hash == hash )
+              cont = true;
+        if(cont)
+           continue;
+     }
+
+     bool cont = false;
+     for (auto listener: my->_package_manager_listeners)
+     {
+
+        if (listener->get_hash() == package->get_hash())
+        {
+           cont = true;
+           chain::content_summary newObject;
+           newObject.synopsis = listener->op().synopsis;
+           newObject.expiration = listener->op().expiration;
+           newObject.author = my->get_account( listener->op().author ).name;
+
+           if (state == decent::package::PackageInfo::PACKING) {
+              newObject.status = "Packing";
+           } else if (state == decent::package::PackageInfo::ENCRYPTING) {
+              newObject.status = "Encrypting";
+           } else if (state == decent::package::PackageInfo::STAGING) {
+              newObject.status = "Staging";
+           } else if (state == decent::package::PackageInfo:: MS_IDLE )
+              newObject.status = "Submission failed";
+
+           result.insert(result.begin(), newObject);
+        }
+     }
+     if (cont)
+        continue;
+  }
+
+  return result;
+}
+
+std::pair<chain::account_id_type, std::vector<chain::account_id_type>> wallet_api::get_author_and_co_authors_by_URI( const std::string& URI )const
+{
+   return my->get_author_and_co_authors_by_URI( URI );
+}
+
+std::pair<std::string, decent::encrypt::CustodyData> wallet_api::create_package(const std::string& content_dir,
+                                                                                const std::string& samples_dir,
+                                                                                const decent::encrypt::DInteger& aes_key) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   fc::sha256 key1;
+#if CRYPTOPP_VERSION >= 600
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
+#else
+   aes_key.Encode((byte*)key1._hash, 32);
+#endif
+
+   auto pack = decent::package::PackageManager::instance().get_package(content_dir, samples_dir, key1);
+   pack->create( true );
+   decent::encrypt::CustodyData cd = pack->get_custody_data();
+   return std::pair<std::string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
+}
+
+void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const decent::encrypt::DInteger& aes_key) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   fc::sha256 key1;
+#if CRYPTOPP_VERSION >= 600
+   aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
+#else
+   aes_key.Encode((byte*)key1._hash, 32);
+#endif
+
+   auto pack = decent::package::PackageManager::instance().find_package(fc::ripemd160(package_hash));
+   if (pack == nullptr) {
+      FC_THROW_EXCEPTION(cannot_find_package_exception, "");
    }
 
-   std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
-   {
-      return my->get_result_formatters();
+   if (pack->get_manipulation_state() != decent::package::PackageInfo::ManipulationState::MS_IDLE) {
+      FC_THROW_EXCEPTION(package_is_not_in_valid_state_exception, "");
    }
+   pack->unpack(output_dir, key1);
+}
 
-   vesting_balance_object_with_info::vesting_balance_object_with_info(const chain::vesting_balance_object& vbo, fc::time_point_sec now)
-      : chain::vesting_balance_object( vbo )
-   {
-      allowed_withdraw = get_allowed_withdraw( now );
-      allowed_withdraw_time = now;
-   }
+void wallet_api::download_package(const std::string& url) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   auto content = get_content(url);
+   if(!content)
+      FC_THROW_EXCEPTION(no_such_content_at_this_url_exception, "URL: ${url}", ("url", url));
 
-   void graphene::wallet::detail::submit_transfer_listener::package_creation_complete()
-   {
-      uint64_t size = std::max((uint64_t)1, ( _info->get_size() + (1024 * 1024) -1 ) / (1024 * 1024));
+   auto pack = decent::package::PackageManager::instance().get_package(url, content->_hash );
+   pack->download(false);
+}
 
-      chain::asset total_price_per_day;
-      for( chain::account_id_type account : _op.seeders )
-      {
-         fc::optional<chain::seeder_object> s = _wallet._remote_db->get_seeder( account );
-         total_price_per_day += s->price.amount * size;
-      }
+std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   auto package = decent::package::PackageManager::instance().get_package(fc::ripemd160(package_hash));
+   package->start_seeding(protocol, true);
+   return package->get_url();
+}
 
-      fc::microseconds duration = (_op.expiration - fc::time_point::now());
-      uint32_t days = static_cast<uint32_t>((duration.to_seconds()+3600*24-1) / 3600 / 24);
+void wallet_api::remove_package(const std::string& package_hash) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   decent::package::PackageManager::instance().release_package(fc::ripemd160(package_hash));
+}
 
-      _op.hash = _info->get_hash();
-      _op.size = size;
-      _op.publishing_fee = days * total_price_per_day;
-      _op.cd = _info->get_custody_data();
+chain::content_keys wallet_api::generate_content_keys(const std::vector<chain::account_id_type>& seeders) const
+{
+   return my->_remote_db->generate_content_keys(seeders);
+}
 
-      _info->start_seeding(_protocol, false);
-   }
+bool wallet_api::is_package_manager_task_waiting() const
+{
+   return my->is_package_manager_task_waiting();
+}
 
-   void graphene::wallet::detail::submit_transfer_listener::package_seed_complete()
-   {
-      _op.URI = _info->get_url();
+signed_transaction_info wallet_api::subscribe_to_author(const std::string& from,
+                                                        const std::string& to,
+                                                        const std::string& price_amount,
+                                                        const std::string& price_asset_symbol,
+                                                        bool broadcast/* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
+}
 
-      chain::signed_transaction tx;
-      tx.operations.push_back( _op );
-      _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-       _wallet.sign_transaction(tx, true);
+signed_transaction_info wallet_api::subscribe_by_author(const std::string& from,
+                                                        const std::string& to,
+                                                        bool broadcast/* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->subscribe_by_author(from, to, broadcast);
+}
 
-       _is_finished = true;
-   }
+signed_transaction_info wallet_api::set_subscription(const std::string& account,
+                                                     bool allow_subscription,
+                                                     uint32_t subscription_period,
+                                                     const std::string& price_amount,
+                                                     const std::string& price_asset_symbol,
+                                                     bool broadcast/* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
+}
+
+signed_transaction_info wallet_api::set_automatic_renewal_of_subscription(const std::string& account_id_or_name,
+                                                                          chain::subscription_id_type subscription_id,
+                                                                          bool automatic_renewal,
+                                                                          bool broadcast/* = false */)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
+}
+
+std::vector<chain::subscription_object> wallet_api::list_active_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const
+{
+   return my->_remote_db->list_active_subscriptions_by_consumer(get_account(account_id_or_name).id, count);
+}
+
+std::vector<chain::subscription_object> wallet_api::list_subscriptions_by_consumer(const std::string& account_id_or_name, uint32_t count) const
+{
+   return my->_remote_db->list_subscriptions_by_consumer(get_account(account_id_or_name).id, count);
+}
+
+std::vector<chain::subscription_object> wallet_api::list_active_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const
+{
+   return my->_remote_db->list_active_subscriptions_by_author(get_account(account_id_or_name).id, count);
+}
+
+std::vector<chain::subscription_object> wallet_api::list_subscriptions_by_author(const std::string& account_id_or_name, uint32_t count) const
+{
+   return my->_remote_db->list_subscriptions_by_author(get_account(account_id_or_name).id, count);
+}
+
+signed_transaction_info wallet_api::send_message(const std::string& from,
+                                                 const std::vector<std::string>& to,
+                                                 const std::string& text,
+                                                 bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->send_message(from, to, text, broadcast);
+}
+
+signed_transaction_info wallet_api::send_unencrypted_message(const std::string& from,
+                                                             const std::vector<std::string>& to,
+                                                             const std::string& text,
+                                                             bool broadcast)
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->send_unencrypted_message(from, to, text, broadcast);
+}
+
+std::vector<message_data> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   fc::optional<chain::account_id_type> receiver_id;
+   if(receiver.size())
+      receiver_id = get_account(receiver).get_id();
+   fc::optional<chain::account_id_type> sender_id;
+   if(sender.size())
+      sender_id = get_account(sender).get_id();
+   return my->get_message_objects(sender_id, receiver_id, max_count);
+}
+
+std::vector<text_message> wallet_api::get_messages(const std::string& receiver, uint32_t max_count) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->get_messages(receiver, max_count);
+}
+
+std::vector<text_message> wallet_api::get_sent_messages(const std::string& sender, uint32_t max_count) const
+{
+   if(my->is_locked())
+      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   return my->get_sent_messages(sender, max_count);
+}
+
+void wallet_api::reset_counters(const std::vector<std::string>& names) const
+{
+   return my->reset_counters(names);
+}
+
+std::vector<monitoring::counter_item_cli> wallet_api::get_counters(const std::vector<std::string>& names) const
+{
+   return my->get_counters(names);
+}
+
+std::vector<chain::non_fungible_token_object> wallet_api::list_non_fungible_tokens(const std::string& lowerbound, uint32_t limit) const
+{
+   return my->_remote_db->list_non_fungible_tokens(lowerbound, limit);
+}
+
+chain::non_fungible_token_object wallet_api::get_non_fungible_token(const std::string& nft_symbol_or_id) const
+{
+   return my->get_non_fungible_token(nft_symbol_or_id);
+}
+
+signed_transaction_info wallet_api::create_non_fungible_token(const std::string& issuer,
+                                                               const std::string& symbol,
+                                                               const std::string& description,
+                                                               const chain::non_fungible_token_data_definitions& definitions,
+                                                               uint32_t max_supply,
+                                                               bool fixed_max_supply,
+                                                               bool transferable,
+                                                               bool broadcast /* = false */)
+{
+   return my->create_non_fungible_token(issuer, symbol, description, definitions, max_supply, fixed_max_supply, transferable, broadcast);
+}
+
+signed_transaction_info wallet_api::update_non_fungible_token(const std::string& issuer,
+                                                               const std::string& symbol,
+                                                               const std::string& description,
+                                                               uint32_t max_supply,
+                                                               bool fixed_max_supply,
+                                                               bool broadcast /* = false */)
+{
+   return my->update_non_fungible_token(issuer, symbol, description, max_supply, fixed_max_supply, broadcast);
+}
+
+signed_transaction_info wallet_api::issue_non_fungible_token(const std::string& to_account,
+                                                               const std::string& symbol,
+                                                               const fc::variants& data,
+                                                               const std::string& memo,
+                                                               bool broadcast /* = false */)
+{
+   return my->issue_non_fungible_token(to_account, symbol, data, memo, broadcast);
+}
+
+std::vector<chain::non_fungible_token_data_object> wallet_api::list_non_fungible_token_data(const std::string& nft_symbol_or_id) const
+{
+   return my->_remote_db->list_non_fungible_token_data(get_non_fungible_token(nft_symbol_or_id).get_id());
+}
+
+std::map<chain::non_fungible_token_id_type, uint32_t> wallet_api::get_non_fungible_token_summary(const std::string& account) const
+{
+   return my->_remote_db->get_non_fungible_token_summary(get_account(account).get_id());
+}
+
+std::vector<chain::non_fungible_token_data_object> wallet_api::get_non_fungible_token_balances(const std::string& account, const std::set<std::string>& symbols_or_ids) const
+{
+   std::set<chain::non_fungible_token_id_type> ids;
+   std::for_each(symbols_or_ids.begin(), symbols_or_ids.end(), [&](const std::string& symbol) { ids.insert(get_non_fungible_token(symbol).get_id()); } );
+   return my->_remote_db->get_non_fungible_token_balances(get_account(account).get_id(), ids);
+}
+
+std::vector<chain::transaction_detail_object> wallet_api::search_non_fungible_token_history(chain::non_fungible_token_data_id_type nft_data_id) const
+{
+   return my->_remote_db->search_non_fungible_token_history(nft_data_id);
+}
+
+signed_transaction_info wallet_api::transfer_non_fungible_token_data(const std::string& to_account,
+                                                                     chain::non_fungible_token_data_id_type nft_data_id,
+                                                                     const std::string& memo,
+                                                                     bool broadcast /* = false */)
+{
+   return my->transfer_non_fungible_token_data(to_account, nft_data_id, memo, broadcast);
+}
+
+signed_transaction_info wallet_api::burn_non_fungible_token_data(chain::non_fungible_token_data_id_type nft_data_id,
+                                                                  bool broadcast /* = false */)
+{
+   return my->burn_non_fungible_token_data(nft_data_id, broadcast);
+}
+
+signed_transaction_info wallet_api::update_non_fungible_token_data(const std::string& modifier,
+                                                                     chain::non_fungible_token_data_id_type nft_data_id,
+                                                                     const std::vector<std::pair<std::string, fc::variant>>& data,
+                                                                     bool broadcast /* = false */)
+{
+   return my->update_non_fungible_token_data(modifier, nft_data_id, data, broadcast);
+}
+
+std::map<std::string, std::function<std::string(fc::variant,const fc::variants&)> > wallet_api::get_result_formatters() const
+{
+   return my->get_result_formatters();
+}
+
+vesting_balance_object_with_info::vesting_balance_object_with_info(const chain::vesting_balance_object& vbo, fc::time_point_sec now)
+   : chain::vesting_balance_object( vbo )
+{
+   allowed_withdraw = get_allowed_withdraw( now );
+   allowed_withdraw_time = now;
+}
 
 } } // graphene::wallet
 
