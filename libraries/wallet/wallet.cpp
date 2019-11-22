@@ -721,10 +721,10 @@ signed_transaction_info wallet_api::update_account_keys(const std::string& name,
    chain::account_object acc = my->get_account( name );
 
    if( !owner.empty() )
-      new_owner = chain::authority( 1, chain::public_key_type( owner ), 1 );
+      new_owner = chain::authority( 1, chain::public_key_type( owner ), chain::weight_type( 1 ) );
 
    if( !active.empty() )
-      new_active = chain::authority( 1, chain::public_key_type( active ), 1 );
+      new_active = chain::authority( 1, chain::public_key_type( active ), chain::weight_type( 1 ) );
 
    if( !memo.empty() )
       new_memo = chain::public_key_type( memo );

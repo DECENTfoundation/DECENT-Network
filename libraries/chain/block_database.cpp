@@ -217,7 +217,7 @@ fc::optional<signed_block> block_database::last()const
       if( _block_num_to_pos.tellp() < (std::streampos)sizeof(index_entry) )
          return {};
 
-      _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
+      _block_num_to_pos.seekg( -static_cast<boost::filesystem::fstream::off_type>(sizeof(index_entry)), _block_num_to_pos.end );
       _block_num_to_pos.read( (char*)&e, sizeof(e) );
       uint64_t pos = _block_num_to_pos.tellg();
       while( e.block_size == 0 && pos > 0 )
@@ -255,7 +255,7 @@ fc::optional<block_id_type> block_database::last_id()const
       if( _block_num_to_pos.tellp() < (std::streampos)sizeof(index_entry) )
          return {};
 
-      _block_num_to_pos.seekg( -sizeof(index_entry), _block_num_to_pos.end );
+      _block_num_to_pos.seekg( -static_cast<boost::filesystem::fstream::off_type>(sizeof(index_entry)), _block_num_to_pos.end );
       _block_num_to_pos.read( (char*)&e, sizeof(e) );
       uint64_t pos = _block_num_to_pos.tellg();
       while( e.block_size == 0 && pos > 0 )

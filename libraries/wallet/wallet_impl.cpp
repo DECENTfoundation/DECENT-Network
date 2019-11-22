@@ -874,8 +874,8 @@ chain::signed_transaction wallet_api_impl::register_account(const std::string& n
 
    account_create_op.registrar = registrar_account_id;
    account_create_op.name = name;
-   account_create_op.owner = chain::authority(1, owner, 1);
-   account_create_op.active = chain::authority(1, active, 1);
+   account_create_op.owner = chain::authority(1, owner, chain::weight_type(1));
+   account_create_op.active = chain::authority(1, active, chain::weight_type(1));
    account_create_op.options.memo_key = memo;
 
    chain::signed_transaction tx;
@@ -959,8 +959,8 @@ chain::signed_transaction wallet_api_impl::create_account_with_private_key(const
 
    account_create_op.registrar = registrar_account_id;
    account_create_op.name = account_name;
-   account_create_op.owner = chain::authority(1, owner_pubkey, 1);
-   account_create_op.active = chain::authority(1, active_pubkey, 1);
+   account_create_op.owner = chain::authority(1, owner_pubkey, chain::weight_type(1));
+   account_create_op.active = chain::authority(1, active_pubkey, chain::weight_type(1));
    account_create_op.options.memo_key = memo_pubkey;
 
    // current_fee_schedule()
