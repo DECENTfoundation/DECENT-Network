@@ -34,7 +34,7 @@ target_link_libraries( graphene_wallet PUBLIC graphene_app PRIVATE package_manag
 target_include_directories( graphene_wallet PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
 if(MSVC)
-  set_source_files_properties( wallet.cpp wallet_utility.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+  set_source_files_properties( wallet.cpp wallet_impl.cpp wallet_utility.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
 #install( TARGETS
