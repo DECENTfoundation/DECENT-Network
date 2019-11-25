@@ -1,6 +1,6 @@
 find_package(CURL REQUIRED)
 
-file(GLOB HEADERS "include/graphene/elasticsearch/*.hpp")
+file(GLOB_RECURSE HEADERS "*.hpp")
 
 add_library( decent_elasticsearch
              adaptor.cpp

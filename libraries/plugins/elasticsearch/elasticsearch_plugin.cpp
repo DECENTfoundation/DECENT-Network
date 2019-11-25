@@ -271,7 +271,11 @@ struct elasticsearch_plugin::impl
       graphene::chain::account_statistics_object,
       graphene::chain::chain_property_object,
       graphene::chain::miner_schedule_object,
-      graphene::chain::budget_record_object
+      graphene::chain::budget_record_object,
+      graphene::chain::buying_object,
+      graphene::chain::content_object,
+      graphene::chain::subscription_object,
+      graphene::chain::seeding_statistics_object
    >;
 
    void check(const std::string &basic_auth, uint32_t bulk_limit, uint32_t bulk_pause);

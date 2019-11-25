@@ -34,6 +34,10 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/miner_schedule_object.hpp>
 #include <graphene/chain/budget_record_object.hpp>
+#include <graphene/chain/buying_object.hpp>
+#include <graphene/chain/content_object.hpp>
+#include <graphene/chain/subscription_object.hpp>
+#include <graphene/chain/seeding_statistics_object.hpp>
 
 namespace decent { namespace elasticsearch {
 
@@ -268,6 +272,104 @@ fc::mutable_variant_object adapt(const graphene::chain::dynamic_global_property_
       o.erase("current_miner");
 
    o.erase("id");
+   return o;
+}
+
+template<>
+fc::mutable_variant_object adapt(const graphene::chain::buying_object &obj, const graphene::chain::database &db)
+{
+   fc::variant v;
+   fc::to_variant(obj, v);
+
+   fc::mutable_variant_object o(v);
+   o.set("consumer", adapt_account(o["consumer"], db));
+   adapt_asset(o["price"], db);
+   adapt_asset(o["paid_price_before_exchange"], db);
+   adapt_asset(o["paid_price_after_exchange"], db);
+
+   for(auto &seeder : o["seeders_answered"].get_array())
+      seeder = adapt_account(seeder, db);
+
+   return o;
+}
+
+template<>
+fc::mutable_variant_object adapt(const graphene::chain::content_object &obj, const graphene::chain::database &db)
+{
+   fc::variant v;
+   fc::to_variant(obj, v);
+
+   fc::mutable_variant_object o(v);
+   o.set("author", adapt_account(o["author"], db));
+
+   for(fc::variant &co_author : o["co_authors"].get_array()) {
+      const fc::variants& ar = co_author.get_array();
+      fc::mutable_variant_object element;
+      element.set("co_author", adapt_account(ar[0], db));
+      element.set("points", ar[1]);
+      co_author = std::move(element);
+   }
+
+   for(fc::variant &key_part : o["key_parts"].get_array()) {
+      const fc::variants& ar = key_part.get_array();
+      fc::mutable_variant_object element;
+      element.set("seeder", adapt_account(ar[0], db));
+      element.set("key_part", ar[1]);
+      key_part = std::move(element);
+   }
+
+   for(fc::variant &proof : o["last_proof"].get_array()) {
+      const fc::variants& ar = proof.get_array();
+      fc::mutable_variant_object element;
+      element.set("seeder", adapt_account(ar[0], db));
+      element.set("timestamp", ar[1]);
+      proof = std::move(element);
+   }
+
+   for(fc::variant &seeder_price : o["seeder_price"].get_array()) {
+      const fc::variants& ar = seeder_price.get_array();
+      fc::mutable_variant_object element;
+      element.set("seeder", adapt_account(ar[0], db));
+      element.set("price", ar[1]);
+      seeder_price = std::move(element);
+   }
+
+   fc::variants price_regions;
+   const fc::variant_object& price = o["price"].get_object();
+   for(const fc::variant &map_price : price["map_price"].get_array()) {
+      const fc::variants& ar = map_price.get_array();
+      fc::mutable_variant_object element;
+      element.set("region", ar[0]);
+      element.set("price", ar[1]);
+      adapt_asset(element["price"], db);
+      price_regions.push_back(std::move(element));
+   }
+
+   o.set("price", price_regions);
+   adapt_asset(o["publishing_fee_escrow"], db);
+   return o;
+}
+
+template<>
+fc::mutable_variant_object adapt(const graphene::chain::subscription_object &obj, const graphene::chain::database &db)
+{
+   fc::variant v;
+   fc::to_variant(obj, v);
+
+   fc::mutable_variant_object o(v);
+   o.set("from", adapt_account(o["from"], db));
+   o.set("to", adapt_account(o["to"], db));
+   return o;
+}
+
+template<>
+fc::mutable_variant_object adapt(const graphene::chain::seeding_statistics_object &obj, const graphene::chain::database &db)
+{
+   fc::variant v;
+   fc::to_variant(obj, v);
+
+   fc::mutable_variant_object o(v);
+   o.set("seeder", adapt_account(o["seeder"], db));
    return o;
 }
 
