@@ -294,10 +294,10 @@ public:
                                             const std::vector<chain::account_id_type>& seeders, uint32_t quorum, fc::time_point_sec expiration,
                                             const std::string& publishing_fee_symbol_name, const std::string& publishing_fee_amount, const std::string& synopsis,
                                             const decent::encrypt::DInteger& secret, const decent::encrypt::CustodyData& cd, bool broadcast);
-   chain::content_keys submit_content_async(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                            const std::string& content_dir, const std::string& samples_dir, const std::string& protocol,
-                                            const std::vector<regional_price_info>& price_amounts, const std::vector<chain::account_id_type>& seeders,
-                                            fc::time_point_sec expiration, const std::string& synopsis);
+   app::content_keys submit_content_async(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                          const std::string& content_dir, const std::string& samples_dir, const std::string& protocol,
+                                          const std::vector<regional_price_info>& price_amounts, const std::vector<chain::account_id_type>& seeders,
+                                          fc::time_point_sec expiration, const std::string& synopsis);
    chain::signed_transaction content_cancellation(const std::string& author, const std::string& URI, bool broadcast);
    content_download_status get_download_status(const std::string& consumer, const std::string& URI) const;
    void download_content(const std::string& consumer, const std::string& URI, const std::string& str_region_code_from, bool broadcast);

@@ -68,6 +68,34 @@ namespace graphene { namespace app {
    const int CURRENT_OUTPUT_LIMIT_1000 = 1000;
    const int CURRENT_OUTPUT_LIMIT_100 = 100;
 
+   void content_summary::set(const chain::content_object& co, const chain::account_object& ao, const std::string& region_code)
+   {
+      id = std::string(co.id);
+      author = ao.name;
+      auto it = chain::RegionCodes::s_mapNameToCode.find(region_code);
+      FC_ASSERT(it != chain::RegionCodes::s_mapNameToCode.end());
+      fc::optional<chain::asset> op_price = co.price.GetPrice(it->second);
+      FC_ASSERT(op_price.valid());
+      price = *op_price;
+
+      synopsis = co.synopsis;
+      URI = co.URI;
+      AVG_rating = co.AVG_rating;
+      _hash = co._hash;
+      size = co.size;
+      expiration = co.expiration;
+      created = co.created;
+      times_bought = co.times_bought;
+      if(co.last_proof.size() >= co.quorum)
+         status = "Uploaded";
+      else if( co.last_proof.size() > 0 )
+         status = "Partially uploaded";
+      else
+         status = "Uploading";
+      if(co.expiration <= fc::time_point::now() )
+         status = "Expired";
+   }
+
    class database_api_impl : public std::enable_shared_from_this<database_api_impl>
    {
    public:
@@ -174,7 +202,7 @@ namespace graphene { namespace app {
       std::vector<chain::buying_object> get_buying_objects_by_consumer(chain::account_id_type consumer, const std::string& order, db::object_id_type id, const std::string& term, uint32_t count) const;
       std::vector<chain::buying_object> search_feedback(const std::string& user, const std::string& URI, db::object_id_type id, uint32_t count) const;
       fc::optional<chain::content_object> get_content(const std::string& URI) const;
-      std::vector<chain::content_summary> search_content(const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
+      std::vector<content_summary> search_content(const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
       std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
       fc::optional<chain::seeder_object> get_seeder(chain::account_id_type account ) const;
       std::vector<chain::seeder_object> list_seeders_by_upload(uint32_t count) const;
@@ -1996,37 +2024,37 @@ namespace
       return key;
    }
 
-   chain::content_keys database_api::generate_content_keys(const std::vector<chain::account_id_type>& seeders) const
+   content_keys database_api::generate_content_keys(const std::vector<chain::account_id_type>& seeders) const
    {
-         chain::content_keys keys;
-         CryptoPP::Integer secret(randomGenerator, 256);
-         while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
-            CryptoPP::Integer tmp(randomGenerator, 256);
-            secret = tmp;
-         }
+      content_keys keys;
+      CryptoPP::Integer secret(randomGenerator, 256);
+      while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
+         CryptoPP::Integer tmp(randomGenerator, 256);
+         secret = tmp;
+      }
 #if CRYPTOPP_VERSION >= 600
-         secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
+      secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
 #else
-         secret.Encode((byte*)keys.key._hash, 32);
+      secret.Encode((byte*)keys.key._hash, 32);
 #endif
 
-         keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
-         decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
-         ss.calculate_split();
+      keys.quorum = std::max(2u, static_cast<uint32_t>(seeders.size()/3));
+      decent::encrypt::ShamirSecret ss(static_cast<uint16_t>(keys.quorum), static_cast<uint16_t>(seeders.size()), secret);
+      ss.calculate_split();
 
-         for( int i =0; i < (int)seeders.size(); i++ )
-         {
-            const auto& s = my->get_seeder( seeders[i] );
+      for( int i =0; i < (int)seeders.size(); i++ )
+      {
+         const auto& s = my->get_seeder( seeders[i] );
 
-            if(!s)
-              FC_THROW_EXCEPTION(seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
-            decent::encrypt::Ciphertext cp;
-            decent::encrypt::point p = ss.split[i];
-            decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
-            keys.parts.push_back(cp);
-         }
+         if(!s)
+            FC_THROW_EXCEPTION(seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
+         decent::encrypt::Ciphertext cp;
+         decent::encrypt::point p = ss.split[i];
+         decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
+         keys.parts.push_back(cp);
+      }
 
-         return keys;
+      return keys;
    }
 
    fc::optional<chain::seeder_object> database_api::get_seeder(chain::account_id_type account) const
@@ -2243,8 +2271,8 @@ namespace
       }FC_CAPTURE_AND_RETHROW( (account)(count) );
    }
 
-   std::vector<chain::content_summary> database_api::search_content(
-      const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
+   std::vector<content_summary> database_api::search_content(const std::string& term, const std::string& order, const std::string& user,
+                                                             const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
    {
       return my->search_content(term, order, user, region_code, id, type, count);
    }
@@ -2253,7 +2281,7 @@ namespace
 
       template <bool is_ascending, class sort_tag>
       void search_content_template(chain::database& db, const std::string& search_term, uint32_t count, const std::string& user, const std::string& region_code,
-         db::object_id_type id, const std::string& type, std::vector<chain::content_summary>& result)
+         db::object_id_type id, const std::string& type, std::vector<content_summary>& result)
       {
          const auto& idx_by_sort_tag = db.get_index_type<chain::content_index>().indices().get<sort_tag>();
 
@@ -2262,7 +2290,7 @@ namespace
 
          correct_iterator<chain::content_index, chain::content_object, sort_tag, decltype(itr_begin), is_ascending>(db, id, itr_begin);
 
-         chain::content_summary content;
+         content_summary content;
          const auto& idx_account = db.get_index_type<chain::account_index>().indices().get<db::by_id>();
 
          chain::ContentObjectTypeValue filter_type;
@@ -2318,13 +2346,13 @@ namespace
       }
    }
 
-   std::vector<chain::content_summary> database_api_impl::search_content(
-      const std::string& search_term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
+   std::vector<content_summary> database_api_impl::search_content(const std::string& search_term, const std::string& order, const std::string& user,
+                                                                  const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const
    {
       if(count > CURRENT_OUTPUT_LIMIT_100)
          FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
-      std::vector<chain::content_summary> result;
+      std::vector<content_summary> result;
       result.reserve( count );
 
       if (order == "+author")

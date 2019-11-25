@@ -157,18 +157,6 @@ static bool InitCodeAndName() { \
       static std::map<std::string, uint32_t> s_mapNameToCode;
    };
 
-   struct PriceRegions
-   {
-      std::map<uint32_t, asset> map_price;
-
-      fc::optional<asset> GetPrice(uint32_t region_code) const;
-      void ClearPrices();
-      void SetSimplePrice(asset const& price);
-      void SetRegionPrice(uint32_t region_code, asset const& price);
-      bool Valid(uint32_t region_code) const;
-      bool Valid(const std::string& region_code) const;
-   };
-
    /**
     * @ingroup operations
     * @brief This operation is used to send a request to buy a content.

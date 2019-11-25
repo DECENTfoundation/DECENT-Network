@@ -1221,15 +1221,15 @@ signed_transaction_info wallet_api::submit_content(const std::string& author,
                              synopsis, secret, cd, broadcast);
 }
 
-chain::content_keys wallet_api::submit_content_async(const std::string& author,
-                                              const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                              const std::string& content_dir,
-                                              const std::string& samples_dir,
-                                              const std::string& protocol,
-                                              const std::vector<regional_price_info>& price_amounts,
-                                              const std::vector<chain::account_id_type>& seeders,
-                                              const fc::time_point_sec& expiration,
-                                              const std::string& synopsis)
+app::content_keys wallet_api::submit_content_async(const std::string& author,
+                                                   const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                                   const std::string& content_dir,
+                                                   const std::string& samples_dir,
+                                                   const std::string& protocol,
+                                                   const std::vector<regional_price_info>& price_amounts,
+                                                   const std::vector<chain::account_id_type>& seeders,
+                                                   const fc::time_point_sec& expiration,
+                                                   const std::string& synopsis)
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
@@ -1389,7 +1389,7 @@ fc::optional<chain::content_object> wallet_api::get_content(const std::string& U
     return my->_remote_db->get_content( URI );
 }
 
-std::vector<chain::content_summary> wallet_api::search_content(const std::string& term,
+std::vector<app::content_summary> wallet_api::search_content(const std::string& term,
                                                         const std::string& order,
                                                         const std::string& user,
                                                         const std::string& region_code,
@@ -1400,7 +1400,7 @@ std::vector<chain::content_summary> wallet_api::search_content(const std::string
    return my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
 }
 
-std::vector<chain::content_summary> wallet_api::search_user_content(const std::string& user,
+std::vector<app::content_summary> wallet_api::search_user_content(const std::string& user,
                                                              const std::string& term,
                                                              const std::string& order,
                                                              const std::string& region_code,
@@ -1408,7 +1408,7 @@ std::vector<chain::content_summary> wallet_api::search_user_content(const std::s
                                                              const std::string& type,
                                                              uint32_t count) const
 {
-  std::vector<chain::content_summary> result = my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
+  std::vector<app::content_summary> result = my->_remote_db->search_content(term, order, user, region_code, db::object_id_type(id), type, count);
 
   auto packages = decent::package::PackageManager::instance().get_all_known_packages();
   for (auto package: packages)
@@ -1433,7 +1433,7 @@ std::vector<chain::content_summary> wallet_api::search_user_content(const std::s
         if (listener->get_hash() == package->get_hash())
         {
            cont = true;
-           chain::content_summary newObject;
+           app::content_summary newObject;
            newObject.synopsis = listener->op().synopsis;
            newObject.expiration = listener->op().expiration;
            newObject.author = my->get_account( listener->op().author ).name;
@@ -1531,7 +1531,7 @@ void wallet_api::remove_package(const std::string& package_hash) const
    decent::package::PackageManager::instance().release_package(fc::ripemd160(package_hash));
 }
 
-chain::content_keys wallet_api::generate_content_keys(const std::vector<chain::account_id_type>& seeders) const
+app::content_keys wallet_api::generate_content_keys(const std::vector<chain::account_id_type>& seeders) const
 {
    return my->_remote_db->generate_content_keys(seeders);
 }

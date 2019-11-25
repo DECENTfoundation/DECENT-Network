@@ -80,6 +80,31 @@ namespace graphene { namespace app {
           operation_info(int32_t id, std::string name, chain::fee_parameters current_fees) : id(id), name(name), current_fees(current_fees) {}
       };
 
+   struct content_keys
+   {
+       fc::sha256 key;
+       std::vector<chain::ciphertext_type> parts;
+       uint32_t quorum = 2;
+   };
+
+   struct content_summary
+   {
+      std::string id;
+      std::string author;
+      chain::asset price;
+      std::string synopsis;
+      fc::ripemd160 _hash;
+      std::string status;
+      std::string URI;
+      uint32_t AVG_rating = 0;
+      uint64_t size = 0;
+      fc::time_point_sec expiration;
+      fc::time_point_sec created;
+      uint32_t times_bought = 0;
+
+      void set(const chain::content_object& co, const chain::account_object& ao, const std::string& region_code);
+   };
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -842,7 +867,7 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw seeder_not_found_exception
           */
-         chain::content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
+         content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
 
          /**
           * @brief Restores encryption key from key parts stored in buying object.
@@ -867,8 +892,8 @@ namespace graphene { namespace app {
           * @ingroup DatabaseAPI_Content
           * @throw limit_exceeded_exception
           */
-         std::vector<chain::content_summary> search_content(
-            const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
+         std::vector<content_summary> search_content(const std::string& term, const std::string& order, const std::string& user,
+                                                     const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
 
          /**
           * @brief Get a list of seeders by price, in increasing order.
@@ -967,8 +992,10 @@ namespace graphene { namespace app {
 
    } }
 
-FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) );
-FC_REFLECT( graphene::app::operation_info, (id)(name)(current_fees) );
+FC_REFLECT( graphene::app::miner_voting_info, (id)(name)(url)(total_votes)(voted) )
+FC_REFLECT( graphene::app::operation_info, (id)(name)(current_fees) )
+FC_REFLECT( graphene::app::content_keys, (key)(parts)(quorum) )
+FC_REFLECT( graphene::app::content_summary, (id)(author)(price)(synopsis)(status)(URI)(_hash)(AVG_rating)(size)(expiration)(created)(times_bought) )
 
 FC_API(graphene::app::database_api,
           // Objects

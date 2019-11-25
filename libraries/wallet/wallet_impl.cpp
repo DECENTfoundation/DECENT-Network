@@ -2121,10 +2121,10 @@ chain::signed_transaction wallet_api_impl::submit_content(const std::string& aut
    } FC_CAPTURE_AND_RETHROW( (author)(URI)(price_amounts)(hash)(seeders)(quorum)(expiration)(publishing_fee_symbol_name)(publishing_fee_amount)(synopsis)(secret)(broadcast) )
 }
 
-chain::content_keys wallet_api_impl::submit_content_async(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                                          const std::string& content_dir, const std::string& samples_dir, const std::string& protocol,
-                                                          const std::vector<regional_price_info>& price_amounts, const std::vector<chain::account_id_type>& seeders,
-                                                          fc::time_point_sec expiration, const std::string& synopsis)
+app::content_keys wallet_api_impl::submit_content_async(const std::string& author, const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                                        const std::string& content_dir, const std::string& samples_dir, const std::string& protocol,
+                                                        const std::vector<regional_price_info>& price_amounts, const std::vector<chain::account_id_type>& seeders,
+                                                        fc::time_point_sec expiration, const std::string& synopsis)
 {
    try
    {
@@ -2157,7 +2157,7 @@ chain::content_keys wallet_api_impl::submit_content_async(const std::string& aut
          secret = tmp;
       }
 
-      chain::content_keys keys;
+      app::content_keys keys;
 #if CRYPTOPP_VERSION >= 600
       secret.Encode((CryptoPP::byte*)keys.key._hash, 32);
 #else

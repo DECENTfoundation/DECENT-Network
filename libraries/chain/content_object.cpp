@@ -65,40 +65,5 @@ namespace graphene { namespace chain {
          return Valid(it->second);
       return false;
    }
-   //
-   content_summary& content_summary::set( const content_object& co, const account_object& ao, uint32_t region_code )
-   {
-      this->id = std::string(co.id);
-      this->author = ao.name;
-      fc::optional<asset> op_price = co.price.GetPrice(region_code);
-      FC_ASSERT(op_price.valid());
-      this->price = *op_price;
-
-      this->synopsis = co.synopsis;
-      this->URI = co.URI;
-      this->AVG_rating = co.AVG_rating;
-      this->_hash = co._hash;
-      this->size = co.size;
-      this->expiration = co.expiration;
-      this->created = co.created;
-      this->times_bought = co.times_bought;
-      if(co.last_proof.size() >= co.quorum)
-         this->status = "Uploaded";
-      else if( co.last_proof.size() > 0 )
-         this->status = "Partially uploaded";
-      else
-         this->status = "Uploading";
-
-      if(co.expiration <= fc::time_point::now() )
-         this->status = "Expired";
-      return *this;
-   }
-   content_summary& content_summary::set( const content_object& co, const account_object& ao, const std::string& region_code )
-   {
-      auto it = RegionCodes::s_mapNameToCode.find(region_code);
-      FC_ASSERT(it != RegionCodes::s_mapNameToCode.end());
-
-      return set(co, ao, it->second);
-   }
 
 }}

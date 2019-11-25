@@ -1675,15 +1675,15 @@ public:
     * @return generated key, key parts and quorum
     * @ingroup WalletAPI_Content
     */
-   chain::content_keys submit_content_async(const std::string& author,
-                                     const std::vector<std::pair<std::string, uint32_t>>& co_authors,
-                                     const std::string& content_dir,
-                                     const std::string& samples_dir,
-                                     const std::string& protocol,
-                                     const std::vector<regional_price_info>& price_amounts,
-                                     const std::vector<chain::account_id_type>& seeders,
-                                     const fc::time_point_sec& expiration,
-                                     const std::string& synopsis);
+   app::content_keys submit_content_async(const std::string& author,
+                                          const std::vector<std::pair<std::string, uint32_t>>& co_authors,
+                                          const std::string& content_dir,
+                                          const std::string& samples_dir,
+                                          const std::string& protocol,
+                                          const std::vector<regional_price_info>& price_amounts,
+                                          const std::vector<chain::account_id_type>& seeders,
+                                          const fc::time_point_sec& expiration,
+                                          const std::string& synopsis);
 
    /**
     * @brief This function can be used to cancel submitted content. This content is immediately not available to purchase.
@@ -1845,7 +1845,7 @@ public:
     * @return the contents found
     * @ingroup WalletAPI_Content
     */
-   std::vector<chain::content_summary> search_content(const std::string& term,
+   std::vector<app::content_summary> search_content(const std::string& term,
                                           const std::string& order,
                                           const std::string& user,
                                           const std::string& region_code,
@@ -1866,7 +1866,7 @@ public:
     * @return the contents found
     * @ingroup WalletAPI_Content
     */
-   std::vector<chain::content_summary> search_user_content(const std::string& user,
+   std::vector<app::content_summary> search_user_content(const std::string& user,
                                                const std::string& term,
                                                const std::string& order,
                                                const std::string& region_code,
@@ -1957,7 +1957,7 @@ public:
     * @return generated key and key parts
     * @ingroup WalletCLI
     */
-   chain::content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
+   app::content_keys generate_content_keys(const std::vector<chain::account_id_type>& seeders) const;
 
    /**
     * @brief Returns true if any package manager task is waiting (e.g. if content submission is still being processed in the background).

@@ -1,6 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
-#include <graphene/chain/protocol/asset.hpp>
 #include <graphene/chain/protocol/decent.hpp>
 
 #include <graphene/db/object.hpp>
@@ -366,7 +365,6 @@ namespace graphene { namespace chain {
       ContentObjectPropertyManager(const std::string& str_synopsis = std::string())
          : m_str_synopsis(str_synopsis)
       {
-
       }
 
       template <typename P>
@@ -393,29 +391,16 @@ namespace graphene { namespace chain {
       std::string m_str_synopsis;
    };
 
-   struct content_summary
+   struct PriceRegions
    {
-      std::string id;
-      std::string author;
-      asset price;
-      std::string synopsis;
-      fc::ripemd160 _hash;
-      std::string status;
-      std::string URI;
-      uint32_t AVG_rating = 0;
-      uint64_t size = 0;
-      fc::time_point_sec expiration;
-      fc::time_point_sec created;
-      uint32_t times_bought = 0;
+      std::map<uint32_t, asset> map_price;
 
-      content_summary& set( const content_object& co, const account_object& ao, uint32_t region_code );
-      content_summary& set( const content_object& co, const account_object& ao, const std::string& region_code );
-   };
-
-   struct content_keys {
-       fc::sha256                 key;
-       std::vector<ciphertext_type> parts;
-       uint32_t                   quorum = 2;
+      fc::optional<asset> GetPrice(uint32_t region_code) const;
+      void ClearPrices();
+      void SetSimplePrice(asset const& price);
+      void SetRegionPrice(uint32_t region_code, asset const& price);
+      bool Valid(uint32_t region_code) const;
+      bool Valid(const std::string& region_code) const;
    };
 
    class content_object : public graphene::db::abstract_object<implementation_ids, impl_content_object_type, content_object>
@@ -594,8 +579,5 @@ FC_REFLECT_DERIVED(graphene::chain::content_object,
                    (URI)(quorum)(key_parts)(_hash)(last_proof)(is_blocked)
                    (AVG_rating)(num_of_ratings)(times_bought)(publishing_fee_escrow)(cd)(seeder_price) )
 
-FC_REFLECT( graphene::chain::content_summary, (id)(author)(price)(synopsis)(status)(URI)(_hash)(AVG_rating)(size)(expiration)(created)(times_bought) )
 FC_REFLECT( graphene::chain::PriceRegions, (map_price) )
 FC_REFLECT( graphene::chain::ContentObjectTypeValue, (type) )
-
-FC_REFLECT( graphene::chain::content_keys, (key)(parts)(quorum) )
