@@ -148,12 +148,6 @@ namespace graphene { namespace chain {
          static const uint8_t top_n_control_owner  = 1;
          static const uint8_t top_n_control_active = 2;
 
-         template<typename DB>
-         const vesting_balance_object& cashback_balance(const DB& db)const
-         {
-            FC_ASSERT(cashback_vb);
-            return db.get(*cashback_vb);
-         }
          bool is_publishing_manager() const { return rights_to_publish.is_publishing_manager; }
    };
 

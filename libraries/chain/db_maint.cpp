@@ -153,9 +153,7 @@ void database::process_budget()
 uint64_t database::get_voting_stake(const account_object& acct) const
 {
    const auto& stats = acct.statistics(*this);
-   return stats.total_core_in_orders.value
-      + (acct.cashback_vb.valid() ? (*acct.cashback_vb)(*this).balance.amount.value: 0)
-      + get_balance(acct.get_id(), asset_id_type()).amount.value;
+   return stats.total_core_in_orders.value + get_balance(acct.get_id(), asset_id_type()).amount.value;
 }
 
 void database::perform_chain_maintenance(const signed_block& next_block)
