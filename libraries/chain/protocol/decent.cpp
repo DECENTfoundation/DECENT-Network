@@ -51,6 +51,10 @@ void content_submit_operation::validate()const
    FC_ASSERT( publishing_fee.amount >= 0);
    fc::url _url( URI );
    FC_ASSERT( _url.proto() == "ipfs" || _url.proto() == "magnet" || _url.proto() == "http" || _url.proto() == "https" );
+
+   // check synopsis format
+   ContentObjectPropertyManager synopsis_parser(synopsis);
+   synopsis_parser.get<ContentObjectTitle>();
 }
 
 void request_to_buy_operation::validate()const

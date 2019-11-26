@@ -2185,6 +2185,12 @@ app::content_keys wallet_api_impl::submit_content_async(const std::string& autho
          keys.parts.push_back(cp);
       }
 
+      // check synopsis format
+      chain::ContentObjectPropertyManager synopsis_parser(synopsis);
+      synopsis_parser.get<chain::ContentObjectType>();
+      synopsis_parser.get<chain::ContentObjectTitle>();
+      synopsis_parser.get<chain::ContentObjectDescription>();
+
       chain::content_submit_operation submit_op;
       submit_op.key_parts = keys.parts;
       submit_op.author = author_account.id;
@@ -2931,9 +2937,13 @@ void submit_transfer_listener::package_seed_complete()
    tx.operations.push_back( _op );
    _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
    tx.validate();
-      _wallet.sign_transaction(tx, true);
+   _wallet.sign_transaction(tx, true);
+   _is_finished = true;
+}
 
-      _is_finished = true;
+void submit_transfer_listener::package_creation_error(const std::string& msg)
+{
+   elog("Package creation error: ${msg}", ("msg", msg));
 }
 
 } } } // namespace graphene::wallet::detail

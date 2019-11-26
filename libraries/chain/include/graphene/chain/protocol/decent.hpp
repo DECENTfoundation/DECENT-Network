@@ -1,15 +1,14 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
-#include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/protocol/asset.hpp>
 #include <boost/preprocessor/seq/seq.hpp>
 
 #include <fc/reflect/reflect.hpp>
 #include <fc/crypto/ripemd160.hpp>
+#include <fc/io/json.hpp>
 #include <fc/time.hpp>
 
-#include <stdint.h>
 #include <vector>
 #include <utility>
 
@@ -57,6 +56,349 @@ namespace graphene { namespace chain {
       uint32_t region;
       asset    price;
    };
+
+   template <typename basic_type, typename Derived>
+   class ContentObjectPropertyBase
+   {
+   public:
+      using value_type = basic_type;
+
+      void load(const std::string& str_synopsis)
+      {
+         m_arrValues.clear();
+         fc::variant variant_synopsis;
+         bool bFallBack = false;   // fallback to support synopsis that was used simply as a string
+         try
+         {
+            if (false == str_synopsis.empty())
+               variant_synopsis = fc::json::from_string(str_synopsis);
+         }
+         catch(...)
+         {
+            if (is_fallback(0))
+               bFallBack = true;
+         }
+
+         fc::variant variant_value;
+
+         if (variant_synopsis.is_object())
+         {
+            const char* str_name = Derived::name();
+
+            if (variant_synopsis.get_object().contains(str_name))
+               variant_value = variant_synopsis[str_name];
+         }
+
+         if (variant_value.is_array())
+         {
+            for (size_t iIndex = 0; iIndex < variant_value.size(); ++iIndex)
+            {
+               fc::variant const& variant_item = variant_value[iIndex];
+               std::string str_value = variant_item.as_string();
+               value_type item;
+               ContentObjectPropertyBase::convert_from_string(str_value, item);
+               m_arrValues.push_back(item);
+            }
+         }
+         else if (false == variant_value.is_null())
+         {
+            std::string str_value = variant_value.as_string();
+            value_type item;
+            ContentObjectPropertyBase::convert_from_string(str_value, item);
+            m_arrValues.push_back(item);
+         }
+
+         if (bFallBack &&
+               m_arrValues.empty())
+         {
+            value_type item;
+            ContentObjectPropertyBase::convert_from_string(str_synopsis, item);
+            m_arrValues.push_back(item);
+         }
+
+         if (is_default(0) &&
+               m_arrValues.empty())
+         {
+            std::string str_value;
+            value_type item;
+            ContentObjectPropertyBase::convert_from_string(str_value, item);
+            m_arrValues.push_back(item);
+         }
+
+         if (is_unique(0) &&
+               1 < m_arrValues.size())
+         {
+            m_arrValues.resize(1);
+         }
+      }
+
+      void save(std::string& str_synopsis) const
+      {
+         std::vector<value_type> arrValues = m_arrValues;
+
+         if (is_unique(0) &&
+               1 < arrValues.size())
+            arrValues.resize(1);
+
+         if (is_default(0) &&
+               arrValues.empty())
+         {
+            std::string str_value;
+            value_type item;
+            ContentObjectPropertyBase::convert_from_string(str_value, item);
+            arrValues.push_back(item);
+         }
+
+         if (arrValues.empty())
+            return;
+
+         fc::variant variant_value;
+         if (1 == arrValues.size())
+         {
+            value_type const& item = arrValues[0];
+            std::string str_value;
+            ContentObjectPropertyBase::convert_to_string(item, str_value);
+            variant_value = str_value;
+         }
+         else
+         {
+            fc::variants arr_variant_value;
+            for (auto const& item : arrValues)
+            {
+               std::string str_value;
+               ContentObjectPropertyBase::convert_to_string(item, str_value);
+               arr_variant_value.emplace_back(str_value);
+            }
+            variant_value = arr_variant_value;
+         }
+
+         fc::variant variant_synopsis;
+         if (false == str_synopsis.empty())
+            variant_synopsis = fc::json::from_string(str_synopsis);
+
+         if (false == variant_synopsis.is_null() &&
+               false == variant_synopsis.is_object())
+            variant_synopsis.clear();
+
+         if (variant_synopsis.is_null())
+         {
+            fc::mutable_variant_object mutable_variant_obj;
+            variant_synopsis = mutable_variant_obj;
+         }
+
+         fc::variant_object& variant_obj = variant_synopsis.get_object();
+         fc::mutable_variant_object mutable_variant_obj(variant_obj);
+
+         const char* str_name = Derived::name();
+         mutable_variant_obj.set(str_name, variant_value);
+         variant_obj = mutable_variant_obj;
+
+         str_synopsis = fc::json::to_string(variant_obj);
+      }
+
+      template <typename U>
+      static void convert_from_string(const std::string& str_value, U& converted_value)
+      {
+         Derived::convert_from_string(str_value, converted_value);
+      }
+
+      template <typename U>
+      static void convert_to_string(U const& value, std::string& str_converted_value)
+      {
+         Derived::convert_to_string(value, str_converted_value);
+      }
+
+      static void convert_from_string(const std::string& str_value, std::string& converted_value)
+      {
+         converted_value = str_value;
+      }
+
+      static void convert_to_string(const std::string& str_value, std::string& converted_value)
+      {
+         converted_value = str_value;
+      }
+
+      template <typename U = Derived>
+      static bool is_default(...)
+      {
+         return false;
+      }
+
+      template <typename U = Derived>
+      static bool is_default(typename U::meta_default)
+      {
+         return true;
+      }
+
+      template <typename U = Derived>
+      static bool is_unique(...)
+      {
+         return false;
+      }
+
+      template <typename U = Derived>
+      static bool is_unique(typename U::meta_unique)
+      {
+         return true;
+      }
+
+      template <typename U = Derived>
+      static bool is_fallback(...)
+      {
+         return false;
+      }
+
+      template <typename U = Derived>
+      static bool is_fallback(typename U::meta_fallback)
+      {
+         return true;
+      }
+
+   public:
+      std::vector<value_type> m_arrValues;
+   };
+
+   enum class EContentObjectApplication
+   {
+      DecentCore
+   };
+
+   class ContentObjectTypeValue
+   {
+   public:
+      ContentObjectTypeValue(EContentObjectApplication appID = EContentObjectApplication::DecentCore)
+      {
+         type.push_back(static_cast<uint32_t>(appID));
+      }
+
+      void to_string(std::string& str_value) const
+      {
+         str_value.clear();
+         for (size_t index = 0; index < type.size(); ++index)
+         {
+            std::string strPart = std::to_string(type[index]);
+            str_value += strPart;
+            if (index < type.size() - 1)
+               str_value += ".";
+         }
+      }
+
+      void from_string(std::string str_value)
+      {
+         type.clear();
+         uint32_t iValue = 0;
+         size_t pos;
+         while (true)
+         {
+            if (str_value.empty())
+               break;
+            iValue = std::stol(str_value, &pos);
+
+            if (pos == 0)
+               break;
+
+            type.push_back(iValue);
+
+            if (pos == std::string::npos)
+               break;
+            else if (str_value[pos] != '.')
+               break;
+            else
+               str_value = str_value.substr(pos + 1);
+         }
+
+         if (type.empty())
+            type.push_back(static_cast<uint32_t>(EContentObjectApplication::DecentCore));
+      }
+
+      bool filter(ContentObjectTypeValue const& filter)
+      {
+         bool bRes = true;
+         if (filter.type.size() > type.size())
+            bRes = false;
+         else
+         {
+            for (size_t index = 0; index < filter.type.size(); ++index)
+            {
+               if (type[index] != filter.type[index])
+               {
+                  bRes = false;
+                  break;
+               }
+            }
+         }
+
+         return bRes;
+      }
+
+   public:
+      std::vector<uint32_t> type;
+   };
+
+   class ContentObjectType : public ContentObjectPropertyBase<ContentObjectTypeValue, ContentObjectType>
+   {
+   public:
+      using meta_default = bool;
+      using meta_unique = bool;
+      static const char* name() { return "content_type_id"; }
+
+      static void convert_from_string(const std::string& str_value, ContentObjectTypeValue& type)
+      {
+         type.from_string(str_value);
+      }
+
+      static void convert_to_string(ContentObjectTypeValue const& type, std::string& str_value)
+      {
+         type.to_string(str_value);
+      }
+   };
+
+   class ContentObjectTitle : public ContentObjectPropertyBase<std::string, ContentObjectTitle>
+   {
+   public:
+      using meta_fallback = bool;
+      using meta_unique = bool;
+      static const char* name() { return "title"; }
+   };
+
+   class ContentObjectDescription : public ContentObjectPropertyBase<std::string, ContentObjectDescription>
+   {
+   public:
+      using meta_default = bool;
+      using meta_unique = bool;
+      static const char* name() { return "description"; }
+   };
+
+   class ContentObjectPropertyManager
+   {
+   public:
+      ContentObjectPropertyManager(const std::string& synopsis)
+         : _synopsis(synopsis)
+      {
+      }
+
+      template <typename P>
+      typename P::value_type get() const
+      {
+         P property;
+         property.load(_synopsis);
+
+         FC_ASSERT(property.m_arrValues.size() == 1, "Failed to get '${p}' from '${s}'", ("p", P::name())("s", _synopsis));
+         return property.m_arrValues.front();
+      }
+
+      template <typename P>
+      void set(typename P::value_type const& value)
+      {
+         P property;
+         property.m_arrValues.clear();
+         property.m_arrValues.push_back(value);
+         property.save(_synopsis);
+      }
+
+      std::string _synopsis;
+   };
+
    /**
     * @ingroup operations
     * @brief Submits content to the blockchain.
@@ -104,6 +446,7 @@ namespace graphene { namespace chain {
       account_id_type fee_payer()const { return author; }
       void validate()const { FC_ASSERT( URI != "" ); };
    };
+
 #ifdef _MSC_VER
 #undef IN
 #endif

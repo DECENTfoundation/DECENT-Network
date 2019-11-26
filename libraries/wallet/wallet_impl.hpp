@@ -61,9 +61,9 @@ struct ipfs_stats_listener : public decent::package::EventListenerInterface
    ipfs_stats_listener(const std::string& URI, wallet_api_impl& api, chain::account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
       _ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port()) {}
 
-   virtual void package_download_start();
-   virtual void package_download_complete();
-   virtual void package_download_error(const std::string&);
+   virtual void package_download_start() override;
+   virtual void package_download_complete() override;
+   virtual void package_download_error(const std::string& msg) override;
 
 private:
    std::string       _URI;
@@ -77,8 +77,9 @@ struct submit_transfer_listener : public decent::package::EventListenerInterface
    submit_transfer_listener(wallet_api_impl& wallet, std::shared_ptr<decent::package::PackageInfo> info, const chain::content_submit_operation& op, const std::string& protocol)
       : _wallet(wallet), _info(info), _op(op), _protocol(protocol), _is_finished(false) {}
 
-   virtual void package_seed_complete();
-   virtual void package_creation_complete();
+   virtual void package_seed_complete() override;
+   virtual void package_creation_complete() override;
+   virtual void package_creation_error(const std::string& msg) override;
 
    fc::ripemd160 get_hash() const { return _info->get_hash(); }
    const chain::content_submit_operation& op() const { return _op; }

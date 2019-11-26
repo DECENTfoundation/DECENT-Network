@@ -1,6 +1,5 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/content_object.hpp>
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
