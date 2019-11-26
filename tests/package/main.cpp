@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE( package_remove_test )
          BOOST_CHECK(package_handle.get() != nullptr);
          package_handle->add_event_listener(std::make_shared<MyEventListener>());
 
-         package_handle->stop_seeding();
+         package_handle->stop_seeding("ipfs");
          package_handle->wait_for_current_task();
          BOOST_CHECK(package_handle->get_task_last_error() == nullptr);
 

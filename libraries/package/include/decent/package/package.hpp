@@ -7,7 +7,6 @@
 
 #include <fc/crypto/ripemd160.hpp>
 #include <fc/crypto/sha256.hpp>
-#include <fc/network/url.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -53,7 +52,6 @@ namespace decent { namespace package {
     class IPFSDownloadPackageTask;
     class IPFSStartSeedingPackageTask;
     class IPFSStopSeedingPackageTask;
-    class LocalDownloadPackageTask;
 
     namespace detail {
 
@@ -116,7 +114,6 @@ namespace decent { namespace package {
         friend class IPFSDownloadPackageTask;
         friend class IPFSStartSeedingPackageTask;
         friend class IPFSStopSeedingPackageTask;
-        friend class LocalDownloadPackageTask;
 
         friend class detail::CreatePackageTask;
         friend class detail::RemovePackageTask;
@@ -187,16 +184,16 @@ namespace decent { namespace package {
         void download(bool block = false);
         /**
          * Start seeding the package. Can be called only when DataState == checked
-         * @param proto ipfs
+         * @param protocol Transfer protocol
          * @param block Blocking call?
          */
-        void start_seeding(std::string proto = "", bool block = false);
+        void start_seeding(const std::string& protocol, bool block = false);
         /**
          * Stop seeding the package.
-         * @param proto ipfs
+         * @param protocol Transfer protocol
          * @param block Blocking call?
          */
-        void stop_seeding(std::string proto = "", bool block = false);
+        void stop_seeding(const std::string& protocol, bool block = false);
         /**
          * Verify integrity of the data
          * @param block Blocking call?
@@ -295,7 +292,7 @@ namespace decent { namespace package {
         virtual void package_transfer_state_change(PackageInfo::TransferState) {}
         virtual void package_manipulation_state_change(PackageInfo::ManipulationState) {}
 
-        virtual void package_creation_start() {};
+        virtual void package_creation_start() {}
         virtual void package_creation_progress() {}
         virtual void package_creation_error(const std::string&) {}
         virtual void package_creation_complete() {}

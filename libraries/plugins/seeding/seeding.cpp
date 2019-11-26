@@ -15,6 +15,7 @@
 #include <decent/package/package.hpp>
 #include <decent/ipfs_check.hpp>
 #include <ipfs/client.h>
+#include <fc/network/url.hpp>
 #include <fc/thread/thread.hpp>
 
 namespace bpo = boost::program_options;
@@ -359,7 +360,7 @@ void seeding_plugin_impl::release_package(const graphene::chain::seeding_object 
 {
    dlog("seeding plugin_impl:  release_package() - content expired, cleaning up");
    auto& pm = decent::package::PackageManager::instance();
-   package_handle->stop_seeding("", true);
+   package_handle->stop_seeding("ipfs", true);
    package_handle->remove(true);
    pm.release_package(package_handle);
    database().modify<graphene::chain::seeding_object>(mso,[](graphene::chain::seeding_object& _mso){_mso.deleted = true;});
@@ -820,7 +821,7 @@ void detail::SeedingListener::package_download_complete()
       _pi.reset();
       return;
    }
-   _pi->start_seeding();
+   _pi->start_seeding("ipfs");
    //Don't block package manager thread for too long.
    _my->database().modify<graphene::chain::seeding_object>(mso, [](graphene::chain::seeding_object& so){so.downloaded = true;});
    _my->service_thread->async([ this, &mso, pi ]() { _my->generate_por_int(mso, pi); });

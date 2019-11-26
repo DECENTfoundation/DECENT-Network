@@ -134,7 +134,7 @@ void pm_sandbox()
         std::this_thread::sleep_for(std::chrono::seconds(20));
 
         {
-            package_handle->stop_seeding();
+            package_handle->stop_seeding("ipfs");
             package_handle->wait_for_current_task();
             auto ex_ptr = package_handle->get_task_last_error();
             if (ex_ptr) {

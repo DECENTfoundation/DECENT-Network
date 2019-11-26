@@ -1233,6 +1233,7 @@ app::content_keys wallet_api::submit_content_async(const std::string& author,
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_ASSERT(protocol == "ipfs", "Only ipfs protocol is supported");
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 }
 
@@ -1519,6 +1520,7 @@ std::string wallet_api::upload_package(const std::string& package_hash, const st
 {
    if(my->is_locked())
       FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_ASSERT(protocol == "ipfs", "Only ipfs protocol is supported");
    auto package = decent::package::PackageManager::instance().get_package(fc::ripemd160(package_hash));
    package->start_seeding(protocol, true);
    return package->get_url();

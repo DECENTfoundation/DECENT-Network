@@ -4,7 +4,6 @@
 #include <decent/encrypt/encryptionutils.hpp>
 
 #include "ipfs_transfer.hpp"
-#include "local.hpp"
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -94,10 +93,10 @@ namespace decent { namespace package {
                     }
 
                     std::memset((void*)&header, 0, sizeof(header));
-            
+
                     _in.read((char*)&header, sizeof(header));
 
-                    if (header.version != 1 || strlen(header.name) == 0) { 
+                    if (header.version != 1 || strlen(header.name) == 0) {
                         break;
                     }
 
@@ -137,7 +136,7 @@ namespace decent { namespace package {
                     char ch = 0;
                     _in.read(&ch, 1);// BugFix:  copy_n does not move source file pointer to next header
                 }
-                
+
                 return true;
             }
 
@@ -661,49 +660,29 @@ namespace decent { namespace package {
         _current_task->start(block);
     }
 
-    void PackageInfo::start_seeding(std::string proto, bool block) {
+    void PackageInfo::start_seeding(const std::string& protocol, bool block) {
         if(is_virtual)
            return;
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
-        const std::string url_proto = detail::get_proto(_url);
-
-        if (proto.empty()) {
-            proto = url_proto;
-        }
-
-        if (proto.empty()) {
+        if (protocol.empty()) {
             FC_THROW("seeding protocol must be specified");
         }
 
-        if (!url_proto.empty() && proto != url_proto) {
-            FC_THROW("seeding protocol of the package must be '${proto}'", ("proto", proto) );
-        }
-        
-        _current_task = PackageManager::instance().get_proto_transfer_engine(proto).create_start_seeding_task(*this);
+        _current_task = PackageManager::instance().get_proto_transfer_engine(protocol).create_start_seeding_task(*this);
         _current_task->start(block);
     }
 
-    void PackageInfo::stop_seeding(std::string proto, bool block) {
+    void PackageInfo::stop_seeding(const std::string& protocol, bool block) {
         if(is_virtual)
            return;
         std::lock_guard<std::recursive_mutex> guard(_task_mutex);
 
-        const std::string url_proto = detail::get_proto(_url);
-
-        if (proto.empty()) {
-            proto = url_proto;
-        }
-
-        if (proto.empty()) {
+        if (protocol.empty()) {
             FC_THROW("seeding protocol must be specified");
         }
 
-        if (!url_proto.empty() && proto != url_proto) {
-            FC_THROW("seeding protocol of the package must be '${proto}'", ("proto", proto) );
-        }
-
-        _current_task = PackageManager::instance().get_proto_transfer_engine(proto).create_stop_seeding_task(*this);
+        _current_task = PackageManager::instance().get_proto_transfer_engine(protocol).create_stop_seeding_task(*this);
         _current_task->start(block);
     }
 
@@ -861,7 +840,6 @@ namespace decent { namespace package {
         }
 
         _proto_transfer_engines["ipfs"] = std::make_shared<IPFSTransferEngine>();
-        _proto_transfer_engines["local"] = std::make_shared<LocalTransferEngine>();
 
         // TODO: restore anything?
     }
@@ -917,7 +895,7 @@ namespace decent { namespace package {
     package_handle_t PackageManager::find_package(const std::string& url)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
-        
+
         for (auto& pack: _packages) {
             if (pack->get_url() == url) {
                 return pack;
