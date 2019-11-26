@@ -136,11 +136,6 @@ namespace graphene { namespace chain {
          account_statistics_id_type statistics;
 
          /**
-          * Vesting balance which receives cashback_reward deposits.
-          */
-         fc::optional<vesting_balance_id_type> cashback_vb;
-
-         /**
           * This flag is set when the top_n logic sets both authorities,
           * and gets reset when authority is set.
           */
@@ -267,7 +262,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (graphene::db::object),
                     (registrar)
                     (name)(owner)(active)(options)(rights_to_publish)(statistics)
-                    (cashback_vb)(top_n_control_flags)
+                    (top_n_control_flags)
                     )
 
 FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
