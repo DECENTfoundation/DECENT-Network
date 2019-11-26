@@ -128,42 +128,6 @@ fc::optional<vesting_balance_id_type> database::deposit_lazy_vesting(
    return vbo.id;
 }
 
-void database::deposit_cashback(const account_object& acct, share_type amount, bool require_vesting)
-{
-   // If we don't have a VBO, or if it has the wrong maturity
-   // due to a policy change, cut it loose.
-
-   if( amount == 0 )
-      return;
-
-   if( acct.get_id() == GRAPHENE_MINER_ACCOUNT || acct.get_id() == GRAPHENE_NULL_ACCOUNT ||
-       acct.get_id() == GRAPHENE_TEMP_ACCOUNT )
-   {
-      // The blockchain's accounts do not get cashback; it simply goes to the reserve pool.
-      modify(get(asset_id_type()).dynamic_asset_data_id(*this), [amount](asset_dynamic_data_object& d) {
-         d.current_supply -= amount;
-      });
-      return;
-   }
-
-   fc::optional<vesting_balance_id_type> new_vbid = deposit_lazy_vesting(
-      acct.cashback_vb,
-      amount,
-      get_global_properties().parameters.cashback_vesting_period_seconds,
-      acct.id,
-      require_vesting );
-
-   if( new_vbid.valid() )
-   {
-      modify( acct, [&]( account_object& _acct )
-      {
-         _acct.cashback_vb = *new_vbid;
-      } );
-   }
-
-   return;
-}
-
 void database::deposit_miner_pay(const miner_object& wit, share_type amount)
 {
    if( amount == 0 )

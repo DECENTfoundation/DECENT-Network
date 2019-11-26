@@ -352,8 +352,6 @@ namespace graphene { namespace chain {
             account_id_type req_owner,
             bool require_vesting );
 
-         // helper to handle cashback rewards
-         void deposit_cashback(const account_object& acct, share_type amount, bool require_vesting = true);
          // helper to handle miner pay
          void deposit_miner_pay(const miner_object& wit, share_type amount);
 

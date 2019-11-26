@@ -590,16 +590,6 @@ namespace graphene { namespace app {
             acnt.registrar_name = account->registrar(_db).name;
             acnt.votes = lookup_vote_ids( std::vector<chain::vote_id_type>(account->options.votes.begin(), account->options.votes.end()) );
 
-            // Add the account itself, its statistics object, cashback balance, and referral account names
-            /*
-             full_account("account", *account)("statistics", account->statistics(_db))
-             ("registrar_name", account->registrar(_db).name)("referrer_name", account->referrer(_db).name)
-             ("lifetime_referrer_name", account->lifetime_referrer(_db).name);
-             */
-            if (account->cashback_vb)
-            {
-               acnt.cashback_balance = account->cashback_balance(_db);
-            }
             // Add the account's proposals
             const auto& proposal_idx = _db.get_index_type<chain::proposal_index>();
             const auto& pidx = dynamic_cast<const db::primary_index<chain::proposal_index>&>(proposal_idx);
