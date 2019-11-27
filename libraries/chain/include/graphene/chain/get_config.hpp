@@ -29,7 +29,6 @@ namespace graphene { namespace chain {
 
 struct configuration {
    std::string graphene_symbol;
-   std::string graphene_address_prefix;
    uint32_t graphene_min_account_name_length;
    uint32_t graphene_max_account_name_length;
    uint32_t graphene_min_asset_symbol_length;
@@ -76,7 +75,6 @@ configuration get_configuration();
 
 FC_REFLECT( graphene::chain::configuration,
             (graphene_symbol)
-            (graphene_address_prefix)
             (graphene_min_account_name_length)
             (graphene_max_account_name_length)
             (graphene_min_asset_symbol_length)
