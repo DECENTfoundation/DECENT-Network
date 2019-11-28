@@ -50,7 +50,7 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
      cd ..
      rm -rf cmake-3.13.4 cmake-3.13.4.tar.gz
 
-For Fedora 29 or later, execute in console:
+For Fedora 30 or later, execute in console:
 
     sudo dnf install curl
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
@@ -150,7 +150,7 @@ You can use any path instead of `C:\Projects` in the steps above.
 Building DCore in Docker
 -------------------------
 
-You can also build Docker image which will run as DCore network node. Image will be based on either Ubuntu, Debian or Fedora Linux, for the details go to [Docker](https://github.com/DECENTfoundation/DCore-Docker/blob/master/README.md) repository.
+You can also build Docker image which will run as DCore network node. Image will be based on either Ubuntu, Debian, Fedora or CentOS Linux, for the details go to [Docker](https://github.com/DECENTfoundation/DCore-Docker/blob/master/README.md) repository.
 
 Starting DCore
 ---------------
