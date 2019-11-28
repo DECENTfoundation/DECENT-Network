@@ -147,6 +147,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type {
          uint64_t fee = 5*GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         uint64_t price_per_kbyte = 0;
       };
 
       asset fee;
@@ -164,7 +165,7 @@ namespace graphene { namespace chain {
       /// Perform internal consistency checks.
       /// @throws fc::exception if any check fails
       void validate() const;
-
+      share_type      calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now)const;
       account_id_type fee_payer() const { return from; }
 
       bool is_partner_account_id(account_id_type acc_id) const;
@@ -266,6 +267,7 @@ FC_REFLECT( graphene::chain::non_fungible_token_issue_operation,
 
 FC_REFLECT( graphene::chain::non_fungible_token_transfer_operation::fee_parameters_type,
             (fee)
+            (price_per_kbyte)
           )
 
 FC_REFLECT( graphene::chain::non_fungible_token_transfer_operation,

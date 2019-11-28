@@ -93,6 +93,11 @@ void non_fungible_token_transfer_operation::validate()const
    FC_ASSERT( from != to );
 }
 
+share_type non_fungible_token_transfer_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now)const
+{
+   return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
+}
+
 bool non_fungible_token_transfer_operation::is_partner_account_id(account_id_type acc_id) const
 {
     return from == acc_id || to == acc_id;
