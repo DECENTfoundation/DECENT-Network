@@ -729,6 +729,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
 
    operation_result ready_to_publish_obsolete_evaluator::do_evaluate(const operation_type& o)
    {try{
+      FC_ASSERT(db().head_block_time() < HARDFORK_5_TIME, "The operation is no longer allowed, use the ready_to_publish operation instead.");
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
