@@ -87,6 +87,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type {
          uint64_t fee       = GRAPHENE_BLOCKCHAIN_PRECISION / 1000;
+         fc::reflect_default_value<uint32_t, 0, 0x12345678> price_per_kbyte;
       };
 
       asset            fee;
@@ -101,16 +102,16 @@ namespace graphene { namespace chain {
       fc::optional<memo_data> memo;
       extensions_type   extensions;
 
-      account_id_type fee_payer()const { return from; }
-      void            validate()const;
+      account_id_type fee_payer() const { return from; }
+      share_type calculate_fee(const fee_parameters_type& k) const;
+      void validate() const;
 
       bool is_partner_account_id(account_id_type acc_id) const;
-
    };
 
 }} // graphene::chain
 
 FC_REFLECT( graphene::chain::transfer_obsolete_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::transfer_obsolete_operation, (fee)(from)(to)(amount)(memo)(extensions) )
-FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee) )
+GRAPHENE_REFLECT_FEE( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )

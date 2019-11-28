@@ -38,6 +38,11 @@ bool transfer_obsolete_operation::is_partner_account_id(account_id_type acc_id) 
     return (from == acc_id || to == acc_id) ? true : false;
 }
 
+share_type transfer_operation::calculate_fee(const fee_parameters_type& param) const
+{
+   return param.fee + calculate_data_fee(fc::raw::pack_size(memo), param.price_per_kbyte);
+}
+
 void transfer_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
@@ -58,3 +63,5 @@ bool transfer_operation::is_partner_account_id(account_id_type acc_id) const
 }
 
 } } // graphene::chain
+
+GRAPHENE_REFLECT_FEE_IMPL(graphene::chain::transfer_operation::fee_parameters_type, fee, (price_per_kbyte))
