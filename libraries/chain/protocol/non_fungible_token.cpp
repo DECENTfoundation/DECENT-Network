@@ -21,17 +21,11 @@ void non_fungible_token_data_type::validate() const
    }
 }
 
-void non_fungible_token_options::validate() const
-{
-   FC_ASSERT( description.size() <= 1000 );
-}
-
 void non_fungible_token_create_definition_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( is_valid_symbol(symbol) );
 
-   options.validate();
    std::for_each(definitions.begin(), definitions.end(), [this](const non_fungible_token_data_type &dt) {
       dt.validate();
 
@@ -69,8 +63,6 @@ share_type non_fungible_token_create_definition_operation::calculate_fee(const f
 void non_fungible_token_update_definition_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
-
-   options.validate();
 }
 
 void non_fungible_token_issue_operation::validate() const

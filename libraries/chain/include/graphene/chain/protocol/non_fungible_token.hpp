@@ -42,10 +42,6 @@ namespace graphene { namespace chain {
 
       /// String that describes the meaning/purpose of non fungible token
       std::string description;
-
-      /// Perform internal consistency checks.
-      /// @throws fc::exception if any check fails
-      void validate() const;
    };
 
    /**

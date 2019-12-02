@@ -38,6 +38,11 @@ operation_result asset_create_evaluator::do_evaluate( const operation_type& op )
 { try {
    database& d = db();
 
+   if( db().head_block_time() >= HARDFORK_5_TIME )
+      FC_ASSERT( op.description.length() <= DECENT_MAX_DESCRIPTION_SIZE );
+   else
+      FC_ASSERT( op.description.length() <= 1000 );
+
    auto& asset_indx = d.get_index_type<asset_index>().indices().get<by_symbol>();
    auto asset_symbol_itr = asset_indx.find( op.symbol );
    FC_ASSERT( asset_symbol_itr == asset_indx.end() );
@@ -145,6 +150,10 @@ operation_result monitored_asset_update_evaluator::do_evaluate(const operation_t
 
 operation_result monitored_asset_update_evaluator::do_apply(const operation_type& o)
 { try {
+
+   if( db().head_block_time() >= HARDFORK_5_TIME )
+      FC_ASSERT( o.new_description.length() <= DECENT_MAX_DESCRIPTION_SIZE );
+
    db().modify(*asset_to_update, [&](asset_object& a) {
       if( o.new_description != "" )
          a.description = o.new_description;
@@ -160,6 +169,9 @@ operation_result monitored_asset_update_evaluator::do_apply(const operation_type
 operation_result user_issued_asset_update_evaluator::do_evaluate(const operation_type& o)
 { try {
       database& d = db();
+
+      if( db().head_block_time() >= HARDFORK_5_TIME )
+         FC_ASSERT( o.new_description.length() <= DECENT_MAX_DESCRIPTION_SIZE );
 
       asset_to_update = &o.asset_to_update(d);
       FC_ASSERT( !asset_to_update->is_monitored_asset() && asset_to_update->id != asset_id_type() );

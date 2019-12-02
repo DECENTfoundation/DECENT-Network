@@ -13,6 +13,11 @@ operation_result non_fungible_token_create_definition_evaluator::do_evaluate( co
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
 
+   if( db().head_block_time() >= HARDFORK_5_TIME )
+      FC_ASSERT( op.options.description.length() <= DECENT_MAX_DESCRIPTION_SIZE );
+   else
+      FC_ASSERT( op.options.description.length() <= 1000 );
+
    auto& nft_indx = d.get_index_type<non_fungible_token_index>().indices().get<by_symbol>();
    auto nft_symbol_itr = nft_indx.find( op.symbol );
    FC_ASSERT( nft_symbol_itr == nft_indx.end(), "Symbol name must be unique" );
@@ -49,6 +54,11 @@ operation_result non_fungible_token_update_definition_evaluator::do_evaluate( co
 { try {
    const database& d = db();
    FC_ASSERT( d.head_block_time() > HARDFORK_4_TIME );
+
+   if( db().head_block_time() >= HARDFORK_5_TIME )
+      FC_ASSERT( op.options.description.length() <= DECENT_MAX_DESCRIPTION_SIZE );
+   else
+      FC_ASSERT( op.options.description.length() <= 1000 );
 
    const non_fungible_token_object& nft_obj = op.nft_id(d);
    FC_ASSERT( op.current_issuer == nft_obj.options.issuer );
