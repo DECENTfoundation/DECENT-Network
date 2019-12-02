@@ -125,3 +125,26 @@ namespace graphene { namespace chain {
 FC_REFLECT_TYPENAME( graphene::chain::operation_result )
 FC_REFLECT_TYPENAME( graphene::chain::future_extensions )
 FC_REFLECT_EMPTY( graphene::chain::void_result )
+
+#define GRAPHENE_REFLECT_FEE( TYPE, MEMBERS ) \
+namespace fc { \
+   template<> void to_variant(const TYPE& o, variant& v); \
+   template<> void from_variant(const variant& v, TYPE& o); \
+} \
+FC_REFLECT(TYPE, MEMBERS)
+
+#define GRAPHENE_REFLECT_FEE_MEMBER( r, o, MEMBER ) \
+   if(o.MEMBER.has_value()) mvo.set(BOOST_PP_STRINGIZE(MEMBER), o.MEMBER.instance);
+
+#define GRAPHENE_REFLECT_FEE_IMPL( TYPE, FEE, MEMBERS ) \
+namespace fc { \
+   template<> void to_variant(const TYPE& o, variant& v) { \
+      mutable_variant_object mvo(BOOST_PP_STRINGIZE(FEE), o.FEE); \
+      BOOST_PP_SEQ_FOR_EACH( GRAPHENE_REFLECT_FEE_MEMBER, o, MEMBERS ) \
+      v = std::move(mvo); \
+   } \
+   template<> void from_variant(const variant& v, TYPE& o) { \
+      const variant_object& vo = v.get_object(); \
+      reflector<TYPE>::visit(from_variant_visitor<TYPE>(vo, o)); \
+   } \
+}
