@@ -45,7 +45,10 @@ void proposal_create_operation::validate() const
 
 share_type proposal_create_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now) const
 {
-   return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
+   if( now >= HARDFORK_5_TIME )
+      return k.fee + calculate_data_fee( fc::raw::pack_size(proposed_ops), k.price_per_kbyte );
+   else
+      return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
 
 void proposal_update_operation::validate() const
@@ -73,7 +76,15 @@ void proposal_update_operation::validate() const
 
 share_type proposal_update_operation::calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now) const
 {
-   return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
+   if( now >= HARDFORK_5_TIME )
+      return k.fee + calculate_data_fee( fc::raw::pack_size(active_approvals_to_add) +
+                                         fc::raw::pack_size(active_approvals_to_remove) +
+                                         fc::raw::pack_size(owner_approvals_to_add) +
+                                         fc::raw::pack_size(owner_approvals_to_remove) +
+                                         fc::raw::pack_size(key_approvals_to_add) +
+                                         fc::raw::pack_size(key_approvals_to_remove), k.price_per_kbyte );
+   else
+      return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
 }
 
 void proposal_update_operation::get_required_authorities( std::vector<authority>& o )const
