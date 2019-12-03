@@ -13,7 +13,7 @@ For Debian 10/Ubuntu 18.04 LTS or later, execute in console:
     sudo apt-get install apt-transport-https curl gnupg lsb-release software-properties-common
     curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://dl.bintray.com/decentfoundation/$(lsb_release -is | tr "[:upper:]" "[:lower:]") $(lsb_release -cs) libpbc"
-    sudo apt-get install build-essential autotools-dev automake autoconf libtool make cmake g++ doxygen git libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
+    sudo apt-get install build-essential make cmake g++ doxygen git libreadline-dev libcrypto++-dev libgmp-dev libpbc-dev libssl-dev libcurl4-openssl-dev libboost-all-dev zlib1g-dev
     mkdir ~/dev
 
     # Download and build JSON 3.7.3
@@ -55,7 +55,7 @@ For Fedora 30 or later, execute in console:
     sudo dnf install curl
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
     sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-fedora.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
-    sudo dnf install automake autoconf libtool make cmake gcc-c++ doxygen git readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    sudo dnf install make cmake gcc-c++ doxygen git readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
     mkdir ~/dev
 
 For CentOS 8, execute in console:
@@ -64,7 +64,7 @@ For CentOS 8, execute in console:
     sudo curl https://bintray.com/user/downloadSubjectPublicKey?username=decentfoundation -o /etc/pki/rpm-gpg/RPM-GPG-KEY-decentfoundation
     sudo curl https://docs.decent.ch/assets/bintray-decentfoundation-centos.repo -o /etc/yum.repos.d/bintray-decentfoundation.repo
     sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-    sudo dnf install --enablerepo PowerTools automake autoconf libtool make cmake gcc-c++ doxygen git readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
+    sudo dnf install --enablerepo PowerTools make cmake gcc-c++ doxygen git readline-devel cryptopp-devel openssl-devel gmp-devel libpbc-devel libcurl-devel json-devel zlib-devel boost-devel boost-static
     mkdir ~/dev
 
 ### Installing prerequisites in MacOS
@@ -75,7 +75,7 @@ For CentOS 8, execute in console:
 Then, execute in console:
 
     $ brew update
-    $ brew install automake autoconf libtool cmake boost cryptopp openssl@1.1 pbc readline doxygen git ipfs
+    $ brew install cmake boost cryptopp openssl@1.1 pbc readline doxygen git ipfs
     $ brew tap nlohmann/json
     $ brew install nlohmann_json --with-cmake
     $ brew link --force readline
