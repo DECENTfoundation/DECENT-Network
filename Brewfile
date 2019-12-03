@@ -1,4 +1,5 @@
 brew "cmake"
+brew "coreutils"
 brew "cryptopp"
 brew "pbc"
 brew "openssl@1.1"
