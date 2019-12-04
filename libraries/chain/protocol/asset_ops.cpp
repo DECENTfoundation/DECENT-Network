@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 #include <graphene/chain/protocol/asset_ops.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 namespace graphene { namespace chain {
 
@@ -106,7 +107,10 @@ void  asset_create_operation::validate()const
 share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k,
                                                 const fc::time_point_sec now )const
 {
-   return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.fee );
+   if( now >= HARDFORK_5_TIME )
+      return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
+   else
+      return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.fee );
 }
 
 void asset_issue_operation::validate()const {
@@ -196,3 +200,5 @@ void update_user_issued_asset_advanced_operation::validate()const
 }
 
 } } // namespace graphene::chain
+
+GRAPHENE_REFLECT_FEE_IMPL( graphene::chain::asset_issue_operation::fee_parameters_type, fee, (price_per_kbyte))

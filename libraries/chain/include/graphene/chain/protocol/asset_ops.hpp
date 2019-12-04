@@ -145,6 +145,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type {
          uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION/1000;
+         fc::reflect_default_value<uint32_t, 0, 0x12345678> price_per_kbyte;
       };
 
       asset            fee;
@@ -360,7 +361,7 @@ FC_REFLECT( graphene::chain::asset_options,
 )
 
 FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (basic_fee) )
-FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee) )
+GRAPHENE_REFLECT_FEE( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::update_monitored_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::update_user_issued_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_fund_pools_operation::fee_parameters_type, (fee) )
