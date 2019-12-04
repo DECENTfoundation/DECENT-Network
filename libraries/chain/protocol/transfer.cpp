@@ -38,7 +38,7 @@ bool transfer_obsolete_operation::is_partner_account_id(account_id_type acc_id) 
     return (from == acc_id || to == acc_id) ? true : false;
 }
 
-share_type transfer_operation::calculate_fee(const fee_parameters_type& param) const
+share_type transfer_operation::calculate_fee(const fee_parameters_type& param, const fc::time_point_sec now) const
 {
    return param.fee + calculate_data_fee(fc::raw::pack_size(memo), param.price_per_kbyte);
 }

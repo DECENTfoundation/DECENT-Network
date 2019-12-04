@@ -67,6 +67,8 @@ namespace graphene { namespace chain {
    public:
       operation_result do_evaluate( const operation_type& o );
       operation_result do_apply( const operation_type& o );
+   private:
+      const seeder_object* s_obj = nullptr;
    };
 
    class proof_of_custody_evaluator : public evaluator<proof_of_custody_operation, proof_of_custody_evaluator>

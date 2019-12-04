@@ -1,6 +1,7 @@
 /* (c) 2016, 2017 DECENT Services. For details refers to LICENSE.txt */
 #include <graphene/chain/protocol/decent.hpp>
 #include <fc/network/url.hpp>
+#include <decent/encrypt/encryptionutils.hpp>
 
 namespace graphene { namespace chain {
 
@@ -82,7 +83,8 @@ void ready_to_publish_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( space > 0 );
-   FC_ASSERT( !ipfs_ID.empty() );
+   FC_ASSERT( !ipfs_ID.empty() && ipfs_ID.length() <= 47 ); // base58 encoded IPFS's default multihash can't be longer
+   FC_ASSERT( pubKey < bigint_type(Params::instance().DECENT_EL_GAMAL_MODULUS_512) );
 }
 
 void proof_of_custody_operation::validate()const

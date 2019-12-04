@@ -103,7 +103,7 @@ namespace graphene { namespace chain {
       extensions_type   extensions;
 
       account_id_type fee_payer() const { return from; }
-      share_type calculate_fee(const fee_parameters_type& k) const;
+      share_type calculate_fee(const fee_parameters_type& k, const fc::time_point_sec now) const;
       void validate() const;
 
       bool is_partner_account_id(account_id_type acc_id) const;

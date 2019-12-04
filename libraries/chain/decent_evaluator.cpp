@@ -770,16 +770,24 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
 
    operation_result ready_to_publish_evaluator::do_evaluate(const operation_type& o )
    {try{
-      FC_ASSERT(db().head_block_time() >= HARDFORK_1_TIME );
+      fc::time_point_sec now = db().head_block_time();
+      FC_ASSERT( now >= HARDFORK_1_TIME );
+
+      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
+      const auto& sor = idx.find( o.seeder );
+      if( sor != idx.end() )
+         s_obj = &(*sor);
+
+      if( now >= HARDFORK_5_TIME && s_obj)
+         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= 23 * 3600 + 1800, "RTP can't be broadcasted more than once in 30 minutes");
+
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    operation_result ready_to_publish_evaluator::do_apply(const operation_type& o )
    {try{
-      auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
-      const auto& sor = idx.find( o.seeder );
       operation_result result;
-      if( sor == idx.end() ) { //this is initial publish request
+      if( !s_obj ) { //this is initial publish request
          const seeding_statistics_object &sso = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
               sso.seeder = o.seeder;
               sso.total_upload = 0;
@@ -800,7 +808,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
          });
       } else
       { //this is republish case
-         db().modify<seeder_object>(*sor,[&](seeder_object &so) {
+         db().modify<seeder_object>(*s_obj,[&](seeder_object &so) {
               so.free_space = o.space;
               so.price = asset(o.price_per_MByte);
               so.pubKey = o.pubKey;
