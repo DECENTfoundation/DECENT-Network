@@ -238,7 +238,7 @@ namespace decent { namespace package {
                            k.key_byte[i] = _key.data()[i];
                         }
 
-                        elog("the encryption key is: ${k}", ("k", _key));
+                        dlog("the encryption key is: ${k}", ("k", _key));
 
                         PACKAGE_TASK_EXIT_IF_REQUESTED;
                         AES_encrypt_file(zip_file_path.string(), aes_file_path.string(), k);
@@ -415,7 +415,7 @@ namespace decent { namespace package {
                            k.key_byte[i] = _key.data()[i];
                         }
 
-                        elog("the decryption key is: ${k}", ("k", _key));
+                        dlog("the decryption key is: ${k}", ("k", _key));
 
                         if (space(temp_dir_path).available < file_size(aes_file_path) * 1.5) { // Safety margin
                             FC_THROW("Not enough storage space to create package in ${tmp_dir}", ("tmp_dir", temp_dir_path.string()) );
@@ -596,18 +596,19 @@ namespace decent { namespace package {
         }
     }
 
-     PackageInfo::PackageInfo(PackageManager& manager, const std::string& url, bool is_virtual )
+     PackageInfo::PackageInfo(PackageManager& manager, const std::string& url)
         : _transfer_state(TS_IDLE)
         , _manipulation_state(MS_IDLE)
         , _url(url)
         , _parent_dir(manager.get_packages_path())
     {
+       std::string proto = detail::get_proto(url);
+       is_virtual = proto != "ipfs";
        if(!is_virtual) {
-          _download_task = manager.get_proto_transfer_engine(detail::get_proto(url)).create_download_task(*this);
+          _download_task = manager.get_proto_transfer_engine(proto).create_download_task(*this);
           _data_state = DS_UNINITIALIZED;
        }else
           _data_state = CHECKED;
-       this->is_virtual = is_virtual;
     }
 
     PackageInfo::~PackageInfo() {
@@ -702,17 +703,12 @@ namespace decent { namespace package {
         _current_task->start(block);
     }
 
-    void PackageInfo::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const {
+    int PackageInfo::create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const {
        //assume the data are downloaded and available
        if(is_virtual)
-          return;
+          return 0;
        FC_ASSERT(cd.n < 10000000 );
-       int ret = decent::encrypt::CustodyUtils::instance().create_proof_of_custody(get_content_file(), cd, proof);
-       if( ret != 0 ) {
-           ilog("create_proof_of_custody returned ${r}", ("r", ret));
-           FC_THROW("Failed to create custody data");
-       }
-       return;
+       return decent::encrypt::CustodyUtils::instance().create_proof_of_custody(get_content_file(), cd, proof);
     }
 
     void PackageInfo::wait_for_current_task() {
@@ -861,7 +857,7 @@ namespace decent { namespace package {
         return *_packages.insert(package).first;
     }
 
-    package_handle_t PackageManager::get_package(const std::string& url, const fc::ripemd160&  hash, bool is_virtual)
+    package_handle_t PackageManager::get_package(const std::string& url, const fc::ripemd160& hash)
     {
         std::lock_guard<std::recursive_mutex> guard(_mutex);
         for (auto& package : _packages) {
@@ -872,7 +868,6 @@ namespace decent { namespace package {
             }
         }
         package_handle_t package(new PackageInfo(*this, url));
-        package->is_virtual = is_virtual;
         return *_packages.insert(package).first;
     }
 

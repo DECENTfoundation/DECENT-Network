@@ -144,7 +144,7 @@ namespace decent { namespace package {
          * @param manager Reference to package manager
          * @param url URL of the package
          */
-        PackageInfo(PackageManager& manager, const std::string& url, bool is_virtual = false);
+        PackageInfo(PackageManager& manager, const std::string& url);
 
     public:
         PackageInfo(const PackageInfo&)             = delete;
@@ -209,7 +209,7 @@ namespace decent { namespace package {
          * @param cd Custody data (received from author)
          * @param proof Calculated proof, shall be pre-filled
          */
-        void create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof)const;
+        int create_proof_of_custody(const decent::encrypt::CustodyData& cd, decent::encrypt::CustodyProof& proof) const;
 
         void wait_for_current_task();
         void cancel_current_task(bool block = false);
@@ -369,24 +369,24 @@ namespace decent { namespace package {
         /**
          * Creates package info out of the URL and returns handle to it. The package is ready for download.
          * @param url URL of the package
-         * @param hash
-         * @param is_virtual
-         * @return
+         * @param hash Hash of the package
          */
-        package_handle_t get_package(const std::string& url, const fc::ripemd160&  hash, bool is_virtual = false);
+        package_handle_t get_package(const std::string& url, const fc::ripemd160& hash);
         /**
          * Re-reads existing package out of existing disk structure and returns handle to it.
-         * @param package_hash Hash of the package
-         * @return
+         * @param hash Hash of the package
          */
         package_handle_t get_package(const fc::ripemd160& hash);
 
        /**
         * search for existing package and returns handle to it or nullptr.
-        * @param package_hash Hash of the package
-        * @return
+        * @param url URL of the package
         */
         package_handle_t find_package(const std::string& url);
+       /**
+        * search for existing package and returns handle to it or nullptr.
+        * @param hash Hash of the package
+        */
         package_handle_t find_package(const fc::ripemd160& hash);
 
         package_handle_set_t get_all_known_packages() const;

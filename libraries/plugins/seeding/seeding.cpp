@@ -15,7 +15,6 @@
 #include <decent/package/package.hpp>
 #include <decent/ipfs_check.hpp>
 #include <ipfs/client.h>
-#include <fc/network/url.hpp>
 #include <fc/thread/thread.hpp>
 
 namespace bpo = boost::program_options;
@@ -204,9 +203,7 @@ void seeding_plugin_impl::handle_new_content(const graphene::chain::content_subm
       service_thread->async( [cs_op, this](){
             dlog("seeding plugin:  handle_content_submit() lambda called");
             auto& pm = decent::package::PackageManager::instance();
-            fc::url _url( cs_op.URI );
-            bool shall_download = (_url.proto() == "ipfs");
-            auto package_handle = pm.get_package(cs_op.URI, cs_op.hash, !shall_download);
+            auto package_handle = pm.get_package(cs_op.URI, cs_op.hash);
             decent::package::event_listener_handle_t sl = std::make_shared<detail::SeedingListener>(*this, cs_op.URI, package_handle);
             package_handle->remove_all_event_listeners();
             package_handle->add_event_listener(sl);
@@ -326,12 +323,10 @@ void seeding_plugin_impl::generate_por_int(const graphene::chain::seeding_object
       proof.reference_block = dyn_props.head_block_number;
       proof.seed = dyn_props.head_block_id; //use the block ID as source of entrophy
 
-      if(package_handle->get_data_state() == decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
-         package_handle->create_proof_of_custody(*mso.cd, proof);
-      else{
+      if(package_handle->get_data_state() != decent::package::PackageInfo::DataState::CHECKED ) //files available on disk
          package_handle->download(true);
-         package_handle->create_proof_of_custody(*mso.cd, proof);
-      }
+
+      FC_ASSERT(package_handle->create_proof_of_custody(*mso.cd, proof) == 0);
       op.proof = proof;
    }
    op.seeder = mso.seeder;
