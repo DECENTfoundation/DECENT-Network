@@ -100,53 +100,46 @@ namespace graphene { namespace app {
    }
 
    fc::api<network_broadcast_api> login_api::network_broadcast()const
-      {
-      if(!_network_broadcast_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_network_broadcast_api.valid(), api_not_available_exception);
       return *_network_broadcast_api;
-      }
+   }
 
    fc::api<network_node_api> login_api::network_node()const
-      {
-      if(!_network_node_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_network_node_api.valid(), api_not_available_exception);
       return *_network_node_api;
-      }
+   }
 
    fc::api<database_api> login_api::database()const
-      {
-      if(!_database_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_database_api.valid(), api_not_available_exception);
       return *_database_api;
-      }
+   }
 
    fc::api<history_api> login_api::history() const
-      {
-      if(!_history_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_history_api.valid(), api_not_available_exception);
       return *_history_api;
-      }
+   }
 
    fc::api<crypto_api> login_api::crypto() const
-      {
-      if(!_crypto_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_crypto_api.valid(), api_not_available_exception);
       return *_crypto_api;
-      }
+   }
 
    fc::api<graphene::app::messaging_api> login_api::messaging() const
-      {
-      if(!_messaging_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_messaging_api.valid(), api_not_available_exception);
       return *_messaging_api;
-      }
+   }
 
    fc::api<monitoring_api> login_api::monitoring() const
-      {
-      if(!_monitoring_api)
-         FC_THROW_EXCEPTION(api_not_available_exception, "");
+   {
+      FC_VERIFY_AND_THROW(_monitoring_api.valid(), api_not_available_exception);
       return *_monitoring_api;
-      }
+   }
 
    network_broadcast_api::network_broadcast_api(application& a):_app(a)
    {
@@ -257,14 +250,11 @@ namespace graphene { namespace app {
    std::vector<chain::operation_history_object> history_api::get_account_history(
       chain::account_id_type account, chain::operation_history_id_type stop, unsigned limit, chain::operation_history_id_type start ) const
    {
-      if(!_app.chain_database())
-        FC_THROW_EXCEPTION(database_not_available_exception, "");
-
-      const auto& db = *_app.chain_database();
-      if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+      FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
+      FC_VERIFY_AND_THROW(limit <= CURRENT_OUTPUT_LIMIT_100, limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       std::vector<chain::operation_history_object> result;
+      const auto& db = *_app.chain_database();
       const auto& stats = account(db).statistics(db);
       const chain::account_transaction_history_object* node = db.find(stats.most_recent_op);
       if( nullptr == node ) { return result; }
@@ -291,14 +281,11 @@ namespace graphene { namespace app {
 
    std::vector<chain::operation_history_object> history_api::get_relative_account_history(chain::account_id_type account, uint32_t stop, unsigned limit, uint32_t start) const
    {
-      if(!_app.chain_database())
-         FC_THROW_EXCEPTION(database_not_available_exception, "");
-
-      const auto& db = *_app.chain_database();
-      if(limit > CURRENT_OUTPUT_LIMIT_100)
-         FC_THROW_EXCEPTION(limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
+      FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
+      FC_VERIFY_AND_THROW(limit <= CURRENT_OUTPUT_LIMIT_100, limit_exceeded_exception, "Current limit: ${l}", ("l", CURRENT_OUTPUT_LIMIT_100));
 
       std::vector<chain::operation_history_object> result;
+      const auto& db = *_app.chain_database();
       if( start == 0 )
         start = account(db).statistics(db).total_ops;
       else start = std::min( account(db).statistics(db).total_ops, start );
@@ -332,9 +319,7 @@ namespace graphene { namespace app {
       bool account_history_query_required = true;
       result.reserve(limit);
 
-      if(!_app.chain_database())
-         FC_THROW_EXCEPTION(database_not_available_exception, "");
-
+      FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
       const auto& db = *_app.chain_database();
 
       try
@@ -454,13 +439,13 @@ namespace graphene { namespace app {
    chain::private_key_type crypto_api::wif_to_private_key(const std::string &wif) const
    {
        fc::optional<chain::private_key_type> key = graphene::utilities::wif_to_key(wif);
-       if(!key.valid())
-          FC_THROW_EXCEPTION(malformed_private_key_exception, "");
+       FC_VERIFY_AND_THROW(key.valid(), malformed_private_key_exception);
        return *key;
    }
 
    chain::signed_transaction crypto_api::sign_transaction(const chain::transaction& trx, const chain::private_key_type &key) const
    {
+       FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
        chain::signed_transaction signed_trx(trx);
        signed_trx.sign(key, _app.chain_database()->get_chain_id());
        return signed_trx;
@@ -497,11 +482,8 @@ namespace graphene { namespace app {
 
    std::vector<chain::message_object> messaging_api::get_message_objects(fc::optional<chain::account_id_type> sender, fc::optional<chain::account_id_type> receiver, uint32_t max_count) const
    {
-      if(!_app.chain_database())
-         FC_THROW_EXCEPTION(database_not_available_exception, "");
-
-      if(!sender.valid() && !receiver.valid())
-         FC_THROW_EXCEPTION(at_least_one_account_needs_to_be_specified_exception, "");
+      FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
+      FC_VERIFY_AND_THROW(sender.valid() || receiver.valid(), at_least_one_account_needs_to_be_specified_exception);
 
       const auto& db = *_app.chain_database();
       const auto& idx = db.get_index_type<chain::message_index>();
@@ -552,10 +534,8 @@ namespace graphene { namespace app {
 
    std::vector<fc::optional<chain::message_object>> messaging_api::get_messages(const std::vector<chain::message_id_type>& message_ids) const
    {
-      FC_ASSERT( _app.chain_database() );
-      const auto& db = *_app.chain_database();
-
-      return db.get_objects(message_ids);
+      FC_VERIFY_AND_THROW(_app.chain_database(), database_not_available_exception);
+      return _app.chain_database()->get_objects(message_ids);
    }
 
    monitoring_api::monitoring_api()

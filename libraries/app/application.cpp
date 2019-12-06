@@ -659,8 +659,7 @@ namespace detail {
                found_a_block_in_synopsis = true;
                break;
              }
-           if (!found_a_block_in_synopsis)
-             FC_THROW_EXCEPTION(graphene::net::peer_is_on_an_unreachable_fork_exception, "Unable to provide a list of blocks starting at any of the blocks in peer's synopsis");
+           FC_VERIFY_AND_THROW(found_a_block_in_synopsis, net::peer_is_on_an_unreachable_fork_exception, "Unable to provide a list of blocks starting at any of the blocks in peer's synopsis");
          }
          for( uint32_t num = block_header::num_from_id(last_known_block_id);
               num <= _chain_db->head_block_num() && result.size() < limit;
@@ -680,17 +679,14 @@ namespace detail {
       virtual message get_item(const item_id& id) override
       { try {
         // ilog("Request for item ${id}", ("id", id));
-         if( id.item_type == graphene::net::block_message_type )
-         {
-            auto opt_block = _chain_db->fetch_block_by_id(id.item_hash);
-            if( !opt_block )
-               elog("Couldn't find block ${id} -- corresponding ID in our chain is ${id2}",
-                    ("id", id.item_hash)("id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
-            FC_ASSERT( opt_block.valid() );
-            // ilog("Serving up block #${num}", ("num", opt_block->block_num()));
-            return block_message(std::move(*opt_block));
-         }
-         FC_THROW_EXCEPTION(fc::key_not_found_exception, "");
+         FC_VERIFY_AND_THROW(id.item_type == net::block_message_type, fc::key_not_found_exception);
+         auto opt_block = _chain_db->fetch_block_by_id(id.item_hash);
+         if( !opt_block )
+            elog("Couldn't find block ${id} -- corresponding ID in our chain is ${id2}",
+                  ("id", id.item_hash)("id2", _chain_db->get_block_id_for_num(block_header::num_from_id(id.item_hash))));
+         FC_ASSERT( opt_block.valid() );
+         // ilog("Serving up block #${num}", ("num", opt_block->block_num()));
+         return block_message(std::move(*opt_block));
       } FC_CAPTURE_AND_RETHROW( (id) ) }
 
       virtual chain::chain_id_type get_chain_id() const override
@@ -971,17 +967,13 @@ public:
 
    void check_reg_expr(const std::regex& rx, const std::string& val)
    {
-      bool matches_reg_expr = std::regex_match(val, rx);
-      if(!matches_reg_expr)
-         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
+      FC_VERIFY_AND_THROW(std::regex_match(val, rx), fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val));
    }
 
    void check_reg_expr(const std::regex& rx, const std::vector<std::string>& val)
    {
       for (size_t i = 0; i < val.size(); i++) {
-         bool matches_reg_expr = std::regex_match(val[i], rx);
-         if(!matches_reg_expr)
-            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
+         FC_VERIFY_AND_THROW(std::regex_match(val[i], rx), fc::parse_error_exception, "Invalid argument: ${name} = ${value}", ("name", _name)("value", val[i]));
       }
    }
 
@@ -1002,12 +994,8 @@ public:
       else if (_name == "p2p-cert-authority-file" || _name == "p2p-cert-file" || _name == "p2p-cert-key-file" || _name == "p2p-cert-key-file" ||
                _name == "server-cert-file" || _name == "server-cert-key-file" || _name == "server-cert-key-file" || _name == "server-cert-chain-file") {
          boost::filesystem::path p(val);
-         bool file_exists = boost::filesystem::exists(p);
-         if(!file_exists)
-            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
-         bool is_regular = boost::filesystem::is_regular(p);
-         if(!is_regular)
-            FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
+         FC_VERIFY_AND_THROW(boost::filesystem::exists(p), fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
+         FC_VERIFY_AND_THROW(boost::filesystem::is_regular(p), fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
       }
    }
    void operator()(const std::vector<std::string>& val)
@@ -1038,12 +1026,8 @@ public:
    }
    void operator()(const boost::filesystem::path& p)
    {
-      bool file_exists = boost::filesystem::exists(p);
-      if(!file_exists)
-         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
-      bool is_regular = boost::filesystem::is_regular(p);
-      if(!is_regular)
-         FC_THROW_EXCEPTION(fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
+      FC_VERIFY_AND_THROW(boost::filesystem::exists(p), fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The file does not exist", ("name", _name)("value", p.string()));
+      FC_VERIFY_AND_THROW(boost::filesystem::is_regular(p), fc::parse_error_exception, "Invalid argument: ${name} = ${value}, The path does not point to a regular file", ("name", _name)("value", p.string()));
    }
 
    std::string _name;
