@@ -174,8 +174,7 @@ fc::variants wallet_api::network_get_connected_peers() const
 
 std::string wallet_api::sign_buffer(const std::string& str_buffer, const std::string& str_brainkey) const
 {
-   if(str_buffer.empty() || str_brainkey.empty())
-      FC_THROW_EXCEPTION(need_buffer_and_brainkey_exception, "");
+   FC_VERIFY_AND_THROW(!str_buffer.empty() && !str_brainkey.empty(), need_buffer_and_brainkey_exception);
 
    std::string normalized_brain_key = utilities::normalize_brain_key( str_brainkey );
    chain::private_key_type privkey = utilities::derive_private_key( normalized_brain_key );
@@ -189,10 +188,7 @@ std::string wallet_api::sign_buffer(const std::string& str_buffer, const std::st
 
 bool wallet_api::verify_signature(const std::string& str_buffer, const std::string& str_publickey, const std::string& str_signature) const
 {
-   if (str_buffer.empty() ||
-       str_publickey.empty() ||
-       str_signature.empty())
-      throw std::runtime_error("You need buffer, public key and signature to verify");
+   FC_VERIFY_AND_THROW(!str_buffer.empty() && !str_publickey.empty() && !str_signature.empty(), need_buffer_pubkey_and_signature_exception);
 
    fc::ecc::compact_signature signature;
    fc::from_hex(str_signature, (char*)signature.begin(), signature.size());
@@ -230,10 +226,7 @@ std::string wallet_api::from_command_file(const std::string& command_file_name) 
       std::ifstream cf_in(command_file_name);
       std::string current_line;
 
-      if (!cf_in.good())
-      {
-         FC_THROW_EXCEPTION(fc::file_not_found_exception, "File: ${f}", ("f", command_file_name));
-      }
+      FC_VERIFY_AND_THROW(cf_in.good(), fc::file_not_found_exception, "File: ${f}", ("f", command_file_name));
 
       wapi.Connect(my->get_wallet_filename(), { my->_wallet.ws_server, my->_wallet.ws_user, my->_wallet.ws_password });
 
@@ -297,9 +290,7 @@ void wallet_api::set_wallet_filename(const boost::filesystem::path& wallet_filen
 
 std::string wallet_api::get_private_key(const chain::public_key_type& pubkey) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return utilities::key_to_wif( my->get_private_key( pubkey ) );
 }
 
@@ -337,8 +328,7 @@ bool wallet_api::unlock(const std::string& password)
       return false;
    }
 
-   if(password.size() == 0)
-      FC_THROW_EXCEPTION(password_cannot_be_empty_exception, "");
+   FC_VERIFY_AND_THROW(!password.empty(), password_cannot_be_empty_exception);
 
    auto pw = fc::sha512::hash(password.c_str(), password.size());
    std::vector<char> decrypted = fc::aes_decrypt(pw, my->_wallet.cipher_keys);
@@ -403,8 +393,7 @@ bool wallet_api::unlock(const std::string& password)
 void wallet_api::set_password(const std::string& password)
 {
    if(!is_new()) {
-      if(my->is_locked())
-         FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+      FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    }
    my->_checksum = fc::sha512::hash( password.c_str(), password.size() );
    lock();
@@ -419,15 +408,13 @@ bool wallet_api::load_wallet_file(const boost::filesystem::path& wallet_filename
 
 void wallet_api::save_wallet_file(const boost::filesystem::path& wallet_filename)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    my->save_wallet_file( wallet_filename );
 }
 
 bool wallet_api::import_key(const std::string& account_name_or_id, const std::string& wif_key)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    bool result = my->import_key(account_name_or_id, wif_key);
    save_wallet_file();
 
@@ -436,8 +423,7 @@ bool wallet_api::import_key(const std::string& account_name_or_id, const std::st
 
 bool wallet_api::import_single_key(const std::string& account_name_or_id, const std::string& wif_key)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    bool result = my->import_single_key(account_name_or_id, wif_key);
    save_wallet_file();
 
@@ -446,8 +432,7 @@ bool wallet_api::import_single_key(const std::string& account_name_or_id, const 
 
 fc::variant wallet_api::dump_private_keys() const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    fc::mutable_variant_object result;
    result["ec_keys"] = my->_keys;
    result["el_gamal_keys"] = my->_el_gamal_keys;   // map of public keys to private keys
@@ -464,8 +449,7 @@ std::string wallet_api::derive_private_key(const std::string& prefix_string, int
 graphene::chain::public_key_type wallet_api::get_public_key(const std::string& wif_private_key) const
 {
    fc::optional<chain::private_key_type> private_key = graphene::utilities::wif_to_key( wif_private_key );
-   if(!private_key)
-      FC_THROW_EXCEPTION(invalid_wif_private_key_exception, "");
+   FC_VERIFY_AND_THROW(private_key.valid(), invalid_wif_private_key_exception);
 
    return private_key->get_public_key();
 }
@@ -670,8 +654,7 @@ signed_transaction_info wallet_api::register_account_with_keys(const std::string
                                                                const std::string& registrar_account,
                                                                bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->register_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -681,8 +664,7 @@ signed_transaction_info wallet_api::register_account(const std::string& name,
                                                      const std::string& registrar_account,
                                                      bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->register_account( name, owner, active, active, registrar_account, broadcast );
 }
 
@@ -693,8 +675,7 @@ signed_transaction_info wallet_api::register_multisig_account(const std::string&
                                                               const std::string& registrar_account,
                                                               bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->register_multisig_account( name, owner, active, memo, registrar_account,  broadcast );
 }
 
@@ -703,8 +684,7 @@ signed_transaction_info wallet_api::create_account_with_brain_key(const std::str
                                                                   const std::string& registrar_account,
                                                                   bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->create_account_with_brain_key( brain_key, account_name, registrar_account, true, broadcast);
 }
 
@@ -714,8 +694,7 @@ signed_transaction_info wallet_api::update_account_keys(const std::string& name,
                                                         const std::string& memo,
                                                         bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    fc::optional<chain::authority> new_owner, new_active;
    fc::optional<chain::public_key_type> new_memo;
    chain::account_object acc = my->get_account( name );
@@ -751,9 +730,7 @@ signed_transaction_info wallet_api::update_account_keys_to_multisig(const std::s
    if( acc.options.memo_key != memo )
       new_memo = memo;
 
-   if(!new_owner && !new_active && !new_memo)
-      FC_THROW_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, "");
-
+   FC_VERIFY_AND_THROW(new_owner.valid() || new_active.valid() || new_memo.valid(), new_auth_needs_to_be_different_from_existing_exception);
    return my->update_account_keys( name, new_owner, new_active, new_memo, broadcast );
 }
 
@@ -769,8 +746,7 @@ el_gamal_key_pair_str wallet_api::get_el_gammal_key(const std::string& consumer)
 {
    try
    {
-      if(is_locked())
-         FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+      FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
 
       chain::account_object consumer_account = get_account( consumer );
       el_gamal_key_pair_str res;
@@ -812,8 +788,7 @@ signed_transaction_info wallet_api::transfer(const std::string& from,
                                              const std::string& memo,
                                              bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
 
@@ -824,18 +799,13 @@ std::vector<chain::asset_object> wallet_api::list_assets(const std::string& lowe
 
 chain::asset_object wallet_api::get_asset(const std::string& asset_name_or_id) const
 {
-   auto a = my->find_asset(asset_name_or_id);
-   if(!a)
-      FC_THROW_EXCEPTION(asset_not_found_exception, "");
-
-   return *a;
+   return my->get_asset(asset_name_or_id);
 }
 
 chain::monitored_asset_options wallet_api::get_monitored_asset_data(const std::string& asset_name_or_id) const
 {
    auto asset = get_asset(asset_name_or_id);
-   if(!asset.is_monitored_asset())
-      FC_THROW_EXCEPTION(asset_not_monitored_exception, "");
+   FC_VERIFY_AND_THROW(asset.is_monitored_asset(), asset_not_monitored_exception);
 
    return *asset.monitored_asset_opts;
 }
@@ -849,9 +819,7 @@ signed_transaction_info wallet_api::create_monitored_asset(const std::string& is
                                                            bool broadcast)
 
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
-
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->create_monitored_asset(issuer, symbol, precision, description, feed_lifetime_sec, minimum_feeds, broadcast);
 }
 
@@ -861,8 +829,7 @@ signed_transaction_info wallet_api::update_monitored_asset(const std::string& sy
                                                            uint8_t minimum_feeds,
                                                            bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->update_monitored_asset(symbol, description, feed_lifetime_sec, minimum_feeds, broadcast);
 }
 
@@ -876,8 +843,7 @@ signed_transaction_info wallet_api::create_user_issued_asset(const std::string& 
                                                              bool is_fixed_max_supply,
                                                              bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->create_user_issued_asset(issuer, symbol, precision, description, max_supply, core_exchange_rate, is_exchangeable, is_fixed_max_supply, broadcast);
 }
 
@@ -887,8 +853,7 @@ signed_transaction_info wallet_api::issue_asset(const std::string& to_account,
                                                 const std::string& memo,
                                                 bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->issue_asset(to_account, amount, symbol, memo, broadcast);
 }
 
@@ -900,8 +865,7 @@ signed_transaction_info wallet_api::update_user_issued_asset(const std::string& 
                                                              bool is_exchangeable,
                                                              bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->update_user_issued_asset(symbol, new_issuer, description, max_supply, core_exchange_rate, is_exchangeable, broadcast);
 }
 
@@ -912,8 +876,7 @@ signed_transaction_info wallet_api::fund_asset_pools(const std::string& from,
                                                      const std::string& DCT_symbol,
                                                      bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->fund_asset_pools(from, uia_amount, uia_symbol, DCT_amount, DCT_symbol, broadcast);
 }
 
@@ -922,8 +885,7 @@ signed_transaction_info wallet_api::reserve_asset(const std::string& from,
                                                   const std::string& symbol,
                                                   bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->reserve_asset(from, amount, symbol, broadcast);
 }
 
@@ -941,8 +903,7 @@ signed_transaction_info wallet_api::claim_fees(const std::string& uia_amount,
                                                const std::string& dct_symbol,
                                                bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->claim_fees( uia_amount, uia_symbol, dct_amount, dct_symbol, broadcast);
 }
 
@@ -951,8 +912,7 @@ signed_transaction_info wallet_api::publish_asset_feed(const std::string& publis
                                                        const chain::price_feed& feed,
                                                        bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->publish_asset_feed(publishing_account, symbol, feed, broadcast);
 }
 
@@ -994,8 +954,7 @@ chain::transaction wallet_api::preview_builder_transaction(transaction_handle_ty
 
 signed_transaction_info wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->sign_builder_transaction(transaction_handle, broadcast);
 }
 
@@ -1004,8 +963,7 @@ signed_transaction_info wallet_api::propose_builder_transaction(transaction_hand
                                                                 uint32_t review_period_seconds,
                                                                 bool broadcast)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->propose_builder_transaction(handle, expiration, review_period_seconds, broadcast);
 }
 
@@ -1015,8 +973,7 @@ signed_transaction_info wallet_api::propose_builder_transaction2(transaction_han
                                                                  uint32_t review_period_seconds,
                                                                  bool broadcast)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->propose_builder_transaction2(handle, account_name_or_id, expiration, review_period_seconds, broadcast);
 }
 
@@ -1033,8 +990,7 @@ std::string wallet_api::serialize_transaction(const chain::signed_transaction& t
 signed_transaction_info wallet_api::sign_transaction(const chain::transaction& tx, bool broadcast /* = false */)
 {
     try {
-       if(is_locked())
-          FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+       FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
        return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (tx) )
 }
@@ -1042,8 +998,7 @@ signed_transaction_info wallet_api::sign_transaction(const chain::transaction& t
 chain::operation wallet_api::get_prototype_operation(const std::string& operation_name) const
 {
    auto it = my->_prototype_ops.find( operation_name );
-   if(it == my->_prototype_ops.end())
-      FC_THROW_EXCEPTION(unsupported_operation_exception, "Operation name: ${operation_name}", ("operation_name", operation_name));
+   FC_VERIFY_AND_THROW(it != my->_prototype_ops.end(), unsupported_operation_exception, "Operation name: ${operation_name}", ("operation_name", operation_name));
 
    return it->second;
 }
@@ -1062,8 +1017,7 @@ signed_transaction_info wallet_api::create_miner(const std::string& owner_accoun
                                                  const std::string& url,
                                                  bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->create_miner(owner_account, url, broadcast);
 }
 
@@ -1072,8 +1026,7 @@ signed_transaction_info wallet_api::update_miner(const std::string& miner_name,
                                                  const std::string& block_signing_key,
                                                  bool broadcast /* = false */)
 {
-   if(is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->update_miner(miner_name, url, block_signing_key, broadcast);
 }
 
@@ -1087,8 +1040,7 @@ signed_transaction_info wallet_api::withdraw_vesting(const std::string& miner_na
                                                      const std::string& asset_symbol,
                                                      bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->withdraw_vesting( miner_name, amount, asset_symbol, broadcast );
 }
 
@@ -1097,8 +1049,7 @@ signed_transaction_info wallet_api::vote_for_miner(const std::string& voting_acc
                                                    bool approve,
                                                    bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->vote_for_miner(voting_account, miner, approve, broadcast);
 }
 
@@ -1106,8 +1057,7 @@ signed_transaction_info wallet_api::set_voting_proxy(const std::string& account_
                                                      fc::optional<std::string> voting_account,
                                                      bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->set_voting_proxy(account_to_modify, voting_account, broadcast);
 }
 
@@ -1115,8 +1065,7 @@ signed_transaction_info wallet_api::set_desired_miner_count(const std::string& a
                                                             uint16_t desired_number_of_miners,
                                                             bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->set_desired_miner_count(account_to_modify, desired_number_of_miners, broadcast);
 }
 
@@ -1126,7 +1075,7 @@ std::vector<app::miner_voting_info> wallet_api::search_miner_voting(const std::s
                                                                     const std::string& order,
                                                                     const std::string& id,
                                                                     uint32_t count) const
-      {
+{
    return my->_remote_db->search_miner_voting(account_id, term, only_my_votes, order, id, count);
 }
 
@@ -1164,8 +1113,7 @@ signed_transaction_info wallet_api::propose_transfer(const std::string& proposer
                                                      const std::string& memo,
                                                      fc::time_point_sec expiration)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->propose_transfer(proposer, from, to, amount, asset_symbol, memo, expiration);
 }
 
@@ -1174,8 +1122,7 @@ signed_transaction_info wallet_api::propose_parameter_change(const std::string& 
                                                              const fc::variant_object& changed_values,
                                                              bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->propose_parameter_change( proposing_account, expiration_time, changed_values, broadcast );
 }
 
@@ -1184,8 +1131,7 @@ signed_transaction_info wallet_api::propose_fee_change(const std::string& propos
                                                        const fc::variant_object& changed_fees,
                                                        bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->propose_fee_change( proposing_account, expiration_time, changed_fees, broadcast );
 }
 
@@ -1194,8 +1140,7 @@ signed_transaction_info wallet_api::approve_proposal(const std::string& fee_payi
                                                      const approval_delta& delta,
                                                      bool broadcast /* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->approve_proposal( fee_paying_account, proposal_id, delta, broadcast );
 }
 
@@ -1215,7 +1160,7 @@ signed_transaction_info wallet_api::submit_content(const std::string& author,
                                                    const decent::encrypt::CustodyData& cd,
                                                    bool broadcast)
 {
-   FC_ASSERT( !my->is_locked(), "the wallet is locked and needs to be unlocked to have access to private keys" );
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->submit_content(author, co_authors, URI, price_amounts, hash, size,
                              seeders, quorum, expiration, publishing_fee_asset, publishing_fee_amount,
                              synopsis, secret, cd, broadcast);
@@ -1231,8 +1176,7 @@ app::content_keys wallet_api::submit_content_async(const std::string& author,
                                                    const fc::time_point_sec& expiration,
                                                    const std::string& synopsis)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    FC_ASSERT(protocol == "ipfs", "Only ipfs protocol is supported");
    return my->submit_content_async(author, co_authors, content_dir, samples_dir, protocol, price_amounts, seeders, expiration, synopsis);
 }
@@ -1241,15 +1185,13 @@ signed_transaction_info wallet_api::content_cancellation(const std::string& auth
                                                          const std::string& URI,
                                                          bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->content_cancellation(author, URI, broadcast);
 }
 
 void wallet_api::download_content(const std::string& consumer, const std::string& URI, const std::string& region_code_from, bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->download_content(consumer, URI, region_code_from, broadcast);
 }
 
@@ -1265,8 +1207,7 @@ signed_transaction_info wallet_api::request_to_buy(const std::string& consumer,
                                                    const std::string& str_region_code_from,
                                                    bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->request_to_buy(consumer, URI, price_asset_name, price_amount, str_region_code_from, broadcast);
 }
 
@@ -1276,15 +1217,13 @@ signed_transaction_info wallet_api::leave_rating_and_comment(const std::string& 
                                                              const std::string& comment,
                                                              bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->leave_rating_and_comment(consumer, URI, rating, comment, broadcast);
 }
 
 decent::encrypt::DInteger wallet_api::restore_encryption_key(const std::string& consumer, chain::buying_id_type buying)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->restore_encryption_key(consumer, buying);
 }
 
@@ -1467,8 +1406,7 @@ std::pair<std::string, decent::encrypt::CustodyData> wallet_api::create_package(
                                                                                 const std::string& samples_dir,
                                                                                 const decent::encrypt::DInteger& aes_key) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    fc::sha256 key1;
 #if CRYPTOPP_VERSION >= 600
    aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
@@ -1476,16 +1414,15 @@ std::pair<std::string, decent::encrypt::CustodyData> wallet_api::create_package(
    aes_key.Encode((byte*)key1._hash, 32);
 #endif
 
-   auto pack = decent::package::PackageManager::instance().get_package(content_dir, samples_dir, key1);
-   pack->create( true );
-   decent::encrypt::CustodyData cd = pack->get_custody_data();
-   return std::pair<std::string, decent::encrypt::CustodyData>(pack->get_hash().str(), cd);
+   auto package = decent::package::PackageManager::instance().get_package(content_dir, samples_dir, key1);
+   package->create( true );
+   decent::encrypt::CustodyData cd = package->get_custody_data();
+   return std::pair<std::string, decent::encrypt::CustodyData>(package->get_hash().str(), cd);
 }
 
 void wallet_api::extract_package(const std::string& package_hash, const std::string& output_dir, const decent::encrypt::DInteger& aes_key) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    fc::sha256 key1;
 #if CRYPTOPP_VERSION >= 600
    aes_key.Encode((CryptoPP::byte*)key1._hash, 32);
@@ -1493,33 +1430,25 @@ void wallet_api::extract_package(const std::string& package_hash, const std::str
    aes_key.Encode((byte*)key1._hash, 32);
 #endif
 
-   auto pack = decent::package::PackageManager::instance().find_package(fc::ripemd160(package_hash));
-   if (pack == nullptr) {
-      FC_THROW_EXCEPTION(cannot_find_package_exception, "");
-   }
-
-   if (pack->get_manipulation_state() != decent::package::PackageInfo::ManipulationState::MS_IDLE) {
-      FC_THROW_EXCEPTION(package_is_not_in_valid_state_exception, "");
-   }
-   pack->unpack(output_dir, key1);
+   auto package = decent::package::PackageManager::instance().find_package(fc::ripemd160(package_hash));
+   FC_VERIFY_AND_THROW(package, cannot_find_package_exception);
+   FC_VERIFY_AND_THROW(package->get_manipulation_state() == decent::package::PackageInfo::ManipulationState::MS_IDLE, package_is_not_in_valid_state_exception);
+   package->unpack(output_dir, key1);
 }
 
 void wallet_api::download_package(const std::string& url) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    auto content = get_content(url);
-   if(!content)
-      FC_THROW_EXCEPTION(no_such_content_at_this_url_exception, "URL: ${url}", ("url", url));
+   FC_VERIFY_AND_THROW(content.valid(), no_such_content_at_this_url_exception, "URL: ${url}", ("url", url));
 
-   auto pack = decent::package::PackageManager::instance().get_package(url, content->_hash );
-   pack->download(false);
+   auto package = decent::package::PackageManager::instance().get_package(url, content->_hash);
+   package->download(false);
 }
 
 std::string wallet_api::upload_package(const std::string& package_hash, const std::string& protocol) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    FC_ASSERT(protocol == "ipfs", "Only ipfs protocol is supported");
    auto package = decent::package::PackageManager::instance().get_package(fc::ripemd160(package_hash));
    package->start_seeding(protocol, true);
@@ -1528,8 +1457,7 @@ std::string wallet_api::upload_package(const std::string& package_hash, const st
 
 void wallet_api::remove_package(const std::string& package_hash) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    decent::package::PackageManager::instance().release_package(fc::ripemd160(package_hash));
 }
 
@@ -1555,8 +1483,7 @@ signed_transaction_info wallet_api::subscribe_to_author(const std::string& from,
                                                         const std::string& price_asset_symbol,
                                                         bool broadcast/* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->subscribe_to_author(from, to, price_amount, price_asset_symbol, broadcast);
 }
 
@@ -1564,8 +1491,7 @@ signed_transaction_info wallet_api::subscribe_by_author(const std::string& from,
                                                         const std::string& to,
                                                         bool broadcast/* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->subscribe_by_author(from, to, broadcast);
 }
 
@@ -1576,8 +1502,7 @@ signed_transaction_info wallet_api::set_subscription(const std::string& account,
                                                      const std::string& price_asset_symbol,
                                                      bool broadcast/* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->set_subscription(account, allow_subscription, subscription_period, price_amount, price_asset_symbol, broadcast);
 }
 
@@ -1586,8 +1511,7 @@ signed_transaction_info wallet_api::set_automatic_renewal_of_subscription(const 
                                                                           bool automatic_renewal,
                                                                           bool broadcast/* = false */)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->set_automatic_renewal_of_subscription(account_id_or_name, subscription_id, automatic_renewal, broadcast);
 }
 
@@ -1616,8 +1540,7 @@ signed_transaction_info wallet_api::send_message(const std::string& from,
                                                  const std::string& text,
                                                  bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->send_message(from, to, text, broadcast);
 }
 
@@ -1626,15 +1549,13 @@ signed_transaction_info wallet_api::send_unencrypted_message(const std::string& 
                                                              const std::string& text,
                                                              bool broadcast)
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->send_unencrypted_message(from, to, text, broadcast);
 }
 
 std::vector<message_data> wallet_api::get_message_objects(const std::string& sender, const std::string& receiver, uint32_t max_count) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    fc::optional<chain::account_id_type> receiver_id;
    if(receiver.size())
       receiver_id = get_account(receiver).get_id();
@@ -1646,15 +1567,13 @@ std::vector<message_data> wallet_api::get_message_objects(const std::string& sen
 
 std::vector<text_message> wallet_api::get_messages(const std::string& receiver, uint32_t max_count) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->get_messages(receiver, max_count);
 }
 
 std::vector<text_message> wallet_api::get_sent_messages(const std::string& sender, uint32_t max_count) const
 {
-   if(my->is_locked())
-      FC_THROW_EXCEPTION(wallet_is_locked_exception, "");
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
    return my->get_sent_messages(sender, max_count);
 }
 

@@ -306,18 +306,12 @@ void wallet_api_impl::set_operation_fees(chain::signed_transaction& tx, const ch
 
 fc::optional<chain::account_object> wallet_api_impl::find_account(chain::account_id_type account_id) const
 {
-   auto rec = _remote_db->get_accounts({account_id}).front();
-
-   if(!rec)
-      FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${account}", ("account", account_id));
-
-   return *rec;
+   return _remote_db->get_accounts({account_id}).front();
 }
 
 fc::optional<chain::account_object> wallet_api_impl::find_account(const std::string& account_name_or_id) const
 {
-   if(account_name_or_id.size() == 0)
-      FC_THROW_EXCEPTION(account_name_or_id_cannot_be_empty_exception, "Account: ${acc}", ("acc", account_name_or_id));
+   FC_VERIFY_AND_THROW(!account_name_or_id.empty(), account_name_or_id_cannot_be_empty_exception);
 
    if( auto id = maybe_id<chain::account_id_type>(account_name_or_id) )
    {
@@ -328,8 +322,7 @@ fc::optional<chain::account_object> wallet_api_impl::find_account(const std::str
       if(_wallet.my_accounts.get<chain::by_name>().count(account_name_or_id))
       {
          auto local_account = *_wallet.my_accounts.get<chain::by_name>().find(account_name_or_id);
-         if(!rec)
-            FC_THROW_EXCEPTION(account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
+         FC_VERIFY_AND_THROW(rec.valid(), account_in_wallet_not_on_blockchain_exception, "Account: ${acc}", ("acc", account_name_or_id));
          if(local_account.id != rec->id)
             elog("my account id ${id} different from blockchain id ${id2}", ("id", local_account.id)("id2", rec->id));
          if(local_account.name != rec->name)
@@ -347,16 +340,14 @@ fc::optional<chain::account_object> wallet_api_impl::find_account(const std::str
 chain::account_object wallet_api_impl::get_account(chain::account_id_type account_id) const
 {
    auto rec = find_account(account_id);
-   if(!rec)
-      FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
+   FC_VERIFY_AND_THROW(rec.valid(), account_does_not_exist_exception, "Account: ${acc}", ("acc", account_id));
    return *rec;
 }
 
 chain::account_object wallet_api_impl::get_account(const std::string& account_name_or_id) const
 {
    auto rec = find_account(account_name_or_id);
-   if(!rec)
-      FC_THROW_EXCEPTION(account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
+   FC_VERIFY_AND_THROW(rec.valid(), account_does_not_exist_exception, "Account: ${acc}", ("acc", account_name_or_id));
    return *rec;
 }
 
@@ -388,14 +379,14 @@ fc::optional<chain::asset_object> wallet_api_impl::find_asset(const std::string&
 chain::asset_object wallet_api_impl::get_asset(chain::asset_id_type asset_id) const
 {
    auto opt = find_asset(asset_id);
-   FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_id));
+   FC_VERIFY_AND_THROW(opt.valid(), asset_does_not_exist_exception, "Asset ${asset} does not exist", ("asset", asset_id));
    return *opt;
 }
 
 chain::asset_object wallet_api_impl::get_asset(const std::string& asset_symbol_or_id) const
 {
    auto opt = find_asset(asset_symbol_or_id);
-   FC_ASSERT(opt, "Asset ${asset} does not exist", ("asset", asset_symbol_or_id));
+   FC_VERIFY_AND_THROW(opt.valid(), asset_does_not_exist_exception, "Asset ${asset} does not exist", ("asset", asset_symbol_or_id));
    return *opt;
 }
 
@@ -451,9 +442,7 @@ chain::non_fungible_token_data_object wallet_api_impl::get_non_fungible_token_da
 
 void wallet_api_impl::set_wallet_filename(const boost::filesystem::path &wallet_filename)
 {
-   if(wallet_filename.empty())
-      FC_THROW_EXCEPTION(wallet_filename_cannot_be_empty_exception, "");
-
+   FC_VERIFY_AND_THROW(!wallet_filename.empty(), wallet_filename_cannot_be_empty_exception);
    _wallet_filename = wallet_filename;
 }
 
@@ -767,16 +756,13 @@ transaction_handle_type wallet_api_impl::begin_builder_transaction()
 
 void wallet_api_impl::add_operation_to_builder_transaction(transaction_handle_type transaction_handle, const chain::operation& op)
 {
-   if(!_builder_transactions.count(transaction_handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
+   FC_VERIFY_AND_THROW(_builder_transactions.count(transaction_handle), invalid_transaction_handle_exception);
    _builder_transactions[transaction_handle].operations.emplace_back(op);
 }
 
 void wallet_api_impl::replace_operation_in_builder_transaction(transaction_handle_type handle, uint32_t operation_index, const chain::operation& new_op)
 {
-   if(!_builder_transactions.count(handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+   FC_VERIFY_AND_THROW(_builder_transactions.count(handle), invalid_transaction_handle_exception);
 
    chain::signed_transaction& trx = _builder_transactions[handle];
    FC_ASSERT( operation_index < trx.operations.size());
@@ -785,11 +771,8 @@ void wallet_api_impl::replace_operation_in_builder_transaction(transaction_handl
 
 chain::asset wallet_api_impl::set_fees_on_builder_transaction(transaction_handle_type handle, const std::string& fee_asset)
 {
-   if(!_builder_transactions.count(handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
-   if(fee_asset != GRAPHENE_SYMBOL)
-      FC_THROW_EXCEPTION(fees_can_be_paid_in_core_asset_exception, "");
+   FC_VERIFY_AND_THROW(_builder_transactions.count(handle), invalid_transaction_handle_exception);
+   FC_VERIFY_AND_THROW(fee_asset == GRAPHENE_SYMBOL, fees_can_be_paid_in_core_asset_exception);
 
    auto fee_asset_obj = get_asset(fee_asset);
    chain::asset total_fee = fee_asset_obj.amount(0);
@@ -803,23 +786,19 @@ chain::asset wallet_api_impl::set_fees_on_builder_transaction(transaction_handle
 
 chain::transaction wallet_api_impl::preview_builder_transaction(transaction_handle_type handle)
 {
-   if(!_builder_transactions.count(handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+   FC_VERIFY_AND_THROW(_builder_transactions.count(handle), invalid_transaction_handle_exception);
    return _builder_transactions[handle];
 }
 
 chain::signed_transaction wallet_api_impl::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
 {
-   if(!_builder_transactions.count(transaction_handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
-
+   FC_VERIFY_AND_THROW(_builder_transactions.count(transaction_handle), invalid_transaction_handle_exception);
    return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
 }
 
 chain::signed_transaction wallet_api_impl::propose_builder_transaction(transaction_handle_type handle, fc::time_point_sec expiration, uint32_t review_period_seconds, bool broadcast)
 {
-   if(!_builder_transactions.count(handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+   FC_VERIFY_AND_THROW(_builder_transactions.count(handle), invalid_transaction_handle_exception);
 
    chain::proposal_create_operation op;
    op.expiration_time = expiration;
@@ -837,8 +816,7 @@ chain::signed_transaction wallet_api_impl::propose_builder_transaction(transacti
 chain::signed_transaction wallet_api_impl::propose_builder_transaction2(transaction_handle_type handle, const std::string& account_name_or_id,
                                                                         fc::time_point_sec expiration, uint32_t review_period_seconds, bool broadcast)
 {
-   if(!_builder_transactions.count(handle))
-      FC_THROW_EXCEPTION(invalid_transaction_handle_exception, "");
+   FC_VERIFY_AND_THROW(_builder_transactions.count(handle), invalid_transaction_handle_exception);
 
    chain::proposal_create_operation op;
    op.fee_paying_account = get_account(account_name_or_id).get_id();
@@ -862,8 +840,7 @@ void wallet_api_impl::remove_builder_transaction(transaction_handle_type handle)
 chain::signed_transaction wallet_api_impl::register_account(const std::string& name, const chain::public_key_type& owner, const chain::public_key_type& active,
                                                             const chain::public_key_type& memo, const std::string& registrar_account, bool broadcast)
 { try {
-   if(find_account(name).valid())
-      FC_THROW_EXCEPTION(account_already_exist_exception, "");
+   FC_VERIFY_AND_THROW(!find_account(name).valid(), account_already_exist_exception);
 
    chain::account_create_operation account_create_op;
 
@@ -898,10 +875,7 @@ chain::signed_transaction wallet_api_impl::register_account(const std::string& n
       if( it != _keys.end() )
       {
          fc::optional<chain::private_key_type> privkey = utilities::wif_to_key( it->second );
-         if( !privkey.valid() )
-         {
-            FC_THROW_EXCEPTION(malformed_private_key_exception, "");
-         }
+         FC_VERIFY_AND_THROW(privkey.valid(), malformed_private_key_exception);
          tx.sign( *privkey, _chain_id );
       }
    }
@@ -914,8 +888,7 @@ chain::signed_transaction wallet_api_impl::register_account(const std::string& n
 chain::signed_transaction wallet_api_impl::register_multisig_account(const std::string& name, const chain::authority& owner_authority, const chain::authority& active_authority,
                                                                      const chain::public_key_type& memo_pubkey, const std::string& registrar_account, bool broadcast)
 { try {
-   if(find_account(name).valid())
-      FC_THROW_EXCEPTION(account_already_exist_exception, "");
+   FC_VERIFY_AND_THROW(!find_account(name).valid(), account_already_exist_exception);
 
    chain::account_create_operation account_create_op;
    chain::account_object acc = get_account( registrar_account );
@@ -937,8 +910,7 @@ chain::signed_transaction wallet_api_impl::register_multisig_account(const std::
 chain::signed_transaction wallet_api_impl::create_account_with_private_key(const chain::private_key_type& owner_privkey, const std::string& account_name, const std::string& registrar_account,
                                                                            bool import, bool broadcast, bool save_wallet)
 { try {
-   if(find_account(account_name).valid())
-      FC_THROW_EXCEPTION(account_already_exist_exception, "");
+   FC_VERIFY_AND_THROW(!find_account(account_name).valid(), account_already_exist_exception);
 
    int active_key_index = find_first_unused_derived_key_index(owner_privkey);
    chain::private_key_type active_privkey = utilities::derive_private_key( utilities::key_to_wif(owner_privkey), active_key_index);
@@ -1055,9 +1027,7 @@ chain::signed_transaction wallet_api_impl::create_user_issued_asset(const std::s
                                                                     uint64_t max_supply, chain::price core_exchange_rate, bool is_exchangeable, bool is_fixed_max_supply, bool broadcast)
 { try {
    chain::account_object issuer_account = get_account( issuer );
-
-   if(find_asset(symbol).valid())
-      FC_THROW_EXCEPTION(asset_already_exists_exception, "");
+   FC_VERIFY_AND_THROW(!find_asset(symbol).valid(), asset_already_exists_exception);
 
    chain::asset_create_operation create_op;
    create_op.issuer = issuer_account.id;
@@ -1196,9 +1166,7 @@ chain::signed_transaction wallet_api_impl::create_monitored_asset(const std::str
                                                                   uint32_t feed_lifetime_sec, uint8_t minimum_feeds, bool broadcast)
 { try {
    chain::account_object issuer_account = get_account( issuer );
-
-   if(find_asset(symbol).valid())
-      FC_THROW_EXCEPTION(asset_already_exists_exception, "");
+   FC_VERIFY_AND_THROW(!find_asset(symbol).valid(), asset_already_exists_exception);
 
    chain::asset_create_operation create_op;
    create_op.issuer = issuer_account.id;
@@ -1269,8 +1237,7 @@ chain::signed_transaction wallet_api_impl::create_non_fungible_token(const std::
                                                                      const chain::non_fungible_token_data_definitions& definitions, uint32_t max_supply,
                                                                      bool fixed_max_supply, bool transferable, bool broadcast)
 { try {
-   if(find_non_fungible_token(symbol).valid())
-      FC_THROW_EXCEPTION(nft_already_exist_exception, "");
+   FC_VERIFY_AND_THROW(!find_non_fungible_token(symbol).valid(), nft_already_exist_exception);
 
    chain::non_fungible_token_create_definition_operation create_op;
    create_op.symbol = symbol;
@@ -1394,19 +1361,16 @@ chain::miner_object wallet_api_impl::get_miner(const std::string& owner_account)
       std::vector<chain::miner_id_type> ids_to_get;
       ids_to_get.push_back(*miner_id);
       std::vector<fc::optional<chain::miner_object>> miner_objects = _remote_db->get_miners(ids_to_get);
-      if (miner_objects.front())
-         return *miner_objects.front();
-      FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
+      FC_VERIFY_AND_THROW(miner_objects.front().valid(), no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
+      return *miner_objects.front();
    }
    else
    {
       // then maybe it's the owner account
       chain:: account_id_type owner_account_id = get_account(owner_account).get_id();
       fc::optional<chain::miner_object> miner = _remote_db->get_miner_by_account(owner_account_id);
-      if (miner)
-         return *miner;
-      else
-         FC_THROW_EXCEPTION(no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
+      FC_VERIFY_AND_THROW(miner.valid(), no_miner_is_registered_for_this_owner_id_exception, "Owner id: ${id}", ("id", owner_account));
+      return *miner;
    }
 } FC_CAPTURE_AND_RETHROW( (owner_account) ) }
 
@@ -1516,20 +1480,17 @@ chain::signed_transaction wallet_api_impl::vote_for_miner(const std::string& vot
    chain::account_object voting_account_object = get_account(voting_account);
    chain::account_id_type miner_owner_account_id = get_account(miner).get_id();
    fc::optional<chain::miner_object> miner_obj = _remote_db->get_miner_by_account(miner_owner_account_id);
-   if(!miner_obj)
-      FC_THROW_EXCEPTION(account_is_not_registered_as_miner_exception, "Account: ${miner}", ("miner", miner));
+   FC_VERIFY_AND_THROW(miner_obj.valid(), account_is_not_registered_as_miner_exception, "Account: ${miner}", ("miner", miner));
 
    if (approve)
    {
       auto insert_result = voting_account_object.options.votes.insert(miner_obj->vote_id);
-      if (!insert_result.second)
-         FC_THROW_EXCEPTION(account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
+      FC_VERIFY_AND_THROW(insert_result.second, account_was_already_voting_for_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
    }
    else
    {
       auto votes_removed = voting_account_object.options.votes.erase(miner_obj->vote_id);
-      if (!votes_removed)
-         FC_THROW_EXCEPTION(account_is_already_not_voting_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
+      FC_VERIFY_AND_THROW(votes_removed, account_is_already_not_voting_miner_exception, "Account: ${account} miner: $miner}", ("account", voting_account)("miner", miner));
    }
    chain::account_update_operation account_update_op;
    account_update_op.account = voting_account_object.id;
@@ -1549,15 +1510,15 @@ chain::signed_transaction wallet_api_impl::set_voting_proxy(const std::string& a
    if (voting_account)
    {
       chain::account_id_type new_voting_account_id = get_account(*voting_account).get_id();
-      if(account_object_to_modify.options.voting_account == new_voting_account_id)
-         FC_THROW_EXCEPTION(voting_proxy_is_already_set_to_voter_exception, "For: ${account} voter: ${voter}", ("account", account_to_modify)("voter", *voting_account));
+      FC_VERIFY_AND_THROW(account_object_to_modify.options.voting_account != new_voting_account_id, voting_proxy_is_already_set_to_voter_exception,
+         "For: ${account} voter: ${voter}", ("account", account_to_modify)("voter", *voting_account));
 
       account_object_to_modify.options.voting_account = new_voting_account_id;
    }
    else
    {
-      if(account_object_to_modify.options.voting_account == GRAPHENE_PROXY_TO_SELF_ACCOUNT)
-         FC_THROW_EXCEPTION(account_was_already_voting_for_itself_exception, "Account: ${account}", ("account", account_to_modify));
+      FC_VERIFY_AND_THROW(account_object_to_modify.options.voting_account != GRAPHENE_PROXY_TO_SELF_ACCOUNT, account_was_already_voting_for_itself_exception,
+         "Account: ${account}", ("account", account_to_modify));
 
       account_object_to_modify.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
    }
@@ -1578,8 +1539,8 @@ chain::signed_transaction wallet_api_impl::set_desired_miner_count(const std::st
 { try {
    chain::account_object account_object_to_modify = get_account(account_to_modify);
 
-   if(account_object_to_modify.options.num_miner == desired_number_of_miners)
-      FC_THROW_EXCEPTION(account_was_already_voting_for_miners_exception, "Account: ${account} number of miners: ${miners} ", ("account", account_to_modify)("miners", desired_number_of_miners));
+   FC_VERIFY_AND_THROW(account_object_to_modify.options.num_miner != desired_number_of_miners, account_was_already_voting_for_miners_exception,
+      "Account: ${account} number of miners: ${miners} ", ("account", account_to_modify)("miners", desired_number_of_miners));
 
    account_object_to_modify.options.num_miner = desired_number_of_miners;
 
@@ -2143,13 +2104,9 @@ app::content_keys wallet_api_impl::submit_content_async(const std::string& autho
       }
 
       // checking for duplicates
-      if(co_authors.size() != co_authors_id_to_split.size())
-         FC_THROW_EXCEPTION(duplicity_at_the_list_of_coauthors_not_allowed_exception, "");
-
-      if(price_amounts.empty())
-         FC_THROW_EXCEPTION(the_prices_of_the_content_per_region_cannot_be_empty_exception, "");
-      if(fc::time_point_sec(fc::time_point::now()) > expiration)
-         FC_THROW_EXCEPTION(invalid_content_expiration_exception, "");
+      FC_VERIFY_AND_THROW(co_authors.size() == co_authors_id_to_split.size(), duplicity_at_the_list_of_coauthors_not_allowed_exception);
+      FC_VERIFY_AND_THROW(!price_amounts.empty(), the_prices_of_the_content_per_region_cannot_be_empty_exception);
+      FC_VERIFY_AND_THROW(expiration < fc::time_point_sec(fc::time_point::now()), invalid_content_expiration_exception);
 
       CryptoPP::Integer secret(randomGenerator, 256);
       while( secret >= Params::instance().DECENT_SHAMIR_ORDER ){
@@ -2171,17 +2128,13 @@ app::content_keys wallet_api_impl::submit_content_async(const std::string& autho
       for( int i =0; i < (int)seeders.size(); i++ )
       {
          const auto& s = _remote_db->get_seeder( seeders[i] );
-         if(!s)
-            FC_THROW_EXCEPTION(seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
-         decent::encrypt::Ciphertext cp;
+         FC_VERIFY_AND_THROW(s.valid(), seeder_not_found_exception, "Seeder: ${s}", ("s", seeders[i]));
+
          decent::encrypt::point p = ss.split[i];
+         dlog("Split ${i} = ${a} / ${b}",("i",i)("a",decent::encrypt::DIntegerString(p.first))("b",decent::encrypt::DIntegerString(p.second)));
 
-         decent::encrypt::DIntegerString a(p.first);
-         decent::encrypt::DIntegerString b(p.second);
-
-         ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
-
-         decent::encrypt::el_gamal_encrypt( p, s->pubKey ,cp );
+         decent::encrypt::Ciphertext cp;
+         decent::encrypt::el_gamal_encrypt( p, s->pubKey, cp );
          keys.parts.push_back(cp);
       }
 
@@ -2238,9 +2191,7 @@ content_download_status wallet_api_impl::get_download_status(const std::string& 
    {
       chain::account_id_type acc = get_account(consumer).id;
       fc::optional<chain::buying_object> bobj = _remote_db->get_buying_by_consumer_URI( acc, URI );
-      if (!bobj) {
-         FC_THROW_EXCEPTION(cannot_find_download_object_exception, "");
-      }
+      FC_VERIFY_AND_THROW(bobj.valid(), cannot_find_download_object_exception);
 
       fc::optional<chain::content_object> content = _remote_db->get_content( URI );
 
@@ -2283,10 +2234,7 @@ void wallet_api_impl::download_content(const std::string& consumer, const std::s
       fc::optional<chain::content_object> content = _remote_db->get_content( URI );
       chain::account_object consumer_account = get_account( consumer );
 
-      if (!content)
-      {
-         FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
-      }
+      FC_VERIFY_AND_THROW(content.valid(), invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
 
       uint32_t region_code_from = chain::RegionCodes::OO_none;
 
@@ -2299,9 +2247,7 @@ void wallet_api_impl::download_content(const std::string& consumer, const std::s
       //
 
       fc::optional<chain::asset> op_price = content->price.GetPrice(region_code_from);
-      if (!op_price)
-         FC_THROW_EXCEPTION(content_not_available_for_this_region_exception, "");
-
+      FC_VERIFY_AND_THROW(op_price.valid(), content_not_available_for_this_region_exception);
 
       chain::request_to_buy_operation request_op;
       request_op.consumer = consumer_account.id;
@@ -2450,8 +2396,7 @@ chain::signed_transaction wallet_api_impl::set_automatic_renewal_of_subscription
       chain::account_id_type account = get_account( account_id_or_name ).get_id();
       fc::optional<chain::subscription_object> subscription_obj = _remote_db->get_subscription(subscription_id);
 
-      if(!subscription_obj)
-         FC_THROW_EXCEPTION(could_not_find_matching_subcription_exception, "Subscription: ${subscription}", ("subscription", subscription_id));
+      FC_VERIFY_AND_THROW(subscription_obj.valid(), could_not_find_matching_subcription_exception, "Subscription: ${subscription}", ("subscription", subscription_id));
 
       chain::automatic_renewal_of_subscription_operation aros_op;
       aros_op.consumer = account;
@@ -2481,14 +2426,8 @@ decent::encrypt::DInteger wallet_api_impl::restore_encryption_key(const std::str
    int i=0;
    for( const auto key_particle : bo.key_particles )
    {
-      auto result = decent::encrypt::el_gamal_decrypt( decent::encrypt::Ciphertext( key_particle ), el_gamal_priv_key->second, message );
-      FC_ASSERT(result == decent::encrypt::ok);
-
-      decent::encrypt::DIntegerString a(message.first);
-      decent::encrypt::DIntegerString b(message.second);
-
-      ilog("Split ${i} = ${a} / ${b}",("i",i)("a",a)("b",b));
-      i++;
+      FC_ASSERT(decent::encrypt::el_gamal_decrypt(decent::encrypt::Ciphertext(key_particle), el_gamal_priv_key->second, message) == decent::encrypt::ok);
+      dlog("Split ${i} = ${a} / ${b}",("i",i++)("a",decent::encrypt::DIntegerString(message.first))("b",decent::encrypt::DIntegerString(message.second)));
       ss.add_point( message );
    }
 
@@ -2500,8 +2439,7 @@ decent::encrypt::DInteger wallet_api_impl::restore_encryption_key(const std::str
 std::pair<chain::account_id_type, std::vector<chain::account_id_type>> wallet_api_impl::get_author_and_co_authors_by_URI(const std::string& URI) const
 {
    fc::optional<chain::content_object> co = _remote_db->get_content( URI );
-   if(!co.valid())
-      FC_THROW_EXCEPTION(invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
+   FC_VERIFY_AND_THROW(co.valid(), invalid_content_uri_exception, "URI: ${uri}", ("uri", URI));
    std::pair<chain::account_id_type, std::vector<chain::account_id_type>> result;
    result.first = co->author;
    for( auto const& co_author : co->co_authors )

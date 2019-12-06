@@ -46,7 +46,7 @@ namespace graphene { namespace wallet {
       invalid_wif_private_key_code              = 12,
       new_auth_needs_to_be_different_from_existing_code = 13,
 
-      asset_not_found_code                      = 14,
+      asset_does_not_exist_code                 = 14,
       asset_not_monitored_code                  = 15,
       asset_already_exists_code                 = 16,
 
@@ -100,7 +100,7 @@ namespace graphene { namespace wallet {
    FC_DECLARE_WALLET_EXCEPTION(invalid_wif_private_key_exception, invalid_wif_private_key_code, "Invalid wif private key.")
    FC_DECLARE_WALLET_EXCEPTION(new_auth_needs_to_be_different_from_existing_exception, new_auth_needs_to_be_different_from_existing_code, "New authority needs to be different from the existing one.")
    // asset
-   FC_DECLARE_WALLET_EXCEPTION(asset_not_found_exception, asset_not_found_code, "Asset not found.")
+   FC_DECLARE_WALLET_EXCEPTION(asset_does_not_exist_exception, asset_does_not_exist_code, "Asset does not exist.")
    FC_DECLARE_WALLET_EXCEPTION(asset_not_monitored_exception, asset_not_monitored_code, "Asset not monitored.")
    FC_DECLARE_WALLET_EXCEPTION(asset_already_exists_exception, asset_already_exists_code, "Asset already exists.")
    // transaction builder
