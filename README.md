@@ -74,10 +74,7 @@ For CentOS 8, execute in console:
 
 Then, execute in console:
 
-    $ brew update
-    $ brew install cmake boost cryptopp openssl@1.1 pbc readline doxygen git ipfs
-    $ brew tap nlohmann/json
-    $ brew install nlohmann_json --with-cmake
+    $ brew install cmake boost cryptopp openssl@1.1 pbc nlohmann-json readline doxygen git ipfs
     $ brew link --force readline
     $ mkdir ~/dev
 
