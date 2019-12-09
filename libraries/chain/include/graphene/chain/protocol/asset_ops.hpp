@@ -118,10 +118,7 @@ namespace graphene { namespace chain {
       /// Number of digits to the right of decimal point, must be less than or equal to 12
       uint8_t                 precision = 0;
 
-      /**
-       * data that describes the meaning/purpose of this asset, fee will be charged proportional to
-       * size of description.
-       */
+      /// String that describes the meaning/purpose of this asset.
       std::string description;
 
       asset_options options;

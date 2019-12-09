@@ -779,7 +779,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
          s_obj = &(*sor);
 
       if( now >= HARDFORK_5_TIME && s_obj)
-         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= 23 * 3600 + 1800, "RTP can't be broadcasted more than once in 30 minutes");
+         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= 23 * 3600 + 1800, "RTP can't be broadcast more than once in 30 minutes");
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }

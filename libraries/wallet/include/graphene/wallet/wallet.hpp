@@ -1007,7 +1007,7 @@ public:
     * @param symbol the ticker symbol of the new asset
     * @param precision the number of digits of precision to the right of the decimal point,
     *                  must be less than or equal to 12
-    * @param description asset description. Maximal length is 1000 chars
+    * @param description asset description. Maximal length is 100 chars
     * @param feed_lifetime_sec time before a price feed expires
     * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
     * @param broadcast \c true to broadcast the transaction on the network
@@ -1026,7 +1026,7 @@ public:
     * @brief Update the parameters specific to a monitored asset.
     * @note The wallet needs to be unlocked and a required key/s needs to be imported.
     * @param symbol the name or id of the asset to update, which must be a monitored asset
-    * @param description asset description
+    * @param description asset description. Maximal length is 100 chars
     * @param feed_lifetime_sec time before a price feed expires
     * @param minimum_feeds minimum number of unexpired feeds required to extract a median feed from
     * @param broadcast \c true to broadcast the transaction on the network
@@ -1049,7 +1049,7 @@ public:
     * @param symbol the ticker symbol of the new asset
     * @param precision the number of digits of precision to the right of the decimal point,
     *               must be less than or equal to 12
-    * @param description asset description. Maximal length is 1000 chars
+    * @param description asset description. Maximal length is 100 chars
     * @param max_supply the maximum supply of this asset which may exist at any given time
     * @param core_exchange_rate core_exchange_rate is a price struct which consist from base asset
     *               and quote asset (see price). One of the asset has to be core asset.
@@ -1097,7 +1097,7 @@ public:
     * @note The wallet needs to be unlocked and a required key/s needs to be imported.
     * @param symbol the name or id of the asset to update, which must be a user-issued asset
     * @param new_issuer if the asset is to be given a new issuer, specify his ID here
-    * @param description asset description
+    * @param description asset description. Maximal length is 100 chars
     * @param max_supply the maximum supply of this asset which may exist at any given time
     * @param core_exchange_rate price used to convert non-core asset to core asset
     * @param is_exchangeable \c true to allow implicit conversion of this asset to/from core asset
@@ -2168,7 +2168,7 @@ public:
     * @brief Creates a new non fungible token definition.
     * @param issuer the name or id of the account who will pay the fee and become the issuer of the new non fungible token
     * @param symbol the ticker symbol of the new non fungible token
-    * @param description non fungible token description (max: 1000)
+    * @param description non fungible token description (max: 100)
     * @param definitions non fungible token data definitions
     * @param max_supply the maximum supply of this non fungible token which may exist at any given time
     * @param fixed_max_supply true to deny future modifications of 'max_supply' otherwise false
@@ -2191,7 +2191,7 @@ public:
     * @note Maximum supply will be changed only if fixed_max_supply is not set.
     * @param issuer the name or id of the account who will become the new issuer (or pass empty string)
     * @param symbol the ticker symbol of the non fungible token to update
-    * @param description non fungible token description (max: 1000)
+    * @param description non fungible token description (max: 100)
     * @param max_supply the maximum supply of this non fungible token which may exist at any given time
     * @param fixed_max_supply true to deny future modifications of 'max_supply'
     * @param broadcast \c true to broadcast the transaction on the network

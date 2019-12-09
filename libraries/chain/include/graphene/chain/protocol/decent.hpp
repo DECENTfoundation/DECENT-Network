@@ -564,6 +564,7 @@ static bool InitCodeAndName() { \
    /**
     * @ingroup operations
     * @brief This operation is used to register a new seeder, modify the existing seeder or to extend seeder's lifetime.
+    * @note can't be broadcast more than once in 30 minutes.
     */
    struct ready_to_publish_operation : public base_operation<false>
    {
