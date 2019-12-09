@@ -60,6 +60,7 @@ before_install:
       test -L /usr/local/opt/cryptopp || test ! -d /usr/local/Cellar/cryptopp || brew link cryptopp || true;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update &&
       brew bundle cleanup --force &&
       brew bundle install --verbose &&
       brew link --force readline;
