@@ -11,7 +11,7 @@ environment:
     BOOST_LIB: C:\Libraries\boost_1_69_0\lib64-msvc-14.1
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
-    VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC\14.23.27820\MergeModules\Microsoft_VC142_CRT_x64.msm
+    VCRUNTIME: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Redist\MSVC\14.24.28127\MergeModules\Microsoft_VC142_CRT_x64.msm
     BOOST: C:\Libraries\boost_1_71_0
     BOOST_LIB: C:\Libraries\boost_1_71_0\lib64-msvc-14.2
 
