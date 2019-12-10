@@ -32,19 +32,11 @@ namespace graphene { namespace net {
 
 stcp_socket::stcp_socket(const std::string& cert_file)
    : _sock(cert_file)
-#ifndef NDEBUG
-   , _read_buffer_in_use(false)
-   , _write_buffer_in_use(false)
-#endif
 {
 }
 
 stcp_socket::stcp_socket(const std::string& cert_file, const std::string& key_file, const std::string& key_password)
    : _sock(cert_file, key_file, key_password)
-#ifndef NDEBUG
-   , _read_buffer_in_use(false)
-   , _write_buffer_in_use(false)
-#endif
 {
 }
 
@@ -86,37 +78,24 @@ size_t stcp_socket::readsome( char* buffer, size_t len )
 { try {
     assert( len > 0 && (len % 16) == 0 );
 
-#ifndef NDEBUG
-    // This code was written with the assumption that you'd only be making one call to readsome
-    // at a time so it reuses _read_buffer.  If you really need to make concurrent calls to
-    // readsome(), you'll need to prevent reusing _read_buffer here
-    struct check_buffer_in_use {
-      bool& _buffer_in_use;
-      check_buffer_in_use(bool& buffer_in_use) : _buffer_in_use(buffer_in_use) { assert(!_buffer_in_use); _buffer_in_use = true; }
-      ~check_buffer_in_use() { assert(_buffer_in_use); _buffer_in_use = false; }
-    } buffer_in_use_checker(_read_buffer_in_use);
-#endif
-
     const size_t read_buffer_length = 4096;
     if (!_read_buffer)
-      _read_buffer.reset(new char[read_buffer_length], [](char* p){ delete[] p; });
+      _read_buffer.reset(new char[read_buffer_length]);
 
     len = std::min(read_buffer_length, len);
-
-    size_t s = _sock.readsome( _read_buffer, len, 0 );
+    size_t s = _sock.readsome(_read_buffer.get(), len);
     if( s % 16 )
     {
-      _sock.read(_read_buffer, 16 - (s%16), s);
+      _sock.read(_read_buffer.get() + s, 16 - (s%16));
       s += 16-(s%16);
     }
-    _recv_aes.decode( _read_buffer.get(), static_cast<uint32_t>(s), buffer );
+
+    if (_sock.uses_ssl())
+      memcpy(buffer, _read_buffer.get(), std::min(s, len));
+    else
+      _recv_aes.decode(_read_buffer.get(), static_cast<uint32_t>(s), buffer);
     return s;
 } FC_RETHROW_EXCEPTIONS( warn, "", ("len",len) ) }
-
-size_t stcp_socket::readsome( const std::shared_ptr<char>& buf, size_t len, size_t offset )
-{
-  return readsome(buf.get() + offset, len);
-}
 
 bool stcp_socket::eof()const
 {
@@ -126,39 +105,23 @@ bool stcp_socket::eof()const
 size_t stcp_socket::writesome( const char* buffer, size_t len )
 { try {
     assert( len > 0 && (len % 16) == 0 );
-
-#ifndef NDEBUG
-    // This code was written with the assumption that you'd only be making one call to writesome
-    // at a time so it reuses _write_buffer.  If you really need to make concurrent calls to
-    // writesome(), you'll need to prevent reusing _write_buffer here
-    struct check_buffer_in_use {
-      bool& _buffer_in_use;
-      check_buffer_in_use(bool& buffer_in_use) : _buffer_in_use(buffer_in_use) { assert(!_buffer_in_use); _buffer_in_use = true; }
-      ~check_buffer_in_use() { assert(_buffer_in_use); _buffer_in_use = false; }
-    } buffer_in_use_checker(_write_buffer_in_use);
-#endif
+    if (_sock.uses_ssl())
+    {
+      _sock.write(buffer, len);
+      return len;
+    }
 
     const std::size_t write_buffer_length = 4096;
     if (!_write_buffer)
-      _write_buffer.reset(new char[write_buffer_length], [](char* p){ delete[] p; });
+      _write_buffer.reset(new char[write_buffer_length]);
+
     len = std::min<size_t>(write_buffer_length, len);
     memset(_write_buffer.get(), 0, len); // just in case aes.encode screws up
-    /**
-     * every sizeof(crypt_buf) bytes the aes channel
-     * has an error and doesn't decrypt properly...  disable
-     * for now because we are going to upgrade to something
-     * better.
-     */
-    uint32_t ciphertext_len = _send_aes.encode( buffer, static_cast<uint32_t>(len), _write_buffer.get() );
+    uint32_t ciphertext_len = _send_aes.encode(buffer, static_cast<uint32_t>(len), _write_buffer.get());
     assert(ciphertext_len == len);
-    _sock.write( _write_buffer, ciphertext_len );
+    _sock.write(_write_buffer.get(), ciphertext_len);
     return ciphertext_len;
 } FC_RETHROW_EXCEPTIONS( warn, "", ("len",len) ) }
-
-size_t stcp_socket::writesome( const std::shared_ptr<const char>& buf, size_t len, size_t offset )
-{
-  return writesome(buf.get() + offset, len);
-}
 
 void stcp_socket::flush()
 {
