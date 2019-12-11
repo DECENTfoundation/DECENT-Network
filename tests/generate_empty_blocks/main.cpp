@@ -29,7 +29,6 @@
 
 #include <fc/io/fstream.hpp>
 #include <fc/io/json.hpp>
-#include <fc/io/stdio.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #include <graphene/app/api.hpp>
@@ -147,7 +146,7 @@ int main( int argc, char** argv )
             else
                break;
          }
-         
+
          miner_id_type prev_miner = b.miner;
          miner_id_type cur_miner = db.get_scheduled_miner(1);
          if( verbose )
