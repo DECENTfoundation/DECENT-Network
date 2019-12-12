@@ -1,6 +1,5 @@
 add_subdirectory( miner )
 add_subdirectory( account_history )
-add_subdirectory( delayed_node )
 add_subdirectory( seeding )
 add_subdirectory( transaction_history )
 add_subdirectory( elasticsearch )

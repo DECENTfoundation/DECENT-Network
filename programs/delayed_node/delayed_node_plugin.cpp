@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-#include <graphene/delayed_node/delayed_node_plugin.hpp>
+#include "delayed_node_plugin.hpp"
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/app/api.hpp>
