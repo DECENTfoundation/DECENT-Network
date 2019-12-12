@@ -28,8 +28,6 @@
 
 #include <graphene/chain/account_object.hpp>
 
-#include <fc/crypto/digest.hpp>
-
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;

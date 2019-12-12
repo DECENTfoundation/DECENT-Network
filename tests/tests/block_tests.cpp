@@ -36,8 +36,6 @@
 
 #include "../common/tempdir.hpp"
 
-#include <fc/crypto/digest.hpp>
-
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
@@ -55,7 +53,7 @@ genesis_state_type make_genesis() {
    for( int i = 0; i < genesis_state.initial_active_miners; ++i )
    {
       auto name = "init"+fc::to_string(i);
-      
+
       genesis_state.initial_accounts.emplace_back(name,
                                                   init_account_priv_key.get_public_key(),
                                                   init_account_priv_key.get_public_key());
@@ -297,7 +295,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
 
 /**
  *  These test has been disabled, out of order blocks should result in the node getting disconnected.
- *  
+ *
 BOOST_AUTO_TEST_CASE( fork_db_tests )
 {
    try {
@@ -320,7 +318,7 @@ BOOST_AUTO_TEST_CASE( fork_db_tests )
      fdb.push_block(skipped_block);
      head = fdb.head();
      FC_ASSERT( head && head->data.block_num() == 2001, "", ("head",head->data.block_num()) );
-  } FC_LOG_AND_RETHROW() 
+  } FC_LOG_AND_RETHROW()
 }
 BOOST_AUTO_TEST_CASE( out_of_order_blocks )
 {
@@ -820,7 +818,7 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
    {
       const account_object& nathan = create_account("nathan");
       time_point_sec now0 = db.head_block_time();
-      
+
       transfer(account_id_type()(db), nathan, asset(5000000));
 
       account_update_operation op;
@@ -844,10 +842,10 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
       cop.proposed_ops.emplace_back(uop);
 
       trx.operations.push_back(cop);
-      
+
       trx.expiration = db.head_block_time() + 100;
       sign(trx, init_account_priv_key);
-      
+
       db.push_transaction(trx);
    }
    BOOST_TEST_MESSAGE( "Updating proposal by signing with the miner private key" );
@@ -869,9 +867,9 @@ BOOST_FIXTURE_TEST_CASE( change_block_interval, database_fixture )
       sign(trx, init_account_priv_key);
 
       db.push_transaction(trx);
-      
+
       generate_blocks(maintenence_time + 5);
-      
+
       maintenence_time2 = db.get_dynamic_global_properties().next_maintenance_time;
    }
    generate_block();
@@ -1246,7 +1244,7 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
          usd.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
          usd.accumulated_fees = 0;
          usd.is_monitored_asset = true;
-         
+
          genesis_state.immutable_parameters.num_special_accounts = num_special_accounts;
          genesis_state.immutable_parameters.num_special_assets = num_special_assets;
          genesis_state.initial_assets.push_back( usd );
@@ -1258,7 +1256,7 @@ BOOST_AUTO_TEST_CASE( genesis_reserve_ids )
       auto acct_itr = acct_idx.find("init0");
       BOOST_REQUIRE( acct_itr != acct_idx.end() );
       BOOST_CHECK( acct_itr->id == account_id_type( num_special_accounts ) );
-      
+
       const auto& asset_idx = db.get_index_type<asset_index>().indices().get<by_symbol>();
       auto asset_itr = asset_idx.find("USD");
       BOOST_REQUIRE( asset_itr != asset_idx.end() );

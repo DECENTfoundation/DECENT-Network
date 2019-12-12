@@ -33,7 +33,6 @@
 
 #include <graphene/db/simple_index.hpp>
 
-#include <fc/crypto/digest.hpp>
 #include <fc/crypto/hex.hpp>
 #include "../common/database_fixture.hpp"
 
@@ -182,11 +181,11 @@ BOOST_AUTO_TEST_CASE( memo_test )
    m.to = receiver.get_public_key();
    m.set_message(sender, receiver.get_public_key(), "Hello, world!", 12345);
 
-   decltype(fc::digest(m)) hash("8de72a07d093a589f574460deb19023b4aff354b561eb34590d9f4629f51dbf3");
-   if( fc::digest(m) != hash )
+   fc::sha256 hash("8de72a07d093a589f574460deb19023b4aff354b561eb34590d9f4629f51dbf3");
+   if( fc::sha256::hash(m) != hash )
    {
       // If this happens, notify the web guys that the memo serialization format changed.
-      edump((m)(fc::digest(m)));
+      edump((m)(fc::sha256::hash(m)));
       BOOST_FAIL("Memo format has changed. Notify the web guys and update this test.");
    }
    BOOST_CHECK_EQUAL(m.get_message(receiver, sender.get_public_key()), "Hello, world!");
@@ -239,7 +238,7 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 
    auto c = []( const digest_type& digest ) -> checksum_type
    {   return checksum_type::hash( digest );   };
-   
+
    auto d = []( const digest_type& left, const digest_type& right ) -> digest_type
    {   return digest_type::hash( std::make_pair( left, right ) );   };
 
@@ -254,7 +253,7 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 
    /*
       A=d(0,1)
-         / \ 
+         / \
         0   1
    */
 
@@ -361,7 +360,7 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 
    /*
                                 _____________O=d(M,N)______________
-                               /                                   \   
+                               /                                   \
                      __M=d(I,J)__                                  N=K
                     /            \                              /
             I=d(A,B)              J=d(C,D)                 K=E
@@ -381,7 +380,7 @@ BOOST_AUTO_TEST_CASE( merkle_root )
 
    /*
                                 _____________O=d(M,N)______________
-                               /                                   \   
+                               /                                   \
                      __M=d(I,J)__                                  N=K
                     /            \                              /
             I=d(A,B)              J=d(C,D)                 K=E

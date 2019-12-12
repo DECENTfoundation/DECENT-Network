@@ -27,7 +27,6 @@
 
 #include <graphene/time/time.hpp>
 
-#include <fc/crypto/digest.hpp>
 #include <fc/smart_ref_impl.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
@@ -64,7 +63,7 @@ BOOST_AUTO_TEST_CASE( genesis_and_persistence_bench )
 
       for( int i = 0; i < account_count; ++i )
          genesis_state.initial_accounts.emplace_back("target"+fc::to_string(i),
-                                                     public_key_type(fc::ecc::private_key::regenerate(fc::digest(i)).get_public_key()));
+                                                     public_key_type(fc::ecc::private_key::regenerate(fc::sha256::hash(i)).get_public_key()));
 
       fc::temp_directory data_dir( graphene::utilities::temp_directory_path() );
 

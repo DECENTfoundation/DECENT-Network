@@ -32,7 +32,6 @@
 
 #include <graphene/db/simple_index.hpp>
 
-#include <fc/crypto/digest.hpp>
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;

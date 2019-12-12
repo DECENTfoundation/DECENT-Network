@@ -36,7 +36,6 @@
 
 #include <graphene/db/simple_index.hpp>
 
-#include <fc/crypto/digest.hpp>
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
@@ -70,9 +69,9 @@ BOOST_AUTO_TEST_CASE( simple_single_signature )
 BOOST_AUTO_TEST_CASE( any_two_of_three )
 {
    try {
-      fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
-      fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
-      fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
+      fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::sha256::hash("key1"));
+      fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::sha256::hash("key2"));
+      fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::sha256::hash("key3"));
       const account_object& nathan = create_account("nathan", nathan_key1.get_public_key() );
       const asset_object& core = asset_id_type()(db);
       auto old_balance = fund(nathan);
@@ -148,7 +147,7 @@ BOOST_AUTO_TEST_CASE( recursive_accounts )
       auto old_balance = fund(child);
 
       BOOST_TEST_MESSAGE( "Attempting to transfer with no signatures, should fail" );
-      transfer_operation op; 
+      transfer_operation op;
       op.from = child.id;
       op.amount = core.amount(500);
       trx.operations.push_back(op);
@@ -302,9 +301,9 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       INVOKE(any_two_of_three);
 
       fc::ecc::private_key miner_key = init_account_priv_key;
-      fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::digest("key1"));
-      fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::digest("key2"));
-      fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::digest("key3"));
+      fc::ecc::private_key nathan_key1 = fc::ecc::private_key::regenerate(fc::sha256::hash("key1"));
+      fc::ecc::private_key nathan_key2 = fc::ecc::private_key::regenerate(fc::sha256::hash("key2"));
+      fc::ecc::private_key nathan_key3 = fc::ecc::private_key::regenerate(fc::sha256::hash("key3"));
 
       const account_object& moneyman = create_account("moneyman", init_account_pub_key);
       const account_object& nathan = get_account("nathan");
@@ -318,13 +317,13 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       transfer_operation transfer_op;
       transfer_op.from = nathan.id;
       transfer_op.to  = moneyman.get_id();
-      transfer_op.amount = core.amount(100); 
+      transfer_op.amount = core.amount(100);
 
       proposal_create_operation op;
       op.fee_paying_account = moneyman.id;
       op.proposed_ops.emplace_back( transfer_op );
       op.expiration_time =  db.head_block_time() + fc::days(1);
-                                     
+
       asset nathan_start_balance = db.get_balance(nathan.get_id(), core.get_id());
       {
          vector<authority> other;
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE( proposed_single_account )
       trx.signatures.clear();
       pup.active_approvals_to_add.clear();
       pup.active_approvals_to_add.insert(nathan.id);
-      
+
       trx.operations = {pup};
       sign( trx,   nathan_key3  );
       sign( trx,   nathan_key2  );
@@ -411,12 +410,12 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 
    const account_object init0_account = get_account("init0");
    const account_object graphene_miner_account = get_account_by_id(account_id_type());
-   
+
    transfer(account_id_type()(db), get_account("voter"), asset(5000000));
 
    BOOST_TEST_MESSAGE( "transfering 100000 CORE to nathan, signing with miner key should fail because this requires it to be part of a proposal" );
    transfer_operation top;
-   
+
    top.to = nathan.id;
    top.amount = asset(100000);
    trx.operations.push_back(top);
@@ -425,7 +424,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 
    auto _sign = [&] { trx.signatures.clear(); sign( trx, nathan_key ); };
 
-   // We must vote 
+   // We must vote
    fc::time_point_sec now = db.head_block_time();
    account_update_operation op;
    op.account = voter.id;
@@ -445,7 +444,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    pop.expiration_time = db.head_block_time() + global_params.miner_proposal_review_period*2;
    pop.fee_paying_account = nathan.id;
    trx.operations = {pop};
-   
+
    trx.expiration = now + global_params.maximum_time_until_expiration;
    _sign();
 
@@ -465,7 +464,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
 
    proposal_object prop = db.get<proposal_object>(PUSH_TX( db, trx ).operation_results.front().get<object_id_type>());
    BOOST_REQUIRE(db.find_object(prop.id));
-   
+
    BOOST_CHECK(prop.expiration_time == pop.expiration_time);
    BOOST_CHECK(prop.review_period_time && *prop.review_period_time == pop.expiration_time - *pop.review_period_seconds);
    BOOST_CHECK(prop.proposed_transaction.operations.size() == 1);
@@ -486,7 +485,7 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    uop.fee_paying_account = get_account("init0").get_id();
    uop.fee == asset();
    uop.proposal = prop.id;
-   uop.key_approvals_to_add.emplace(miner_key.get_public_key()); 
+   uop.key_approvals_to_add.emplace(miner_key.get_public_key());
    /* we can use also active_approvals_to_add:
    uop.active_approvals_to_add = { get_account("init0").get_id(), get_account("init1").get_id(),
       get_account("init2").get_id(), get_account("init3").get_id(),
@@ -500,11 +499,11 @@ BOOST_AUTO_TEST_CASE( committee_authority )
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 0);
    BOOST_CHECK(db.get<proposal_object>(prop.id).is_authorized_to_execute(db));
 
-   fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;   
+   fc::time_point_sec maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
    generate_blocks(maintenence_time);
    maintenence_time = db.get_dynamic_global_properties().next_maintenance_time;
    generate_blocks(maintenence_time);
-   
+
    auto bn = get_balance(nathan, asset_id_type()(db));
    BOOST_CHECK_EQUAL(get_balance(nathan, asset_id_type()(db)), 100000);
 } FC_LOG_AND_RETHROW() }
@@ -1228,7 +1227,7 @@ BOOST_FIXTURE_TEST_CASE( get_required_signatures_test, database_fixture )
       BOOST_CHECK( chk( tx, all_keys, { alice_public_key, bobian_public_key, cindy_public_key, danian_public_key } ) );
 
       // TODO:  Add sigs to tx, then check
-      // TODO:  Check removing sigs      
+      // TODO:  Check removing sigs
       // TODO:  Accounts with mix of keys and accounts in their authority
       // TODO:  Tx with multiple ops requiring different sigs
    }

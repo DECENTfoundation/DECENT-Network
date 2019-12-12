@@ -36,8 +36,6 @@
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/miner_object.hpp>
 
-#include <fc/crypto/digest.hpp>
-
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
