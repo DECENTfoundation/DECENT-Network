@@ -905,15 +905,6 @@ namespace graphene { namespace app {
          std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
 
          /**
-          * @brief Get a list of seeders by total upload, in decreasing order.
-          * @param count maximum number of seeders to retrieve
-          * @return the seeders found
-          * @ingroup DatabaseAPI_Content
-          * @throw limit_exceeded_exception
-          */
-         std::vector<chain::seeder_object> list_seeders_by_upload(uint32_t count) const;
-
-         /**
           * @brief Get a list of seeders by region code.
           * @param region_code region code of seeders to retrieve
           * @return the seeders found
@@ -1109,7 +1100,6 @@ FC_API(graphene::app::database_api,
           (restore_encryption_key)
           (search_content)
           (list_seeders_by_price)
-          (list_seeders_by_upload)
           (list_seeders_by_region)
           (list_seeders_by_rating)
           (get_seeder)

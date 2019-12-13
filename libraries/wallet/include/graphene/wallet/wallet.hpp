@@ -1516,14 +1516,6 @@ public:
    std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
 
    /**
-    * @brief Get a list of seeders ordered by total upload, in decreasing order.
-    * @param count maximum number of seeders to retrieve
-    * @return a list of seeders
-    * @ingroup WalletAPI_Seeding
-    */
-   fc::optional<std::vector<chain::seeder_object>> list_seeders_by_upload(uint32_t count) const;
-
-   /**
     * @brief Get a list of seeders by region code.
     * @param region_code region code of seeders to retrieve
     * @return a list of seeders
@@ -2501,7 +2493,6 @@ FC_API( graphene::wallet::wallet_api,
 
         //Seeding
         (list_seeders_by_price)
-        (list_seeders_by_upload)
         (list_seeders_by_region)
         (list_seeders_by_rating)
 

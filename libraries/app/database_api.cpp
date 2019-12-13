@@ -205,7 +205,6 @@ namespace graphene { namespace app {
       std::vector<content_summary> search_content(const std::string& term, const std::string& order, const std::string& user, const std::string& region_code, db::object_id_type id, const std::string& type, uint32_t count) const;
       std::vector<chain::seeder_object> list_seeders_by_price(uint32_t count) const;
       fc::optional<chain::seeder_object> get_seeder(chain::account_id_type account ) const;
-      std::vector<chain::seeder_object> list_seeders_by_upload(uint32_t count) const;
       std::vector<chain::seeder_object> list_seeders_by_region(const std::string& region_code) const;
       std::vector<chain::seeder_object> list_seeders_by_rating(uint32_t count) const;
       std::vector<chain::subscription_object> list_active_subscriptions_by_consumer(chain::account_id_type account, uint32_t count) const;
@@ -2372,32 +2371,6 @@ namespace
             result.emplace_back(*itr);
          else
             ++count;
-         ++itr;
-      }
-
-      return result;
-   }
-
-   std::vector<chain::seeder_object> database_api::list_seeders_by_upload(uint32_t count) const
-   {
-      return my->list_seeders_by_upload( count );
-   }
-
-   std::vector<chain::seeder_object> database_api_impl::list_seeders_by_upload(uint32_t count) const
-   {
-      FC_VERIFY_AND_THROW(count <= CURRENT_OUTPUT_LIMIT_100, limit_exceeded_exception, "Current limit: ${i}", ("l", CURRENT_OUTPUT_LIMIT_100));
-
-      const auto& idx = _db.get_index_type<chain::seeding_statistics_index>().indices().get<chain::by_upload>();
-      const auto& idx2 = _db.get_index_type<chain::seeder_index>().indices().get<chain::by_seeder>();
-      std::vector<chain::seeder_object> result;
-      result.reserve(count);
-
-      auto itr = idx.begin();
-
-      while(count-- && itr != idx.end())
-      {
-         const auto& so_itr = idx2.find(itr->seeder);
-         result.emplace_back(*so_itr);
          ++itr;
       }
 
