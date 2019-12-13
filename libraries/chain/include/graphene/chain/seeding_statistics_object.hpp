@@ -14,8 +14,6 @@ namespace graphene { namespace chain {
       {
       public:
          account_id_type seeder;
-         // total bytes uploaded to consumers through ipfs
-         uint64_t total_upload = 0;
          // increased with every request_to_buy op and decreased with every deliver_key_op, reset at maint to 0
          uint32_t missed_delivered_keys = 0;
          // increased with every deliver_key_op, reset at maint to 0
@@ -27,18 +25,23 @@ namespace graphene { namespace chain {
          uint32_t num_of_content_seeded = 0;
          // increased with every content_submit operation, decreased with every initial PoR
          uint32_t total_content_requested_to_seed = 0;
-         // not initial ones, reset at every maint to 0
-         uint32_t num_of_pors = 0;
+         // 30% ( content_requested_to_seed_in_given_MT / number_of_content ) + 70%*missed_ratio
+         uint32_t missed_ratio = 0;
+
+         // not in use after HF5
+
+         // total bytes uploaded to consumers through ipfs
+         uint64_t total_upload = 0;
          // total_upload at maint
          uint64_t uploaded_till_last_maint = 0;
-         // 30%*(total_delivery_keys + missed_delivered_keys) / number_of_content + 70%*avg_buying_ratio
+         // not initial ones, reset at every maint to 0
+         uint32_t num_of_pors = 0;
+         // 30%*(total_delivered_keys + missed_delivered_keys) / number_of_content + 70%*avg_buying_ratio
          uint32_t avg_buying_ratio = 0;
-         // 30%* upload_to_data_recent / avg_buying_ratio + 70%*seeding_ratio
+         // 30%* upload_to_data_recent / avg_buying_ratio + 70%*seeding_rel_ratio
          uint32_t seeding_rel_ratio = 0;
          // 30% * upload_to_data_recent + 70% * seeding_abs_ratio
          uint32_t seeding_abs_ratio = 0;
-         // 30% ( content_requested_to_seed_in_given_MT / number_of_content ) + 70%*missed_ratio
-         uint32_t missed_ratio = 0;
       };
 
       struct by_seeder;

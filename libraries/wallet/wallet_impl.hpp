@@ -34,44 +34,6 @@
 
 namespace graphene { namespace wallet { namespace detail {
 
-// this class helps to gather seeding statistics. Tracks seeders currently in use.
-class seeders_tracker
-{
-public:
-   seeders_tracker(wallet_api_impl& wallet) : _wallet(wallet) {}
-
-   bool is_empty() const { return seeder_to_content.empty(); }
-
-   std::vector<chain::account_id_type> track_content(const std::string& URI);
-   std::vector<chain::account_id_type> untrack_content(const std::string& URI);
-   std::vector<chain::account_id_type> get_unfinished_seeders();
-
-   void set_initial_stats(chain::account_id_type seeder, const uint64_t amount);
-   uint64_t get_final_stats(chain::account_id_type seeder, const uint64_t amount);
-   void remove_stats(chain::account_id_type seeder);
-
-private:
-   wallet_api_impl& _wallet;
-   std::multimap<chain::account_id_type, chain::content_id_type> seeder_to_content;
-   std::map<chain::account_id_type, uint64_t> initial_stats;
-};
-
-struct ipfs_stats_listener : public decent::package::EventListenerInterface
-{
-   ipfs_stats_listener(const std::string& URI, wallet_api_impl& api, chain::account_id_type consumer) : _URI(URI), _wallet(api), _consumer(consumer),
-      _ipfs_client(decent::package::PackageManagerConfigurator::instance().get_ipfs_host(), decent::package::PackageManagerConfigurator::instance().get_ipfs_port()) {}
-
-   virtual void package_download_start() override;
-   virtual void package_download_complete() override;
-   virtual void package_download_error(const std::string& msg) override;
-
-private:
-   std::string       _URI;
-   wallet_api_impl&  _wallet;
-   chain::account_id_type _consumer;
-   ipfs::Client      _ipfs_client;
-};
-
 struct submit_transfer_listener : public decent::package::EventListenerInterface
 {
    submit_transfer_listener(wallet_api_impl& wallet, std::shared_ptr<decent::package::PackageInfo> info, const chain::content_submit_operation& op, const std::string& protocol)
@@ -346,7 +308,6 @@ public:
    static_operation_map _operation_which_map;
 
    std::vector<std::shared_ptr<detail::submit_transfer_listener>> _package_manager_listeners;
-   seeders_tracker _seeders_tracker;
 
    static CryptoPP::AutoSeededRandomPool randomGenerator;
 };

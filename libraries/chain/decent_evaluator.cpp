@@ -921,31 +921,26 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    operation_result report_stats_evaluator::do_evaluate(const operation_type& o)
-   {
-	   try {
-         for (const auto& item : o.stats)
-         {
-            FC_ASSERT( db().find_object(item.first), "Invalid seeder account specified." );
-         }
-	   }FC_CAPTURE_AND_RETHROW((o))
-
+   {try{
+      FC_ASSERT( db().head_block_time() < HARDFORK_5_TIME, "The operation is no longer allowed." );
+      for (const auto& item : o.stats)
+      {
+         FC_ASSERT( db().find_object(item.first), "Invalid seeder account specified." );
+      }
       return void_result();
-   }
+   }FC_CAPTURE_AND_RETHROW((o))}
 
    operation_result report_stats_evaluator::do_apply(const operation_type& o)
-   {
-      try {
-         auto& idx = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
-         for (const auto& item : o.stats)
-         {
-            const auto &so = idx.find(item.first);
-            db().modify<seeding_statistics_object>(*so, [&item](seeding_statistics_object &sso) {
-               sso.total_upload += item.second;
-            });
-         }
-      }FC_CAPTURE_AND_RETHROW((o))
-
+   {try{
+      auto& idx = db().get_index_type<seeding_statistics_index>().indices().get<by_seeder>();
+      for (const auto& item : o.stats)
+      {
+         const auto &so = idx.find(item.first);
+         db().modify<seeding_statistics_object>(*so, [&item](seeding_statistics_object &sso) {
+            sso.total_upload += item.second;
+         });
+      }
       return void_result();
-   }
+   }FC_CAPTURE_AND_RETHROW((o))}
 
 }} // graphene::chain

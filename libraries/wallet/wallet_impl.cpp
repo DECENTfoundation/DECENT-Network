@@ -239,8 +239,7 @@ wallet_api_impl::wallet_api_impl(wallet_api& s, const fc::api<app::login_api> &r
      _remote_api(rapi),
      _remote_db(rapi->database()),
      _remote_net_broadcast(rapi->network_broadcast()),
-     _remote_hist(rapi->history()),
-     _seeders_tracker(*this)
+     _remote_hist(rapi->history())
 {
    chain::chain_id_type remote_chain_id = _remote_db->get_chain_id();
    if( remote_chain_id != _chain_id )
@@ -2266,8 +2265,6 @@ void wallet_api_impl::download_content(const std::string& consumer, const std::s
       sign_transaction( tx, broadcast );
       auto& package_manager = decent::package::PackageManager::instance();
       auto package = package_manager.get_package( URI, content->_hash );
-      std::shared_ptr<ipfs_stats_listener> listener_ptr = std::make_shared<ipfs_stats_listener>( URI, *this, consumer_account.id );
-      package->add_event_listener( listener_ptr );
       package->download();
 
    } FC_CAPTURE_AND_RETHROW( (consumer)(URI)(broadcast) )
@@ -2710,139 +2707,6 @@ fc::variants wallet_api_impl::network_get_connected_peers()
       result.push_back( v );
    }
    return result;
-}
-
-std::vector<chain::account_id_type> seeders_tracker::track_content(const std::string& URI)
-{
-   fc::optional<chain::content_object> content = _wallet._remote_db->get_content( URI );
-   FC_ASSERT( content );
-   std::vector<chain::account_id_type> new_seeders;
-   for( const auto& element : content->key_parts )
-   {
-      auto range = seeder_to_content.equal_range( element.first );
-      auto& itr = range.first;
-      if( range.first == range.second)
-         new_seeders.push_back( element.first );
-
-      while( itr != range.second )
-      {
-         if( itr->second == content->id )
-            break;
-         itr++;
-      }
-      if( itr == range.second )
-         seeder_to_content.insert(std::make_pair( element.first, content->id ));
-   }
-   return new_seeders;
-}
-
-std::vector<chain::account_id_type> seeders_tracker::untrack_content(const std::string& URI)
-{
-   fc::optional<chain::content_object> content = _wallet._remote_db->get_content( URI );
-   FC_ASSERT( content );
-   std::vector<chain::account_id_type> finished_seeders;
-   for( auto& element : content->key_parts )
-   {
-      auto range = seeder_to_content.equal_range( element.first );
-      auto& itr = range.first;
-      while( itr != range.second )
-      {
-         if( itr->second == content->id )
-         {
-            seeder_to_content.erase(itr);
-            break;
-         }
-         itr++;
-      }
-      if( seeder_to_content.count( element.first ) == 0 )
-         finished_seeders.push_back( element.first );
-   }
-   return finished_seeders;
-}
-
-std::vector<chain::account_id_type> seeders_tracker::get_unfinished_seeders()
-{
-   std::vector<chain::account_id_type> result;
-   for( const auto& element : initial_stats )
-   {
-      result.push_back( element.first );
-   }
-   return result;
-}
-
-void seeders_tracker::set_initial_stats(chain::account_id_type seeder, const uint64_t amount)
-{
-   FC_ASSERT( initial_stats.count(seeder) == 0 );
-   initial_stats.emplace( seeder, amount );
-}
-
-uint64_t seeders_tracker::get_final_stats(chain::account_id_type seeder, const uint64_t amount)
-{
-   FC_ASSERT( initial_stats.count(seeder) == 1 );
-   return amount - initial_stats[seeder];
-}
-
-void seeders_tracker::remove_stats(chain::account_id_type seeder)
-{
-   FC_ASSERT( initial_stats.erase( seeder ) == 1 );
-}
-
-void ipfs_stats_listener::package_download_start()
-{
-   std::vector<chain::account_id_type> new_seeders = _wallet._seeders_tracker.track_content(_URI);
-   if( !new_seeders.empty() )
-   {
-      for( const auto& element : new_seeders )
-      {
-         const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
-         ipfs::Json json;
-         _ipfs_client.BitswapLedger( ipfs_ID, &json );
-         uint64_t received = json["Recv"];
-         ilog( "IPFS stats: package download start: ${r} bytes from ${id}", ("r", received)("id", ipfs_ID));
-         _wallet._seeders_tracker.set_initial_stats( element, received );
-      }
-   }
-}
-
-void ipfs_stats_listener::package_download_complete()
-{
-   std::vector<chain::account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
-   if( !finished_seeders.empty() )
-   {
-      uint64_t difference;
-      std::map<chain::account_id_type, uint64_t> stats;
-      for( const auto& element : finished_seeders )
-      {
-         const std::string ipfs_ID = _wallet._remote_db->get_seeder( element )->ipfs_ID;
-         ipfs::Json json;
-         _ipfs_client.BitswapLedger( ipfs_ID, &json );
-         uint64_t received = json["Recv"];
-         difference = _wallet._seeders_tracker.get_final_stats( element, received );
-         ilog( "IPFS stats: package download complete: received ${r} bytes from ${id}, difference: ${diff}", ("r", received)("id", ipfs_ID)("diff", difference));
-         stats.emplace( element, difference );
-
-         _wallet._seeders_tracker.remove_stats( element );
-      }
-
-      chain::report_stats_operation op;
-      op.consumer = _consumer;
-      op.stats = stats;
-      chain::signed_transaction tx;
-      tx.operations.push_back( op );
-      _wallet.set_operation_fees( tx, _wallet._remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-      _wallet.sign_transaction(tx, true);
-   }
-}
-
-void ipfs_stats_listener::package_download_error(const std::string&)
-{
-   std::vector<chain::account_id_type> finished_seeders = _wallet._seeders_tracker.untrack_content( _URI);
-   for( const auto& element : finished_seeders )
-   {
-      _wallet._seeders_tracker.remove_stats( element );
-   }
-   elog( "IPFS stats: package download error: URI: ${uri}", ("uri", _URI));
 }
 
 void submit_transfer_listener::package_creation_complete()

@@ -145,15 +145,15 @@ void database::set_and_reset_seeding_stats()
    const auto& idx = get_index_type<seeder_index>().indices().get<graphene::db::by_id>();
 
    // total_delivered_keys / (total_delivered_keys + missed_delivered_keys)
-   uint32_t key_delivery_ratio;
+   uint32_t key_delivery_ratio = 0;
    // (uploaded - uploaded_till_last_maint) / total_content_seeded
-   uint64_t upload_to_data_recent;
-   uint32_t num_of_requests_to_buy;
-   uint32_t avg_buying_ratio;
-   uint32_t seeding_rel_ratio;
-   uint32_t seeding_abs_ratio;
-   uint32_t num_of_content;
-   uint32_t missed_ratio;
+   uint64_t upload_to_data_recent = 0;
+   uint32_t num_of_requests_to_buy = 0;
+   uint32_t avg_buying_ratio = 0;
+   uint32_t seeding_rel_ratio = 0;
+   uint32_t seeding_abs_ratio = 0;
+   uint32_t num_of_content = 0;
+   uint32_t missed_ratio = 0;
 
    auto itr = idx.begin();
    while( itr != idx.end() )
@@ -164,31 +164,30 @@ void database::set_and_reset_seeding_stats()
       // interval [0,1]->[0,10000]
       if( num_of_requests_to_buy > 0 )
          key_delivery_ratio = ( stats.total_delivered_keys * 10000 ) / num_of_requests_to_buy;
-      else
-         key_delivery_ratio = 0;
 
-      // interval [0,~), multiplied by 10.000
-      if( stats.total_content_seeded > 0 )
-         upload_to_data_recent = ( ( stats.total_upload - stats.uploaded_till_last_maint ) * 10000 ) / stats.total_content_seeded;
-      else
-         upload_to_data_recent = 0;
+      if( head_block_time() < HARDFORK_5_TIME )
+      {
+         // interval [0,~), multiplied by 10.000
+         if( stats.total_content_seeded > 0 )
+            upload_to_data_recent = ( ( stats.total_upload - stats.uploaded_till_last_maint ) * 10000 ) / stats.total_content_seeded;
 
-      // interval [0,~), multiplied by 10.000
-      if( stats.num_of_content_seeded > 0 )
-         avg_buying_ratio = ( ( num_of_requests_to_buy * 10000 * 3 ) / stats.num_of_content_seeded ) / 10 + ( stats.avg_buying_ratio * 7 ) / 10;
-      else
-         avg_buying_ratio = ( stats.avg_buying_ratio * 7 ) / 10;
+         // interval [0,~), multiplied by 10.000
+         if( stats.num_of_content_seeded > 0 )
+            avg_buying_ratio = ( ( num_of_requests_to_buy * 10000 * 3 ) / stats.num_of_content_seeded ) / 10 + ( stats.avg_buying_ratio * 7 ) / 10;
+         else
+            avg_buying_ratio = ( stats.avg_buying_ratio * 7 ) / 10;
 
-      // multiplied by 10000
-      if( avg_buying_ratio > 0 && upload_to_data_recent > 0)
-         seeding_rel_ratio = static_cast<uint32_t>( ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10 );
-      else
-         seeding_rel_ratio = stats.seeding_rel_ratio;
+         // multiplied by 10000
+         if( avg_buying_ratio > 0 && upload_to_data_recent > 0)
+            seeding_rel_ratio = static_cast<uint32_t>( ( 3 * 10000 * upload_to_data_recent / avg_buying_ratio ) / 10 + ( stats.seeding_rel_ratio * 7 ) / 10 );
+         else
+            seeding_rel_ratio = stats.seeding_rel_ratio;
 
-      if( upload_to_data_recent > 0 )
-         seeding_abs_ratio = static_cast<uint32_t>( ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10 );
-      else
-         seeding_abs_ratio = stats.seeding_abs_ratio;
+         if( upload_to_data_recent > 0 )
+            seeding_abs_ratio = static_cast<uint32_t>( ( 3 * upload_to_data_recent ) / 10 + ( stats.seeding_abs_ratio * 7 ) / 10 );
+         else
+            seeding_abs_ratio = stats.seeding_abs_ratio;
+      }
 
       num_of_content = stats.total_content_requested_to_seed + stats.num_of_content_seeded;
       // [0,1]->10000
@@ -197,12 +196,19 @@ void database::set_and_reset_seeding_stats()
       else
          missed_ratio = ( stats.missed_ratio * 7 ) / 10;
 
-      seeding_rel_ratio = std::min( 20000u, seeding_rel_ratio );
-      seeding_abs_ratio = std::min( 40000u, seeding_abs_ratio );
+      if( head_block_time() < HARDFORK_5_TIME )
+      {
+         seeding_rel_ratio = std::min( 20000u, seeding_rel_ratio );
+         seeding_abs_ratio = std::min( 40000u, seeding_abs_ratio );
 
-      modify<seeder_object>( *itr, [&](seeder_object& so){
-         so.rating = std::min( ( seeding_rel_ratio + seeding_abs_ratio ) / 6, ( missed_ratio + key_delivery_ratio ) / 2);
-      });
+         modify<seeder_object>( *itr, [&](seeder_object& so){
+            so.rating = std::min( ( seeding_rel_ratio + seeding_abs_ratio ) / 6, ( missed_ratio + key_delivery_ratio ) / 2);
+         });
+      }
+      else
+         modify<seeder_object>( *itr, [&](seeder_object& so){
+            so.rating = ( missed_ratio + key_delivery_ratio ) / 2;
+         });
 
       modify<seeding_statistics_object>( stats, [&]( seeding_statistics_object& so ){
          so.uploaded_till_last_maint = so.total_upload;
