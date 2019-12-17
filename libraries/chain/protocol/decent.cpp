@@ -21,6 +21,8 @@ void set_publishing_right_operation::validate()const
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( URI.length() <= DECENT_MAX_CONTENT_URI_SIZE );
+   FC_ASSERT( synopsis.length() <= DECENT_MAX_CONTENT_SYNOPSIS_SIZE );
 
    uint32_t sum_of_splits = 0;
    for( auto const &element : co_authors )

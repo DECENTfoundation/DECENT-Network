@@ -60,6 +60,8 @@
 #define DECENT_MAX_DESCRIPTION_SIZE 100 /// chars
 #define DECENT_MAX_SUBSCRIPTION_PERIOD 365 /// days, aka: 1 year
 #define DECENT_MAX_SEEDING_PRICE 100000000 /// 1 DCT per MB
+#define DECENT_MAX_CONTENT_SYNOPSIS_SIZE 2000 /// chars
+#define DECENT_MAX_CONTENT_URI_SIZE 200 /// chars
 /**
  * Don't allow the committee_members to publish a limit that would make the network unable to operate.
  */
