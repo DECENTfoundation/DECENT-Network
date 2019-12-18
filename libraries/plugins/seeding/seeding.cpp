@@ -8,6 +8,7 @@
 #include <graphene/chain/content_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/seeding_object.hpp>
+#include <graphene/chain/seeder_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <decent/encrypt/encryptionutils.hpp>
 #include <graphene/utilities/key_conversion.hpp>
@@ -620,6 +621,15 @@ void seeding_plugin_impl::restore_state()
    });
 
    fc::time_point next_call = fc::time_point::now() + fc::seconds(30);
+   auto& idx = database().get_index_type<graphene::chain::seeder_index>().indices().get<graphene::chain::by_seeder>();
+   const auto& sor = idx.find( seeding_options.seeder );
+   if( sor != idx.end() )
+   {
+      fc::time_point diff = fc::time_point( sor->expiration - fc::time_point_sec(fc::time_point::now()) - fc::seconds(DECENT_RTP_VALIDITY - 1800) );
+      if( diff > fc::time_point() )
+         next_call += diff.time_since_epoch();
+   }
+
    dlog("RtP planned at ${t}", ("t",next_call) );
    service_thread->schedule([this](){ send_ready_to_publish(); }, next_call, "Seeding plugin RtP generate");
 }

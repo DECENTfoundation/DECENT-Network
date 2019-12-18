@@ -50,7 +50,6 @@ void content_submit_operation::validate()const
       FC_ASSERT(quorum >= 2 , "At least two seeders are needed to reconstruct the key");
       FC_ASSERT(seeders.size() >= quorum);
    }
-   FC_ASSERT( expiration <= fc::time_point_sec::maximum() );
    FC_ASSERT( publishing_fee.amount >= 0);
    fc::url _url( URI );
    FC_ASSERT( _url.proto() == "ipfs" || _url.proto() == "magnet" || _url.proto() == "http" || _url.proto() == "https" );

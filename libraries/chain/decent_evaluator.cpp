@@ -779,7 +779,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
          s_obj = &(*sor);
 
       if( now >= HARDFORK_5_TIME && s_obj)
-         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= 23 * 3600 + 1800, "RTP can't be broadcast more than once in 30 minutes");
+         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= DECENT_RTP_VALIDITY - 1800, "RTP can't be broadcast more than once in 30 minutes");
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -812,7 +812,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
               so.free_space = o.space;
               so.price = asset(o.price_per_MByte);
               so.pubKey = o.pubKey;
-              so.expiration = db().head_block_time() + 24 * 3600;
+              so.expiration = db().head_block_time() + DECENT_RTP_VALIDITY;
               so.ipfs_ID = o.ipfs_ID;
 
               if( o.region_code.valid() )
