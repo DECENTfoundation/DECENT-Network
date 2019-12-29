@@ -30,12 +30,6 @@ set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_STANDARD_REQUIRED YES )
 set( CMAKE_EXPORT_COMPILE_COMMANDS YES )
 
-if( MSVC )
-    option( USE_PCH "Use precompiled header" ON )
-else()
-    option( USE_PCH "Use precompiled header" OFF )
-endif()
-
 if( WIN32 )
     message( STATUS "Configuring DCore on WIN32" )
     add_compile_options( /D_CRT_SECURE_NO_WARNINGS )
