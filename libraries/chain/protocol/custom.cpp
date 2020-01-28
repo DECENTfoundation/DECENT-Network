@@ -32,7 +32,7 @@ void custom_operation::validate()const
 }
 share_type custom_operation::calculate_fee(const fee_parameters_type& k, fc::time_point_sec now)const
 {
-   if( now >= HARDFORK_5_TIME && id == custom_operation_subtype_messaging )
+   if( now >= HARDFORK_5_TIME )
       return k.fee + calculate_data_fee( fc::raw::pack_size(data), k.price_per_kbyte );
    else
       return k.fee + calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
