@@ -83,7 +83,6 @@ Then, execute in console:
 * Install Git for Windows (https://gitforwindows.org)
 * Install CMake tools (https://cmake.org/download)
 * Install Visual Studio 2017 Community (https://visualstudio.microsoft.com/downloads)
-* Install Boost 1.68 MSVC 14.1 (https://sourceforge.net/projects/boost/files/boost-binaries) (choose *C:\Projects\boost_1_68_0* as installation prefix)
 * Install Doxygen (http://www.doxygen.org) (choose *C:\Doxygen* as installation prefix)
 * Install Perl (http://strawberryperl.com) (choose *C:\Strawberry* as installation prefix)
 
@@ -128,17 +127,13 @@ You can use Xcode, or any other CMake generator, and then, if it is an IDE gener
 
 In order to build and install DCore follow the steps:
 * start Visual Studio 2017, navigate to _File > Open > Folder_ and choose `C:\Projects\DECENT-Network`
-* navigate to _CMake > Change CMake Settings > DCore_ and adjust installation prefix and paths to Boost, Doxygen, Perl and vcpkg (if needed)
+* navigate to _CMake > Change CMake Settings > DCore_ and adjust installation prefix and paths to Doxygen, Perl and vcpkg (if needed)
 * build and install artifacts using _CMake > Install > DCore_
 
 You can use CMake generator to create a Visual Studio 2017 project files and perform _Build > Build solution_ action from there, just start the _Visual Studio 2017 x64 Native Tools Command Prompt_ and execute:
 
     cd \Projects\DECENT-Network
-    set BOOST=C:\Projects\boost_1_68_0
-    set DOXYGEN=C:\Doxygen
-    set PERL=C:\Strawberry\perl
-    set VCPKG=C:\Projects\vcpkg
-    cmake -DCMAKE_TOOLCHAIN_FILE=%VCPKG%\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=%DOXYGEN%;%PERL% -DBOOST_ROOT=%BOOST% -DBOOST_LIBRARYDIR=%BOOST%\lib64-msvc-14.1 -G "Visual Studio 15 2017 Win64" .
+    cmake -DCMAKE_TOOLCHAIN_FILE=C:\Projects\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:\Doxygen;C:\Strawberry\perl -G "Visual Studio 15 2017 Win64" .
 
 You can specify any other custom install prefix for `cmake` during the initial configuration, for example, by adding `-DCMAKE_INSTALL_PREFIX=C:\Projects\DECENT-Network-prefix` to the command line.
 

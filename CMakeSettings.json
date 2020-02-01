@@ -22,14 +22,6 @@
           "value": "C:\\Doxygen;C:\\Strawberry\\perl"
         },
         {
-          "name": "BOOST_ROOT",
-          "value": "C:\\Projects\\boost_1_68_0"
-        },
-        {
-          "name": "BOOST_LIBRARYDIR",
-          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
-        },
-        {
           "name": "VCPKG_TARGET_TRIPLET",
           "value": "x64-windows-static"
         }
@@ -55,14 +47,6 @@
         {
           "name": "CMAKE_PREFIX_PATH",
           "value": "C:\\Doxygen;C:\\Strawberry\\perl"
-        },
-        {
-          "name": "BOOST_ROOT",
-          "value": "C:\\Projects\\boost_1_68_0"
-        },
-        {
-          "name": "BOOST_LIBRARYDIR",
-          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
@@ -92,14 +76,6 @@
           "value": "C:\\Doxygen;C:\\Strawberry\\perl"
         },
         {
-          "name": "BOOST_ROOT",
-          "value": "C:\\Projects\\boost_1_68_0"
-        },
-        {
-          "name": "BOOST_LIBRARYDIR",
-          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
-        },
-        {
           "name": "VCPKG_TARGET_TRIPLET",
           "value": "x64-windows-static"
         }
@@ -125,14 +101,6 @@
         {
           "name": "CMAKE_PREFIX_PATH",
           "value": "C:\\Doxygen;C:\\Strawberry\\perl"
-        },
-        {
-          "name": "BOOST_ROOT",
-          "value": "C:\\Projects\\boost_1_68_0"
-        },
-        {
-          "name": "BOOST_LIBRARYDIR",
-          "value": "C:\\Projects\\boost_1_68_0\\lib64-msvc-14.1"
         },
         {
           "name": "VCPKG_TARGET_TRIPLET",
