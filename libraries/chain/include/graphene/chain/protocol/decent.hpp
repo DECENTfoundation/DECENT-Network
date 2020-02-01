@@ -460,11 +460,10 @@ namespace graphene { namespace chain {
                        (KP)(KR)(KW)(KY)(KZ)(LA)(LB)(LC)(LI)(LK)(LR)(LS)(LT)(LU)(LV)(LY)(MA)(MC)(MD)(ME) \
                        (MF)(MG)(MH)(MK)(ML)(MM)(MN)(MO)(MP)(MQ)(MR)(MS)(MT)(MU)(MV)(MW)(MX)(MY)(MZ)(NA) \
                        (NC)(NE)(NF)(NG)(NI)(NL)(NO)(NP)(NR)(NU)(NZ)(OM)(PA)(PE)(PF)(PG)(PH)(PK)(PL)(PM) \
-                       (PN)(PR)(PS)(PT)(PW)(PY)(QA)(RE)(RO)(RS)(RU)(RW)(SA)(SB)(SC)(SD)(SE)(SG)(SH)(SI) \
-                       (SJ)(SK)(SL)(SM)(SN)(SO)(SR)(SS)(ST)(SV)(SX)(SY)(SZ)(TC)(TD)(TF)(TG)(TH)(TJ)(TK) \
-                       (TL)(TM)(TN)(TO)(TR)(TT)(TV)(TW)
+                       (PN)(PR)(PS)(PT)(PW)(PY)(QA)(RE)(RO)(RS)(RU)(RW)(SA)(SB)(SC)(SD)(SE)(SG)(SH)(SI)
 
-#define COUNTRY_CODES2 (TZ)(UA)(UG)(UM)(US)(UY)(UZ)(VA)(VC)(VE)(VG)(VI) \
+#define COUNTRY_CODES2 (SJ)(SK)(SL)(SM)(SN)(SO)(SR)(SS)(ST)(SV)(SX)(SY)(SZ)(TC)(TD)(TF)(TG)(TH)(TJ)(TK) \
+                       (TL)(TM)(TN)(TO)(TR)(TT)(TV)(TW)(TZ)(UA)(UG)(UM)(US)(UY)(UZ)(VA)(VC)(VE)(VG)(VI) \
                        (VN)(VU)(WF)(WS)(YE)(YT)(ZA)(ZM)(ZW)
 
 #define INNER_MACRO(r, data, elem) elem,
