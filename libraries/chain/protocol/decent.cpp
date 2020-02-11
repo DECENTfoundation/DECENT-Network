@@ -21,8 +21,6 @@ void set_publishing_right_operation::validate()const
 void content_submit_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( URI.length() <= DECENT_MAX_CONTENT_URI_SIZE );
-   FC_ASSERT( synopsis.length() <= DECENT_MAX_CONTENT_SYNOPSIS_SIZE );
 
    uint32_t sum_of_splits = 0;
    for( auto const &element : co_authors )
@@ -84,8 +82,6 @@ void ready_to_publish_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( space > 0 );
-   FC_ASSERT( !ipfs_ID.empty() && ipfs_ID.length() <= 47 ); // base58 encoded IPFS's default multihash can't be longer
-   FC_ASSERT( pubKey < bigint_type(Params::instance().DECENT_EL_GAMAL_MODULUS_512) );
 }
 
 void proof_of_custody_operation::validate()const

@@ -131,6 +131,12 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
 
    operation_result content_submit_evaluator::do_evaluate(const operation_type& o )
    {try{
+      if( db().head_block_time() >= HARDFORK_5_TIME )
+      {
+         FC_ASSERT( o.URI.length() <= DECENT_MAX_CONTENT_URI_SIZE );
+         FC_ASSERT( o.synopsis.length() <= DECENT_MAX_CONTENT_SYNOPSIS_SIZE );
+      }
+
       FC_ASSERT( (db().head_block_time() > HARDFORK_4_TIME) || (o.co_authors.size() <= 10) );
 
       if( o.key_parts.size() == 0 ) //simplified content
@@ -209,48 +215,6 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
          {
             FC_ASSERT( (db().head_block_time() > HARDFORK_4_TIME) || (content_itr->expiration == o.expiration) );
          }
-
-         /* Resubmit that changes other stuff is not supported.
-         for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
-         {
-            auto itr = idx.find( p );
-            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-
-            auto itr2 = content_itr->key_parts.begin();
-            while( itr2 != content_itr->key_parts.end() )
-            {
-               if( itr2->first == p )
-               {
-                  break;
-               }
-               itr2++;
-            }
-            if( itr2 == content_itr->key_parts.end() )
-               FC_ASSERT( itr->free_space > o.size ); // only newly added seeders are tested against free space
-
-            total_price_per_day += itr-> price.amount * o.size;
-         }
-         FC_ASSERT( days * total_price_per
-         for ( auto &p : o.seeders ) //check if seeders exist and accumulate their prices
-         {
-            auto itr = idx.find( p );
-            FC_ASSERT( itr != idx.end(), "seeder does not exist" );
-
-            auto itr2 = content_itr->key_parts.begin();
-            while( itr2 != content_itr->key_parts.end() )
-            {
-               if( itr2->first == p )
-               {
-                  break;
-               }
-               itr2++;
-            }
-            if( itr2 == content_itr->key_parts.end() )
-               FC_ASSERT( itr->free_space > o.size ); // only newly added seeders are tested against free space
-
-            total_price_per_day += itr-> price.amount * o.size;
-         }
-         FC_ASSERT( days * total_price_per_day <= o.publishing_fee + content_itr->publishing_fee_escrow );*/
       } else
       {
          asset total_price_per_day;
@@ -771,21 +735,27 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
    operation_result ready_to_publish_evaluator::do_evaluate(const operation_type& o )
    {try{
       fc::time_point_sec now = db().head_block_time();
-      FC_ASSERT( now >= HARDFORK_1_TIME );
 
       auto& idx = db().get_index_type<seeder_index>().indices().get<by_seeder>();
       const auto& sor = idx.find( o.seeder );
       if( sor != idx.end() )
          s_obj = &(*sor);
 
-      if( now >= HARDFORK_5_TIME && s_obj)
-         FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= DECENT_RTP_VALIDITY - 1800, "RTP can't be broadcast more than once in 30 minutes");
+      if( now >= HARDFORK_5_TIME)
+      {
+         FC_ASSERT( !o.ipfs_ID.empty() && o.ipfs_ID.length() <= 47 ); // base58 encoded IPFS's default multihash can't be longer
+         FC_ASSERT( o.pubKey < bigint_type(Params::instance().DECENT_EL_GAMAL_MODULUS_512) );
+         if( s_obj ) // republish
+            FC_ASSERT( fc::microseconds(s_obj->expiration - now).to_seconds() <= DECENT_RTP_VALIDITY - 1800, "RTP can't be broadcast more than once in 30 minutes");
+      }
+
 
       return void_result();
    }FC_CAPTURE_AND_RETHROW( (o) ) }
 
    operation_result ready_to_publish_evaluator::do_apply(const operation_type& o )
    {try{
+      fc::time_point_sec now = db().head_block_time();
       operation_result result;
       if( !s_obj ) { //this is initial publish request
          const seeding_statistics_object &sso = db().create<seeding_statistics_object>([&o](seeding_statistics_object &sso) {
@@ -798,7 +768,7 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
               so.free_space = o.space;
               so.pubKey = o.pubKey;
               so.price = asset(o.price_per_MByte);
-              so.expiration = db().head_block_time() + DECENT_RTP_VALIDITY;
+              so.expiration = now + DECENT_RTP_VALIDITY;
               so.ipfs_ID = o.ipfs_ID;
               so.stats = sso.id;
               if( o.region_code.valid() )
@@ -812,7 +782,10 @@ operation_result set_publishing_right_evaluator::do_evaluate( const operation_ty
               so.free_space = o.space;
               so.price = asset(o.price_per_MByte);
               so.pubKey = o.pubKey;
-              so.expiration = db().head_block_time() + DECENT_RTP_VALIDITY;
+              if( now >= HARDFORK_5_TIME )
+                 so.expiration = now + DECENT_RTP_VALIDITY;
+              else
+                 so.expiration = now + 24 * 3600;
               so.ipfs_ID = o.ipfs_ID;
 
               if( o.region_code.valid() )
