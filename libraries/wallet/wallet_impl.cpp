@@ -1448,6 +1448,28 @@ std::vector<vesting_balance_object_with_info> wallet_api_impl::get_vesting_balan
    return result;
 } FC_CAPTURE_AND_RETHROW( (account_name) ) }
 
+chain::signed_transaction wallet_api_impl::create_linear_vesting(const std::string& creator, const std::string& owner, const std::string& amount, const std::string& asset_symbol,
+                                                                 const fc::time_point_sec start, const uint32_t cliff_seconds, const uint32_t duration_seconds, bool broadcast)
+   { try {
+   chain::account_object creator_obj = get_account(creator);
+   chain::account_object owner_obj = get_account(owner);
+   chain::asset_object asset_obj = get_asset(asset_symbol);
+
+   chain::vesting_balance_create_operation vesting_balance_create_op;
+
+   vesting_balance_create_op.creator = creator_obj.id;
+   vesting_balance_create_op.owner = owner_obj.id;
+   vesting_balance_create_op.amount = asset_obj.amount_from_string(amount);
+   vesting_balance_create_op.policy = chain::linear_vesting_policy_initializer{ start, cliff_seconds, duration_seconds };
+
+   chain::signed_transaction tx;
+   tx.operations.push_back( vesting_balance_create_op );
+   set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+   tx.validate();
+
+   return sign_transaction( tx, broadcast );
+} FC_CAPTURE_AND_RETHROW( (creator)(owner)(amount)(asset_symbol)(start)(cliff_seconds)(duration_seconds)(broadcast) ) }
+
 chain::signed_transaction wallet_api_impl::withdraw_vesting(const std::string& miner_name, const std::string& amount, const std::string& asset_symbol, bool broadcast)
 { try {
    chain::asset_object asset_obj = get_asset( asset_symbol );

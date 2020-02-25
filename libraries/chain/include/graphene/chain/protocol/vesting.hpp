@@ -50,17 +50,11 @@ namespace graphene { namespace chain {
     * @ingroup operations
     *
     *  The chain allows a user to create a vesting balance.
-    *  Normally, vesting balances are created automatically as part
-    *  of cashback and worker operations.  This operation allows
-    *  vesting balances to be created manually as well.
-    *
     *  Manual creation of vesting balances can be used by a stakeholder
     *  to publicly demonstrate that they are committed to the chain.
     *  It can also be used as a building block to create transactions
     *  that function like public debt.  Finally, it is useful for
     *  testing vesting balance functionality.
-    *
-    * @return ID of newly created vesting_balance_object
     */
    struct vesting_balance_create_operation : public base_operation<false>
    {
@@ -83,10 +77,6 @@ namespace graphene { namespace chain {
    /**
     * @brief Withdraw from a vesting balance.
     * @ingroup operations
-    *
-    * Withdrawal from a not-completely-mature vesting balance
-    * will result in paying fees.
-    *
     * @return Nothing
     */
    struct vesting_balance_withdraw_operation : public base_operation<false>

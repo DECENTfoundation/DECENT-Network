@@ -1035,6 +1035,19 @@ std::vector<vesting_balance_object_with_info> wallet_api::get_vesting_balances(c
    return my->get_vesting_balances( account_name );
 }
 
+signed_transaction_info wallet_api::create_linear_vesting(const std::string& creator,
+                                                          const std::string& owner,
+                                                          const std::string& amount,
+                                                          const std::string& asset_symbol,
+                                                          const fc::time_point_sec start,
+                                                          const uint32_t cliff_seconds,
+                                                          const uint32_t duration_seconds,
+                                                          bool broadcast /* = false */)
+{
+   FC_VERIFY_AND_THROW(!my->is_locked(), wallet_is_locked_exception);
+   return my->create_linear_vesting(creator, owner, amount, asset_symbol, start, cliff_seconds, duration_seconds, broadcast);
+}
+
 signed_transaction_info wallet_api::withdraw_vesting(const std::string& miner_name,
                                                      const std::string& amount,
                                                      const std::string& asset_symbol,

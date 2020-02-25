@@ -235,6 +235,8 @@ public:
    chain::signed_transaction create_miner(const std::string& owner_account, const std::string& url, bool broadcast);
    chain::signed_transaction update_miner(const std::string& miner_name, const std::string& url, const std::string& block_signing_key, bool broadcast);
    std::vector<vesting_balance_object_with_info> get_vesting_balances(const std::string& account_name) const;
+   chain::signed_transaction create_linear_vesting(const std::string& creator, const std::string& owner, const std::string& amount, const std::string& asset_symbol,
+                                                   const fc::time_point_sec start, const uint32_t cliff_duration, const uint32_t duration_seconds, bool broadcast);
    chain::signed_transaction withdraw_vesting(const std::string& miner_name, const std::string& amount, const std::string& asset_symbol, bool broadcast);
    chain::signed_transaction vote_for_miner(const std::string& voting_account, const std::string& miner, bool approve, bool broadcast);
    chain::signed_transaction set_voting_proxy(const std::string& account_to_modify, fc::optional<std::string> voting_account, bool broadcast);

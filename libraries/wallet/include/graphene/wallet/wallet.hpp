@@ -1411,6 +1411,28 @@ public:
    std::vector<vesting_balance_object_with_info> get_vesting_balances(const std::string& account_name) const;
 
    /**
+    * @brief Creates a vesting( a balance that is locked by the blockchain for a period of time) based on a linear policy.
+    * @note The amount available for withdrawal increases linearly over time.
+    * @param creator the name or ID of the account who is providing funds
+    * @param owner the name or ID of the account who is able to withdraw vested funds
+    * @param amount the amount to vest
+    * @param asset_symbol the symbol of the asset to vest
+    * @param start the time at which funds begin vesting
+    * @param cliff_seconds no amount may be withdrawn before this many seconds of the vesting period have elapsed
+    * @param duration_seconds duration of the vesting period, in seconds. Must be greater than vesting_cliff_seconds
+    * @param broadcast \c true if you wish to broadcast the transaction
+    * @ingroup WalletAPI_Mining
+    */
+   signed_transaction_info create_linear_vesting(const std::string& creator,
+                                                 const std::string& owner,
+                                                 const std::string& amount,
+                                                 const std::string& asset_symbol,
+                                                 const fc::time_point_sec start,
+                                                 const uint32_t cliff_seconds,
+                                                 const uint32_t duration_seconds,
+                                                 bool broadcast = false);
+
+   /**
     * @brief Withdraw a vesting balance.
     * @note The wallet needs to be unlocked and a required key/s needs to be imported.
     * @param miner_name the account name of the miner, also accepts account ID or vesting balance ID type.
@@ -2485,6 +2507,7 @@ FC_API( graphene::wallet::wallet_api,
         (create_miner)
         (update_miner)
         (get_vesting_balances)
+        (create_linear_vesting)
         (withdraw_vesting)
         (vote_for_miner)
         (set_voting_proxy)

@@ -121,9 +121,8 @@ operation_result vesting_balance_withdraw_evaluator::do_apply( const operation_t
 
    const vesting_balance_object& vbo = op.vesting_balance( d );
 
-   // Allow zero balance objects to stick around, (1) to comply
-   // with the chain's "objects live forever" design principle, (2)
-   // if it's cashback or worker, it'll be filled up again.
+   // Allow zero balance objects to stick around to comply
+   // with the chain's "objects live forever" design principle
 
    d.modify( vbo, [&]( vesting_balance_object& vbo )
    {
@@ -132,7 +131,6 @@ operation_result vesting_balance_withdraw_evaluator::do_apply( const operation_t
 
    d.adjust_balance( op.owner, op.amount );
 
-   // TODO: Check asset authorizations and withdrawals
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
