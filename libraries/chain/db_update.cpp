@@ -158,12 +158,14 @@ void database::update_last_irreversible_block()
       wit_objs.push_back( &(wid(*this)) );
 
    static_assert( GRAPHENE_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero" );
+   static_assert( GRAPHENE_IRREVERSIBLE_THRESHOLD_HF5 > 0, "irreversible threshold must be nonzero" );
 
    // 1 1 1 2 2 2 2 2 2 2 -> 2     .7*10 = 7
    // 1 1 1 1 1 1 1 2 2 2 -> 1
    // 3 3 3 3 3 3 3 3 3 3 -> 3
 
-   size_t offset = ((GRAPHENE_100_PERCENT - GRAPHENE_IRREVERSIBLE_THRESHOLD) * wit_objs.size() / GRAPHENE_100_PERCENT);
+   size_t irreversible_threshold = head_block_time() > HARDFORK_5_TIME ? GRAPHENE_IRREVERSIBLE_THRESHOLD_HF5 : GRAPHENE_IRREVERSIBLE_THRESHOLD;
+   size_t offset = ((GRAPHENE_100_PERCENT - irreversible_threshold) * wit_objs.size() / GRAPHENE_100_PERCENT);
 
    std::nth_element( wit_objs.begin(), wit_objs.begin() + offset, wit_objs.end(),
       []( const miner_object* a, const miner_object* b )
