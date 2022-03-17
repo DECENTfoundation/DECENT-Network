@@ -165,7 +165,7 @@ set_property( TARGET gmp PROPERTY IMPORTED_LOCATION "${GMP_LIBRARIES}" )
 set_property( TARGET gmp PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}" )
 
 find_path( PBC_INCLUDE_DIR NAMES "pbc.h" "pbc/pbc.h" )
-find_library( PBC_LIBRARIES NAMES "pbc" "pbclib.lib" )
+find_library( PBC_LIBRARIES NAMES "libpbc.a" "pbc" "pbclib.lib" )
 
 if( NOT PBC_INCLUDE_DIR )
    message( FATAL_ERROR "PBC includes not found" )
@@ -177,10 +177,16 @@ endif()
 mark_as_advanced( PBC_LIBRARIES PBC_INCLUDE_DIR )
 message( STATUS "Found PBC: ${PBC_INCLUDE_DIR}, ${PBC_LIBRARIES}" )
 
-add_library( pbc UNKNOWN IMPORTED )
+add_library( pbc STATIC IMPORTED )
 set_property( TARGET pbc PROPERTY IMPORTED_LOCATION "${PBC_LIBRARIES}" )
 set_property( TARGET pbc PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PBC_INCLUDE_DIR}" )
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
+
+
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libreadline,libcrypto++,libgmp,libssl,libcurl4,zlib1g")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "decent") #required
+INCLUDE(CPack)
