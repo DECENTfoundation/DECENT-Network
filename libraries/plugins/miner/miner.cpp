@@ -140,7 +140,7 @@ void miner_plugin::plugin_startup()
       {
          if( d.head_block_num() == 0 )
             new_chain_banner(d);
-         _production_skip_flags |= graphene::chain::database::skip_undo_history_check;
+         //_production_skip_flags |= graphene::chain::database::skip_undo_history_check;
          _production_skip_flags |= graphene::chain::database::skip_transaction_signatures;
       }
       schedule_production_loop();
