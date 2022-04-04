@@ -358,7 +358,7 @@ namespace detail {
          if( _options->count("checkpoint") )
          {
             auto cps = _options->at("checkpoint").as<std::vector<std::string>>();
-            loaded_checkpoints.reserve( cps.size() );
+            loaded_checkpoints.reserve( cps.size()+1 );
             for( auto cp : cps )
             {
                auto item = fc::json::from_string(cp).as<std::pair<uint32_t,block_id_type> >();
@@ -366,6 +366,9 @@ namespace detail {
                ilog ( "loaded checkpoint ${s} at ${n}", ("s",loaded_checkpoints[item.first])("n", item.first));
             }
          }
+	 // Add default checkpoint - HF5
+	 loaded_checkpoints[27651520] = block_id_type("01a5edc06b20df0874258b360583f057f5777ebc");
+	 ilog ( "loaded HF5 checkpoint ${s} at ${n}", ("s",loaded_checkpoints[27651520])("n", 27651520));
 
          _chain_db->add_checkpoints( loaded_checkpoints );
 
