@@ -158,12 +158,14 @@ void database::update_last_irreversible_block()
       wit_objs.push_back( &(wid(*this)) );
 
    static_assert( GRAPHENE_IRREVERSIBLE_THRESHOLD > 0, "irreversible threshold must be nonzero" );
+   static_assert( GRAPHENE_IRREVERSIBLE_THRESHOLD_HF5 > 0, "irreversible threshold must be nonzero" );
 
    // 1 1 1 2 2 2 2 2 2 2 -> 2     .7*10 = 7
    // 1 1 1 1 1 1 1 2 2 2 -> 1
    // 3 3 3 3 3 3 3 3 3 3 -> 3
 
-   size_t offset = ((GRAPHENE_100_PERCENT - GRAPHENE_IRREVERSIBLE_THRESHOLD) * wit_objs.size() / GRAPHENE_100_PERCENT);
+   size_t irreversible_threshold = head_block_time() > HARDFORK_5_TIME ? GRAPHENE_IRREVERSIBLE_THRESHOLD_HF5 : GRAPHENE_IRREVERSIBLE_THRESHOLD;
+   size_t offset = ((GRAPHENE_100_PERCENT - irreversible_threshold) * wit_objs.size() / GRAPHENE_100_PERCENT);
 
    std::nth_element( wit_objs.begin(), wit_objs.begin() + offset, wit_objs.end(),
       []( const miner_object* a, const miner_object* b )
@@ -172,6 +174,20 @@ void database::update_last_irreversible_block()
       } );
 
    uint32_t new_last_irreversible_block_num = wit_objs[offset]->last_confirmed_block_num;
+
+   // add check that there is not only one miner for last DECENT_MAX_BLOCKS_SINGLE_MINER_GROUP
+   // where DECENT_SINGLE_MINER_GROUP_SIZE
+   size_t miner_group_size_offset = wit_objs.size() - DECENT_SINGLE_MINER_GROUP_SIZE;
+   size_t max_blocks_group= DECENT_MAX_BLOCKS_SINGLE_MINER_GROUP;
+   std::nth_element( wit_objs.begin(), wit_objs.begin() + miner_group_size_offset, wit_objs.end(),
+       []( const miner_object* a, const miner_object* b )
+       {
+         return a->last_confirmed_block_num < b->last_confirmed_block_num;
+       } );
+
+   FC_VERIFY_AND_THROW( head_block_num() <= max_blocks_group + wit_objs[miner_group_size_offset]->last_confirmed_block_num,
+         too_many_blocks_by_single_group_exception, "Too many unconfirmed blocks by single miner group", ("head_block_num", head_block_num())
+	 ("nth miner last confirmed block", wit_objs[miner_group_size_offset]->last_confirmed_block_num));
 
    if( new_last_irreversible_block_num > dpo.last_irreversible_block_num )
    {
