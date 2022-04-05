@@ -86,7 +86,8 @@ namespace graphene { namespace chain {
       insufficient_fee_code                    = 11,
       trx_must_have_at_least_one_op_code       = 12,
       invalid_pts_address_code                 = 13,
-      pop_empty_chain_code                     = 14
+      pop_empty_chain_code                     = 14,
+      too_many_blocks_by_single_group_code     = 15,
    };
 
    FC_DECLARE_EXCEPTION( chain_exception, 400, "blockchain exception" )
@@ -112,6 +113,7 @@ namespace graphene { namespace chain {
    FC_DECLARE_CHAIN_EXCEPTION( trx_must_have_at_least_one_op_exception, trx_must_have_at_least_one_op_code, "Transaction must have at least one operation.")
    FC_DECLARE_CHAIN_EXCEPTION( invalid_pts_address_exception, invalid_pts_address_code, "Invalid pts address." )
    FC_DECLARE_CHAIN_EXCEPTION( pop_empty_chain_exception, pop_empty_chain_code, "There are no blocks to pop." )
+   FC_DECLARE_CHAIN_EXCEPTION( too_many_blocks_by_single_group_exception, too_many_blocks_by_single_group_code, "There are too many unfonfirmed blocks by single group." )
 
    GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_create );
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( max_auth_exceeded, account_create, 1, "Exceeds max authority fan-out" )

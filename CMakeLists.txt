@@ -9,7 +9,7 @@ if (POLICY CMP0048)
 endif()
 
 cmake_minimum_required( VERSION 3.10.2 FATAL_ERROR )
-project( DCore VERSION 1.5.0 LANGUAGES CXX )
+project( DCore VERSION 1.5.2 LANGUAGES CXX )
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
     if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1 )
@@ -187,6 +187,6 @@ add_subdirectory( tests )
 
 
 SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libreadline,libcrypto++,libgmp,libssl,libcurl4,zlib1g")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libreadline8,libcrypto++6,libgmp10,libssl1.1,libcurl4,zlib1g")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "decent") #required
 INCLUDE(CPack)
